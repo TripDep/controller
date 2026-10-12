@@ -73,6 +73,10 @@ def behavior_ids(content):
         raise Blocked("DUPLICATE_BEHAVIOR_RULE")
     return set(matches)
 
+def pinned_public_action(workflow):
+    """Require an immutable 40-hex public action in a named OR unnamed step."""
+    return re.search(r"(?m)^\s*(?:-\s*)?uses:\s*TripDep/controller@[0-9a-f]{40}\s*$", workflow) is not None
+
 def verify_sources(root, policy):
     paths = {
         "master": "governance/sources/GOLDEN_GARDEN_MASTER_RULES_AND_STATE.md",
@@ -118,7 +122,7 @@ def verify_sources(root, policy):
         if required not in guard:
             raise Blocked("PRIVATE_GUARD_WEAKENED:" + required)
     workflow = sources["workflow"].read_text(encoding="utf-8")
-    if not re.search(r"(?m)^\s*(?:-\s*)?uses:\s*TripDep/controller@[0-9a-f]{40}\s*$", workflow):
+    if not pinned_public_action(workflow):
         raise Blocked("PUBLIC_SUPERVISOR_NOT_PINNED")
     if "needs: [guard-tests, phase-guard]" not in workflow:
         raise Blocked("PUBLIC_SUPERVISOR_DEPENDENCIES_MISSING")
