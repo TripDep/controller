@@ -118,7 +118,7 @@ def verify_sources(root, policy):
         if required not in guard:
             raise Blocked("PRIVATE_GUARD_WEAKENED:" + required)
     workflow = sources["workflow"].read_text(encoding="utf-8")
-    if not re.search(r"(?m)^\s*-\s*uses:\s*TripDep/controller@[0-9a-f]{40}\s*$", workflow):
+    if not re.search(r"(?m)^\s*(?:-\s*)?uses:\s*TripDep/controller@[0-9a-f]{40}\s*$", workflow):
         raise Blocked("PUBLIC_SUPERVISOR_NOT_PINNED")
     if "needs: [guard-tests, phase-guard]" not in workflow:
         raise Blocked("PUBLIC_SUPERVISOR_DEPENDENCIES_MISSING")
