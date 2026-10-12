@@ -63,6 +63,13 @@ class SupervisorTests(unittest.TestCase):
             with self.assertRaisesRegex(guard.Blocked, "GIT_BASE_HEAD_UNVERIFIED"):
                 guard.verify_paths(Path(temp), "invalid", "wrong")
 
+    def test_sha_pinned_public_step_variants(self):
+        sha = "a" * 40
+        self.assertTrue(guard.pinned_public_action("      - uses: TripDep/controller@" + sha))
+        self.assertTrue(guard.pinned_public_action("      - name: Public gate\n        uses: TripDep/controller@" + sha))
+        self.assertFalse(guard.pinned_public_action("      - uses: TripDep/controller@main"))
+        self.assertFalse(guard.pinned_public_action("      - uses: TripDep/controller@v1"))
+
     def test_policy_minimums_and_hash(self):
         policy = json.loads(guard.POLICY_PATH.read_text(encoding="utf-8"))
         self.assertEqual(policy["non_aaa_id_count"], 551)
