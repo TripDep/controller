@@ -1,0 +1,8 @@
+{
+  "schema": "public-process-supervisor-v1",
+  "canonical_master_sha256": "ff60ca580ab7a34c2df620c0db420449e306c02a4061747dd276bb071c770a38",
+  "non_aaa_id_count": 551,
+  "aaa_count": 200,
+  "behavior_110_count": 110,
+  "note": "SHA and counts only. The MASTER, the AAA catalog and project evidence remain private."
+}

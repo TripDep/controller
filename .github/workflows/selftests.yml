@@ -1,0 +1,22 @@
+name: Public controller selftests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  selftests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Public controller synthetic tests
+        run: python3 -m unittest discover -s supervisor -p 'test_*.py' -v
+      - name: Syntax and policy checks
+        run: |
+          python3 -m py_compile supervisor/controller.py
+          python3 -m json.tool supervisor/policy.json > /dev/null

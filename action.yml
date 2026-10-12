@@ -1,0 +1,18 @@
+name: Public Process Controller
+description: Fail-closed process checks running inside the caller private CI (no uploads)
+inputs:
+  base-sha:
+    description: Git base commit
+    required: true
+  head-sha:
+    description: Git head commit
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Public controller verifying private workflow
+      shell: bash
+      env:
+        GG_PUBLIC_BASE: ${{ inputs.base-sha }}
+        GG_PUBLIC_HEAD: ${{ inputs.head-sha }}
+      run: python3 "${{ github.action_path }}/supervisor/controller.py" --repo "$GITHUB_WORKSPACE" --base "$GG_PUBLIC_BASE" --head "$GG_PUBLIC_HEAD"
