@@ -71,10 +71,12 @@ def validate_packet(packet,expected):
     exact(packet['mg0'],('binding','kind','result','trigger_assessment','content_sha256'),'EVIDENCE_MG0_REQUIRED')
     mg=packet['mg0'];need(mg['binding']==expected and mg['kind']=='INDIVIDUAL_PROCESS_PROOF_BINDING' and mg['result']=='BINDING_CHECKED_NOT_MG0_PASS','EVIDENCE_MG0_BINDING')
     need(isinstance(mg['trigger_assessment'],dict) and mg['content_sha256']==digest(mg['trigger_assessment']),'EVIDENCE_MG0_CONTENT')
-    return {'schema':'gg-evidence-link-result-v1','status':'NATIVE_EVIDENCE_CONTENT_AND_BINDING_VERIFIED','binding':expected,'packet_sha256':digest(packet),'rule_evidence_sha256':e['content_sha256'],'mg0_evidence_sha256':mg['content_sha256'],'native_content_retrieved':True,'rule_semantics_verified':False,'mg0_execution_pass':False,'asset_execution_passes':0,'advancement_authorized':False,'scope':SCOPE}
+    return {'schema':'gg-evidence-link-result-v1','status':'BINDING_STRUCTURE_VERIFIED_ONLY','binding':expected,'packet_sha256':digest(packet),'rule_evidence_sha256':e['content_sha256'],'mg0_evidence_sha256':mg['content_sha256'],'native_content_retrieved':False,'rule_semantics_verified':False,'mg0_execution_pass':False,'asset_execution_passes':0,'advancement_authorized':False,'scope':SCOPE}
 def verify(api,origin,issuer,expected):
     packet=extract(native(api,origin,issuer,EMIT_STEP),PREFIX)
-    return validate_packet(packet,expected)
+    result=validate_packet(packet,expected)
+    result.update(status='NATIVE_EVIDENCE_CONTENT_AND_BINDING_VERIFIED',native_content_retrieved=True)
+    return result
 def emit(api,ref):
     need(isinstance(ref,str) and SHA40.fullmatch(ref),'EVIDENCE_CASE_REF')
     case=strict_json(decode_file(api.call('GET','/contents/'+CASE+'?ref='+ref),CASE),max_size=65536)
