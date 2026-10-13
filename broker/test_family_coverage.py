@@ -62,6 +62,9 @@ def synthetic_ledger(inv,phase='P8',asset_type='vegetation',profiles=None):
                'source_sha256':row['source_sha256'],'requirement_sha256':row['requirement_sha256'],
                'evidence':dict(proof),'mg0':{'result':'PASS','rule_id':rule,'phase':phase,
                'master_sha256':inv['canonical_master_sha256'],'evidence':dict(proof)}}
+            if 'catalog_phase' in row:
+                for field in ('catalog_number','catalog_section','catalog_phase','asset_type'):
+                    groups[family][rule][field]=row[field]
     return {'phase':phase,'families':groups}
 
 class CoverageTests(unittest.TestCase):
@@ -151,6 +154,13 @@ class CoverageTests(unittest.TestCase):
     def test_na_cannot_hide_due_rule_or_rule_slot(self):
         l=copy.deepcopy(self.ledger);l['families']['MASTER_CHAIN']['A']['result']='N_A_ASSET_TYPE'
         with self.assertRaisesRegex(f.Blocked,'LEDGER_RULE_RESULT'):self.validate(l)
+    def test_aaa_phase_section_number_and_type_cannot_be_omitted_or_changed(self):
+        for field in ('catalog_number','catalog_section','catalog_phase','asset_type'):
+            for absent in (False,True):
+                l=copy.deepcopy(self.ledger);check=l['families']['AAA-200']['AAA-200-A-001']
+                if absent:check.pop(field)
+                else:check[field]='changed'
+                with self.assertRaisesRegex(f.Blocked,'LEDGER_CATALOG_BINDING'):self.validate(l)
     def test_unsupported_or_empty_profiles_are_denied(self):
         for profiles in ([],['UNREGISTERED_PROFILE'],['FOLIAGE_PROFILE']*2):
             with self.assertRaisesRegex(f.Blocked,'WORK_PROFILE'):f.validate_coverage(self.inv,self.ledger,phase='P8',asset_type='vegetation',profiles=profiles)
