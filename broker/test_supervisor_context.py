@@ -4,12 +4,12 @@ from supervisor_context import validate,assess,digest,Blocked
 
 def receipt(role='rescue'):
     r={'library_file_id':'libfile_'+'a'*32,'version':1,'sha256':'a'*64}
-    v={'schema':'gg-supervisor-context-v1','role':role,'observed_at':'2026-10-13T18:00:00+00:00','master':r,'state':dict(r),'provider':{'automation_id_sha256':'b'*64,'last_run_time':'2026-10-13T17:30:00+00:00','enabled':True},'checkpoint':{'status':'UNVERIFIED','source':None,'verification':None,'run_id_sha256':None},'dependencies':{'c'*64:'d'*64,'e'*64:'f'*64},'signals':[],'provenance':'OPERATOR_LIBRARY_READBACK_NOT_GIT_VERIFIED_CONTENT','advancement_authorized':False}
+    v={'schema':'gg-supervisor-context-v1','role':role,'observed_at':'2020-10-13T18:00:00+00:00','master':r,'state':dict(r),'provider':{'automation_id_sha256':'b'*64,'last_run_time':'2020-10-13T17:30:00+00:00','enabled':True},'checkpoint':{'status':'UNVERIFIED','source':None,'verification':None,'run_id_sha256':None},'dependencies':{'c'*64:'d'*64,'e'*64:'f'*64},'signals':[],'provenance':'OPERATOR_LIBRARY_READBACK_NOT_GIT_VERIFIED_CONTENT','advancement_authorized':False}
     return seal(v)
 def seal(v):v['observation_id']=digest({k:x for k,x in v.items() if k!='observation_id'});return v
 class Tests(unittest.TestCase):
     def update(self,v):
-        n=copy.deepcopy(v);n['observed_at']='2026-10-13T19:00:00+00:00';n['state']['version']+=1;n['state']['sha256']='0'*64;return n
+        n=copy.deepcopy(v);n['observed_at']='2020-10-13T19:00:00+00:00';n['state']['version']+=1;n['state']['sha256']='0'*64;return n
     def test_hourly_gap_does_not_restart(self):
         v=receipt();n=seal(self.update(v));self.assertEqual(assess(v,n,['c'*64])['action'],'CONTEXT_RECORDED_NO_RECHECK')
     def test_unrelated_dependency(self):
@@ -31,7 +31,7 @@ class Tests(unittest.TestCase):
         v=receipt();n=seal(self.update(v))
         with self.assertRaisesRegex(Blocked,'CONTEXT_REPLAY'):assess(n,v,[])
     def test_same_version_tamper(self):
-        v=receipt();n=copy.deepcopy(v);n['observed_at']='2026-10-13T19:00:00+00:00';n['state']['sha256']='0'*64
+        v=receipt();n=copy.deepcopy(v);n['observed_at']='2020-10-13T19:00:00+00:00';n['state']['sha256']='0'*64
         with self.assertRaisesRegex(Blocked,'CONTEXT_SAME_VERSION_TAMPER'):assess(v,seal(n),[])
     def test_injected_asset(self):
         v=receipt();v['asset_bytes']='bad'
@@ -41,8 +41,11 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(Blocked,'CONTEXT_PENDING_NOT_COMPLETE'):validate(seal(v))
     def test_no_work_authority(self):self.assertFalse(assess(None,receipt(),[])['advancement_authorized'])
     def test_digest_tamper(self):
-        v=receipt();v['observed_at']='2026-10-13T19:00:00+00:00'
+        v=receipt();v['observed_at']='2020-10-13T19:00:00+00:00'
         with self.assertRaisesRegex(Blocked,'CONTEXT_OBSERVATION_DIGEST'):validate(v)
     def test_same_observation_idempotent(self):
         v=receipt();self.assertEqual(assess(v,v,['c'*64])['action'],'CONTEXT_RECORDED_NO_RECHECK')
+    def test_future_observation(self):
+        v=receipt();v['observed_at']='2100-10-13T19:00:00+00:00'
+        with self.assertRaisesRegex(Blocked,'CONTEXT_OBSERVATION_FUTURE'):validate(seal(v))
 if __name__=='__main__':unittest.main()
