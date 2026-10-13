@@ -67,7 +67,7 @@ MASTER_BINDINGS={
   'GOLDEN_CONTROLLER':('## 0.0B Golden Controller enforcement','## 0.0C Full gate-through-Master passage'),
   'WORK_STATE':('## 0.0B Golden Controller enforcement',),
   'APPEND_ONLY_AUDIT':('## 0.0A Persistent observable audit trail',),
-  'LOCK_MATRIX':('## 0.2 GLOBAL LOCK / AUTONOMY MATRIX','## 0.0H — LOCK ASSOLUTO:'),
+  'LOCK_MATRIX':('## 0.2 GLOBAL LOCK / AUTONOMY MATRIX','## 0.3 Asset-specific lock rows','## 0.0H — LOCK ASSOLUTO:'),
   'USER_AUTHORIZATION_D0':('## D0 —',),
   'BLOCK_ON_UNKNOWN':('## 0.0 Continuous Master re-check','## 0.1 Status vocabulary'),
   'DEPENDENCY_RECHECK':('## EXEC-003 —','## 0.0 Continuous Master re-check'),
@@ -185,6 +185,9 @@ def build_inventory(raw,canonical_master_sha):
        'source_read_mode':'PINNED_TO_VERIFIED_LIBRARY_DIGEST','library_live_read':False,
        'legacy_rule_count':sum(len(f['required']) for f in declared),'legacy_family_count':len(declared),
        'explicit_r110_additions':12,'rule_count':len(items),'family_count':len(families),
+       'aaa_section_count':len({r['catalog_section'] for r in items.values() if 'catalog_section' in r}),
+       'coverage_scope':'REGISTERED_GLOBAL_RULES_AND_CANONICAL_R110_SOURCE_BASE',
+       'asset_specific_context_extensions_verified':False,
        'asset_execution_passes':0,'advancement_authorized':False}
 
 def expected_result(row,phase,asset_type,profiles):
@@ -215,6 +218,9 @@ def validate_coverage(inventory,ledger,*,phase,asset_type,profiles):
             wanted=expected_result(row,phase,asset_type,profiles)
             need(check.get('result')==wanted,'LEDGER_RULE_RESULT:'+rule)
             need(check.get('source_sha256')==row['source_sha256'] and check.get('requirement_sha256')==row['requirement_sha256'],'LEDGER_SOURCE_BINDING:'+rule)
+            if 'catalog_phase' in row:
+                for field in ('catalog_number','catalog_section','catalog_phase','asset_type'):
+                    need(check.get(field)==row[field],'LEDGER_CATALOG_BINDING:'+rule+':'+field)
             evidence=check.get('evidence');need(isinstance(evidence,dict) and isinstance(evidence.get('ref'),str) and evidence['ref']
                  and isinstance(evidence.get('sha256'),str) and HEX.fullmatch(evidence['sha256']),'LEDGER_EVIDENCE_REQUIRED:'+rule)
             mg0=check.get('mg0');need(isinstance(mg0,dict) and mg0.get('result')=='PASS'
