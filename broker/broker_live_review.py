@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from urllib import request, error
 
 import broker_auto_review_v4 as auto
 import git_release_broker_v2 as base
@@ -17,6 +18,11 @@ RULESET = 24958898
 WORKFLOW = '.github/workflows/gg-phase-guard.yml'
 MASTER = 'governance/sources/GOLDEN_GARDEN_MASTER_RULES_AND_STATE.md'
 HEX40 = re.compile(r'[0-9a-f]{40}\Z')
+MAX_RESPONSE = 4 * 1024 * 1024
+
+class NoRedirect(request.HTTPRedirectHandler):
+    def redirect_request(self, *args, **kwargs):
+        raise auto.Blocked('READ_ONLY_API_REDIRECT_FORBIDDEN')
 
 class ReadOnlyAPI(base.GitHubAPI):
     def call(self, method, route, payload=None):
@@ -24,7 +30,17 @@ class ReadOnlyAPI(base.GitHubAPI):
             raise auto.Blocked('READ_ONLY_API_WRITE_FORBIDDEN')
         if not isinstance(route, str) or not route.startswith('/') or '://' in route or '..' in route or any(c in route for c in '\r\n'):
             raise auto.Blocked('READ_ONLY_API_ROUTE_INVALID')
-        return super().call(method, route)
+        req=request.Request('https://api.github.com/repos/'+self.repository+route,
+            headers={'Accept':'application/vnd.github+json','Authorization':'Bearer '+self.token,
+                     'X-GitHub-Api-Version':'2022-11-28','User-Agent':'pinehaven-readonly-review'},method='GET')
+        try:
+            with request.build_opener(NoRedirect()).open(req,timeout=20) as response:
+                raw=response.read(MAX_RESPONSE+1)
+        except (error.HTTPError,error.URLError,OSError) as exc:
+            raise auto.Blocked('READ_ONLY_API_UNAVAILABLE:'+type(exc).__name__) from exc
+        if len(raw)>MAX_RESPONSE:
+            raise auto.Blocked('READ_ONLY_API_RESPONSE_TOO_LARGE')
+        return alignment.strict_json(raw,max_size=MAX_RESPONSE)
     def merge(self, *args):
         raise auto.Blocked('READ_ONLY_API_MERGE_FORBIDDEN')
 
