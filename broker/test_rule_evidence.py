@@ -101,4 +101,6 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(e.Blocked,'SCOPE_NOT_ENROLLED'):e.binding(b)
     def test_no_hash_only_input(self):
         with self.assertRaises(e.Blocked):e.validate_packet({'sha256':'a'*64},binding())
+    def test_local_json_does_not_claim_native_origin(self):
+        r=e.validate_packet(packet(),binding());self.assertFalse(r['native_content_retrieved']);self.assertEqual(r['status'],'BINDING_STRUCTURE_VERIFIED_ONLY')
 if __name__=='__main__':unittest.main()
