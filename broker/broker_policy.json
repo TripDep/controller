@@ -2,7 +2,7 @@
   "schema": "gg-git-broker-v1",
   "enabled": false,
   "base_branch": "main",
-  "master_sha256": "d958c2a62a7e09e3d8086148edf1dadf8bad68cf5678ad6a6727424cc8be5ec0",
+  "master_sha256": "710a477b22591e0fe9d1939d9e7a8ef118fbdcdbcc1e8e5f1ff447286e1505cc",
   "public_controller_sha": "b9c8a7160b9c72c0d7731334a76601dddce8b9e6",
   "reviewer_public_key_sha256": null,
   "required_checks": [
