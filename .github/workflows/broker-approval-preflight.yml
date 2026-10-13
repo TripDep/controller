@@ -1,0 +1,20 @@
+name: Broker approval environment preflight (NO merge / NO credentials)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  approval-environment-preflight:
+    name: broker-approval-preflight
+    environment:
+      name: broker-approval
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Confirm broker remains disabled and secrets are not used
+        run: python3 -m unittest discover -s broker -p 'test_policy_preflight.py' -v
+      - name: Declare limited result (not a broker merge)
+        run: echo 'BROKER_NOT_ARMED - environment preflight completed; no private repo access, no signature, no merge'
