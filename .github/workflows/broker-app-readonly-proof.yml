@@ -1,0 +1,35 @@
+name: Broker GitHub App read-only installation proof (NO MERGE)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  app-readonly-installation-proof:
+    name: broker-app-readonly
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: broker-approval
+    steps:
+      - name: Enforce trusted default branch
+        shell: bash
+        run: test "$GITHUB_REPOSITORY" = "TripDep/controller" && test "$GITHUB_REF" = "refs/heads/main"
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Verify policy still forbids operational merges
+        run: python3 -m unittest discover -s broker -p 'test_policy_preflight.py' -v
+      - name: Mint ephemeral READ-ONLY installation token
+        id: token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: '5293734'
+          private-key: ${{ secrets.BROKER_APP_PRIVATE_KEY }}
+          owner: TripDep
+          permission-contents: read
+          permission-pull-requests: read
+          permission-checks: read
+      - name: Confirm exactly one expected private installation (no private names in log)
+        env:
+          BROKER_APP_TOKEN: ${{ steps.token.outputs.token }}
+        run: python3 broker/verify_app_installation.py
