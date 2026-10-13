@@ -14,7 +14,7 @@ class Blocked(Exception):
 # regenerate only by explicitly reviewed protected release procedure.
 TRUSTED_GOVERNANCE_BLOBS = {
     '.github/workflows/gg-phase-guard.yml': 'a438061bd8b00aa6cfa60a57c290d666d2e6bb8e',
-    'governance/gg_phase_guard.py': 'dddb8230d4cedbd0f76bebbf5c74a511a0fd139b',
+    'governance/gg_phase_guard.py': '2d45ca88badbde6e6a876257a1b8492743a06253',
     'governance/gg_controlled_executor.py': '204f324b07245b264eab9c0ab8aec6db3d21e24b',
     'governance/gg_broker_service.py': '3cc211c33332c5886b05cbb4ef136e79f0b60501',
     'governance/test_gg_phase_guard.py': '11ecd21aff1e69583b954850a1e021ce54b17658',
