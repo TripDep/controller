@@ -3,6 +3,7 @@ import copy
 import hashlib
 import unittest
 from unittest.mock import patch
+from unittest.mock import MagicMock
 import broker_live_review as live
 
 def file_record(raw=b'hello',path='source'):
@@ -15,6 +16,25 @@ def event():
         'head_repository':{'full_name':'Org/Repo'},'event':'pull_request','pull_requests':[{'number':19}]}}
 
 class LiveReviewTests(unittest.TestCase):
+    def test_large_json_is_not_truncated(self):
+        import json
+        payload={'content':'x'*800000}
+        response=MagicMock();response.read.return_value=json.dumps(payload).encode()
+        response.__enter__.return_value=response
+        with patch.object(live.request,'build_opener') as opener:
+            opener.return_value.open.return_value=response
+            self.assertEqual(live.ReadOnlyAPI('x'*40,'Org/Repo').call('GET','/contents/master'),payload)
+            response.read.assert_called_once_with(live.MAX_RESPONSE+1)
+    def test_response_overflow_is_denied(self):
+        response=MagicMock();response.read.return_value=b'x'*(live.MAX_RESPONSE+1)
+        response.__enter__.return_value=response
+        with patch.object(live.request,'build_opener') as opener:
+            opener.return_value.open.return_value=response
+            with self.assertRaisesRegex(live.auto.Blocked,'RESPONSE_TOO_LARGE'):
+                live.ReadOnlyAPI('x'*40,'Org/Repo').call('GET','/contents/master')
+    def test_redirects_are_denied(self):
+        with self.assertRaisesRegex(live.auto.Blocked,'REDIRECT_FORBIDDEN'):
+            live.NoRedirect().redirect_request(None,None,None,None,None,None)
     def test_writes_never_reach_network(self):
         api=live.ReadOnlyAPI('x'*40,'Org/Repo')
         with patch.object(live.base.GitHubAPI,'call') as network:
