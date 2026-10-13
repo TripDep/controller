@@ -16,6 +16,8 @@ jobs:
           persist-credentials: false
       - name: Public controller synthetic tests
         run: python3 -m unittest discover -s supervisor -p 'test_*.py' -v
+      - name: Verify Git broker remains unarmed
+        run: python3 -m unittest discover -s broker -p 'test_policy_preflight.py' -v
       - name: Syntax and policy checks
         run: |
           python3 -m py_compile supervisor/controller.py
