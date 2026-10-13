@@ -91,9 +91,21 @@ class SignalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             p=Path(t)/'x.json';p.write_text('{}');q=Path(t)/'link';q.symlink_to(p)
             with self.assertRaises(g.Blocked):g.read_snapshot(q)
-    def test_observed_five_real_signal_prs_are_not_merge_candidates(self):
-        observed=Path(__file__).with_name('proofs')/'private_open_pr_snapshot_20261013.json'
-        out=self.t(g.read_snapshot(observed))
+    def test_five_stale_signal_prs_are_not_merge_candidates(self):
+        # Public CI uses synthetic records; private observed evidence stays private.
+        snapshot=basic()
+        snapshot['pull_requests']=[]
+        for number in range(1,6):
+            record=copy.deepcopy(basic()['pull_requests'][0])
+            record['number']=number
+            record['title']='GG_RUN_DONE_SYNTHETIC_'+str(number)
+            record['url']='https://github.com/'+REPO+'/pull/'+str(number)
+            snapshot['pull_requests'].append(record)
+        snapshot['total_open_count']=5
+        with tempfile.TemporaryDirectory() as directory:
+            fixture=Path(directory)/'five_signals.json'
+            fixture.write_text(json.dumps(snapshot))
+            out=self.t(g.read_snapshot(fixture))
         self.assertEqual(out['signal_count'],5)
         self.assertEqual(out['other_count'],0)
         self.assertEqual(out['stale_signals'],5)
