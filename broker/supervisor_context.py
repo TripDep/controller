@@ -4,7 +4,7 @@ import hashlib
 import json
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 HEX=re.compile(r'[a-f0-9]{64}\Z')
@@ -27,6 +27,7 @@ def validate(v):
     need(v['schema']=='gg-supervisor-context-v1' and v['role'] in PATHS,'CONTEXT_SCHEMA_ROLE')
     need(v['advancement_authorized'] is False and v['provenance']=='OPERATOR_LIBRARY_READBACK_NOT_GIT_VERIFIED_CONTENT','CONTEXT_CANNOT_AUTHORIZE')
     stamp(v['observed_at']);ref(v['master']);ref(v['state'])
+    need(stamp(v['observed_at'])<=datetime.now(timezone.utc)+timedelta(minutes=5),'CONTEXT_OBSERVATION_FUTURE')
     exact(v['provider'],('automation_id_sha256','last_run_time','enabled'),'CONTEXT_PROVIDER_FIELDS')
     p=v['provider'];need(HEX.fullmatch(p['automation_id_sha256']) and type(p['enabled']) is bool,'CONTEXT_PROVIDER');stamp(p['last_run_time'])
     need(stamp(p['last_run_time'])<=stamp(v['observed_at']),'CONTEXT_PROVIDER_FUTURE')
