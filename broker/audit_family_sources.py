@@ -18,7 +18,8 @@ def audit(api,ref,master_sha,prove_omissions=False):
          for key,path in coverage.SOURCES.items()}
     inv=coverage.build_inventory(raw,master_sha)
     summary={k:inv[k] for k in ('schema','legacy_family_count','legacy_rule_count','family_count',
-          'rule_count','explicit_r110_additions','canonical_master_sha256','source_digests',
+          'rule_count','explicit_r110_additions','aaa_section_count','coverage_scope',
+          'asset_specific_context_extensions_verified','canonical_master_sha256','source_digests',
           'source_read_mode','library_live_read','asset_execution_passes','advancement_authorized')}
     summary['families']={name:len(ids) for name,ids in inv['families'].items()}
     summary['repository_ref']=ref
