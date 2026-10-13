@@ -87,7 +87,7 @@ def main(argv=None):
         if args.prove_transitions:
             from test_supervisor_context import receipt,seal
             import copy
-            old=receipt();new=copy.deepcopy(old);new['observed_at']='2026-10-13T19:00:00+00:00'
+            old=receipt();new=copy.deepcopy(old);new['observed_at']='2020-10-13T19:00:00+00:00'
             new['state']['version']+=1;new['state']['sha256']='0'*64;new['dependencies']['e'*64]='0'*64;seal(new)
             unrelated=assess(old,new,['c'*64]);need(unrelated['action']=='CONTEXT_RECORDED_NO_RECHECK','UNRELATED_CHANGE_RESTARTED')
             new['dependencies']['c'*64]='0'*64;seal(new);relevant=assess(old,new,['c'*64]);need(relevant['action']=='RECHECK_AFFECTED_CONTROLS','RELEVANT_CHANGE_IGNORED')
