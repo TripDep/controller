@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import sys
+from datetime import datetime, timezone, timedelta
 from urllib import request, error
 
 import broker_auto_review_v4 as auto
@@ -67,6 +68,28 @@ def workflow_pin(raw):
         raise auto.Blocked('PRIVATE_ACTION_PIN_MISSING_OR_AMBIGUOUS')
     return matches[0].decode()
 
+def ruleset_timestamp(value):
+    if not isinstance(value,str):
+        raise auto.Blocked('RULESET_TIMESTAMP_INVALID')
+    try:
+        parsed=datetime.fromisoformat(value.replace('Z','+00:00'))
+    except ValueError as exc:
+        raise auto.Blocked('RULESET_TIMESTAMP_INVALID') from exc
+    if parsed.tzinfo is None:
+        raise auto.Blocked('RULESET_TIMESTAMP_TIMEZONE_MISSING')
+    return parsed.astimezone(timezone.utc)
+
+def same_ruleset_timestamp(current, attested, captured):
+    actual=ruleset_timestamp(current);expected=ruleset_timestamp(attested)
+    if actual==expected:
+        return True
+    # REST may omit subsecond precision exposed by the owner connector.
+    # Accept truncation only after a capture safely beyond that revision second;
+    # future changes cannot be hidden inside the attested second.
+    return (actual.microsecond==0 and expected.microsecond!=0
+            and actual==expected.replace(microsecond=0)
+            and captured>=expected+timedelta(seconds=5))
+
 def verified_ruleset_view(current, attested):
     # The reader API redacts bypass_actors. The immutable source package holds
     # the owner-read full record; every visible field and server update revision
@@ -77,10 +100,17 @@ def verified_ruleset_view(current, attested):
         raise auto.Blocked('RULESET_ATTESTATION_SCOPE_OR_BYPASS_INVALID')
     if not isinstance(attested.get('updated_at'),str) or not attested['updated_at']:
         raise auto.Blocked('RULESET_ATTESTATION_REVISION_MISSING')
+    captured=ruleset_timestamp(attested.get('_attestation_captured_at'))
+    if captured<ruleset_timestamp(attested['updated_at'])+timedelta(seconds=5):
+        raise auto.Blocked('RULESET_ATTESTATION_CAPTURE_TOO_EARLY')
     fields=('id','name','target','source_type','source','enforcement','conditions','rules',
             'node_id','created_at','updated_at')
     for field in fields:
-        if field not in current or field not in attested or current[field]!=attested[field]:
+        if field not in current or field not in attested:
+            raise auto.Blocked('RULESET_ATTESTATION_DRIFT:'+field)
+        matches=(same_ruleset_timestamp(current[field],attested[field],captured)
+                 if field in ('created_at','updated_at') else current[field]==attested[field])
+        if not matches:
             raise auto.Blocked('RULESET_ATTESTATION_DRIFT:'+field)
     if 'bypass_actors' in current and current['bypass_actors']!=attested['bypass_actors']:
         raise auto.Blocked('RULESET_LIVE_BYPASS_CHANGED')
