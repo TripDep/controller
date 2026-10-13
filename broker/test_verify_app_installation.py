@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-TARGET_NAME = "TripDep/SERVE-PER-FARTI-LAVORARE-"
+TARGET_NAME = "ExampleOrg/synthetic-private-repo"
 ROOT = Path(__file__).parent
 spec = importlib.util.spec_from_file_location("app_scope", ROOT / "verify_app_installation.py")
 scope = importlib.util.module_from_spec(spec)
