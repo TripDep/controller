@@ -1,0 +1,44 @@
+name: Broker protected runtime capability proof (NO WRITE OR MERGE)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/broker-runtime-capability-proof.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: broker-runtime-capability-proof
+  cancel-in-progress: false
+jobs:
+  runtime-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: broker-approval
+    steps:
+      - name: Require protected main and disabled production broker
+        shell: bash
+        run: test "$GITHUB_REPOSITORY" = "TripDep/controller" && test "$GITHUB_REF" = "refs/heads/main"
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Verify installed broker tests before requesting App capability
+        working-directory: broker
+        run: python3 -m unittest discover -p 'test_*.py' -v
+      - name: Mint temporary App capability token behind existing environment approval
+        id: token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: '5293734'
+          private-key: ${{ secrets.BROKER_APP_PRIVATE_KEY }}
+          owner: TripDep
+          permission-actions: read
+          permission-contents: write
+          permission-pull-requests: read
+          permission-checks: read
+      - name: Validate exact private installation and current workflow using GET only
+        env:
+          BROKER_APP_TOKEN: ${{ steps.token.outputs.token }}
+        run: python3 broker/verify_private_actions_readonly.py
+      - name: State the exact scope of this proof
+        run: echo "Runtime capability proof only. No repository write, merge, signer enrollment or broker activation."
