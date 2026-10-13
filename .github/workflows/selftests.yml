@@ -20,6 +20,9 @@ jobs:
         run: python3 -m unittest discover -s broker -p 'test_policy_preflight.py' -v
       - name: Verify read-only App installation scope and fail-closed behavior
         run: python3 -m unittest discover -s broker -p 'test_verify_app_installation.py' -v
+      - name: Verify staged broker v5 modules and negative gates without credentials
+        working-directory: broker
+        run: python3 -m unittest discover -p 'test_*.py' -v
       - name: Syntax and policy checks
         run: |
           python3 -m py_compile supervisor/controller.py broker/verify_app_installation.py
