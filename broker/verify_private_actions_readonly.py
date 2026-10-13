@@ -16,8 +16,8 @@ from urllib import request, error
 
 API = 'https://api.github.com'
 WORKFLOW = '.github/workflows/gg-phase-guard.yml'
-# Observed GitHub blob on the owner's existing private main at first proof.
-EXPECTED_BLOB = '0ccdf1e5442560c850cca2c6eac53a26a6493e3d'
+# Verified GitHub blob on private main after the coordinated R149 release.
+EXPECTED_BLOB = 'a438061bd8b00aa6cfa60a57c290d666d2e6bb8e'
 # Identity sha256 from owner's existing disabled protected broker policy.
 TARGET_SHA256 = 'ba6c371db01f88a9a16e02a03d673f320bd3c04adc3ebdff97b2ef102a188e70'
 REPO = re.compile(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z')
