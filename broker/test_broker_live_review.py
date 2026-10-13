@@ -19,8 +19,28 @@ class LiveReviewTests(unittest.TestCase):
     def ruleset(self):
         return {'id':live.RULESET,'name':'controller','target':'branch','source_type':'Repository',
             'source':live.PUBLIC,'enforcement':'active','conditions':{'ref_name':{'include':['~DEFAULT_BRANCH'],'exclude':[]}},
-            'rules':[{'type':'pull_request'}],'node_id':'node','created_at':'2026-01-01','updated_at':'2026-10-13',
+            'rules':[{'type':'pull_request'}],'node_id':'node','created_at':'2026-01-01T00:00:00.329+02:00','updated_at':'2026-10-13T01:14:29.621+02:00',
+            '_attestation_captured_at':'2026-10-13T14:00:00Z',
             'bypass_actors':[]}
+    def test_equivalent_utc_and_second_precision_dates(self):
+        attested=self.ruleset();current=copy.deepcopy(attested)
+        current['created_at']='2025-12-31T22:00:00Z'
+        current['updated_at']='2026-10-12T23:14:29Z'
+        self.assertEqual(live.verified_ruleset_view(current,attested)['bypass_actors'],[])
+        current['updated_at']='2026-10-12T23:14:29.621Z'
+        self.assertEqual(live.verified_ruleset_view(current,attested)['bypass_actors'],[])
+    def test_timestamp_revision_change_is_denied(self):
+        for value in ('2026-10-12T23:14:30Z','2026-10-12T23:14:29.622Z','2026-10-12T23:14:28Z'):
+            attested=self.ruleset();current=copy.deepcopy(attested);current['updated_at']=value
+            with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(current,attested)
+    def test_capture_near_revision_or_missing_is_denied(self):
+        for value in (None,'2026-10-12T23:14:32Z','2026-10-12T23:14:29.621Z'):
+            attested=self.ruleset();attested['_attestation_captured_at']=value
+            with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(self.ruleset(),attested)
+    def test_naive_or_malformed_dates_are_denied(self):
+        for value in ('2026-10-13','bad',None):
+            current=self.ruleset();current['created_at']=value
+            with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(current,self.ruleset())
     def test_redacted_bypass_needs_exact_attested_revision(self):
         attested=self.ruleset();current=copy.deepcopy(attested);current.pop('bypass_actors')
         self.assertEqual(live.verified_ruleset_view(current,attested)['bypass_actors'],[])
