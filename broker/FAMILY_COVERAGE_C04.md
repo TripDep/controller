@@ -47,6 +47,11 @@ le definizioni operative globali recuperate nel corpo principale del MASTER.
   devono completare verifica delle prove, giudizio operativo e ciclo reale.
 - Profili di asset e gate storici non vengono eliminati dall'inventario quando
   non pertinenti: l'applicabilità deve restare esplicita e giustificata.
+- Questa è la base delle famiglie globali e R110, non una certificazione delle
+  estensioni e dei lock specifici di un asset. MASTER0.3 impone quelle estensioni;
+  C05/C06 devono recuperare il contesto dell'attività e includerle prima del
+  giudizio operativo. Il risultato espone tale limite e resta senza autorità
+  di avanzamento. Le20 sezioni AAA sono conteggiate separatamente dai20 gruppi.
 
 Nessun asset, modello, texture, render o pacchetto di produzione va su GitHub.
 Le fonti private sono lette come dati dal runner pubblico immutabile, non
