@@ -16,6 +16,27 @@ def event():
         'head_repository':{'full_name':'Org/Repo'},'event':'pull_request','pull_requests':[{'number':19}]}}
 
 class LiveReviewTests(unittest.TestCase):
+    def ruleset(self):
+        return {'id':live.RULESET,'name':'controller','target':'branch','source_type':'Repository',
+            'source':live.PUBLIC,'enforcement':'active','conditions':{'ref_name':{'include':['~DEFAULT_BRANCH'],'exclude':[]}},
+            'rules':[{'type':'pull_request'}],'node_id':'node','created_at':'2026-01-01','updated_at':'2026-10-13',
+            'bypass_actors':[]}
+    def test_redacted_bypass_needs_exact_attested_revision(self):
+        attested=self.ruleset();current=copy.deepcopy(attested);current.pop('bypass_actors')
+        self.assertEqual(live.verified_ruleset_view(current,attested)['bypass_actors'],[])
+    def test_ruleset_revision_and_configuration_drift_are_denied(self):
+        for field in ('id','name','source','enforcement','conditions','rules','updated_at','node_id'):
+            attested=self.ruleset();current=copy.deepcopy(attested);current.pop('bypass_actors');current[field]='changed'
+            with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(current,attested)
+    def test_ruleset_missing_revision_is_denied(self):
+        attested=self.ruleset();current=copy.deepcopy(attested);current.pop('updated_at')
+        with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(current,attested)
+    def test_owner_attestation_with_bypass_is_denied(self):
+        attested=self.ruleset();attested['bypass_actors']=[{'actor_id':1}]
+        with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(self.ruleset(),attested)
+    def test_live_bypass_change_is_denied(self):
+        current=self.ruleset();current['bypass_actors']=[{'actor_id':1}]
+        with self.assertRaises(live.auto.Blocked):live.verified_ruleset_view(current,self.ruleset())
     def test_large_json_is_not_truncated(self):
         import json
         payload={'content':'x'*800000}

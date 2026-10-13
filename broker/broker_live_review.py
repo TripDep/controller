@@ -67,6 +67,27 @@ def workflow_pin(raw):
         raise auto.Blocked('PRIVATE_ACTION_PIN_MISSING_OR_AMBIGUOUS')
     return matches[0].decode()
 
+def verified_ruleset_view(current, attested):
+    # The reader API redacts bypass_actors. The immutable source package holds
+    # the owner-read full record; every visible field and server update revision
+    # must still match before its bypass information can be used.
+    if not isinstance(current,dict) or not isinstance(attested,dict):
+        raise auto.Blocked('RULESET_ATTESTATION_INVALID')
+    if attested.get('id')!=RULESET or attested.get('source')!=PUBLIC or attested.get('bypass_actors')!=[]:
+        raise auto.Blocked('RULESET_ATTESTATION_SCOPE_OR_BYPASS_INVALID')
+    if not isinstance(attested.get('updated_at'),str) or not attested['updated_at']:
+        raise auto.Blocked('RULESET_ATTESTATION_REVISION_MISSING')
+    fields=('id','name','target','source_type','source','enforcement','conditions','rules',
+            'node_id','created_at','updated_at')
+    for field in fields:
+        if field not in current or field not in attested or current[field]!=attested[field]:
+            raise auto.Blocked('RULESET_ATTESTATION_DRIFT:'+field)
+    if 'bypass_actors' in current and current['bypass_actors']!=attested['bypass_actors']:
+        raise auto.Blocked('RULESET_LIVE_BYPASS_CHANGED')
+    out=dict(current)
+    out['bypass_actors']=attested['bypass_actors']
+    return out
+
 def event_pr_numbers(event, repo):
     run=event.get('workflow_run') if isinstance(event,dict) else None
     if not isinstance(run,dict) or run.get('name')!='Golden Garden mandatory phase guard' or run.get('path')!=WORKFLOW:
@@ -96,13 +117,16 @@ def review(private_api, public_api, number, public_sha):
     if hashlib.sha256(snapshot).hexdigest()!=policy['master_sha256'] or policy['master_sha256']!=supervisor['canonical_master_sha256']:
         raise auto.Blocked('LIBRARY_PINNED_SNAPSHOT_DRIFT')
     source=decode_file(private_api.call('GET','/contents/'+WORKFLOW+'?ref='+base_sha),WORKFLOW)
+    attestation=alignment.strict_json(Path(__file__).with_name('public_ruleset_attestation.json').read_bytes())
+    rules=verified_ruleset_view(public_api.call('GET','/rulesets/'+str(RULESET)),attestation)
     result=auto.assess_routine_eligibility(canonical_master=snapshot,private_master=snapshot,
         supervisor_policy=supervisor,broker_policy=policy,
         public_branch=public_api.call('GET','/branches/main'),
-        public_ruleset=public_api.call('GET','/rulesets/'+str(RULESET)),
+        public_ruleset=rules,
         private_api=private_api,pr_number=number,pinned_public_main_sha=public_sha,
         private_workflow_action_sha=workflow_pin(source))
     result.update({'authority_mode':'PINNED_LIBRARY_SNAPSHOT','library_live_read':False,
+                   'bypass_verification':'ADMIN_READ_ATTESTATION_BOUND_TO_LIVE_RULESET_REVISION',
                    'merge_authorized':False,'private_write_isolation_verified':False})
     return result
 
