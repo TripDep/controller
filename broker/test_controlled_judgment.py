@@ -177,6 +177,9 @@ class Tests(unittest.TestCase):
                 'step':a['step'],'path':str(output.resolve()),'role':'SYNTHETIC_UNIT',
                 'size_bytes':output.stat().st_size,
                 'sha256':hashlib.sha256(output.read_bytes()).hexdigest()})
+            # Simulate a forged state entry persisted without an audit event.
+            # ControlledJudgment reloads state from disk under its lock.
+            self.c.save()
             with self.assertRaisesRegex(j.Blocked,'CONTROLLED_MUTATING_OUTPUT_AUDIT_ABSENT'):
                 self.s.close(a['step'],a['token'],'PASS','forged','unit',[])
 
