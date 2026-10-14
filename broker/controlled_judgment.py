@@ -202,6 +202,22 @@ class ControlledJudgment:
             row = self.plan()
             plan = row['plan']
             work, previous, prior_decision = self.prepare(row)
+            # Independently replay canonical MG0 process-falsification signals
+            # from the complete current Controller audit for EVERY due rule and
+            # the exact attempt. An uncorrected observed process failure STOPs
+            # before the native operation can be opened. UNKNOWN is not a PASS:
+            # the Git per-rule semantic packet must still prove its own MG0.
+            from c07_operation_scope import inspect as inspect_scope
+            from c07_mg0_individual import inspect as inspect_mg0
+            due = inspect_scope(self.inventory, plan)['due']
+            master_raw = self.c.master.read_bytes()
+            audit_raw = self.c.audit_path(self.asset).read_bytes()
+            for rule_id in due:
+                review = inspect_mg0(master_raw, audit_raw, self.asset,
+                                     work['master_sha256'], rule_id,
+                                     work['attempt_id'])
+                j.need(review['individual_rule_mg0'] != 'FAIL',
+                       'CONTROLLED_CURRENT_RULE_MG0_PROCESS_FAILURE:' + rule_id)
             current = self.contexts()
             decision = j.native_decision(self.api, origin, plan['issuer'])
             backend = j.NativeRuleBackend(self.api, plan['enrolled'])
