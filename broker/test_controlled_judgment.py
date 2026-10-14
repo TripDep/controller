@@ -219,7 +219,11 @@ class Tests(unittest.TestCase):
         offers, _ = self.issue()
         requested = self.s.expected_work()
         bind = {'rule_id':'EXEC-003','attempt_id':requested['attempt_id']}
-        self.c.append_event('TEST', dict(event='STEP_CLOSE', result='PASS', **bind))
+        status_close = next(r for r in reversed(self.s.records())
+                            if r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS')
+        self.c.append_event('TEST', dict(
+            event='MG0_BASELINE_PASS',
+            previous_pass_record_hash=status_close['record_hash'], **bind))
         self.c.append_event('TEST', dict(
             event='USER_REVIEW', result='FAIL', detected_by='OWNER',
             owner_evidence_sha256='d' * 64, assistant_preflight_passed=True,
