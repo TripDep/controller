@@ -78,6 +78,11 @@ class NativeRuleBackend:
             packets=[p for p in self.cache[key] if p.get('binding',{}).get('rule_id')==rule]
             need(len(packets)==1,'JUDGMENT_NATIVE_RULE_UNIQUE');packet=packets[0]
             need(digest(packet)==offer['expected_packet_sha256'],'JUDGMENT_NATIVE_PACKET_DIGEST')
+            if spec['validator_id'] == 'GG_R173_DOCUMENTARY_P0_A008_B018_V1':
+                # Independent readback of content/criteria from the exact R173
+                # pinned sources. A native PASS tag or 64-char digest is not proof.
+                from r173_rule_semantics import native_rule_readback
+                native_rule_readback(self.api,packet,expected,spec)
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):
