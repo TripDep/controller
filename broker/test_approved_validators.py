@@ -20,9 +20,9 @@ class Tests(unittest.TestCase):
         self.assertFalse(result['complete_763_rule_coverage'])
     def test_unreviewed_id_stays_unavailable(self):
         rid,spec,inventory=fixture()
-        inventory['rules']['AAA-200-A-009']={'requirement_sha256':spec['requirement_sha256']}
+        inventory['rules']['AAA-200-A-010']={'requirement_sha256':spec['requirement_sha256']}
         with self.assertRaisesRegex(v.InvalidEnrollment,'VALIDATOR_NOT_IMPLEMENTED_FOR_RULE'):
-            v.validate({'AAA-200-A-009':spec},inventory)
+            v.validate({'AAA-200-A-010':spec},inventory)
     def test_unreviewed_implementation_is_not_enrolled(self):
         rid,spec,inventory=fixture();spec['validator_id']='unreviewed'
         with self.assertRaisesRegex(v.InvalidEnrollment,'VALIDATOR_ID_NOT_REVIEWED'):
