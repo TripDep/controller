@@ -18,7 +18,7 @@ TRIGGERS = (
     'a formally compliant process still produces a mediocre or non-deliverable result.',
 )
 EVENTS = ('STEP_CLOSE','USER_REVIEW','VERIFIED_STATE_REVOKED',
-          'QUALITY_FINDING','DELIVERY_GATE_CHECK',
+          'QUALITY_FINDING','DELIVERY_GATE_CHECK','MG0_BASELINE_PASS',
           'MG0_PROCESS_ROOT_CAUSE','MG0_PROCESS_CORRECTION',
           'MG0_AFFECTED_STATES_INVALIDATED','MG0_RULE_REAPPLIED')
 
@@ -47,6 +47,17 @@ def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
             'C07_MG0_UNKNOWN_SCOPED_EVENT')
     completed = [r for r in scope if r.get('event') == 'STEP_CLOSE'
                  and r.get('result') == 'PASS']
+    # A proper Controller already has one STEP_CLOSE per step. A later owner
+    # review therefore references that real step through a scoped annotation,
+    # rather than inventing a second close for the same step.
+    prior_passes = {r['record_hash']:r for r in rows if
+                    r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS'}
+    for evidence in scope:
+        if evidence.get('event') != 'MG0_BASELINE_PASS':
+            continue
+        referenced = prior_passes.get(evidence.get('previous_pass_record_hash'))
+        if referenced and rows.index(referenced) < rows.index(evidence):
+            completed.append(evidence)
     owner_failures = [r for r in scope if r.get('event')=='USER_REVIEW'
                       and r.get('result')=='FAIL' and
                       r.get('detected_by')=='OWNER' and
