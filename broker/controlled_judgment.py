@@ -180,6 +180,15 @@ class ControlledJudgment:
                 self.c.master_identity()['sha256'])
             j.need(intake['controller_preflight_ready'],
                    'CONTROLLED_LIVE_INTAKE_BLOCKED:' + ','.join(intake['blockers']))
+            # Canonical MG0 process falsification is checked from the same
+            # current Library Master and complete asset audit under the lock.
+            # A historic correction event is NOT an individual rule/MG0 PASS.
+            import mg0_audit_semantics
+            mg0 = mg0_audit_semantics.inspect(
+                self.c.master.read_bytes(), self.c.audit_path(self.asset).read_bytes(),
+                self.asset, self.c.master_identity()['sha256'])
+            j.need(all(event['correction_records'] for event in mg0['trigger_events']),
+                   'CONTROLLED_MG0_UNCORRECTED_PROCESS_FAILURE')
             row = self.plan()
             plan = row['plan']
             work, previous, prior_decision = self.prepare(row)
