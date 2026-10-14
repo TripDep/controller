@@ -57,7 +57,10 @@ class Tests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.master = self.root / 'MASTER.md'
-        self.master.write_text('\n'.join(gc.REQUIRED_MASTER_MARKERS))
+        self.master.write_text('\n'.join(gc.REQUIRED_MASTER_MARKERS) + '\n' +
+            '## MG0 — PROCESS FALSIFICATION\\n' +
+            'Canonical trigger pattern recovered from the old chat:\\n' +
+            'The response is not limited to fixing the asset.\\n')
         self.inv = inventory()
         self.inv['canonical_master_sha256'] = hashlib.sha256(self.master.read_bytes()).hexdigest()
         self.c = gc.Controller(self.root, self.master)
