@@ -110,6 +110,48 @@ def packets_for_current_work(report,work,inventory):
         packets[rid]=packet
     return packets
 
+def native_rule_readback(api, packet, expected, enrolled_spec):
+    """Independent consuming-side rule proof validation, not producer PASS trust.
+
+    Fetch the *exact* source-approved evidence bytes on immutable private Git
+    and re-run all of the per-rule criteria before honoring any native packet.
+    The documentary check may PASS; individual MG0 MUST remain UNKNOWN.
+    """
+    from broker_live_review import decode_file
+    source_ref=enrolled_spec.get('source_ref')
+    require(isinstance(source_ref,str) and re.fullmatch(r'[0-9a-f]{40}',source_ref),
+            'R173_RULE_NATIVE_IMMUTABLE_SOURCE_REF')
+    rid=expected.get('rule_id')
+    require(rid in RULES and expected.get('phase')=='P0' and
+            expected.get('family')=='AAA-200' and
+            expected.get('master_sha256')==MASTER_SHA and
+            expected.get('source_sha256')==CATALOG_SHA and
+            expected.get('requirement_sha256')==sha(RULES[rid][1].encode()),
+            'R173_RULE_NATIVE_CANONICAL_BINDING')
+    require(enrolled_spec.get('validator_id')==VALIDATOR,
+            'R173_RULE_NATIVE_VALIDATOR_ID')
+    raw={}
+    for key,path in [('qa','governance/supervisor/evidence/r173/GG_R173_QA_METADATA_ONLY_PROOF.json'),
+                     ('catalog','governance/sources/AAA_200_CANONICAL_CATALOG.json')]:
+        raw[key]=decode_file(api.call('GET','/contents/'+path+'?ref='+source_ref),path)
+    verified=inspect(raw['qa'],raw['catalog'])
+    item=verified['results'][rid]
+    require(set(enrolled_spec.get('criteria',()))==set(item['documentary_checks']),
+            'R173_RULE_NATIVE_CRITERIA_REQUIRED')
+    require(packet.get('rule')=={
+       'result':item['documentary_result'],
+       'checks':item['documentary_checks'],
+       'proof_digest':item['proof_digest']},
+       'R173_RULE_NATIVE_CONTENT_OR_RESULT_MISMATCH')
+    require(packet.get('mg0')=={
+       'binding':expected,'triggered':None,'result':'UNKNOWN',
+       'checks':{'canonical_triggers_checked':False},
+       'proof_digest':j.digest({'id':rid,'status':'INDIVIDUAL_MG0_UNVERIFIED',
+                                 'packet':PACKET_SHA})},
+       'R173_RULE_NATIVE_FALSE_MG0')
+    return {'rule_id':rid,'documentary_result':item['documentary_result'],
+            'individual_rule_mg0':'UNKNOWN','asset_advancement_authorized':False}
+
 def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI,PRIVATE_REPO_SHA
