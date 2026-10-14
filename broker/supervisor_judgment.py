@@ -138,6 +138,18 @@ def _consume_checked(decision,fresh,work,operation_id,used):
     for k in ('work_item_sha256','attempt_id','operation_sha256','attempt_number','phase','master_sha256','work_dependencies'):need(decision[k]==work[k],'JUDGMENT_OPERATION_BINDING')
     used.add(operation_id)
     return {'status':'EXACT_OPERATION_CONSUMED','operation_id':operation_id,'decision_sha256':decision['decision_sha256']}
+def native_decision(api, origin, issuer):
+    """Read one actual native decision; a local previous-decision dict is no authority."""
+    logs=evidence.native(api,origin,issuer,'Judge all canonical families and individual MG0')
+    values=[]
+    for line in logs.splitlines():
+        m=re.fullmatch(r'\d{4}-\d\d-\d\dT\S+Z C07_NATIVE_PROCESS_JUDGMENT:(\{.*\})',line)
+        if m:values.append(evidence.strict_json(m.group(1).encode(),max_size=1000000))
+    need(len(values)==1,'JUDGMENT_NATIVE_DECISION_UNIQUE')
+    d=values[0]
+    need(d.get('decision_sha256')==digest({k:v for k,v in d.items() if k!='decision_sha256'}),'JUDGMENT_DECISION_DIGEST')
+    return d
+
 def consume_native(api,origin,issuer,inv,work,offers,backend,current_contexts,operation_id,used,*,previous_contexts=None,previous_decision=None):
     """Operational entry: native decision retrieval AND fresh rule verification.
 
@@ -145,12 +157,7 @@ def consume_native(api,origin,issuer,inv,work,offers,backend,current_contexts,op
     persisted together with the governed action. This does not isolate writers.
     """
     need(type(backend) is NativeRuleBackend and backend.api is api,'JUDGMENT_TRUSTED_BACKEND_REQUIRED')
-    logs=evidence.native(api,origin,issuer,'Judge all canonical families and individual MG0')
-    values=[]
-    for line in logs.splitlines():
-        m=re.fullmatch(r'\d{4}-\d\d-\d\dT\S+Z C07_NATIVE_PROCESS_JUDGMENT:(\{.*\})',line)
-        if m:values.append(evidence.strict_json(m.group(1).encode(),max_size=1000000))
-    need(len(values)==1,'JUDGMENT_NATIVE_DECISION_UNIQUE')
+    decision=native_decision(api,origin,issuer)
     backend.cache.clear() # Never use the old log cache to authorize a new step.
     fresh=judge(inv,work,offers,backend,current_contexts=current_contexts,previous_contexts=previous_contexts,previous_decision=previous_decision)
-    return _consume_checked(values[0],fresh,work,operation_id,used)
+    return _consume_checked(decision,fresh,work,operation_id,used)
