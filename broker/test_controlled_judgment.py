@@ -53,6 +53,12 @@ class GitFixture(API):
 
 class Tests(unittest.TestCase):
     def setUp(self):
+        # This test suite deliberately uses synthetic per-rule fixture verdicts.
+        # Production enrollment has no stub: exact reviewed validators mandatory.
+        self.validator_fixture = patch('approved_validators.validate',
+             return_value={'reviewed_enrolled_count':0,'complete_763_rule_coverage':False})
+        self.validator_fixture.start()
+        self.addCleanup(self.validator_fixture.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
