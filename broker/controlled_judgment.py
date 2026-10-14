@@ -209,7 +209,8 @@ class ControlledJudgment:
                         operation_sha256=work['operation_sha256'], step=active['step'])
             return active
 
-    def close(self, step, token, result, evidence, regression, sections_after, critical=True):
+    def close(self, step, token, result, evidence, regression, sections_after, critical=True,
+              post_origin=None, post_offers=None):
         with self.locked():
             active = self.c.asset_state(self.asset).get('active_step')
             j.need(active and active['step'] == step and active['token'] == token, 'CONTROLLED_STEP_TOKEN')
@@ -234,6 +235,56 @@ class ControlledJudgment:
                 except (ValueError, KeyError, OSError, TypeError) as exc:
                     result, critical = 'BLOCKED', True
                     evidence += ' | ' + str(exc)
+            # A pre-operation verdict never proves the action was performed
+            # correctly. PASS requires an independent, *later* authenticated Git
+            # semantic judgment on the exact reserved work and every due MG0.
+            # FAIL/BLOCKED may always close without pretending to be a PASS.
+            if result.upper() == 'PASS':
+                from datetime import datetime, timezone
+                j.need(isinstance(post_origin, dict) and isinstance(post_offers, dict),
+                       'CONTROLLED_POST_NATIVE_PROOF_REQUIRED')
+                records = self.records()
+                reservation = next(r for r in records if r['record_hash'] == rows[0]['reservation_hash'])
+                work = reservation['work']
+                plan = next(r['plan'] for r in records if r['record_hash'] == reservation['plan_record_hash'])
+                began = [r for r in records if r['event'] == 'SUPERVISOR_NATIVE_DECISION'
+                         and r['decision'].get('operation_sha256') == work['operation_sha256']]
+                j.need(len(began) == 1, 'CONTROLLED_BEGIN_NATIVE_RECORD')
+                begin_origin = began[0]['origin']
+                j.need(post_origin.get('run_id') != begin_origin.get('run_id') and
+                       post_origin.get('job_id') != begin_origin.get('job_id'),
+                       'CONTROLLED_POST_CANNOT_REUSE_BEGIN_PROOF')
+                post_run = self.api.call('GET', '/actions/runs/' + str(post_origin['run_id']))
+                stamp = post_run.get('created_at')
+                j.need(isinstance(stamp, str), 'CONTROLLED_POST_RUN_START_NOT_ATTESTED')
+                started = datetime.fromisoformat(stamp.replace('Z', '+00:00'))
+                opened = datetime.fromisoformat(active['opened_at'].replace('Z', '+00:00'))
+                j.need(started.tzinfo is not None and opened.tzinfo is not None and
+                       started >= opened, 'CONTROLLED_POST_PREDATES_OPERATION')
+                prior_decision = None
+                prior_context = None
+                if work['attempt_number'] > 1:
+                    old = [r for r in records if r['event'] == 'SUPERVISOR_NATIVE_DECISION'
+                           and r['decision'].get('attempt_id') == work['previous_attempt_id']]
+                    j.need(len(old) == 1, 'CONTROLLED_POST_CORRECTION_LINEAGE')
+                    prior_decision = j.native_decision(self.api, old[0]['origin'], old[0]['issuer'])
+                    j.need(prior_decision == old[0]['decision'], 'CONTROLLED_POST_PRIOR_GIT_CHANGED')
+                    prior_context = old[0]['contexts']
+                post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
+                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+                fresh = j.judge(self.inventory, work, post_offers, post_backend,
+                                current_contexts=self.contexts(), previous_contexts=prior_context,
+                                previous_decision=prior_decision)
+                j.need(post_decision == fresh and
+                       fresh.get('advancement_authorized') is True and
+                       fresh.get('action') == 'READY_FOR_EXACT_OPERATION' and
+                       fresh.get('operation_sha256') == work['operation_sha256'],
+                       'CONTROLLED_POST_NATIVE_RULES_MG0_NOT_VERIFIED')
+                self.append('SUPERVISOR_POST_OPERATION_VERIFIED',
+                            reservation_hash=rows[0]['reservation_hash'],
+                            operation_sha256=work['operation_sha256'],
+                            native_origin=post_origin, native_decision_sha256=post_decision['decision_sha256'],
+                            scope='POST_OPERATION_NATIVE_RULE_AND_MG0_CHECK')
             rec = self.c.close(self.asset, step, token, result, evidence, regression, sections_after, critical)
             self.append('SUPERVISOR_OPERATION_CLOSED', reservation_hash=rows[0]['reservation_hash'],
                         operation_sha256=rows[0]['operation_sha256'], step=step,
