@@ -45,8 +45,12 @@ def semantic_packet(packet,expected,spec):
     need(packet['binding']==expected,'JUDGMENT_EVIDENCE_REPLAY_OR_CONTEXT')
     rule=packet['rule'];mg=packet['mg0'];evidence.exact(rule,('result','checks','proof_digest'),'JUDGMENT_RULE_CHECKS');evidence.exact(mg,('binding','triggered','result','checks','proof_digest'),'JUDGMENT_MG0')
     need(rule['result'] in ('PASS','FAIL','UNKNOWN') and isinstance(rule['checks'],dict) and set(rule['checks'])==set(spec['criteria']),'JUDGMENT_CRITERIA_COVERAGE')
-    need(evidence.is_sha(rule['proof_digest']) and type(mg['triggered']) is bool and mg['binding']==expected and mg['result'] in ('PASS','FAIL','UNKNOWN'),'JUDGMENT_MG0_BINDING')
-    needed=('cause_identified','affected_states_invalidated','correction_applied','reapplied_on_current_attempt') if mg['triggered'] else ('canonical_triggers_checked',)
+    need(evidence.is_sha(rule['proof_digest']) and (type(mg['triggered']) is bool or mg['triggered'] is None) and mg['binding']==expected and mg['result'] in ('PASS','FAIL','UNKNOWN'),'JUDGMENT_MG0_BINDING')
+    # UNKNOWN trigger state is distinct from a proved canonical trigger. In that
+    # case no correction loop is invented and a PASS is categorically forbidden.
+    if mg['triggered'] is None:
+        need(mg['result']=='UNKNOWN','JUDGMENT_MG0_UNRESOLVED_TRIGGER_CANNOT_PASS')
+    needed=('cause_identified','affected_states_invalidated','correction_applied','reapplied_on_current_attempt') if mg['triggered'] is True else ('canonical_triggers_checked',)
     need(isinstance(mg['checks'],dict) and set(mg['checks'])==set(needed) and evidence.is_sha(mg['proof_digest']),'JUDGMENT_MG0_REQUIRED_CHECKS')
     for checks in (rule['checks'],mg['checks']):need(all(type(v) is bool for v in checks.values()),'JUDGMENT_NONBOOLEAN_CHECK')
     if rule['result']=='FAIL' or mg['result']=='FAIL':result='FAIL'
