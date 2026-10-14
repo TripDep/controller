@@ -79,6 +79,36 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(p['rule']['result']=='PASS' for p in packets.values()))
         self.assertTrue(all(p['mg0']['result']=='UNKNOWN' for p in packets.values()))
 
+    def test_native_consumer_rechecks_actual_rule_checks_and_does_not_accept_pass_tag(self):
+        report=self.report()
+        inv=inventory()
+        inv['canonical_master_sha256']=r.MASTER_SHA
+        inv['families']['AAA-200']=list(r.RULES)
+        for rid in r.RULES:
+            req=r.RULES[rid][1]
+            inv['rules'][rid]={'family':'AAA-200','source_sha256':r.CATALOG_SHA,
+                               'requirement_sha256':r.sha(req.encode()),
+                               'requirement':req}
+        w=work();w['master_sha256']=r.MASTER_SHA;w['phase']='P0';w['asset_type']='terrain'
+        packets=r.packets_for_current_work(report,w,inv)
+        rid='AAA-200-B-018';packet=packets[rid]
+        spec={'validator_id':r.VALIDATOR,'criteria':list(packet['rule']['checks']),
+              'source_ref':'f'*40,'requirement_sha256':packet['binding']['requirement_sha256']}
+        class API:
+            def call(self,method,path):return {}
+        with patch('broker_live_review.decode_file',return_value=b'fixture'),patch.object(r,'inspect',return_value=report):
+            actual=r.native_rule_readback(API(),packet,packet['binding'],spec)
+            self.assertEqual(actual['individual_rule_mg0'],'UNKNOWN')
+            false=copy.deepcopy(packet);false['rule']['result']='FAIL'
+            with self.assertRaisesRegex(ValueError,'R173_RULE_NATIVE_CONTENT_OR_RESULT_MISMATCH'):
+                r.native_rule_readback(API(),false,packet['binding'],spec)
+            false=copy.deepcopy(packet);false['mg0']['result']='PASS'
+            with self.assertRaisesRegex(ValueError,'R173_RULE_NATIVE_FALSE_MG0'):
+                r.native_rule_readback(API(),false,packet['binding'],spec)
+            wrong=dict(spec,source_ref='mutable')
+            with self.assertRaisesRegex(ValueError,'R173_RULE_NATIVE_IMMUTABLE_SOURCE_REF'):
+                r.native_rule_readback(API(),packet,packet['binding'],wrong)
+
     def test_real_work_scope_mismatch_blocked(self):
         doc=self.report();inv=inventory();w=work()
         with self.assertRaises((ValueError,j.Blocked)):r.packets_for_current_work(doc,w,inv)
