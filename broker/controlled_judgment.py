@@ -83,6 +83,10 @@ class ControlledJudgment:
             j.need(plan['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
             j.need(plan['operation']['category'] != 'MASTER_UPDATE', 'CONTROLLED_MASTER_UPDATE_SEPARATE')
             j.need(plan['dependency_files'] and isinstance(plan['enrolled'], dict), 'CONTROLLED_PLAN_DEPENDENCIES')
+            # A native origin alone does not prove a validator checks a rule.
+            # Only reviewed source-specific implementations may be enrolled.
+            from approved_validators import validate as validate_reviewed
+            validate_reviewed(plan['enrolled'],self.inventory)
             rec = self.append('SUPERVISOR_PLAN_ENROLLED', plan=copy.deepcopy(plan),
                               plan_sha256=j.digest(plan), status_step=active['step'])
             return rec['record_hash']
@@ -98,6 +102,8 @@ class ControlledJudgment:
         j.need(len(closed) == 1 and closed[0]['result'] == 'PASS', 'CONTROLLED_PLAN_NOT_APPROVED')
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
+        from approved_validators import validate as validate_reviewed
+        validate_reviewed(row['plan']['enrolled'],self.inventory)
         return row
 
     def local_file(self, relative):
