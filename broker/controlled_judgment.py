@@ -248,6 +248,37 @@ class ControlledJudgment:
             # correctly. PASS requires an independent, *later* authenticated Git
             # semantic judgment on the exact reserved work and every due MG0.
             # FAIL/BLOCKED may always close without pretending to be a PASS.
+            if result.upper() == 'PASS' and active.get('category') in ('GENERATION','MUTATION','EXPORT'):
+                # A second native PASS about pre-operation inputs cannot by itself
+                # prove that a 3D output was actually produced. Verify actual
+                # controller-registered output bytes and the append-only audit
+                # before allowing a mutating step to close successfully.
+                import real_work_intake
+                from pathlib import Path
+                events, _ = real_work_intake.audit_check(
+                    self.c.audit_path(self.asset).read_bytes(), self.asset)
+                artifacts = [a for a in self.c.asset_state(self.asset).get('artifacts', ())
+                             if a.get('step') == step and isinstance(a.get('path'), str)]
+                j.need(artifacts,'CONTROLLED_MUTATING_OUTPUT_EVIDENCE_REQUIRED')
+                allowed={'.blend','.glb','.gltf','.fbx','.obj','.ydr','.ytd','.yft','.ymap','.ytyp','.zip'}
+                observed=set()
+                for item in artifacts:
+                    path=Path(item['path'])
+                    j.need(path.suffix.lower() in allowed and path.is_file() and
+                           not path.is_symlink() and
+                           isinstance(item.get('role'),str) and bool(item['role']) and
+                           type(item.get('size_bytes')) is int and item['size_bytes'] > 20 and
+                           j.evidence.is_sha(item.get('sha256')),
+                           'CONTROLLED_MUTATING_OUTPUT_NOT_A_MODEL')
+                    j.need(path.stat().st_size == item['size_bytes'] and
+                           hashlib.sha256(path.read_bytes()).hexdigest() == item['sha256'],
+                           'CONTROLLED_MUTATING_OUTPUT_BYTES_CHANGED')
+                    match=[ev for ev in events if ev.get('event') == 'ARTIFACT_RECORDED'
+                           and ev.get('step') == step and
+                           ev.get('evidence_operation') == item]
+                    j.need(len(match)==1,'CONTROLLED_MUTATING_OUTPUT_AUDIT_ABSENT')
+                    observed.add(item['sha256'])
+                j.need(bool(observed),'CONTROLLED_MUTATING_OUTPUT_NO_HASH')
             if result.upper() == 'PASS':
                 from datetime import datetime, timezone
                 j.need(isinstance(post_origin, dict) and isinstance(post_offers, dict),
