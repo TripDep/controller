@@ -21,9 +21,11 @@ def fixture():
             'explicitly_rejected_assets':'R170_R171 environment intentionally excluded',
             'terrain':'R101 DESIGN EVIDENCE ONLY, not complete mesh terrain',
             'R101_world_position':'local datum NOT GTA absolute origin',
-            'export_GLB_render':'UNVERIFIED_PENDING_INDEPENDENT_REIMPORT'}
+            'export_GLB_render':'UNVERIFIED_PENDING_INDEPENDENT_REIMPORT',
+            'source_R169_SHA256':'a'*64,'source_R101_SHA256':'b'*64}
     road={'slope_collision_artistic':'NOT_ACCEPTED','status':'GEOMETRY_PREVIEW_COLLISION_VOLUMES_NOT_FIVEM_CONVERTED'}
-    context={'market':'BLEND NOT INCLUDED -- FOOTPRINT REFERENCE ONLY','acceptance':'NONE'}
+    context={'market':'BLEND NOT INCLUDED -- FOOTPRINT REFERENCE ONLY','acceptance':'NONE',
+             'source_old_GLBG_HA':'e'*64,'source_non_gate_accepted_node_count':992}
     reports={
        'R173_BANK_DESIGN_AND_INTEGRATION_QA.json':bank,
        'R173_SOURCE_GEOMETRY_QA.json':source,
@@ -45,7 +47,7 @@ class Tests(unittest.TestCase):
              'advancement_authorized':False,'qa_metadata_contents_and_consistency':'PASS'}),patch.object(r,'CATALOG_SHA',r.sha(can)):
             return r.inspect(raw,can)
 
-    def test_seven_distinct_real_requirement_predicates(self):
+    def test_nine_distinct_real_requirement_predicates(self):
         verdict=self.report()
         self.assertEqual(set(verdict['results']),set(r.RULES))
         self.assertTrue(all(x['documentary_result']=='PASS' for x in verdict['results'].values()))
@@ -155,6 +157,24 @@ class Tests(unittest.TestCase):
         item['raw_text']=json.dumps(doc)
         verdict=self.report(json.dumps(p).encode(),cat)
         self.assertEqual(verdict['results']['AAA-200-B-011']['documentary_result'],'FAIL')
+
+    def test_approved_source_inventory_tamper_fails_b014(self):
+        raw,cat=fixture();packet=json.loads(raw)
+        item=packet['reports']['R173_R98_SCHEMATIC_CONTEXT_QA.json']
+        v=json.loads(item['raw_text'])
+        v['source_non_gate_accepted_node_count']=0
+        item['raw_text']=json.dumps(v)
+        report=self.report(json.dumps(packet).encode(),cat)
+        self.assertEqual(report['results']['AAA-200-B-014']['documentary_result'],'FAIL')
+
+    def test_missing_objective_slope_criterion_fails_b020(self):
+        raw,cat=fixture();packet=json.loads(raw)
+        item=packet['reports']['R173_SOURCE_GEOMETRY_QA.json']
+        v=json.loads(item['raw_text'])
+        v['slope_over_5percent_total_m']=0
+        item['raw_text']=json.dumps(v)
+        report=self.report(json.dumps(packet).encode(),cat)
+        self.assertEqual(report['results']['AAA-200-B-020']['documentary_result'],'FAIL')
 
     def test_real_work_scope_mismatch_blocked(self):
         doc=self.report();inv=inventory();w=work()
