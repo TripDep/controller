@@ -21,7 +21,7 @@ def main(argv=None):
         dep=next(iter(contexts['rescue']['dependencies']))
         work={'work_item_sha256':judgment.digest('C07_FULL_INVENTORY_DIAGNOSTIC'),'attempt_id':judgment.digest(args.ref),'operation_sha256':judgment.digest('C07_DIAGNOSTIC_ONLY'),'attempt_number':1,'previous_attempt_id':None,'phase':'P8','asset_type':'vegetation','profiles':['FOLIAGE_PROFILE'],'master_sha256':args.master_sha,'work_dependencies':{dep:contexts['rescue']['dependencies'][dep]},'asset_specific_extensions_verified':False,'guardian_required':True,'mode':'DIAGNOSTIC_ONLY','closure_requested':False}
         result=judgment.judge(inv,work,{},judgment.NativeRuleBackend(api,{}),current_contexts=contexts)
-        judgment.need(result['family_count']==inv['family_count'] and result['rule_count']==inv['rule_count'] and result['counts']['UNKNOWN']==inv['rule_count'],'JUDGMENT_OMITTED_ID')
+        judgment.need(result['family_count']==inv['family_count'] and result['rule_count']==inv['rule_count'] and sum(result['counts'].values())==inv['rule_count'] and result['counts']['PASS']==0 and result['counts']['FAIL']==0 and result['counts']['UNKNOWN']>0,'JUDGMENT_OMITTED_ID')
         judgment.need(result['advancement_authorized'] is False and result['phase_ready'] is False,'JUDGMENT_FALSE_ADVANCEMENT')
         print('C07_NATIVE_PROCESS_JUDGMENT:'+json.dumps(result,sort_keys=True))
         print('C07_JUDGMENT_SUMMARY:'+json.dumps({k:result[k] for k in ('action','counts','family_count','rule_count','blockers','advancement_authorized','mode','decision_sha256')},sort_keys=True))
