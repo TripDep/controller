@@ -87,6 +87,8 @@ class ControlledJudgment:
             # Only reviewed source-specific implementations may be enrolled.
             from approved_validators import validate as validate_reviewed
             validate_reviewed(plan['enrolled'],self.inventory)
+            from c07_operation_scope import require_due_enrolled
+            require_due_enrolled(self.inventory, plan)
             rec = self.append('SUPERVISOR_PLAN_ENROLLED', plan=copy.deepcopy(plan),
                               plan_sha256=j.digest(plan), status_step=active['step'])
             return rec['record_hash']
@@ -104,6 +106,8 @@ class ControlledJudgment:
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
         from approved_validators import validate as validate_reviewed
         validate_reviewed(row['plan']['enrolled'],self.inventory)
+        from c07_operation_scope import require_due_enrolled
+        require_due_enrolled(self.inventory, row['plan'])
         return row
 
     def local_file(self, relative):
