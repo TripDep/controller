@@ -38,13 +38,32 @@ consume_native helper remains available; durable operational callers use the
 Controller adapter rather than an in-memory used set. This adapter does not
 intercept unrelated writers or direct calls to the legacy Controller API.
 
-Current installation is PARTIAL C07. No actual asset semantic validator is
-enrolled. The native diagnostic therefore correctly returns UNKNOWN for every
-ID, with no advancement. Its diagnostic P8/vegetation template is explicitly NOT
-a real asset state. MASTER164 is the current source. Rescue PR33 and Guardian
-PR32 context metadata on MASTER164 were imported in private PR34. Historical
-receipts on162 remain historical; each operation reads its canonical current
-local context files and checks the bound work dependencies.
+Current installation is PARTIAL C07. The initial native diagnostic returns
+UNKNOWN for every ID, with no advancement. Its P8/vegetation template is NOT a
+real asset state. Current Master identity is checked from actual Library bytes
+and the hash-only public policy, rather than a version number in this document.
+Rescue36 metadata on Master165/state230 was imported in private PR37; Guardian32
+remains on164 and cannot clear current-Master work. Historical receipts remain
+historical; each operation checks its actual current private context files.
+
+planning_semantics.py implements a first source-reading documentary predicate
+for AAA-200-B-012: verify the documented destination engine in both actual
+historical/current Master contents, the full work audit hash-chain, preflight
+chronology and the individual preflight record before generation. It does not
+certify a model or other planning rules. Its individual MG0 remains UNKNOWN:
+the function emits no invented corrective lineage, so even a positive engine
+predicate is an overall UNKNOWN in NativeRuleBackend. The pilot is strictly
+DIAGNOSTIC_ONLY retrospective review; it cannot authorize a production action.
+Native verification retrieves the actual semantic packet and rejects reusing
+it for another attempt, while retaining the full canonical family/ID matrix.
+
+The pilot reads actual R165 state/audit and report metadata only. Availability
+qualifies all200 AAA entries but does not promote source PASS labels. P0 report
+QA/P0_PREFLIGHT_EVIDENCE.md is referenced by40 PASS entries and was not found
+in the retrieved R165 archive; it has NOT been established absent everywhere.
+Other report bytes are distinguished from asset payloads deliberately withheld
+from Git. Retrieved report bytes do not alone certify any rule or MG0. No model,
+image, asset generator or source geometry is uploaded for this pilot.
 
 Remaining C07 work: implement and enroll appropriate source-bound validators
 for the real rule obligations, reconcile asset-specific locks/applicability,
