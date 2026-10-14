@@ -7,6 +7,7 @@ import fcntl
 import hashlib
 import json
 import tempfile
+from datetime import datetime, timezone, timedelta
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -91,8 +92,8 @@ class Tests(unittest.TestCase):
         self.s.enroll_plan(self.plan)
         self.c.close('TEST', self.open['step'], self.open['token'], 'PASS', 'unit', 'unit', [], True)
 
-    def issue(self, verdict='PASS'):
-        work = self.s.expected_work()
+    def issue(self, verdict='PASS', work_override=None):
+        work = work_override if work_override is not None else self.s.expected_work()
         packets = []
         offers = {}
         for rid, row in self.inv['rules'].items():
@@ -115,11 +116,36 @@ class Tests(unittest.TestCase):
         self.api.logs += '\n2020-10-13T18:00:00Z C07_NATIVE_PROCESS_JUDGMENT:' + json.dumps(result)
         return offers, result
 
+    def verified_close(self, active, evidence='unit'):
+        # Independent fixture run after begin: these remain synthetic integration tests.
+        reserved = [r for r in self.s.records()
+                    if r['event'] == 'SUPERVISOR_OPERATION_RESERVED'][-1]
+        self.api.next_run()
+        self.api.run['created_at'] = (datetime.now(timezone.utc) +
+                                      timedelta(seconds=2)).isoformat()
+        offers, _ = self.issue(work_override=reserved['work'])
+        return self.s.close(active['step'], active['token'], 'PASS', evidence,
+                            'unit', [], post_origin=self.api.origin, post_offers=offers)
+
+    def test_post_operation_proof_required_even_after_eligible_begin(self):
+        offers, _ = self.issue()
+        active = self.s.begin(self.api.origin, offers)
+        with self.assertRaisesRegex(j.Blocked, 'POST_NATIVE_PROOF_REQUIRED'):
+            self.s.close(active['step'], active['token'], 'PASS', 'bare PASS', 'unit', [])
+        self.assertEqual(self.c.asset_state('TEST')['active_step']['step'], active['step'])
+
+    def test_begin_run_cannot_be_reused_as_post_proof(self):
+        offers, _ = self.issue()
+        active = self.s.begin(self.api.origin, offers)
+        with self.assertRaisesRegex(j.Blocked, 'POST_CANNOT_REUSE_BEGIN_PROOF'):
+            self.s.close(active['step'], active['token'], 'PASS', 'replay', 'unit', [],
+                         post_origin=self.api.origin, post_offers=offers)
+
     def test_native_fixture_opens_and_closes_real_controller(self):
         offers, _ = self.issue()
         active = self.s.begin(self.api.origin, offers)
         self.assertEqual(active['action'], self.plan['operation']['action'])
-        self.s.close(active['step'], active['token'], 'PASS', 'wiring only', 'unit', [])
+        self.verified_close(active, 'wiring only')
         self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
         self.assertIsNone(self.c.asset_state('TEST')['active_step'])
         self.assertEqual(self.s.records()[-1]['event'], 'SUPERVISOR_OPERATION_CLOSED')
@@ -163,12 +189,12 @@ class Tests(unittest.TestCase):
         active = self.s.begin(self.api.origin, offers)
         restored = ControlledJudgment(gc.Controller(self.root, self.master), 'TEST', self.api, self.inv)
         with self.assertRaisesRegex(j.Blocked, 'STEP_ALREADY_OPEN'): restored.begin(self.api.origin, offers)
-        restored.close(active['step'], active['token'], 'PASS', 'unit', 'unit', [])
+        self.verified_close(active)
 
     def test_replay_after_closed_operation_denied(self):
         offers, _ = self.issue()
         a = self.s.begin(self.api.origin, offers)
-        self.s.close(a['step'], a['token'], 'PASS', 'unit', 'unit', [])
+        self.verified_close(a)
         restored = ControlledJudgment(gc.Controller(self.root, self.master), 'TEST', self.api, self.inv)
         with self.assertRaisesRegex(j.Blocked, 'PREVIOUS_NOT_FAILED'): restored.begin(self.api.origin, offers)
 
@@ -220,7 +246,7 @@ class Tests(unittest.TestCase):
         offers, _ = self.issue()
         a = self.s.begin(self.api.origin, offers)
         self.dep.write_text('changed during operation')
-        closed = self.s.close(a['step'], a['token'], 'PASS', 'unit', 'unit', [])
+        closed = self.verified_close(a)
         self.assertEqual(closed['result'], 'BLOCKED')
 
     def test_unrelated_context_update_during_action_keeps_pass(self):
@@ -233,7 +259,7 @@ class Tests(unittest.TestCase):
         value['dependencies']['e' * 64] = '8' * 64
         seal(value)
         (self.root / j.context.PATHS['rescue']).write_text(json.dumps(value))
-        closed = self.s.close(a['step'], a['token'], 'PASS', 'unit', 'unit', [])
+        closed = self.verified_close(a)
         self.assertEqual(closed['result'], 'PASS')
 
 
