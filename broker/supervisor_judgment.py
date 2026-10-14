@@ -106,18 +106,46 @@ def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,prev
         for rule in rules:
             row=inv['rules'][rule];wanted=coverage.expected_result(row,work['phase'],work['asset_type'],work['profiles'])
             expected=binding(work,row,rule)
+            # Applicability is derived from the immutable canonical source and
+            # the Controller-enrolled work context, never an executor's waiver.
+            # All IDs remain visible. No future/N_A ID is called a PASS or MG0 PASS.
+            if wanted != 'PASS':
+                if wanted == 'FUTURE_PHASE':
+                    need(row.get('catalog_phase') in coverage.PRO_PHASES,
+                         'JUDGMENT_FUTURE_WITHOUT_CANONICAL_PHASE')
+                elif wanted == 'N_A_ASSET_TYPE':
+                    need(row.get('asset_type') not in (None, 'all', work['asset_type']),
+                         'JUDGMENT_NA_WITHOUT_CANONICAL_ASSET_TYPE')
+                elif wanted == 'N_A_PROFILE_NOT_SELECTED':
+                    need(row.get('profile') is not None and row['profile'] not in work['profiles'],
+                         'JUDGMENT_NA_WITHOUT_CANONICAL_PROFILE')
+                else:
+                    raise Blocked('JUDGMENT_UNSUPPORTED_APPLICABILITY:'+str(wanted))
+                basis={'rule_id':rule, 'binding':expected, 'applicability':wanted,
+                       'work_phase':work['phase'], 'asset_type':work['asset_type'],
+                       'profiles':work['profiles'], 'canonical_phase':row.get('catalog_phase'),
+                       'canonical_asset_type':row.get('asset_type'),
+                       'canonical_profile':row.get('profile')}
+                status='FUTURE_PHASE' if wanted=='FUTURE_PHASE' else 'N_A'
+                counts[status]+=1
+                family_results[rule]={'result':status,'expected_applicability':wanted,
+                                      'mg0':'NOT_DUE_NO_CURRENT_RULE_PASS',
+                                      'evidence_digest':digest(basis),
+                                      'reason':'SOURCE_AND_TRUSTED_WORK_CONTEXT_APPLICABILITY',
+                                      'binding_sha256':digest(expected),
+                                      'applicability_basis':basis}
+                continue
             try:r=backend.rule(rule,expected,offers.get(rule))
             except (ValueError,KeyError,TypeError) as exc:r={'result':'UNKNOWN','reason':str(exc)}
             need(isinstance(r,dict) and r.get('result') in ('PASS','FAIL','UNKNOWN'),'JUDGMENT_BACKEND_RESULT')
             status=r['result']
             if status=='PASS':
                 need(r.get('mg0')=='PASS' and r.get('semantic_scope')==SEMANTIC_SCOPE and evidence.is_sha(r.get('proof_digest')),'JUDGMENT_NOT_A_SEMANTIC_MG0_PASS')
-                if wanted=='FUTURE_PHASE':status='FUTURE_PHASE'
-                elif wanted.startswith('N_A'):status='N_A'
             counts[status]+=1
             family_results[rule]={'result':status,'expected_applicability':wanted,'mg0':r.get('mg0','UNKNOWN'),'evidence_digest':r.get('proof_digest'),'reason':r.get('reason'),'binding_sha256':digest(expected)}
         results[family]=family_results
     if counts['FAIL'] or counts['UNKNOWN']:blockers.append('REQUIRED_RULE_OR_MG0_NOT_VERIFIED')
+    if not counts['PASS']:blockers.append('NO_APPLICABLE_RULE_SEMANTIC_PASS')
     if work['closure_requested'] and (counts['FUTURE_PHASE'] or work['phase']!='DELIVERY'):blockers.append('FULL_CLOSURE_NOT_READY')
     ready=not blockers
     if any('CONTEXT' in x or 'DEPENDENCY' in x or 'MASTER_CHANGED' in x for x in blockers):action='STOP_CONTEXT_RECHECK'

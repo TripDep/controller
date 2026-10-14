@@ -72,11 +72,51 @@ class Tests(unittest.TestCase):
     def test_triggered_mg0_requires_process_correction(self):
         b=j.binding(work(),inventory()['rules']['EXEC-003'],'EXEC-003');p={'schema':'gg-semantic-rule-v1','scope':j.SEMANTIC_SCOPE,'validator_id':'unit','binding':b,'rule':{'result':'PASS','checks':{'clause':True},'proof_digest':'e'*64},'mg0':{'binding':b,'triggered':True,'result':'PASS','checks':{'canonical_triggers_checked':True},'proof_digest':'f'*64}}
         with self.assertRaisesRegex(j.Blocked,'MG0_REQUIRED_CHECKS'):j.semantic_packet(p,b,{'validator_id':'unit','criteria':['clause']})
+    def test_future_and_nonapplicable_retained_without_premature_semantic_mg0(self):
+        i=inventory()
+        i['rules']['EXEC-003'].update(catalog_phase='P8',asset_type='all')
+        w=work();w['phase']='P0'
+        class Backend(FixtureBackend):
+            def __init__(self):super().__init__('PASS');self.called=[]
+            def rule(self,r,expected,offer):self.called.append(r);return super().rule(r,expected,offer)
+        b=Backend();d=judge(backend=b,w=w,inv=i)
+        self.assertEqual(b.called,['PROFILE_FOLIAGE'])
+        self.assertEqual(d['counts']['FUTURE_PHASE'],1)
+        self.assertEqual(d['counts']['PASS'],1)
+        entry=d['families']['EXECUTION']['EXEC-003']
+        self.assertEqual(entry['result'],'FUTURE_PHASE')
+        self.assertEqual(entry['mg0'],'NOT_DUE_NO_CURRENT_RULE_PASS')
+        self.assertEqual(entry['applicability_basis']['canonical_phase'],'P8')
+        self.assertEqual(entry['applicability_basis']['binding']['requirement_sha256'],'b'*64)
+        self.assertTrue(d['phase_ready'])
+        self.assertFalse(d['advancement_authorized']) # Fixture cannot authorize.
+
+    def test_na_rule_kept_and_missing_applicable_evidence_still_blocks(self):
+        i=inventory()
+        i['rules']['EXEC-003'].update(catalog_phase='P0',asset_type='architecture')
+        d=judge(j.NativeRuleBackend(API(),{}),inv=i)
+        self.assertEqual(d['counts']['N_A'],1)
+        self.assertEqual(d['counts']['UNKNOWN'],1)
+        self.assertEqual(d['families']['EXECUTION']['EXEC-003']['mg0'],'NOT_DUE_NO_CURRENT_RULE_PASS')
+        self.assertEqual(d['families']['ASSET_PROFILE_READINESS']['PROFILE_FOLIAGE']['result'],'UNKNOWN')
+        self.assertFalse(d['advancement_authorized'])
+
+    def test_no_current_applicable_semantic_pass_never_advances(self):
+        i=inventory()
+        i['rules']['EXEC-003'].update(catalog_phase='P8',asset_type='all')
+        i['rules']['PROFILE_FOLIAGE'].update(catalog_phase='P8',asset_type='all')
+        w=work();w['phase']='P0'
+        d=judge(backend=FixtureBackend(),w=w,inv=i)
+        self.assertEqual(d['counts']['FUTURE_PHASE'],2)
+        self.assertEqual(d['counts']['PASS'],0)
+        self.assertIn('NO_APPLICABLE_RULE_SEMANTIC_PASS',d['blockers'])
+        self.assertFalse(d['phase_ready'])
+
     def test_synthetic_full_inventory_all_ids_retained(self):
         from test_family_coverage import synthetic_sources
         raw=synthetic_sources()
         with patch.object(f,'AUX_PINS',{k:f.sha(raw[k]) for k in f.AUX_PINS}):inv=f.build_inventory(raw,f.sha(raw['master']))
         w=work();w['master_sha256']=inv['canonical_master_sha256'];c=contexts()
         for role in c:c[role]['master']['sha256']=w['master_sha256'];seal(c[role])
-        d=j.judge(inv,w,{},j.NativeRuleBackend(API(),{}),current_contexts=c);self.assertEqual(d['rule_count'],inv['rule_count']);self.assertEqual(d['counts']['UNKNOWN'],inv['rule_count'])
+        d=j.judge(inv,w,{},j.NativeRuleBackend(API(),{}),current_contexts=c);self.assertEqual(d['rule_count'],inv['rule_count']);self.assertEqual(sum(d['counts'].values()),inv['rule_count']);self.assertEqual(d['counts']['PASS'],0);self.assertGreater(d['counts']['UNKNOWN'],0);self.assertFalse(d['advancement_authorized'])
 if __name__=='__main__':unittest.main()
