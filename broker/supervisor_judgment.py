@@ -141,8 +141,6 @@ def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,prev
             status=r['result']
             if status=='PASS':
                 need(r.get('mg0')=='PASS' and r.get('semantic_scope')==SEMANTIC_SCOPE and evidence.is_sha(r.get('proof_digest')),'JUDGMENT_NOT_A_SEMANTIC_MG0_PASS')
-                if wanted=='FUTURE_PHASE':status='FUTURE_PHASE'
-                elif wanted.startswith('N_A'):status='N_A'
             counts[status]+=1
             family_results[rule]={'result':status,'expected_applicability':wanted,'mg0':r.get('mg0','UNKNOWN'),'evidence_digest':r.get('proof_digest'),'reason':r.get('reason'),'binding_sha256':digest(expected)}
         results[family]=family_results
