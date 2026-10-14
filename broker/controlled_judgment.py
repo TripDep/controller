@@ -170,6 +170,16 @@ class ControlledJudgment:
             reserved = [r for r in records if r['event'] == 'SUPERVISOR_OPERATION_RESERVED']
             finished = {r['reservation_hash'] for r in records if r['event'] == 'SUPERVISOR_OPERATION_CLOSED'}
             j.need(all(r['record_hash'] in finished for r in reserved), 'CONTROLLED_OPERATION_PENDING_RECONCILIATION')
+            # Use the actual current Library/Controller bytes before any operational
+            # begin, not an isolated read-only intake report from an earlier run.
+            # This stays inside the Controller lock to avoid accepting a stale state.
+            import real_work_intake
+            intake = real_work_intake.inspect(
+                self.c.master.read_bytes(), self.c.state_path.read_bytes(),
+                self.c.audit_path(self.asset).read_bytes(), self.asset,
+                self.c.master_identity()['sha256'])
+            j.need(intake['controller_preflight_ready'],
+                   'CONTROLLED_LIVE_INTAKE_BLOCKED:' + ','.join(intake['blockers']))
             row = self.plan()
             plan = row['plan']
             work, previous, prior_decision = self.prepare(row)
