@@ -130,6 +130,56 @@ class Tests(unittest.TestCase):
         return self.s.close(active['step'], active['token'], 'PASS', evidence,
                             'unit', [], post_origin=self.api.origin, post_offers=offers)
 
+    def reenroll_mutation(self):
+        self.plan['operation']['category']='MUTATION'
+        self.plan['operation']['aaa_phase']='P0'
+        step=self.c.begin('TEST','Enroll real-output test operation','STATUS',[],[],'unit',[])
+        self.s.enroll_plan(self.plan)
+        self.c.close('TEST',step['step'],step['token'],'PASS','unit','unit',[],True)
+
+    def test_mutating_close_requires_controller_registered_real_binary(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            active=self.s.begin(self.api.origin,offers)
+            with self.assertRaisesRegex(j.Blocked,'CONTROLLED_MUTATING_OUTPUT_EVIDENCE_REQUIRED'):
+                self.s.close(active['step'],active['token'],'PASS','text only','unit',[])
+            self.assertEqual(self.c.asset_state('TEST')['active_step']['step'],active['step'])
+            # The binary stays in local temporary Controller workspace, never Git.
+            output=self.root/'synthetic_model.glb'
+            output.write_bytes(b'glTF'+(2).to_bytes(4,'little')+(48).to_bytes(4,'little')+
+                               b' '+b'0'*35)
+            self.c.record_artifact('TEST',output,'SYNTHETIC_UNIT_LOCAL_MODEL')
+            close=self.verified_close(active)
+            self.assertEqual(close['result'],'PASS')
+            self.assertEqual(self.s.records()[-1]['event'],'SUPERVISOR_OPERATION_CLOSED')
+
+    def test_mutating_close_rejects_output_modified_after_controller_registration(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            a=self.s.begin(self.api.origin,offers)
+            output=self.root/'mutated_model.glb'
+            output.write_bytes(b'glTF'+b'1'*44)
+            self.c.record_artifact('TEST',output,'SYNTHETIC_UNIT_LOCAL_MODEL')
+            output.write_bytes(output.read_bytes()+b'changed')
+            with self.assertRaisesRegex(j.Blocked,'CONTROLLED_MUTATING_OUTPUT_BYTES_CHANGED'):
+                self.s.close(a['step'],a['token'],'PASS','forged','unit',[])
+
+    def test_mutating_close_rejects_unlogged_model_pointer(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            a=self.s.begin(self.api.origin,offers)
+            output=self.root/'unregistered_model.glb'
+            output.write_bytes(b'glTF'+b'1'*44)
+            self.c.asset_state('TEST')['artifacts'].append({
+                'step':a['step'],'path':str(output.resolve()),'role':'SYNTHETIC_UNIT',
+                'size_bytes':output.stat().st_size,
+                'sha256':hashlib.sha256(output.read_bytes()).hexdigest()})
+            with self.assertRaisesRegex(j.Blocked,'CONTROLLED_MUTATING_OUTPUT_AUDIT_ABSENT'):
+                self.s.close(a['step'],a['token'],'PASS','forged','unit',[])
+
     def test_post_operation_proof_required_even_after_eligible_begin(self):
         offers, _ = self.issue()
         active = self.s.begin(self.api.origin, offers)
