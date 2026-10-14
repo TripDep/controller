@@ -140,11 +140,11 @@ def documented_engine(inv, work, documents, policy):
     packet = {'schema':'gg-semantic-rule-v1', 'scope':j.SEMANTIC_SCOPE,
               'validator_id':VALIDATOR, 'binding':expected,
               'rule':{'result':result, 'checks':checks, 'proof_digest':j.digest(proof)},
-              # No made-up MG0 PASS: actual per-rule corrective lineage is absent.
-              'mg0':{'binding':copy.deepcopy(expected), 'triggered':True, 'result':'UNKNOWN',
-                     'checks':{k:False for k in ('cause_identified','affected_states_invalidated',
-                               'correction_applied','reapplied_on_current_attempt')},
-                     'proof_digest':j.digest({'rule':ENGINE_RULE,'status':'INDIVIDUAL_MG0_NOT_VERIFIED'})}}
+              # No invented MG0 trigger: the actual per-rule trigger evaluation is absent.
+              'mg0':{'binding':copy.deepcopy(expected), 'triggered':None, 'result':'UNKNOWN',
+                     'checks':{'canonical_triggers_checked':False},
+                     'proof_digest':j.digest({'rule':ENGINE_RULE,
+                       'status':'INDIVIDUAL_MG0_TRIGGER_UNRESOLVED_NOT_A_PASS'})}}
     return packet, proof
 
 
