@@ -44,10 +44,13 @@ def pack():
       'scope':'R173_REVIEW_QA_METADATA_ONLY_NOT_ASSET_CERTIFICATION',
       'advancement_authorized':False}
 def serialize(v):return (json.dumps(v,sort_keys=True)+'\n').encode()
-def assess(v):
+def assess(v, *, trusted_changed_report_snapshot=False):
     raw=serialize(v)
+    # The trusted source list is fixed BEFORE adversarial fixture mutation.
+    baseline=pack()['reports']
+    refs=v['reports'] if trusted_changed_report_snapshot else baseline
     return validate(raw,expected_packet_sha=sha(raw),
-      report_sha={k:vv['sha256'] for k,vv in v['reports'].items()})
+      report_sha={k:vv['sha256'] for k,vv in refs.items()})
 
 class Tests(unittest.TestCase):
     def test_admissible_qa_text_is_not_asset_certification(self):
@@ -70,7 +73,7 @@ class Tests(unittest.TestCase):
         v=pack();k='R173_SOURCE_GEOMETRY_QA.json';v['reports'][k]['raw_text']=json.dumps({
              **json.loads(v['reports'][k]['raw_text']),'bridge_landings_pending':[]})
         v['reports'][k]['sha256']=sha(v['reports'][k]['raw_text'].encode())
-        with self.assertRaisesRegex(Blocked,'R173_PENDING_LANDINGS_NOT_PRESERVED'):assess(v)
+        with self.assertRaisesRegex(Blocked,'R173_PENDING_LANDINGS_NOT_PRESERVED'):assess(v, trusted_changed_report_snapshot=True)
     def test_invalid_glb_header_claim_rejected(self):
         v=pack();v['glb_source_readback_observations'][0]['glb_header_version']=1
         with self.assertRaisesRegex(Blocked,'R173_BINARY_LOCAL_READBACK_CLAIM'):assess(v)
