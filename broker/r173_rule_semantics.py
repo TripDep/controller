@@ -21,12 +21,14 @@ RULES={
  'AAA-200-A-008':(8,'Riconoscere la differenza tra un fatto verificato e una supposizione.'),
  'AAA-200-A-009':(9,'Non dichiarare mai completato ciò che non è stato verificato.'),
  'AAA-200-B-011':(11,'Identificare lo scopo esatto dell’asset o dell’ambiente.'),
+ 'AAA-200-B-014':(14,'Verificare quali asset esistono già e possono essere riutilizzati.'),
  'AAA-200-B-015':(15,'Separare gli elementi approvati da quelli ancora modificabili.'),
  'AAA-200-B-016':(16,'Identificare le dipendenze tra modelli, terreno, vegetazione e architettura.'),
  'AAA-200-B-017':(17,'Definire cosa deve essere realmente consegnato, non soltanto studiato.'),
  'AAA-200-B-018':(18,'Individuare i rischi tecnici prima di iniziare la produzione.'),
+ 'AAA-200-B-020':(20,'Definire criteri oggettivi per stabilire quando il lavoro sarà finito.'),
 }
-VALIDATOR='GG_R173_DOCUMENTARY_P0_7_RULES_V2'
+VALIDATOR='GG_R173_DOCUMENTARY_P0_9_RULES_V3'
 LABEL='C07_R173_SOURCE_BOUND_RULE_CRITERIA:'
 
 def require(cond,reason):
@@ -68,6 +70,13 @@ def inspect(packet_raw,catalog_raw):
        'real_path_extent_documented':type(source['total_length_m']) in (float,int) and source['total_length_m']>0,
        'path_review_not_final_asset':source['status']=='ARTISTIC_REVIEW_CANDIDATE_NOT_ACCEPTED_NOT_FIVEM',
        'bank_rework_purpose_explicit':bank['stage']=='DESIGN_REVIEW_NOT_PRODUCTION'},
+     'AAA-200-B-014':{
+       'historic_r169_source_identified':re.fullmatch('[0-9a-f]{64}',source['source_R169_SHA256']) is not None,
+       'terrain_r101_source_identified':re.fullmatch('[0-9a-f]{64}',source['source_R101_SHA256']) is not None,
+       'existing_r98_inventory_recorded':type(context['source_non_gate_accepted_node_count']) is int and
+                 context['source_non_gate_accepted_node_count']>900 and
+                 re.fullmatch('[0-9a-f]{64}',context['source_old_GLBG_HA']) is not None,
+       'retained_r98_not_claimed_mutable':bank['R98_source_changed'] is False},
      'AAA-200-B-015':{
        'protected_r98_explicitly_not_modified':bank['R98_source_changed'] is False and
            'source R98 untouched' in source['gate_source_copy'],
@@ -91,6 +100,14 @@ def inspect(packet_raw,catalog_raw):
        'owner_delivery_acceptance_pending':bank['artist_approval']=='PENDING' and
              context['acceptance']=='NONE',
        'final_fivem_runtime_not_claimed':road['status']=='GEOMETRY_PREVIEW_COLLISION_VOLUMES_NOT_FIVEM_CONVERTED'},
+     'AAA-200-B-020':{
+       'measurable_slope_5pct_risk_observed':source['slope_over_5percent_total_m']>0 and
+                     source['max_centerline_designed_grade']>0.05,
+       'measurable_landing_count_unresolved':len(source['bridge_landings_pending'])==8,
+       'walkability_acceptance_pending':source['collision_walkability']=='UNKNOWN' and
+                   bank['bridge_deck_walkability']=='UNKNOWN',
+       'runtime_acceptance_not_forged':road['slope_collision_artistic']=='NOT_ACCEPTED' and
+                   bank['artist_approval']=='PENDING'},
      'AAA-200-B-018':{
        'prior_block_named':bank['AAA200']=='R172_BLOCKED_NOT_PROMOTED',
        'eight_landing_risks_documented':len(source['bridge_landings_pending'])==8 and all(x['reason'] for x in source['bridge_landings_pending']),
