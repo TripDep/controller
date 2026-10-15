@@ -16,6 +16,53 @@ def digest(value):
                                      separators=(',', ':')).encode('utf-8')).hexdigest()
 
 
+
+def challenge(inventory, plan, work, checkpoint):
+    """Read-only questions due now from Controller authority, not assistant scope.
+
+    Emit a machine-readable answer request. This is not approval of an attempt
+    or independent proof of a 3D operation. No Git/Library asset transfer.
+    """
+    if not isinstance(checkpoint, dict) or type(checkpoint.get('next_step')) is not int:
+        raise ValueError('C07_TRUSTED_CHECKPOINT_REQUIRED')
+    due = scope.inspect(inventory, plan)['due']
+    ledger = answer_contract.build(inventory)
+    questions = []
+    for rid in due:
+        entry = ledger['entries'][rid]
+        for question in entry['questions']:
+            questions.append({
+                'rule_id': rid, 'family': entry['family'],
+                'question_id': question['id'], 'type': question['type'],
+                'question': question['text'],
+                'source_sha256': entry['source_sha256'],
+                'requirement_sha256': entry['requirement_sha256'],
+                'compound_subchecks_pending': entry['compound_subchecks_pending'],
+                'evidence_required_for_independent_pass': True,
+            })
+    return {
+        'schema': 'gg-c07-controller-question-batch-v1',
+        'asset': checkpoint['asset'], 'phase': work['phase'],
+        'master_sha256': work['master_sha256'],
+        'work_item_sha256': work['work_item_sha256'],
+        'attempt_id': work['attempt_id'],
+        'attempt_number': work['attempt_number'],
+        'previous_attempt_id': work['previous_attempt_id'],
+        'operation_sha256': work['operation_sha256'],
+        'checkpoint': checkpoint,
+        'plan_record_hash': checkpoint['plan_record_hash'],
+        'due_rules_sha256': digest(due),
+        'question_count': len(questions),
+        'compound_due': sorted({q['rule_id'] for q in questions
+                                if q['compound_subchecks_pending']}),
+        'questions': questions,
+        'answer_packet_schema_fields': [
+            'rule_id', 'question_id', 'requirement_sha256', 'master_sha256',
+            'attempt_id', 'operation_sha256', 'answer', 'statement', 'evidence_refs'],
+        'native_rule_mg0_verified': False,
+        'advancement_authorized': False,
+    }
+
 def inspect(inventory, plan, work, packets, checkpoint):
     """Return a reviewable STOP/continuation report, never a work PASS.
 
