@@ -100,7 +100,7 @@ def inspect(inventory, plan, *, master_raw=None,
     else:
         rows, tail = (), None
 
-    found={},missing=[],audit_fails=[],mg0_fails=[]
+    found={}; missing=[]; audit_fails=[]; mg0_fails=[]
     for rid in expected:
         row=rules[rid]
         question=row.get('requirement')
