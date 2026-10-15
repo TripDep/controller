@@ -201,7 +201,7 @@ class ControlledJudgment:
                     challenge(self.inventory, row['plan'], work, checkpoint),
                     'advancement_authorized': False}
 
-    def begin(self, origin, offers, answer_packets=None):
+    def begin(self, origin, offers, answer_packets=None, subcheck_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
         Any interruption after reservation leaves the operation consumed. No
@@ -247,7 +247,8 @@ class ControlledJudgment:
                     answer_packets if answer_packets is not None else [],
                     {'asset': self.asset, 'next_step': st['next_step'],
                      'last_audit_hash': st['last_audit_hash'],
-                     'plan_record_hash': row['record_hash']})
+                     'plan_record_hash': row['record_hash']},
+                    subcheck_packets=subcheck_packets)
                 self.append('SUPERVISOR_ASSISTANT_ANSWER_GATE', report=answer_report)
                 print('C07_ANSWER_GATE_REPORT:' + json.dumps(answer_report, sort_keys=True))
                 j.need(answer_report['may_request_native_proof'],
@@ -430,6 +431,7 @@ def main(argv=None):
     parser.add_argument('--origin', type=Path)
     parser.add_argument('--offers', type=Path)
     parser.add_argument('--answers', type=Path)
+    parser.add_argument('--subcheck-answers', type=Path)
     parser.add_argument('--close-record', type=Path)
     args = parser.parse_args(argv)
     try:
@@ -452,7 +454,8 @@ def main(argv=None):
                       'advancement_authorized': False}
         elif args.command == 'begin':
             result = bridge.begin(data(args.origin), data(args.offers),
-                                  data(args.answers) if args.answers else None)
+                                  data(args.answers) if args.answers else None,
+                                  data(args.subcheck_answers) if args.subcheck_answers else None)
         else:
             result = bridge.close(**data(args.close_record))
         print(json.dumps(result, sort_keys=True))
