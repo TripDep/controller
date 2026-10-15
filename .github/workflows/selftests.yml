@@ -29,6 +29,9 @@ jobs:
       - name: C07 110 individual anti-regression negative tests
         working-directory: broker
         run: python3 -m unittest -v test_c07_behavior_110
+      - name: C07 AAA200 individual semantic/quality negative-test suite
+        working-directory: broker
+        run: python3 -m unittest -v test_c07_aaa200
       - name: Syntax and policy checks
         run: |
           python3 -m py_compile supervisor/controller.py broker/verify_app_installation.py
