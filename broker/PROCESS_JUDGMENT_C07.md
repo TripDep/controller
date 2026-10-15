@@ -86,8 +86,12 @@ The reviewed source-bound `c07_answer_semantics.py` contract distinguishes:
 - `OPEN_ANALYSIS`: demands a substantive narrative, not a forced YES/NO.
 
 The first five reviewed canonical IDs are AAA-200-G-067, Q-075, Q-021,
-Q-001 and Q-280. All other 758 of the 763 remain `REVIEW_REQUIRED`; no
-keyword-based or model-inferred polarity can turn them into PASS. Source text,
+Q-001 and Q-280. All other 758 of the 763 receive a *neutral* mandatory
+`CONTROL_PERFORMED` meta-question (whether the canonical requirement was
+checked) while their source-specific answer polarity remains
+`GENERIC_CHECK_REVIEW_PENDING`. This is full question *coverage*, not full
+question *semantic verification*; no keyword-inferred polarity or YES can
+turn them into PASS. Source text,
 requirement hash, exact attempt and operation bindings are checked. Duplicate,
 inconsistent, stale or malformed answer packets are rejected.
 

@@ -84,6 +84,21 @@ class PolarityRegression(unittest.TestCase):
   r=assess(self.l,[])
   self.assertIn('BEHAVIOR-051',r['unreviewed_due'])
   self.assertTrue(r['missing']);self.assertEqual(r['status'],'UNKNOWN')
+ def test_all_six_fixture_rules_get_a_question_without_giving_fake_pass(self):
+  self.assertTrue(all(row['questions'] for row in self.l['entries'].values()))
+  self.assertEqual(self.l['question_count'],7)
+  self.assertEqual(self.l['entries']['BEHAVIOR-051']['classification'],
+                   'GENERIC_CHECK_REVIEW_PENDING')
+ def test_generic_unreviewed_no_is_fail(self):
+  q='BEHAVIOR-051:CONTROL_CHECK'
+  r=assess(self.l,[answer(self.l,q,'NO')])
+  self.assertIn(q,r['failed'])
+  self.assertIn('BEHAVIOR-051',r['unreviewed_due'])
+ def test_generic_unreviewed_yes_stays_unknown(self):
+  q='BEHAVIOR-051:CONTROL_CHECK'
+  r=assess(self.l,[answer(self.l,q,'YES')])
+  self.assertEqual(r['status'],'UNKNOWN')
+  self.assertFalse(r['advancement_authorized'])
  def test_fake_evidence_digest_rejected(self):
   x=answer(self.l,'Q-075:DEFECT','NO',
            refs=[{'ref':'looks fine','sha256':'fake'}])

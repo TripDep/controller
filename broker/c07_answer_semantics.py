@@ -45,14 +45,17 @@ def build(inv):
   reviewed=REVIEWED.get(rid)
   if reviewed:need(clause==reviewed[0],'ANSWER_REVIEWED_CLAUSE_DRIFT:'+rid)
   qs=[{'id':rid+':'+key,'type':kind,'text':prompt}
-      for key,kind,prompt in reviewed[1]] if reviewed else []
+      for key,kind,prompt in reviewed[1]] if reviewed else [
+      {'id':rid+':CONTROL_CHECK','type':'CONTROL_PERFORMED',
+       'text':'Hai effettuato il controllo previsto dalla regola canonica '+rid+'?'}]
   entries[rid]={'family':r['family'],'requirement_sha256':r['requirement_sha256'],
                 'source_sha256':r['source_sha256'],
-                'classification':'REVIEWED' if reviewed else 'REVIEW_REQUIRED',
+                'classification':'REVIEWED' if reviewed else 'GENERIC_CHECK_REVIEW_PENDING',
                 'questions':qs,'verdict':'UNKNOWN'}
  return {'schema':'gg-c07-answer-contract-v1','master_sha256':master,
-         'rule_count':len(entries),'reviewed_count':sum(bool(x['questions']) for x in entries.values()),
-         'unreviewed_count':sum(not x['questions'] for x in entries.values()),
+         'rule_count':len(entries),'reviewed_count':sum(x['classification']=='REVIEWED' for x in entries.values()),
+         'unreviewed_count':sum(x['classification']!='REVIEWED' for x in entries.values()),
+         'question_count':sum(len(x['questions']) for x in entries.values()),
          'entries':entries,'advancement_authorized':False}
 
 def assess(ledger,due_ids,packets,*,attempt_id,operation_sha256):
@@ -102,7 +105,7 @@ def assess(ledger,due_ids,packets,*,attempt_id,operation_sha256):
             'SELF_DECLARATION_ONLY' if not refs else 'PROOF_REFS_NOT_INDEPENDENTLY_VERIFIED')
   seen[qid]={'answer':ans,'status':status,'reason':reason}
  missing=sorted(set(expected)-set(seen))
- unreviewed=sorted(rid for rid in due_ids if not ledger['entries'][rid]['questions'])
+ unreviewed=sorted(rid for rid in due_ids if ledger['entries'][rid]['classification']!='REVIEWED')
  fails=sorted(qid for qid,row in seen.items() if row['status']=='FAIL')
  return {'schema':'gg-c07-answer-assessment-v1','status':'FAIL' if fails else 'UNKNOWN',
          'answered':seen,'failed':fails,'missing':missing,'unreviewed_due':unreviewed,
