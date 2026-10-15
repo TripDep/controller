@@ -4,7 +4,9 @@ A producer's answer can establish FAIL, never work PASS. Only explicitly
 source-reviewed questions have a polarity. All others remain UNKNOWN.
 """
 import hashlib
+import json
 import re
+from pathlib import Path
 
 REVIEWED={
  'AAA-200-G-067':('Individuare e correggere compenetrazioni.',(
@@ -25,6 +27,76 @@ def need(ok,why):
  if not ok:raise Blocked(why)
 def digest(s):return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
+
+# These are question *wordings* reviewed against immutable canonical sources.
+# They are NOT source-specific native semantic verifiers or independent asset QA.
+QUESTION_MASTER_PIN='b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165'
+QUESTION_FILES=('c07_questions_758_part1.json','c07_questions_758_part2.json')
+
+def _verified_wording(inv):
+ """Refuse drift, missing/extra IDs, conflicting overlaps or stale Library pins."""
+ count=inv['rule_count']
+ # Small six-rule fixture is explicitly non-operational and keeps old unit tests.
+ if count != 763:
+  need(count < 20 and inv['canonical_master_sha256']=='a'*64,
+       'ANSWER_NONCANONICAL_INVENTORY')
+  return {}
+ need(inv['canonical_master_sha256']==QUESTION_MASTER_PIN,
+      'ANSWER_758_LIBRARY_MASTER_DRIFT')
+ merged={}
+ for index,name in enumerate(QUESTION_FILES,1):
+  try:
+   part=json.loads((Path(__file__).resolve().parent/name).read_text(encoding='utf-8'))
+  except (OSError,ValueError) as err:
+   raise Blocked('ANSWER_758_SOURCE_NOT_READABLE:'+name) from err
+  need(part.get('schema')=='gg-c07-reviewed-part-v1' and part.get('index')==index
+       and isinstance(part.get('questions'),dict),'ANSWER_758_PART_SCHEMA')
+  for rid,row in part['questions'].items():
+   need(type(row) is dict and
+        set(row)=={'requirement_sha256','source_sha256','question','compound_review'}
+        and type(row['question']) is str and row['question'].strip().endswith('?')
+        and isinstance(row['compound_review'],bool)
+        and HEX.fullmatch(row['requirement_sha256'])
+        and HEX.fullmatch(row['source_sha256']),
+        'ANSWER_758_ROW_SCHEMA:'+rid)
+   if rid in merged:need(merged[rid]==row,'ANSWER_758_OVERLAP_CONFLICT:'+rid)
+   merged[rid]=row
+ need(len(merged)==758 and set(merged)==set(inv['rules'])-set(REVIEWED),
+      'ANSWER_758_MEMBERSHIP')
+ need(sum(x['compound_review'] for x in merged.values())==72,
+      'ANSWER_758_COMPOUND_COUNT')
+ for rid,row in merged.items():
+  canonical=inv['rules'][rid]
+  need(row['requirement_sha256']==canonical['requirement_sha256'] and
+       row['source_sha256']==canonical['source_sha256'],
+       'ANSWER_758_SOURCE_DRIFT:'+rid)
+ return merged
+
+def questions_for(inv):
+ """Shared source-checked source of C07/obligation ledger questions."""
+ wording=_verified_wording(inv)
+ specs={}
+ for rid in inv['rules']:
+  reviewed=REVIEWED.get(rid)
+  if reviewed:
+   qs=[{'id':rid+':'+key,'type':kind,'text':prompt}
+       for key,kind,prompt in reviewed[1]]
+   cls='REVIEWED'
+   compound=False
+  elif rid in wording:
+   row=wording[rid]
+   qs=[{'id':rid+':REQUIREMENT','type':'REQUIREMENT_SATISFIED',
+        'text':row['question']}]
+   cls='YES_NO_WORDING_REVIEWED_PROOF_PENDING'
+   compound=row['compound_review']
+  else:
+   qs=[{'id':rid+':CONTROL_CHECK','type':'CONTROL_PERFORMED',
+        'text':'Hai effettuato il controllo previsto dalla regola canonica '+rid+'?'}]
+   cls='GENERIC_CHECK_REVIEW_PENDING'
+   compound=False
+  specs[rid]={'classification':cls,'questions':qs,'compound_subchecks_pending':compound}
+ return specs
+
 def build(inv):
  """Full inventory, exact source binding, explicit unreviewed classification."""
  need(isinstance(inv,dict) and inv.get('schema')=='gg-effective-family-inventory-v1','ANSWER_INVENTORY_SCHEMA')
@@ -35,6 +107,7 @@ def build(inv):
       len(families)==inv.get('family_count') and set(flat)==set(rows),'ANSWER_CANONICAL_MEMBERSHIP')
  master=inv.get('canonical_master_sha256')
  need(isinstance(master,str) and HEX.fullmatch(master),'ANSWER_MASTER_DIGEST')
+ specs=questions_for(inv)
  entries={}
  for rid in flat:
   r=rows[rid];clause=r.get('requirement')
@@ -44,18 +117,19 @@ def build(inv):
        'ANSWER_RULE_SOURCE:'+rid)
   reviewed=REVIEWED.get(rid)
   if reviewed:need(clause==reviewed[0],'ANSWER_REVIEWED_CLAUSE_DRIFT:'+rid)
-  qs=[{'id':rid+':'+key,'type':kind,'text':prompt}
-      for key,kind,prompt in reviewed[1]] if reviewed else [
-      {'id':rid+':CONTROL_CHECK','type':'CONTROL_PERFORMED',
-       'text':'Hai effettuato il controllo previsto dalla regola canonica '+rid+'?'}]
+  spec=specs[rid]
   entries[rid]={'family':r['family'],'requirement_sha256':r['requirement_sha256'],
                 'source_sha256':r['source_sha256'],
-                'classification':'REVIEWED' if reviewed else 'GENERIC_CHECK_REVIEW_PENDING',
-                'questions':qs,'verdict':'UNKNOWN'}
+                'classification':spec['classification'],
+                'compound_subchecks_pending':spec['compound_subchecks_pending'],
+                'questions':spec['questions'],'verdict':'UNKNOWN'}
  return {'schema':'gg-c07-answer-contract-v1','master_sha256':master,
          'rule_count':len(entries),'reviewed_count':sum(x['classification']=='REVIEWED' for x in entries.values()),
          'unreviewed_count':sum(x['classification']!='REVIEWED' for x in entries.values()),
          'question_count':sum(len(x['questions']) for x in entries.values()),
+         'wording_reviewed_count':sum(x['classification']=='YES_NO_WORDING_REVIEWED_PROOF_PENDING' for x in entries.values()),
+         'generic_count':sum(x['classification']=='GENERIC_CHECK_REVIEW_PENDING' for x in entries.values()),
+         'compound_pending_count':sum(x['compound_subchecks_pending'] for x in entries.values()),
          'entries':entries,'advancement_authorized':False}
 
 def assess(ledger,due_ids,packets,*,attempt_id,operation_sha256):
