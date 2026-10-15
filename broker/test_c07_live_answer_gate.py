@@ -93,6 +93,40 @@ class AnswerGateTests(unittest.TestCase):
         self.assertNotIn('Q-075:DEFECT', {q['question_id'] for q in batch['questions']})
         self.assertEqual(batch['due_rules_sha256'], gate.digest(['AAA-200-G-067']))
 
+    def test_large_due_source_is_indexed_and_paged_without_scope_bypass(self):
+        rid = 'AAA-200-G-067'
+        self.ledger['entries'][rid]['compound_subchecks_pending'] = True
+        rows = [{'subcheck_id': rid+':SC'+str(i).zfill(3),
+                 'clause_sha256': 'a'*64, 'canonical_clause': 'source clause '+str(i)}
+                for i in range(1,61)]
+        contract = {'schema': 'gg-c07-canonical-composites-v1',
+                    'master_sha256': self.ledger['master_sha256'],
+                    'canonical_composite_count':72,'due_composite_count':1,
+                    'due_composites':{rid:{
+                        'family':'AAA-200','source_sha256':'c'*64,
+                        'requirement_sha256':self.ledger['entries'][rid]['requirement_sha256'],
+                        'source_decomposition':'SOURCE_LIST_CANDIDATES_REVIEW_PENDING',
+                        'source_subcheck_count':60,'subchecks':rows}}}
+        self.inventory['rule_count'] = 763
+        with patch.object(gate.composites,'inspect',return_value=contract):
+            batch=gate.challenge(self.inventory,self.plan,self.work,self.checkpoint,
+                                 detail_rule=rid,subcheck_offset=20,subcheck_limit=20)
+            self.assertEqual(batch['compound_source_subchecks'][rid]['source_subcheck_count'],60)
+            self.assertNotIn('subchecks',batch['compound_source_subchecks'][rid])
+            self.assertEqual(len(batch['selected_source_subcheck_page']['subchecks']),20)
+            self.assertEqual(batch['selected_source_subcheck_page']['next_offset'],40)
+            overview=gate.challenge(self.inventory,self.plan,self.work,self.checkpoint)
+            self.assertIsNone(overview['selected_source_subcheck_page'])
+            with self.assertRaisesRegex(ValueError,'C07_SUBCHECK_VIEW_NOT_DUE'):
+                gate.challenge(self.inventory,self.plan,self.work,self.checkpoint,
+                               detail_rule='Q-075')
+            response=gate.inspect(self.inventory,self.plan,self.work,[],
+                                  self.checkpoint,subcheck_packets=[])
+            self.assertEqual(response['compound_answer_assessment']['missing_total'],60)
+            self.assertEqual(len(response['compound_answer_assessment']['missing']),20)
+            self.assertTrue(response['compound_answer_assessment']['missing_truncated'])
+            self.assertFalse(response['advancement_authorized'])
+
     def test_evidence_reference_never_self_verifies(self):
         p = [answer(self.ledger, 'AAA-200-G-067:CHECK', 'YES',
                     refs=[{'ref': 'untrusted', 'sha256': 'f'*64}]),

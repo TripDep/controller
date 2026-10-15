@@ -225,7 +225,7 @@ class ControlledJudgment:
             work, _, _ = self.prepare(row)
             return work
 
-    def expected_question_batch(self):
+    def expected_question_batch(self, *, compound_rule=None, subcheck_offset=0, subcheck_limit=20):
         """Offer the exact due-question challenge without authorizing work."""
         with self.locked():
             row = self.plan()
@@ -236,7 +236,10 @@ class ControlledJudgment:
                           'last_audit_hash': st['last_audit_hash'],
                           'plan_record_hash': row['record_hash']}
             return {'work': work, 'question_batch':
-                    challenge(self.inventory, row['plan'], work, checkpoint),
+                    challenge(self.inventory, row['plan'], work, checkpoint,
+                              detail_rule=compound_rule,
+                              subcheck_offset=subcheck_offset,
+                              subcheck_limit=subcheck_limit),
                     'advancement_authorized': False}
 
     def begin(self, origin, offers, answer_packets=None, subcheck_packets=None):
@@ -489,6 +492,9 @@ def main(argv=None):
     parser.add_argument('--offers', type=Path)
     parser.add_argument('--answers', type=Path)
     parser.add_argument('--subcheck-answers', type=Path)
+    parser.add_argument('--compound-rule')
+    parser.add_argument('--subcheck-offset', type=int, default=0)
+    parser.add_argument('--subcheck-limit', type=int, default=20)
     parser.add_argument('--close-record', type=Path)
     args = parser.parse_args(argv)
     try:
@@ -505,7 +511,10 @@ def main(argv=None):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
         if args.command == 'request':
-            result = bridge.expected_question_batch()
+            result = bridge.expected_question_batch(
+                compound_rule=args.compound_rule,
+                subcheck_offset=args.subcheck_offset,
+                subcheck_limit=args.subcheck_limit)
         elif args.command == 'enroll':
             result = {'plan_record_hash': bridge.enroll_plan(data(args.plan)),
                       'advancement_authorized': False}
