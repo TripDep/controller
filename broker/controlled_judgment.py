@@ -94,6 +94,8 @@ class ControlledJudgment:
             if self.inventory.get('rule_count') == 763 or 'source_digests' in self.inventory:
                 from c07_non_aaa_153 import require_operational_scope
                 require_operational_scope(self.inventory, plan)
+                from c07_behavior_110 import require_operational_scope as require_behavior_110
+                require_behavior_110(self.inventory, plan)
             rec = self.append('SUPERVISOR_PLAN_ENROLLED', plan=copy.deepcopy(plan),
                               plan_sha256=j.digest(plan), status_step=active['step'])
             return rec['record_hash']
@@ -116,6 +118,8 @@ class ControlledJudgment:
         if self.inventory.get('rule_count') == 763 or 'source_digests' in self.inventory:
             from c07_non_aaa_153 import require_operational_scope
             require_operational_scope(self.inventory, row['plan'])
+            from c07_behavior_110 import require_operational_scope as require_behavior_110
+            require_behavior_110(self.inventory, row['plan'])
         return row
 
     def local_file(self, relative):
