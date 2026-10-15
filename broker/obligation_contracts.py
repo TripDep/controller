@@ -54,6 +54,7 @@ def build(inv):
     flattened=[rid for family,ids in families.items() for rid in ids]
     need(len(flattened)==len(set(flattened)) and set(flattened)==set(rules),
          'LEDGER_OMITTED_OR_DUPLICATE_ID')
+    question_specs=answers.questions_for(inv)
     entries={}
     for rid in sorted(rules):
         row=rules[rid]
@@ -68,14 +69,12 @@ def build(inv):
         if reviewed_answer is not None:
             need(row['requirement']==reviewed_answer[0],
                  'LEDGER_REVIEWED_ANSWER_SOURCE_DRIFT:'+rid)
-        answer_questions=([{'id':rid+':'+key,'type':kind,'text':prompt}
-                           for key,kind,prompt in reviewed_answer[1]]
-                          if reviewed_answer else [
-                              {'id':rid+':CONTROL_CHECK','type':'CONTROL_PERFORMED',
-                               'text':'Hai effettuato il controllo previsto dalla regola canonica '+rid+'?'}])
+        spec=question_specs[rid]
+        answer_questions=spec['questions']
         entries[rid]={
           'family':row['family'],'canonical_requirement':row['requirement'],
-          'answer_polarity_classification':('REVIEWED' if reviewed_answer else 'GENERIC_CHECK_REVIEW_PENDING'),
+          'answer_polarity_classification':spec['classification'],
+          'compound_subchecks_pending':spec['compound_subchecks_pending'],
           'answer_questions':answer_questions,
           'answer_self_attestation_is_work_pass':False,
           'source_sha256':row['source_sha256'],
@@ -102,6 +101,9 @@ def build(inv):
     reviewed=sum(x['reviewed_validator_id'] is not None for x in entries.values())
     missing=len(entries)-reviewed
     typed=sum(x['answer_polarity_classification']=='REVIEWED' for x in entries.values())
+    wording_reviewed=sum(x['answer_polarity_classification']=='YES_NO_WORDING_REVIEWED_PROOF_PENDING' for x in entries.values())
+    generic_count=sum(x['answer_polarity_classification']=='GENERIC_CHECK_REVIEW_PENDING' for x in entries.values())
+    compound_pending=sum(x['compound_subchecks_pending'] for x in entries.values())
     by_family={family:{'registered':len(ids),
                        'reviewed_implementations':sum(entries[r]['reviewed_validator_id'] is not None for r in ids),
                        'pending_semantic_implementations':sum(entries[r]['reviewed_validator_id'] is None for r in ids)}
@@ -118,6 +120,9 @@ def build(inv):
             'missing_semantic_verifier_implementations':missing,
             'reviewed_question_polarity_rules':typed,
             'question_polarity_review_required':len(entries)-typed,
+            'question_wording_reviewed_proof_pending':wording_reviewed,
+            'generic_question_count':generic_count,
+            'compound_subchecks_pending':compound_pending,
             'all_rule_question_contracts_present':len(entries)==sum(bool(x['answer_questions']) for x in entries.values()),
             'current_operational_rule_passes':0,'individual_mg0_passes':0,
             'advancement_authorized':False,'closure_authorized':False,
