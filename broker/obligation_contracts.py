@@ -15,6 +15,7 @@ from pathlib import Path
 
 import family_coverage as coverage
 import approved_validators as approved
+import c07_answer_semantics as answers
 
 # Read the protected Controller's current canonical Master pin.
 CURRENT_MASTER=json.loads((Path(__file__).resolve().parent.parent /
@@ -63,8 +64,18 @@ def build(inv):
              'LEDGER_SOURCE_ID_INVALID:'+rid)
         validator=approved.REVIEWED.get(rid)
         kinds=evidence_modalities(row)
+        reviewed_answer=answers.REVIEWED.get(rid)
+        if reviewed_answer is not None:
+            need(row['requirement']==reviewed_answer[0],
+                 'LEDGER_REVIEWED_ANSWER_SOURCE_DRIFT:'+rid)
+        answer_questions=([{'id':rid+':'+key,'type':kind,'text':prompt}
+                           for key,kind,prompt in reviewed_answer[1]]
+                          if reviewed_answer else [])
         entries[rid]={
           'family':row['family'],'canonical_requirement':row['requirement'],
+          'answer_polarity_classification':('REVIEWED' if reviewed_answer else 'REVIEW_REQUIRED'),
+          'answer_questions':answer_questions,
+          'answer_self_attestation_is_work_pass':False,
           'source_sha256':row['source_sha256'],
           'requirement_sha256':row['requirement_sha256'],
           'earliest_catalog_phase':row.get('catalog_phase'),
@@ -88,6 +99,7 @@ def build(inv):
          len(families)==inv['family_count'],'LEDGER_COUNTS')
     reviewed=sum(x['reviewed_validator_id'] is not None for x in entries.values())
     missing=len(entries)-reviewed
+    typed=sum(bool(x['answer_questions']) for x in entries.values())
     by_family={family:{'registered':len(ids),
                        'reviewed_implementations':sum(entries[r]['reviewed_validator_id'] is not None for r in ids),
                        'pending_semantic_implementations':sum(entries[r]['reviewed_validator_id'] is None for r in ids)}
@@ -102,6 +114,8 @@ def build(inv):
             'registered_families':len(families),'registered_rule_ids':len(entries),
             'reviewed_documentary_predicate_implementations':reviewed,
             'missing_semantic_verifier_implementations':missing,
+            'reviewed_question_polarity_rules':typed,
+            'question_polarity_review_required':len(entries)-typed,
             'current_operational_rule_passes':0,'individual_mg0_passes':0,
             'advancement_authorized':False,'closure_authorized':False,
             'by_family':by_family,'rules':entries}
