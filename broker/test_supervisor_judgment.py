@@ -7,7 +7,7 @@ from test_rule_evidence import API,binding as old_binding
 from test_supervisor_context import receipt,seal
 
 def inventory():
-    return {'canonical_master_sha256':'a'*64,'families':{'EXECUTION':['EXEC-003'],'ASSET_PROFILE_READINESS':['PROFILE_FOLIAGE']},'rules':{'EXEC-003':{'family':'EXECUTION','source_sha256':'a'*64,'requirement_sha256':'b'*64},'PROFILE_FOLIAGE':{'family':'ASSET_PROFILE_READINESS','source_sha256':'a'*64,'requirement_sha256':'c'*64,'profile':'FOLIAGE_PROFILE'}}}
+    return {'canonical_master_sha256':'a'*64,'family_count':2,'rule_count':2,'families':{'EXECUTION':['EXEC-003'],'ASSET_PROFILE_READINESS':['PROFILE_FOLIAGE']},'rules':{'EXEC-003':{'family':'EXECUTION','source_sha256':'a'*64,'requirement_sha256':'b'*64},'PROFILE_FOLIAGE':{'family':'ASSET_PROFILE_READINESS','source_sha256':'a'*64,'requirement_sha256':'c'*64,'profile':'FOLIAGE_PROFILE'}}}
 def work():
     return {'work_item_sha256':'a'*64,'attempt_id':'b'*64,'operation_sha256':'e'*64,'attempt_number':1,'previous_attempt_id':None,'phase':'P8','asset_type':'vegetation','profiles':['FOLIAGE_PROFILE'],'master_sha256':'a'*64,'work_dependencies':{'c'*64:'d'*64},'asset_specific_extensions_verified':True,'guardian_required':False,'mode':'DIAGNOSTIC_ONLY','closure_requested':False}
 def contexts():return {'rescue':receipt(),'guardian':receipt('guardian')}

@@ -15,6 +15,7 @@ from unittest.mock import patch
 import golden_controller as gc
 import supervisor_judgment as j
 from controlled_judgment import ControlledJudgment
+from c07_mg0_individual import TRIGGERS as MG0_TRIGGERS
 from test_rule_evidence import API
 from test_supervisor_judgment import inventory, contexts
 from test_supervisor_context import seal
@@ -63,10 +64,12 @@ class Tests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.master = self.root / 'MASTER.md'
-        self.master.write_text('\n'.join(gc.REQUIRED_MASTER_MARKERS) + '\n' +
+        self.master.write_text('\\n'.join(gc.REQUIRED_MASTER_MARKERS) + '\\n' +
             '## MG0 — PROCESS FALSIFICATION\\n' +
             'Canonical trigger pattern recovered from the old chat:\\n' +
-            'The response is not limited to fixing the asset.\\n')
+            ''.join('- ' + text + '\\n' for text in MG0_TRIGGERS) +
+            'The response is not limited to fixing the asset.\\n' +
+            'invalidate affected states and reapply the corrected process\\n')
         self.inv = inventory()
         self.inv['canonical_master_sha256'] = hashlib.sha256(self.master.read_bytes()).hexdigest()
         self.c = gc.Controller(self.root, self.master)
@@ -211,6 +214,26 @@ class Tests(unittest.TestCase):
         self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
         self.assertIsNone(self.c.asset_state('TEST')['active_step'])
         self.assertEqual(self.s.records()[-1]['event'], 'SUPERVISOR_OPERATION_CLOSED')
+
+    def test_current_attempt_individual_mg0_observed_error_blocks_actual_begin(self):
+        offers, _ = self.issue()
+        requested = self.s.expected_work()
+        bind = {'rule_id':'EXEC-003','attempt_id':requested['attempt_id']}
+        status_close = next(r for r in reversed(self.s.records())
+                            if r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS')
+        self.c.append_event('TEST', dict(
+            event='MG0_BASELINE_PASS',
+            previous_pass_record_hash=status_close['record_hash'], **bind))
+        self.c.append_event('TEST', dict(
+            event='USER_REVIEW', result='FAIL', detected_by='OWNER',
+            owner_evidence_sha256='d' * 64, assistant_preflight_passed=True,
+            **bind))
+        with self.assertRaisesRegex(j.Blocked,
+                                    'CONTROLLED_CURRENT_RULE_MG0_PROCESS_FAILURE:EXEC-003'):
+            self.s.begin(self.api.origin, offers)
+        self.assertIsNone(self.c.asset_state('TEST')['active_step'])
+        self.assertFalse(any(r.get('event')=='SUPERVISOR_OPERATION_OPENED'
+                             for r in self.s.records()))
 
     def test_stop_persisted_without_opening_controller(self):
         offers, _ = self.issue('FAIL')
