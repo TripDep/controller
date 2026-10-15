@@ -100,3 +100,31 @@ proof, asset quality or native-origin authentication. This pure contract
 returns FAIL/UNKNOWN, never operational PASS, and does not itself intercept
 ChatGPT messages or run the Controller begin/close lifecycle. This stage is
 not C07 completion, C08 positive correction or C09 full acceptance.
+
+## C07 Library-reviewed 758 yes/no wording integration candidate (15 October 2026)
+
+Source of truth for this *wording review*: Library
+`/Pine Haven/Golden Garden/_CONTROL/C07_758_QUESTION_REVIEW_20261015/C07_758_CHECKLIST_REVISIONATA.json`,
+pinned to Master SHA256
+`b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165`.
+
+Two checked-in JSON partitions contain **only** each question, canonical rule/source
+digests and a flag for the 72 composite rule questions; they contain no 3D assets.
+There are exactly 758 unique remaining rule IDs, no conflicting overlaps and no
+remaining generic fallback for a complete canonical 763-rule inventory. The five
+already-reviewed specific rules retain their specialized controls, including
+DEFECT_PRESENT and OPEN_ANALYSIS. The 758 new prompts use a positive YES/NO
+requirement-satisfaction polarity: NO admits a failure, YES remains an unverified
+self-declaration. Every rule continues to require *independent* source-bound
+semantic verification, MG0 and the authorized Controller phase protocol.
+
+**Important limit:** the 72 composite questions are wording-reviewed, not
+independently verified at the per-subclause level. Their composite flag stays
+open, and no single YES certifies every constituent requirement. The separate
+question contract and full obligation ledger use one shared source-validated
+question mapping. No automatic PASS, asset approval, phase close or live
+conversation interception is added by this release.
+
+Operational promotion requires actual native work answers, native individual
+proof validators, a healthy broker with the canonical Master pin and a
+fail-closed enforceable process. C07 therefore remains PARTIAL.

@@ -1,0 +1,1638 @@
+{
+  "schema": "gg-c07-reviewed-part-v1",
+  "index": 2,
+  "questions": {
+    "BEHAVIOR-059": {
+      "requirement_sha256": "d38e6bd7191bb0026772521f3fa50471e3b33fe7587b2e681b572d1b468e48af",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Governance strumentale, non sostitutiva del lavoro»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-060": {
+      "requirement_sha256": "8603a8f6aa77dd46e4c13826ffb21fe5d9559a4e01eaa6bf675572be119f9551",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Portare i limiti verificati nella prima frase utile»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-061": {
+      "requirement_sha256": "a90ca6d0c8a0583671d37774a4d2631d4b46fa5ca4f40e4a49c81cce28d353e8",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Recuperare e leggere il MASTER reale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-062": {
+      "requirement_sha256": "bfbdd0c84eab7c5c64f0ca9306e1503e4004e585e5ea0326561abbc3b689aeef",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Confermare versione e path reali»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-063": {
+      "requirement_sha256": "7e6fe0492b73839add2af5864f72fccb36ea075f584bdad515b913ffc566433e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Approval utente separato dal PASS meccanico»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-064": {
+      "requirement_sha256": "54ffb53ac1f78e01f33d02692867ad3c124357bb743e2e7c00a7c8e8451ccdd6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non inventare quote o misure»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-065": {
+      "requirement_sha256": "f32bc620207e1c5230349c29a76a0ec256bb95b7a8cfd50832c99cc3468345ee",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Applicare stop e rollback»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-066": {
+      "requirement_sha256": "b1d9742e1fd14f8f6cf2f4526a7b4bbd72f59c9af22102b993f5bae18b351c00",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Preservare PENDING e stato LOCK»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-067": {
+      "requirement_sha256": "d006184d46474898253be00d604432b1d907f9a5f2d0d747479c649bd6fe5bd1",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Sincronizzare MASTER, WORK_STATE, audit e handoff»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-068": {
+      "requirement_sha256": "663c9d03f075fb7cdbf9f75a7d89022ee4d87129b94649e5c86e954e77e6cfcd",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità del grafo in uso»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-069": {
+      "requirement_sha256": "d03c3825d7674b7c5aab213445f7cc1d9f9d73c93b045e56b1ee59bc5a327130",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Persistenza fallita = BLOCKED, non DONE»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-070": {
+      "requirement_sha256": "3119f46373b901e1920e757752a26245ece7aab66dce5fd71b44585ba63ea6ef",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Se si chiede testo integrale, salvarlo integralmente»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-071": {
+      "requirement_sha256": "bd0ece66758674bb08e23dcb9ac3a68a9558c0c7f776f5d67779e641fd851dce",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «QA visivo e topologico della catena strutturale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-072": {
+      "requirement_sha256": "28857fbae4a902e61f2426227977ddeab035f1ae2fd0397decdfed17fbe9bb42",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare tutti i punti di contatto e appoggio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-073": {
+      "requirement_sha256": "0d7970f7fa74cfe252b2885d816a389c6dcb04ed8805f120349457e63866fb1e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Vietare consegna senza verifica delle connessioni»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-074": {
+      "requirement_sha256": "1c66571a971613a4faba2810ae31df30ed8e3aa58fa0d9b3312e68a264aabb97",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non usare il cliente come QA primario»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-075": {
+      "requirement_sha256": "6b43e6d7e066a5a775acfd73b1b1f4739670706d7e9c37cc76fe1ba9d0b99a55",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non conservare versioni HARD FAIL come baseline»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-076": {
+      "requirement_sha256": "fd79c4a3356dfcf75dd29fade08f93e8b31805a3f8772f6eb418d34193d410af",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare geometria, materiali, runtime e accettazione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-077": {
+      "requirement_sha256": "05f3d97d0a848a186fd82a961949430956d50348ff63de18764a6d34581ad2ce",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare anche la consegna effettiva, non solo il file»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-078": {
+      "requirement_sha256": "11978d52e590f33aa7a36807ef388312cfa5d90f094b331c3ff48f3a4c5996a6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Confrontare misure di riferimento e ingombro risultante»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-079": {
+      "requirement_sha256": "366084c2b6daec728c83adfb054cee05bdbe9060e5fa906a29bcb44daa397ff6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità architettonica prima del dettaglio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-080": {
+      "requirement_sha256": "ac6e0e6a07a786b3dec4a463634a2e103392b20da7d507255efe8ab002b8326e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ricercare le compenetrazioni da più visuali»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-081": {
+      "requirement_sha256": "24e0280b63ed15aaa8754d20ad05f865064cb636f77a598407c67d9f0daac6fb",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Valutare l'idoneità degli strumenti all'inizio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-082": {
+      "requirement_sha256": "2996ee1a4bd64faa0dd1bd275b3badade8de2656e1651c3061990155a9432e53",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Applicare Abort Early sulla tecnica fallimentare»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-083": {
+      "requirement_sha256": "c58debcdddf2d89e85753a30bd773a649c9afe8f981239e4fb56eca0e8ca9e75",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non ripetere patch su una base invalida»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-084": {
+      "requirement_sha256": "50e6e4d08ecc95432023f59af97a277168a4f0f6dcbce1bca249c5de86a195ed",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Validare volume tridimensionale e silhouette»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-085": {
+      "requirement_sha256": "57c674fd13a3c385bf73f054df6f26f464081674df14c234c58fc5b43c4e540b",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità anatomica e stile reference»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-086": {
+      "requirement_sha256": "70f50dbd8c607d1543555ce4ea697b1f926be8f151c2b90543dd6540e4cd850c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controllare variazione volumetrica organica»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-087": {
+      "requirement_sha256": "6f9f335ecd589df414cff5ce4fd2cdcb8fac7a7f0380ad968b51293e0591c89b",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare articolazioni e raccordi organici»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-088": {
+      "requirement_sha256": "3aba17f2910f63358a31c6bbd11b56af9ce2ef994ffd3f4d339589fd70f0c750",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controllare connessione fisica e posa»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-089": {
+      "requirement_sha256": "a4f46b313d18d1c06bf67ce6a5099af486550ef3ae7daff7d13d730d2fd30b0f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «QA visivo indipendente da quello meccanico»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-090": {
+      "requirement_sha256": "a60ea6b6390f11af6bc77ada1ece13f4e5a70412b1dd481a3cd25ff1beb91fe1",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ispezione approfondita prima della consegna»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-091": {
+      "requirement_sha256": "877f5dfaba8f8c51f81222088671a6d577d83fb0936b64f8bed2900b84783ad9",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare assi, pivot, origine e trasformazioni»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-092": {
+      "requirement_sha256": "d928f363045feae59aa5cd3b493ca9d0b61279a42b881833c8608e928fcadb98",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «QA multi-angolo prima dell'output»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-093": {
+      "requirement_sha256": "d5740d4d047c408cca6aadc256808e73e6d1229e660c87523ef07ceb3b6ce129",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare componenti minuti con viste ravvicinate»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-094": {
+      "requirement_sha256": "0f4d53e5a2f6e80afddec79ef6a9fd3cfde913bf04d61d4e7043bd5156b356f6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controllare carpenteria, proporzioni e raccordi dalle reference»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-095": {
+      "requirement_sha256": "1983afc1ddaf572ed6d0078a075206a0da22af5a85449313d1f1ab33dc8da74e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Preservare materiali LOCK»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-096": {
+      "requirement_sha256": "5453c39b4d3e4421b0a5d5aef596ab28bcdcad18d1e8e789affb14deb042a9b0",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Confronto visivo contro palette accettata»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-097": {
+      "requirement_sha256": "8b5c51093067695437ed240ea362cbd24fe2cab6b240251023cd760233310c9f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare shader e risposta ottica realistica»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-098": {
+      "requirement_sha256": "eb8bf709abf84ce47bae9f8e6aa77e502de2ec9fe3ae9516f91089c05c12b501",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Studiare leaf cards e alpha materiali nativi GTA»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-099": {
+      "requirement_sha256": "83621c02a9932aef0abd1bc2b6ac7fab3c95f7b03d1948a21e44c199d9508bd5",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Runtime PASS soltanto su test in gioco»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-100": {
+      "requirement_sha256": "f3ea80c7026450a0e0787a5b6d1e112bc504a56f93ec064dab4641fc0981c3da",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ricontrollare identità, separazione e livello visivo degli asset»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-101": {
+      "requirement_sha256": "d74b3794108c3828a2004398434e475bdc85fe9a1c2d68c6304412dc1374754a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Mostrare il file operativo che l'utente ha richiesto»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-102": {
+      "requirement_sha256": "eadc51a4336d3ecf1ba163ef011fb2f7c20e1417b6173ee14e92f8171b96e2aa",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Comunicare soltanto verifiche utili e risultati»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-103": {
+      "requirement_sha256": "299705eba0d4ac61f5e9da95c3360c877c0a66e2412f15302e9e9056a874291e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Correggere l'errore reale prima del discorso»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-104": {
+      "requirement_sha256": "420c050d4b73d715bef693e5a58587fecf7431538b6339581462e7283c59d81b",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Nessuna richiesta di fiducia sostitutiva della prova»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-105": {
+      "requirement_sha256": "1d16301795ed985b6ff8258f2f1a85ffa98cee6892b5b2535970066048d9d03f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Risposta binaria corretta prima, condizioni pertinenti subito»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-106": {
+      "requirement_sha256": "086a3b9400ca9ff93caf85f18797ce4fe4b18a340bcf4ac75d516f59430c2e54",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Classificare limite provato, bug, scelta e UNKNOWN»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-107": {
+      "requirement_sha256": "789c184c3b745f8fdb7ce076153a605876c972bed6dc12f72d08e3c7ff3cbdad",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Dichiarare stato tecnico effettivo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-108": {
+      "requirement_sha256": "2b72adbf9e1ae265cdfa4ce29908e6fe63935ffa3e56f91c5dac91b06ef06ef7",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Iterare internamente, consegnare solo dopo QA»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-109": {
+      "requirement_sha256": "dbecdbe4e5bd6f193589deadcb4167c5343d39d5646a31e45976582b76ed1ce6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Applicare D0/autorizzazione dove richiesta»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-110": {
+      "requirement_sha256": "d925a220479830f096ccc88100e2a122969bb5e1fef0fa24ccbc6afa5b02cd40",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Distinguere persistenza del file da installazione nelle impostazioni»?",
+      "compound_review": false
+    },
+    "P0": {
+      "requirement_sha256": "419b0939624a53683e50745781d9dd2f7e7d42ee4f2325f12ee501702536c7db",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P0 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P1": {
+      "requirement_sha256": "3deb79536da0fc3e15c199b7012f818b220202b0d27b6aa2c7a598e94b33cd3e",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P1 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P2": {
+      "requirement_sha256": "4b433d79b2686252b37d74ffd9bc9a2ebb56f0406c8215507e92b48b6068e6d4",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P2 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P3": {
+      "requirement_sha256": "fdebc8d793ba07467cd3ecae919ad332f00bf65e57d43c694e2b0a9cdaba8701",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P3 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P4": {
+      "requirement_sha256": "58fd7dcae4ade164d021e59d532caa821c61b1f8fc752a265a59a701e6d7dc1f",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P4 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P5": {
+      "requirement_sha256": "a6c7ebc3cbd90b6ff2cbbcc2e2fae0ec43cb069fb31172776f2842f14537e8d8",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P5 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P6": {
+      "requirement_sha256": "9c97d165ac5eccb8e85d5f8fab1abcbb1ec7e2b25527dadbaceb00dafe2690d8",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P6 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P7": {
+      "requirement_sha256": "2e632f7867b58fc041ec01ab454e48bbe87b86e2fda16bcc4fb5a8819c51938a",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P7 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "P8": {
+      "requirement_sha256": "445fa2d823af8302ce01e1e7d95242b116d7b9a1f85353901d2ad95e19c76c9f",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai completato e documentato i prerequisiti della fase P8 previsti dal sistema R110, prima di procedere?",
+      "compound_review": true
+    },
+    "PROFILE_ARCHITECTURE": {
+      "requirement_sha256": "492da0b64a42514c8338df7921cf952eb97602b241a4773f31608b3fe7d92b74",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo ARCHITECTURE per identità/reference, silhouette strutturale, scala giocatore, ingressi, scale, corrimano, moduli e connessioni?",
+      "compound_review": false
+    },
+    "PROFILE_FOLIAGE": {
+      "requirement_sha256": "fe160e6f6c0183d3b10a11057a272ae23ad6ba47af6ea37ea738977b05346913",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo FOLIAGE per identità botanica, clima, stagionalità, tronco/rami, alpha cards, vento e LOD?",
+      "compound_review": true
+    },
+    "PROFILE_ROCK_ROCKERY": {
+      "requirement_sha256": "48c69787fffe20604e017db07e591a6e34283798aa8bcd102ad1c761aa9d856e",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo ROCK_ROCKERY per identità geologica, massa, erosione, contatti, materiali, silhouette e LOD?",
+      "compound_review": true
+    },
+    "PROFILE_TERRAIN_PATH": {
+      "requirement_sha256": "342981c676ce4230c55722d888b9a1ad34b123b85a0b2df9f6083d78e188bcd5",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo TERRAIN_PATH per quote reali, pendenze, raccordi, drenaggio, collisioni e walkability?",
+      "compound_review": false
+    },
+    "PROFILE_WATER_FOUNTAIN": {
+      "requirement_sha256": "70f4a0c46ab6e6d1ebb13cb12be4bdb47a960c0a0e72702bfabba795bd19cb85",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo WATER_FOUNTAIN per livello acqua, geometria, shader, emissioni, collisioni e comportamento runtime?",
+      "compound_review": true
+    },
+    "PROFILE_PROP": {
+      "requirement_sha256": "b5bed8c67bfa1c021924ce7944127cf18fc65d9567eca1d17d591eab08d42269",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato i requisiti del profilo PROP per scala e funzione, materiali, collider, orientamento, collocazione e LOD?",
+      "compound_review": false
+    },
+    "SYSTEM_SOURCE_RELATIONSHIP": {
+      "requirement_sha256": "d12d4f445ba1beb219ef0be64a5cc511adfbd79dff77f6e798eb44a990898ee2",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai mantenuto la gerarchia fra le regole R110 e il MASTER/Controller esistenti?",
+      "compound_review": true
+    },
+    "SYSTEM_TASK_DEPENDENCIES": {
+      "requirement_sha256": "7b50d9dcb7c8524cceda98ac3b4521917c6cfe4fd3431ca0c9a01fef6c4f4284",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato e registrato grafo, dipendenze e stato della coda Rescue della fase?",
+      "compound_review": true
+    },
+    "SYSTEM_MG0_ESCALATION": {
+      "requirement_sha256": "56687fcf8a8c403524bb6825fcb282c4478e02687c2780d7ee3c2c5d3eeeed91",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai applicato le escalation MG0 previste per i fallimenti e le ripetizioni osservate?",
+      "compound_review": true
+    },
+    "SYSTEM_TECHNICAL_ENVIRONMENT": {
+      "requirement_sha256": "57528e9d21ff548c5b62a7960b338372ae62c00b0ff290acc2255e08b08d1c06",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai verificato il target tecnico FiveM prima di scegliere geometria, LOD, materiali e formati?",
+      "compound_review": true
+    },
+    "SYSTEM_MONITORING_CONSTRAINTS": {
+      "requirement_sha256": "e512b74b2b181a4b3b34538a5a324fd653d7aa7ce109bafd1c93961f617141d8",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai rispettato limiti e costi del monitoraggio, evitando attività non autorizzate o a pagamento?",
+      "compound_review": true
+    },
+    "SYSTEM_RELEASE_PRIORITIES": {
+      "requirement_sha256": "7c4d9ca31f8c22c4810952e3c3d337dea9e4fe0ecc74c9654a9b5730b38bba01",
+      "source_sha256": "00fe684e66dad8acca0afa973f3fa2618afcebea0b591b817184d237b8d6a700",
+      "question": "Hai mantenuto le priorità di release concordate senza spostare il lavoro su deliverable secondari?",
+      "compound_review": true
+    },
+    "AAA-200-A-001": {
+      "requirement_sha256": "021d47c9f8ec22877968f674ec6053b343cd646f3d9d3d7149f81a1a3264004a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso esattamente l’obiettivo prima di iniziare qualsiasi attività?",
+      "compound_review": false
+    },
+    "AAA-200-A-002": {
+      "requirement_sha256": "45fa19ffcb54880564296b50891285d6489b57c9589313b326fdf2ead9f48793",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai distinto il risultato richiesto dalle attività necessarie per raggiungerlo?",
+      "compound_review": false
+    },
+    "AAA-200-A-003": {
+      "requirement_sha256": "94f7ef9226ab1249cc71df48c1db22f99c4e05b485d78e34799cace8bb50d2a9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di confondere il tempo lavorato con il progresso realmente ottenuto?",
+      "compound_review": false
+    },
+    "AAA-200-A-004": {
+      "requirement_sha256": "179a178cd8ab439fb9185a85f47af42fb7fd45b134f2b5f48de82fab963b1182",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai rispettato tutte le istruzioni e i vincoli già stabiliti?",
+      "compound_review": false
+    },
+    "AAA-200-A-005": {
+      "requirement_sha256": "d440ba54520b16ec177eb153c25de601b4f0be4759f0632a328510cfd03c5fe3",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di cambiare obiettivo senza una motivazione tecnica verificabile o un’autorizzazione?",
+      "compound_review": false
+    },
+    "AAA-200-A-006": {
+      "requirement_sha256": "d1e346775d0dfedcd8f4500428f5017266878cf66146514d5783ef3019bc7008",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai assunto la responsabilità della qualità del proprio lavoro?",
+      "compound_review": false
+    },
+    "AAA-200-A-007": {
+      "requirement_sha256": "1d65e04926127d798e2cc95c082b122b94e648baaa08654516e95095f21673db",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai individuato autonomamente gli errori prima che li scopra il cliente?",
+      "compound_review": false
+    },
+    "AAA-200-A-008": {
+      "requirement_sha256": "1ea92a3f75e4e1211e52e1df343986d1d4a959d8daf8772c00754d6fc2be33e7",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai riconosciuto la differenza tra un fatto verificato e una supposizione?",
+      "compound_review": false
+    },
+    "AAA-200-A-009": {
+      "requirement_sha256": "15f8252b45639709e5870482952827b6e1efeebc993cf8a4d5906bdf89e39985",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di dichiarare mai completato ciò che non è stato verificato?",
+      "compound_review": false
+    },
+    "AAA-200-A-010": {
+      "requirement_sha256": "2fea0100282f7390cb6aa874d036585e1274dda1d260e14445f5a72293e2a813",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai scelto la soluzione più semplice che soddisfa tutti i requisiti, evitando complessità inutile?",
+      "compound_review": false
+    },
+    "AAA-200-B-011": {
+      "requirement_sha256": "1d69c5904045237d57f016ce3ea1976cc3b0c4805433316364c161f34a713448",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato lo scopo esatto dell’asset o dell’ambiente?",
+      "compound_review": false
+    },
+    "AAA-200-B-012": {
+      "requirement_sha256": "821df305c0091590369aba2881311351186c5cb3eb5e658d573aff135ee1e9b6",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai stabilito il motore di destinazione prima della modellazione?",
+      "compound_review": false
+    },
+    "AAA-200-B-013": {
+      "requirement_sha256": "cec5bc96aa7f1996c2028c07d3d8b18069c13256031b852acceb6eed2918ca40",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato formato, scala, unità di misura e coordinate richieste?",
+      "compound_review": false
+    },
+    "AAA-200-B-014": {
+      "requirement_sha256": "0ea83f808dd3cec09621d04cbe183480e3f2f25661ffbe7a798530b7c587e473",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato quali asset esistono già e possono essere riutilizzati?",
+      "compound_review": false
+    },
+    "AAA-200-B-015": {
+      "requirement_sha256": "7360e50c6574d9cf52595065d207d21af8df85c4eb4ecf75c6264689bb115031",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato gli elementi approvati da quelli ancora modificabili?",
+      "compound_review": false
+    },
+    "AAA-200-B-016": {
+      "requirement_sha256": "e58591c191ead4b2de98fd5ce48ec21c69461485b1055d449e98c8c167d951a2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato le dipendenze tra modelli, terreno, vegetazione e architettura?",
+      "compound_review": false
+    },
+    "AAA-200-B-017": {
+      "requirement_sha256": "115017577825b910f541b497bc3acc2465fbfdb3245161392c248759da7f1dea",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai definito cosa deve essere realmente consegnato, non soltanto studiato?",
+      "compound_review": false
+    },
+    "AAA-200-B-018": {
+      "requirement_sha256": "90d680200ff3de2e2c9974ccf18eab1df3b28003a6b0cd8367c6c0fd8d4bc2cd",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai individuato i rischi tecnici prima di iniziare la produzione?",
+      "compound_review": false
+    },
+    "AAA-200-B-019": {
+      "requirement_sha256": "33b86d13af52a8a3db01400826713b3df912112d883643463e7cb29f789c0f95",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai stimato tempi e complessità usando evidenze, senza inventare scadenze?",
+      "compound_review": false
+    },
+    "AAA-200-B-020": {
+      "requirement_sha256": "a7c405c238bc0e7a5371c3f711a3a521171a384e1d868deae56fa96f2a6615f0",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai definito criteri oggettivi per stabilire quando il lavoro sarà finito?",
+      "compound_review": false
+    },
+    "AAA-200-C-021": {
+      "requirement_sha256": "289ba1b0fd3308a5466bc1b45809e763b6e4408d249c7d077fd43762248e4728",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai cercato reference fotografiche autentiche e pertinenti?",
+      "compound_review": false
+    },
+    "AAA-200-C-022": {
+      "requirement_sha256": "37f53754eeb0e331b6db930419979c55b246040886f065277602d92a167e3cee",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai cercato disegni tecnici, sezioni e planimetrie quando disponibili?",
+      "compound_review": false
+    },
+    "AAA-200-C-023": {
+      "requirement_sha256": "dcf621377a53878b2e6ca2cf02ebb937e24ab5cd2ded2b540da40391828ab587",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato le proporzioni degli oggetti e degli edifici reali?",
+      "compound_review": false
+    },
+    "AAA-200-C-024": {
+      "requirement_sha256": "10303fdf2b22cb34a6042ff4e7956dffdf1a81dec0453dfe209c215cc915e3f7",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso come le strutture vengono costruite nel mondo reale?",
+      "compound_review": false
+    },
+    "AAA-200-C-025": {
+      "requirement_sha256": "f29cf6244849a2bf6ae84dc49af32fe3f39590f72c13f81bd8d8ddd1c068cfd5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai analizzato materiali e superfici dei riferimenti originali?",
+      "compound_review": false
+    },
+    "AAA-200-C-026": {
+      "requirement_sha256": "a56c6c80b56831ac51dcc0ec59d05787a414c3b67c83c320efe64e2cbaee37b1",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai raccolto reference da diverse angolazioni?",
+      "compound_review": false
+    },
+    "AAA-200-C-027": {
+      "requirement_sha256": "40f375bd6a554b4cc80263264fb16c1f2eb62f2c140db51d5448793d2b9e4d5b",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato le reference strutturali da quelle puramente estetiche?",
+      "compound_review": false
+    },
+    "AAA-200-C-028": {
+      "requirement_sha256": "83ed37c839b830a846528599dcb5c73ec7cacce9d3190846309e05c83c164b3c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato epoca, luogo, cultura e identità dell’architettura?",
+      "compound_review": false
+    },
+    "AAA-200-C-029": {
+      "requirement_sha256": "72ecb6b555f338afaa798828228c756f05e969aecb9f4b121259bb5599acf8e2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato copyright e licenze di modelli, texture e fotografie?",
+      "compound_review": false
+    },
+    "AAA-200-C-030": {
+      "requirement_sha256": "0de6dacd4f47d0e6ca2bc52a46c1107e749a6b39b6b1093c8efb77c32977786f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato una raccolta di reference coerente prima del blockout?",
+      "compound_review": false
+    },
+    "AAA-200-D-031": {
+      "requirement_sha256": "3925e7c94be7c1536aad591450556d018fada14df9730fb24d9824f6898160d4",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato il linguaggio visivo dell’intero progetto?",
+      "compound_review": false
+    },
+    "AAA-200-D-032": {
+      "requirement_sha256": "5e06e30ad837704f6b04af485752104db492351f4142d8495ffd0f50633b4c05",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai mantenuto coerenza tra asset appartenenti alla stessa area?",
+      "compound_review": false
+    },
+    "AAA-200-D-033": {
+      "requirement_sha256": "a4337b73cd6d222fb7f5ed224db05444409c0b4c47538e34a853de489f01e5e9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai definito palette dei colori e gerarchia dei materiali?",
+      "compound_review": false
+    },
+    "AAA-200-D-034": {
+      "requirement_sha256": "b93758926130c406c23815cb6994454959f65b9e3bcecdeaa27be204f3205e97",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato il rapporto tra pieni e vuoti?",
+      "compound_review": false
+    },
+    "AAA-200-D-035": {
+      "requirement_sha256": "0325c959533ab5ab294cd416889fd09a59a72adfb724006608b578e3486eff8f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato silhouette e forme principali?",
+      "compound_review": false
+    },
+    "AAA-200-D-036": {
+      "requirement_sha256": "3202c9a027bb14b9ae346e54a29e0010c180e711143c48d4a6d58b5371ebe3ac",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai progettato punti focali leggibili?",
+      "compound_review": false
+    },
+    "AAA-200-D-037": {
+      "requirement_sha256": "41169b6f7491c95cfd1e140a27a5e2c707ac5aa0cf73e2e0b38d57975f431e29",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato ripetizioni visive troppo evidenti?",
+      "compound_review": false
+    },
+    "AAA-200-D-038": {
+      "requirement_sha256": "2ca2463b15702a6c2783bf191e70477eab48ef4d3701f5793961cf77e6b31e6a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato variazioni credibili senza perdere coerenza stilistica?",
+      "compound_review": false
+    },
+    "AAA-200-D-039": {
+      "requirement_sha256": "6751c2c0bd6dee326b8d2050ec07d6d560128bcab64747ae435b932f1c3667dd",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai valutato la composizione dal punto di vista del giocatore?",
+      "compound_review": false
+    },
+    "AAA-200-D-040": {
+      "requirement_sha256": "cdbdb7cb46b23ed1a79ad54c5a227de2aae6ff83a89aed6d7405067cb675a55d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che ogni elemento contribuisca alla scena e non sia semplice riempitivo?",
+      "compound_review": false
+    },
+    "AAA-200-E-041": {
+      "requirement_sha256": "496e6cec063f034d81d7fa2b5b12e88c2c227814077f0e2ea6cf88fc58195e08",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai stabilito le dimensioni reali dello spazio disponibile?",
+      "compound_review": false
+    },
+    "AAA-200-E-042": {
+      "requirement_sha256": "f22b2b52a8fc71374adcce38ae27fb40b0ae826b67633a3aa0024f40e25bb359",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai definito sistemi di coordinate, orientamento e origini?",
+      "compound_review": false
+    },
+    "AAA-200-E-043": {
+      "requirement_sha256": "7ac8b6c70b21a030509e44c500de0e555835eb0730f3b92f8bd956b1fa4478a5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato distanze e rapporti dimensionali tra gli edifici?",
+      "compound_review": false
+    },
+    "AAA-200-E-044": {
+      "requirement_sha256": "dd65c9af4e3a5e2d9690d3ea9c5f43fa51111605fb5c25cf8c4470c17ada4fe1",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato percorsi principali e secondari?",
+      "compound_review": false
+    },
+    "AAA-200-E-045": {
+      "requirement_sha256": "7067b11ae4a5da41080ec972907ea06d554902be2d3a51eb44179661c6042bac",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato aree accessibili e non accessibili?",
+      "compound_review": false
+    },
+    "AAA-200-E-046": {
+      "requirement_sha256": "f2ca31392068e660dbe02a0b9e539adede2bc8de92321a3197fe0044dc50b8da",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai considerato visuali, ingressi e uscite?",
+      "compound_review": false
+    },
+    "AAA-200-E-047": {
+      "requirement_sha256": "96f5ae48ec52d0d65bab42ffb46d37b0b79b9c14707e578769828c853e8b9c98",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai previsto gli ingombri delle strutture prima di costruirle?",
+      "compound_review": false
+    },
+    "AAA-200-E-048": {
+      "requirement_sha256": "96a6214dce2a77a52ad1e6f7134d57b26bc486944ab9cd41f145d8632d69c8d2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato la relazione tra strutture e terreno?",
+      "compound_review": false
+    },
+    "AAA-200-E-049": {
+      "requirement_sha256": "49eba1b481764fbe123126325aa45d3cebfe98a05b44695a6fdfa70a53365b3f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato eventuali sovrapposizioni con asset già presenti?",
+      "compound_review": false
+    },
+    "AAA-200-E-050": {
+      "requirement_sha256": "eb228f64c86cede51b4a86c84c91b685f881032c5e6cbf6c952a4e4ade9c9d33",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai conservato gli elementi progettuali bloccati senza spostarli arbitrariamente?",
+      "compound_review": false
+    },
+    "AAA-200-F-051": {
+      "requirement_sha256": "8442621c53672ec0d6182f827689f13e40e73109c431bc77a1f99a4f4c40237f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai creato prima le forme principali con geometria semplice?",
+      "compound_review": false
+    },
+    "AAA-200-F-052": {
+      "requirement_sha256": "af74d9fe1b3bfc8e8db49626b9dbb12a476bb9620648780015e158f60f226e8a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato scala e proporzioni rispetto al progetto?",
+      "compound_review": false
+    },
+    "AAA-200-F-053": {
+      "requirement_sha256": "0d34024b9eb1d7b1cdb128ddb9a7069c544c0877f4bacd33e386dbf2b6aa55cd",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato che i modelli siano orientati correttamente?",
+      "compound_review": false
+    },
+    "AAA-200-F-054": {
+      "requirement_sha256": "27891bfa7f99a2fa134fae310f29bae6c22a9b92ee0956e46ba5f22b9ae9b281",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato gli allineamenti tra moduli e strutture?",
+      "compound_review": false
+    },
+    "AAA-200-F-055": {
+      "requirement_sha256": "19d2403f553a7e9ffb7e376d1371146c85efaf3d0c348ff6edcbbf40373d07d3",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato gli spazi attraversabili dal giocatore?",
+      "compound_review": false
+    },
+    "AAA-200-F-056": {
+      "requirement_sha256": "fb83059c3673afbe88cb9e5e9ffaf6bc69b6f9be243bf474a572efdc7fbb2c56",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai provato più inquadrature, incluse quelle dall’alto?",
+      "compound_review": false
+    },
+    "AAA-200-F-057": {
+      "requirement_sha256": "3a05c5484f1b76da47104cfb92dca29bf5541464d8f567b57936c2eb2d2da95a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato problemi di composizione prima dei dettagli?",
+      "compound_review": false
+    },
+    "AAA-200-F-058": {
+      "requirement_sha256": "e63e6504aa3a850ff8fcc75df16fe136551eb67acf2ee004b59f95da0d75c44c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato i collegamenti tra elementi adiacenti?",
+      "compound_review": false
+    },
+    "AAA-200-F-059": {
+      "requirement_sha256": "94fe0a8f0f875ee61d5e7d62369ef347c059e5bc994d0f850aafcad8b72054f2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai corretto errori strutturali prima della modellazione definitiva?",
+      "compound_review": false
+    },
+    "AAA-200-F-060": {
+      "requirement_sha256": "2ff154ae76a5208b57ec0b673f08bb469fe3c2af1c681f2eb0b009e8f5b5d958",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di avanzare al dettaglio se il blockout non soddisfa i requisiti?",
+      "compound_review": false
+    },
+    "AAA-200-G-061": {
+      "requirement_sha256": "b54b3d062850232a7334aa61d33c48857da4b79d7379e071b325e38e893629d5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato geometria coerente con la forma reale dell’oggetto?",
+      "compound_review": false
+    },
+    "AAA-200-G-062": {
+      "requirement_sha256": "285e958669961c686b12e6bee1fcd760d3c45d792ba432139e66892d3be31c05",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai costruito silhouette corrette prima dei dettagli secondari?",
+      "compound_review": false
+    },
+    "AAA-200-G-063": {
+      "requirement_sha256": "e2c187eb8cd210273762c4e41d1b3ead85f1f65332b2774729a814ceefc7a5f5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato bevel con dimensioni realistiche?",
+      "compound_review": false
+    },
+    "AAA-200-G-064": {
+      "requirement_sha256": "9b521d29cfdf48461c63350ea7962b59c459c153c9cb2b28d139a438a9f78d95",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato spigoli involontariamente taglienti o arrotondati?",
+      "compound_review": false
+    },
+    "AAA-200-G-065": {
+      "requirement_sha256": "1a9776d6c38fdb07f328bc8c4c10cdfe9dee3a5afc5e2fb3a1144d273eb758ab",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato normali e direzione delle superfici?",
+      "compound_review": false
+    },
+    "AAA-200-G-066": {
+      "requirement_sha256": "b296793099ae35f4eff9985113a41f7fa8bd133abe8b0b735c256c4159f23f3f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai prevenuto geometria duplicata o inutilmente sovrapposta?",
+      "compound_review": false
+    },
+    "AAA-200-G-068": {
+      "requirement_sha256": "1bb5aeffada43e75d999c6e9ad62805c649ee8e7e94b2240afa05ee54465e2fd",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai mantenuto trasformazioni, pivot e origini coerenti?",
+      "compound_review": false
+    },
+    "AAA-200-G-069": {
+      "requirement_sha256": "2d8c1ba4c7991cda348fa555a7c3b3e66b405724d9c2c628cdd0002d22869fae",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato tecniche modulari quando migliorano precisione e produttività?",
+      "compound_review": false
+    },
+    "AAA-200-G-070": {
+      "requirement_sha256": "2d824f0aad4d3915ffd1429484a964192c981733db58f9a2a0fa412638eea710",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai conservato la geometria editabile fino alla validazione delle forme principali?",
+      "compound_review": false
+    },
+    "AAA-200-H-071": {
+      "requirement_sha256": "0a9ca5fd01188a97e32e1fb8cf6688d74d187f22ae39b48c56ee1436ce4c3222",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato la logica costruttiva dell’edificio?",
+      "compound_review": false
+    },
+    "AAA-200-H-072": {
+      "requirement_sha256": "504bbaf6170f50cf64546fa640f0346965f0ee83a5563fe6c512003f5a12bf68",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai riprodotto correttamente travi, pilastri e strutture portanti visibili?",
+      "compound_review": false
+    },
+    "AAA-200-H-073": {
+      "requirement_sha256": "6e30ec77429846978a5ccf090bf754aae6f9e66ba9c60610b68550fe65d6a29a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato l’effettivo collegamento tra gli elementi?",
+      "compound_review": false
+    },
+    "AAA-200-H-074": {
+      "requirement_sha256": "c1966239d2aa4ea88e810508cd54237fca5e46279ff0191532153eb895c6c00a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato simmetrie quando richieste dal progetto?",
+      "compound_review": false
+    },
+    "AAA-200-H-075": {
+      "requirement_sha256": "3b5474499345a033cef6b57e9c199e8292741818e158328becb1b74f4b6e4a7f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai inserito asimmetrie soltanto quando intenzionali?",
+      "compound_review": false
+    },
+    "AAA-200-H-076": {
+      "requirement_sha256": "c7330f0a6fb76af503b4ba2c809e1d855ff1511eb38a6920affcb5c817ecbe92",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai modellato coperture con pendenze e curvature coerenti?",
+      "compound_review": false
+    },
+    "AAA-200-H-077": {
+      "requirement_sha256": "c6830844535520771703dbfb3027aab60c6976d8c599bcf62c8acf02ac222cc9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai costruito raccordi credibili tra tetti, pareti e colonne?",
+      "compound_review": false
+    },
+    "AAA-200-H-078": {
+      "requirement_sha256": "17bc89a6f6374d453863920699a1658db8c8893e6c378bf80955fdb6a94a65ed",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato il cosiddetto effetto Lego: volumi semplicemente sovrapposti e giunzioni artificiali?",
+      "compound_review": false
+    },
+    "AAA-200-H-079": {
+      "requirement_sha256": "79bcfc71409370cb47b31935f8f51febd89bcf88e7219739becb2b5597bdbaa8",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai curato proporzioni e dettagli di porte, finestre, scale, corrimano e ornamenti?",
+      "compound_review": false
+    },
+    "AAA-200-H-080": {
+      "requirement_sha256": "543e47a3c0c8535acc249038e799b5b0b569098bc2a5bf1c7b1254585718fa50",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato la struttura sia singolarmente sia inserita nel contesto architettonico?",
+      "compound_review": false
+    },
+    "AAA-200-I-081": {
+      "requirement_sha256": "27278aa620382a7ba8ac5b450fd2bbf50cde212ff3a2affda0385f8e19e39bdc",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato l’aspetto naturale dell’elemento da riprodurre?",
+      "compound_review": false
+    },
+    "AAA-200-I-082": {
+      "requirement_sha256": "e668698b6fbb08364398e2ad9eced317125c643102759b4c7ae79884cecb0f3b",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai partito dalle forme organiche principali?",
+      "compound_review": false
+    },
+    "AAA-200-I-083": {
+      "requirement_sha256": "7909c9cfd13625e968662617297e62dc1c898d5d9fb5e8194725196cf13d13d2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato sculpting o modellazione procedurale quando appropriato?",
+      "compound_review": false
+    },
+    "AAA-200-I-084": {
+      "requirement_sha256": "27a59bc92600a12130bcbf5dd4619fdae2c0dfea11e3abd6f6d8c779473c1e3d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato distribuzioni casuali prive di logica naturale?",
+      "compound_review": false
+    },
+    "AAA-200-I-085": {
+      "requirement_sha256": "b25d620895fc12e47bcdff80abb5955fdea3596cfe6cc570925a1e6a08ca80bb",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai introdotto variazioni di silhouette e superficie?",
+      "compound_review": false
+    },
+    "AAA-200-I-086": {
+      "requirement_sha256": "4be8a8f851b48c34c6d57e0c0105e96bbfe583fea707e9d295ea49db4230b247",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai modellato erosioni coerenti con il materiale rappresentato?",
+      "compound_review": false
+    },
+    "AAA-200-I-087": {
+      "requirement_sha256": "77ddc9fb8bd8b34dd516c35a1695a01bda654323cafbf1d01d50edf9b8a74230",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato rocce ripetitive o dall’aspetto artificiale?",
+      "compound_review": false
+    },
+    "AAA-200-I-088": {
+      "requirement_sha256": "842ac2f4fc6206daa9541159fae4925b6fb07827a03e01f55386c28dadc30168",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che i punti di contatto con il terreno siano credibili?",
+      "compound_review": false
+    },
+    "AAA-200-I-089": {
+      "requirement_sha256": "37ef58e8c10e2e699188f80d4756250c347c4c59dbf39ee0f3f7e4d773fed0a2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai ottimizzato la geometria preservando le caratteristiche visive importanti?",
+      "compound_review": false
+    },
+    "AAA-200-I-090": {
+      "requirement_sha256": "0aefefdb197ce2f3cef4c5b56468833b56808a42331ebb8bb35cad95984f4a36",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato la composizione dei gruppi di rocce su scala ravvicinata e panoramica?",
+      "compound_review": false
+    },
+    "AAA-200-J-091": {
+      "requirement_sha256": "1b111d9bb568f8141b264f4ca2f15502fb71c78ffb10752fea7cd3d6120d1d29",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato specie botaniche realmente compatibili con l’ambiente?",
+      "compound_review": false
+    },
+    "AAA-200-J-092": {
+      "requirement_sha256": "afc5d6bc84a5a78dccd7d8635b0d28f8d2a07afc39e5d665f38a8ce341422c9a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato altezza, struttura e silhouette della pianta?",
+      "compound_review": false
+    },
+    "AAA-200-J-093": {
+      "requirement_sha256": "382a0d146378f05bf1ea0feb3b818e3c72284168e519744dfd95657a108216b4",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai costruito tronco e rami con gerarchia naturale?",
+      "compound_review": false
+    },
+    "AAA-200-J-094": {
+      "requirement_sha256": "bbdc0214674e7b3287c208b3db1d59739902d2cadbc507bc736592cda0190c75",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai distribuito i rami secondo una struttura botanicamente plausibile?",
+      "compound_review": false
+    },
+    "AAA-200-J-095": {
+      "requirement_sha256": "5bef14d20d54133ebbba426803d76ed6a350a527b5d9eacd1bf17b7be947fec0",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato foglie modellate, alpha cards o combinazioni appropriate al target?",
+      "compound_review": false
+    },
+    "AAA-200-J-096": {
+      "requirement_sha256": "1440d892f4061d9ffdaede5c362787742285c40deed09fae3c1d6cbf7c4f5371",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato texture di foglie con trasparenza corretta?",
+      "compound_review": false
+    },
+    "AAA-200-J-097": {
+      "requirement_sha256": "57c6642b5d1b5aad46b4bb4eec5b8ec7dfd6a37892d3a4e60efac62fb1b83538",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato chiome piatte o con ripetizioni evidenti?",
+      "compound_review": false
+    },
+    "AAA-200-J-098": {
+      "requirement_sha256": "77d99dababdeff433d12f902d2272cf1090f6dc22dfb88d18a81759c47992b3b",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai previsto varianti di alberi, cespugli, bambù e piante ornamentali?",
+      "compound_review": false
+    },
+    "AAA-200-J-099": {
+      "requirement_sha256": "a10d2c512f2d3828f89304f66aed50399ca7a93d9de9d4384d78cbf6ee487311",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato livelli di dettaglio adatti alla distanza?",
+      "compound_review": false
+    },
+    "AAA-200-J-100": {
+      "requirement_sha256": "34452b3e06d5a6bed50b3616a4864afd819f98d8f3d2b5c2ccd64b032655bd75",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato effettivamente nel motore il movimento del vento e il comportamento dei materiali?",
+      "compound_review": false
+    },
+    "AAA-200-K-101": {
+      "requirement_sha256": "a4bf2fbe27bc8c213be46d35c6a27d7479ed1040a8a226116127db4b492608c1",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai partito da dati affidabili delle quote del terreno?",
+      "compound_review": false
+    },
+    "AAA-200-K-102": {
+      "requirement_sha256": "63d1b5d6f0badeb278d0183dea247f65247f2624f0c877a83676c2be3b5add20",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di inventare quote, pendenze o profondità mancanti?",
+      "compound_review": false
+    },
+    "AAA-200-K-103": {
+      "requirement_sha256": "2bb289f0098459248cf3597be84f110ba5e5ae4209c235b978ad3a187e8ade9f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato terreno naturale, superfici costruite e superfici d’acqua?",
+      "compound_review": false
+    },
+    "AAA-200-K-104": {
+      "requirement_sha256": "ab20c7bf7a0b76b845d00bafb2ad4c724ba3a812bc652dfacc759ce6d56d1099",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai modellato variazioni naturali senza produrre rilievi arbitrari?",
+      "compound_review": false
+    },
+    "AAA-200-K-105": {
+      "requirement_sha256": "877d499a9cad127c31c0974993199b75634c16d3335216e2f845be76bf6b75ca",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato sentieri dall’andamento eccessivamente regolare e artificiale?",
+      "compound_review": false
+    },
+    "AAA-200-K-106": {
+      "requirement_sha256": "f3dba6574c9f9a75da4527989e00ac57c856cb7c270655e37a1dab17195569af",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai progettato raccordi corretti tra sentieri, scale e ponti?",
+      "compound_review": false
+    },
+    "AAA-200-K-107": {
+      "requirement_sha256": "1d583bff7f09839e99bbac8762438ceed274ef7122a026b49454838f317ddec9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai costruito sponde con transizioni credibili?",
+      "compound_review": false
+    },
+    "AAA-200-K-108": {
+      "requirement_sha256": "a1671f192ebd1fca5e85d8f454d430af9a3b26adb342210c7aff7c8be8af6120",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato il contatto tra acqua, terreno, rocce e strutture?",
+      "compound_review": false
+    },
+    "AAA-200-K-109": {
+      "requirement_sha256": "8c2b3ce6422793a4fb690465fe4166c335c5369ff7d2cf7b8f3875a8025c47ce",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato ponti, bordi, fondali e superfici percorribili rispetto alle quote note?",
+      "compound_review": false
+    },
+    "AAA-200-K-110": {
+      "requirement_sha256": "312cae50983f2e11ec9e450d2a86e5d44df8a34bc8d810fc6099170167250e91",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai testato visivamente e tecnicamente l’ambiente con l’acqua inserita nella scena?",
+      "compound_review": false
+    },
+    "AAA-200-L-111": {
+      "requirement_sha256": "87b2eed176cbf6094fbaa2e167a6160e40428976e524d58051d11fab6ff37a11",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato la topologia di ogni mesh?",
+      "compound_review": false
+    },
+    "AAA-200-L-112": {
+      "requirement_sha256": "4d4bb46c1ec95747d770b0abae6e0ea006aa6a648e7682b56f7fec18d2c28d35",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai eliminato vertici e facce duplicate?",
+      "compound_review": false
+    },
+    "AAA-200-L-113": {
+      "requirement_sha256": "d3d29a068cafd7f66bcfdc5e71ca406b7b5a33b9efe837f66c37c7f0ed1e49c7",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai individuato facce degeneri o geometria non intenzionale?",
+      "compound_review": false
+    },
+    "AAA-200-L-114": {
+      "requirement_sha256": "0150f1738c11629a513cb2706314f989b31cc3f5ab36a89d0a718c3687c16361",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato shading e triangolazione dell’asset esportato?",
+      "compound_review": false
+    },
+    "AAA-200-L-115": {
+      "requirement_sha256": "c2f2b24ba25ed9b5dba908be20fd6498a20ea1ead7e2c5b5e2d4a8f63ad06ab7",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato UV senza distorsioni visive ingiustificate?",
+      "compound_review": false
+    },
+    "AAA-200-L-116": {
+      "requirement_sha256": "b59596a71352059fad4aab7260a86784116b4bcfc5280333db7bd4004d45233d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai mantenuto densità delle texture coerente tra asset correlati?",
+      "compound_review": false
+    },
+    "AAA-200-L-117": {
+      "requirement_sha256": "ceeee39cf7b8da9242d4ccbb323c1acdd0722b12e7f556f703d7934fbf5e686f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato sovrapposizioni UV involontarie?",
+      "compound_review": false
+    },
+    "AAA-200-L-118": {
+      "requirement_sha256": "57f488cee714995468c81e5624eeb31a5da5b133182f3a73bf73b23b393c79fa",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato texture atlas quando offre benefici concreti?",
+      "compound_review": false
+    },
+    "AAA-200-L-119": {
+      "requirement_sha256": "5648eb57314aa0d45a8f8c51c8d414f21bbb34fe03a606003bc76e04fd9d5e29",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato baking di normal map e altre mappe quando necessario?",
+      "compound_review": false
+    },
+    "AAA-200-L-120": {
+      "requirement_sha256": "c630244d558187e646fd6463c62426b3000a475cf8ca58f1e0dfdbe5b24af015",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che la mesh esportata corrisponda visivamente a quella approvata?",
+      "compound_review": false
+    },
+    "AAA-200-M-121": {
+      "requirement_sha256": "a9920ffc03c80660fad6b544a99d8a4deb47f03fdcf9d5877500f6295221dc77",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato correttamente il materiale fisico rappresentato?",
+      "compound_review": false
+    },
+    "AAA-200-M-122": {
+      "requirement_sha256": "e6a9e72151fe4b8578ec8bba084d9cb2be85a52a6b563831cdc0c98d2b4e0d45",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai studiato roughness, riflettanza e comportamento delle superfici reali?",
+      "compound_review": false
+    },
+    "AAA-200-M-123": {
+      "requirement_sha256": "8e505a7bf3eaeebc9a4d68130afabac4e0a1a2e3e84b2e0486870a27fe0af2b5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato mappe normal, roughness e altre proprietà quando supportate?",
+      "compound_review": false
+    },
+    "AAA-200-M-124": {
+      "requirement_sha256": "b216b5ff9ef9e6e2498fe06296d524e933e576f22022c3c88e36a4a4725a72b5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato colori uniformi che rendono i materiali artificiali?",
+      "compound_review": false
+    },
+    "AAA-200-M-125": {
+      "requirement_sha256": "6379d1684958278e9bb99328f0a7331fc305b3173245a7f87410d4120774f0a4",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai introdotto variazioni credibili di superficie?",
+      "compound_review": false
+    },
+    "AAA-200-M-126": {
+      "requirement_sha256": "62b2984eec0397eabf72eddae0e95ce9f64923f7eb9aa8715e371ba6bdcca50f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato legno, pietra, metallo, vetro e intonaco con caratteristiche differenti?",
+      "compound_review": false
+    },
+    "AAA-200-M-127": {
+      "requirement_sha256": "77daed0a57f06f559bf60025672fcea1405e1b6d660250853341be670a28157d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato texture troppo pulite o usurate senza motivo?",
+      "compound_review": false
+    },
+    "AAA-200-M-128": {
+      "requirement_sha256": "2e382d6a834b2ed5ac2938976fbfb01601626431ae95bdc86b310c89df0e17b2",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato risoluzione, compressione e costo delle texture?",
+      "compound_review": false
+    },
+    "AAA-200-M-129": {
+      "requirement_sha256": "7b546cb6018af45bf7daf8b52d2d5634220de2af0baace9f41fc017332706d11",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai adattato i materiali allo shader supportato dal motore di destinazione?",
+      "compound_review": false
+    },
+    "AAA-200-M-130": {
+      "requirement_sha256": "68e90f48e340ee4baa036075061db444a1bd6d3b08bb6c15c7970005c043a8b5",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato che il materiale resti coerente sotto diverse condizioni di illuminazione?",
+      "compound_review": false
+    },
+    "AAA-200-N-131": {
+      "requirement_sha256": "e31fccb593a29b5655e5e66a045d49a73d27d9086777fadd9cfab34d36f6db57",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato illuminazione neutra per verificare il modello?",
+      "compound_review": false
+    },
+    "AAA-200-N-132": {
+      "requirement_sha256": "5ad34d85f26d371cf7f49e601c0d33037a1c539916886d45508e6eb7e638d78f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato l’illuminazione di controllo da quella cinematografica?",
+      "compound_review": false
+    },
+    "AAA-200-N-133": {
+      "requirement_sha256": "12b5776fac99c8a6dc9756dd2e1ac235cb869cc5a9614b80eee0958a5f3ec686",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato come la luce evidenzia i difetti geometrici?",
+      "compound_review": false
+    },
+    "AAA-200-N-134": {
+      "requirement_sha256": "51774fa35ef6950896675e95d4dd32d438f82ad60f6144ffe86953983e95f26f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato il comportamento dei materiali in luce diretta?",
+      "compound_review": false
+    },
+    "AAA-200-N-135": {
+      "requirement_sha256": "b4030d382757c443e12118d44a967d649dabea8e62eabb3dc84785c460abac14",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato il comportamento in ombra?",
+      "compound_review": false
+    },
+    "AAA-200-N-136": {
+      "requirement_sha256": "de3dfb53655f38187b7f26e9522349642a6e1d3fe11c39ca87219f9e1e1d0873",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato superfici metalliche, vetri e materiali riflettenti?",
+      "compound_review": false
+    },
+    "AAA-200-N-137": {
+      "requirement_sha256": "34bb43540820aed424144b9f7a612ca106644be9dcba447c4b9a499ccc59bbc4",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai osservato il modello dalla visuale del giocatore?",
+      "compound_review": false
+    },
+    "AAA-200-N-138": {
+      "requirement_sha256": "eb117309f851967b4c3951e3233f2290da375cd5cf2063b4fa5529d8fd54cdde",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai prodotto viste frontali, laterali, posteriori e dall’alto per il QA?",
+      "compound_review": false
+    },
+    "AAA-200-N-139": {
+      "requirement_sha256": "be78979f9bffdba9275d56ca206d31973c8c009499b12cb60644c592d98c0aa1",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di utilizzare render suggestivi per nascondere difetti?",
+      "compound_review": false
+    },
+    "AAA-200-N-140": {
+      "requirement_sha256": "87620b2bbf0773dd10332be03629c1016534528c4baf0ea06c1c7f94b0de664f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai distinto la qualità della presentazione dalla qualità tecnica dell’asset?",
+      "compound_review": false
+    },
+    "AAA-200-O-141": {
+      "requirement_sha256": "8456b2c9c0c6e47b5f1991b01c32af17d410599f59e1dc39fd883d6045707a20",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai stabilito un budget prestazionale coerente con la scena e la piattaforma?",
+      "compound_review": false
+    },
+    "AAA-200-O-142": {
+      "requirement_sha256": "1bb5dc438a348b83d7a94088a24a38100a47b15482dd52254a56d0df1cb5ab6e",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato il numero di triangoli delle mesh?",
+      "compound_review": false
+    },
+    "AAA-200-O-143": {
+      "requirement_sha256": "ca3429f9d2940255bf9bebf3d927191935fa7d1bae88c55b25c0429ae3b676b6",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai eliminato geometria invisibile quando non necessaria?",
+      "compound_review": false
+    },
+    "AAA-200-O-144": {
+      "requirement_sha256": "1b8058477d24129cb61e25e43dd420b877550859a0495eb6dd9cd3593caab051",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai preparato LOD coerenti con distanza e importanza dell’asset?",
+      "compound_review": false
+    },
+    "AAA-200-O-145": {
+      "requirement_sha256": "953d5a7cff6c4d313582671b338f6264dbff3bca05c5f3208493a01697cf248a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato le transizioni tra i livelli di dettaglio?",
+      "compound_review": false
+    },
+    "AAA-200-O-146": {
+      "requirement_sha256": "7acf106864989391cacb6362d3018fad0ec355eeeb1f20b449a9f9a57c098e72",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai ridotto il costo dei materiali quando possibile?",
+      "compound_review": false
+    },
+    "AAA-200-O-147": {
+      "requirement_sha256": "d88309ac0dbab2a25eeda0605d4f6dee590a6754ff05cae58dd0d0e61a849fb9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai riutilizzato texture e materiali senza impoverire la scena?",
+      "compound_review": false
+    },
+    "AAA-200-O-148": {
+      "requirement_sha256": "a7b6cfa7d8bfc0747b3c888faa9fe789fe66d9dd783378fe9c0c00dd82db0091",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato il consumo di memoria delle texture?",
+      "compound_review": false
+    },
+    "AAA-200-O-149": {
+      "requirement_sha256": "20a4ecf0eb7a95d0dae2fbfd7e6bcc474dc0aeff3332ff0abbde741d2aacb1d3",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai valutato il costo della vegetazione e delle superfici trasparenti?",
+      "compound_review": false
+    },
+    "AAA-200-O-150": {
+      "requirement_sha256": "966ceb2dcb77b8caed9df6c1c5fd3057249f96071d44022f4677b3b9b1180e4d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai misurato le prestazioni nel contesto reale, senza inventare benchmark?",
+      "compound_review": false
+    },
+    "AAA-200-P-151": {
+      "requirement_sha256": "0d38509edd2edbe61e81a8ffcf937b16affc2fe32c295fa3e84a64d7250bf173",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai identificato le superfici che necessitano di collisione?",
+      "compound_review": false
+    },
+    "AAA-200-P-152": {
+      "requirement_sha256": "242bba12b2b5bf97a2c94cade2bd74ea92cefa76ce5d962c90e7b09d895ceed6",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai separato collisioni e geometria visiva?",
+      "compound_review": false
+    },
+    "AAA-200-P-153": {
+      "requirement_sha256": "4e91912678ae2f475795da1e4a67f57d64fb164114f1544a9041e3e4ef39f45b",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato collisioni inutilmente complesse?",
+      "compound_review": false
+    },
+    "AAA-200-P-154": {
+      "requirement_sha256": "745705bc2bc71876467dcf31de5d4aed385c0911f88520d8ec270ea6def82029",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato porte, passaggi, scale e corrimano?",
+      "compound_review": false
+    },
+    "AAA-200-P-155": {
+      "requirement_sha256": "e629d285d5a3e78ad2e24d800322446adc7c14870b4e0147de52e0ffe8390c37",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che il giocatore non attraversi superfici solide?",
+      "compound_review": false
+    },
+    "AAA-200-P-156": {
+      "requirement_sha256": "98344c6cfbe38240053d5d3f03b3a234fdcaa633084637ee343fbdea01b8d56b",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che non esistano collisioni invisibili indesiderate?",
+      "compound_review": false
+    },
+    "AAA-200-P-157": {
+      "requirement_sha256": "0c2965fd1467f4be220faf040446ab0fd5fbc284337e63e13e5c71159a36930d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato le zone accessibili a piedi?",
+      "compound_review": false
+    },
+    "AAA-200-P-158": {
+      "requirement_sha256": "183ce4f065a0b2e20162d874965fae4bd076fed847bf6af9def810ae03beb8df",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai testato punti di contatto tra edifici e terreno?",
+      "compound_review": false
+    },
+    "AAA-200-P-159": {
+      "requirement_sha256": "7647ffbb75a2ba149bd82bc3c5ebb1f6eac1d3c660add51d78019d13a288ee3c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai considerato eventuali passaggi dei veicoli?",
+      "compound_review": false
+    },
+    "AAA-200-P-160": {
+      "requirement_sha256": "13c6b703b204f1d961567b3ab50003547991732ece282a82aa76f7d101f87a02",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato collisioni e percorribilità dentro il motore di gioco?",
+      "compound_review": false
+    },
+    "AAA-200-Q-161": {
+      "requirement_sha256": "d5e2e11b469ee661f262965e8e8e8a22ff8a565b5c50a3880f6a062c876cbecf",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato di conoscere la struttura delle risorse di GTA V/FiveM?",
+      "compound_review": false
+    },
+    "AAA-200-Q-162": {
+      "requirement_sha256": "54b489958abbcd9929973ca88741f47b11f964393f8533543a04ca3554edba52",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso la funzione di .ydr per i drawable?",
+      "compound_review": false
+    },
+    "AAA-200-Q-163": {
+      "requirement_sha256": "2ba7c9616709375c9a705105b4e85052588655f04cbfa1180d977a8fc5712dba",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso il ruolo dei dizionari texture .ytd?",
+      "compound_review": false
+    },
+    "AAA-200-Q-164": {
+      "requirement_sha256": "2b23db1b426f2852a347d9fd719437c010184f03300336f7e7eb542d7f84aa14",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso la funzione degli archetipi .ytyp?",
+      "compound_review": false
+    },
+    "AAA-200-Q-165": {
+      "requirement_sha256": "7638251817b8b6a4efd119b1bae0f46a9c8566297e9bb618477ea20c6dd266b3",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso il posizionamento degli oggetti tramite .ymap?",
+      "compound_review": false
+    },
+    "AAA-200-Q-166": {
+      "requirement_sha256": "a8a5eaaff3a495faaa83be46f2c793ac2501a4c213fc0bd096e3e3a0f73a6d19",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai compreso le collisioni .ybn?",
+      "compound_review": false
+    },
+    "AAA-200-Q-167": {
+      "requirement_sha256": "1250cdb6bc889d726f04643f3d289f205a66fc527b463aaf378638676c3e1819",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato Sollumz per preparare gli asset compatibili?",
+      "compound_review": false
+    },
+    "AAA-200-Q-168": {
+      "requirement_sha256": "605f94b2e20abd74dd104f20e5d8ab8711fcc281e41a58b2ed63bd5d3332f4be",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato shader RAGE, attributi dei vertici e materiali supportati?",
+      "compound_review": false
+    },
+    "AAA-200-Q-169": {
+      "requirement_sha256": "400f43785700160506acef638acee067b8ab5fd388ca61f91afe7ec44f14182e",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato posizionamento, streaming, LOD e visualizzazione in CodeWalker?",
+      "compound_review": false
+    },
+    "AAA-200-Q-170": {
+      "requirement_sha256": "b1f86cb063a85c2b6f6fa47872c200cc43d6c08bc11c463a2eb32c58fac40501",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai provato gli asset in FiveM prima di dichiararli pronti per il gioco?",
+      "compound_review": false
+    },
+    "AAA-200-R-171": {
+      "requirement_sha256": "ea3ceab1ec83e50234a9a5079940948a5a0d28f0e1070440c0e63ad6d216386f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai organizzato i sorgenti con nomi e strutture coerenti?",
+      "compound_review": false
+    },
+    "AAA-200-R-172": {
+      "requirement_sha256": "26c8a6b68c49703028e9fb8fddf2b9aa339104e3b058b54eb9d0a0a1ee3572b3",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai distinto sorgenti modificabili, esportazioni e consegne?",
+      "compound_review": false
+    },
+    "AAA-200-R-173": {
+      "requirement_sha256": "4730fc01ac8da31f9517aefe3dde51d20ca26aec4d4ca35ce38bd1e1dc773e07",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai utilizzato il controllo versione per proteggere il lavoro?",
+      "compound_review": false
+    },
+    "AAA-200-R-174": {
+      "requirement_sha256": "2c8fadb2c62e03791cecd3bfbfcba1ceb6993a90faf85f3ee9c0039486e8e396",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai conservato copie verificabili degli asset approvati?",
+      "compound_review": false
+    },
+    "AAA-200-R-175": {
+      "requirement_sha256": "0ae4e26d74d26fac224d5af99f3cf054d031ba0ca9d9c76f56ae6150a2f9ae5c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai automatizzato verifiche ripetitive quando il beneficio è concreto?",
+      "compound_review": false
+    },
+    "AAA-200-R-176": {
+      "requirement_sha256": "a6c9c1e7261a54a9f9b9f898c67de1f93da473a3a7a9bf49cc44b6dcc4cad547",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che gli script producano il risultato atteso, non soltanto che terminino senza errori?",
+      "compound_review": false
+    },
+    "AAA-200-R-177": {
+      "requirement_sha256": "bb701d75f41eb15edca7da5813322802b9bd92fb562222344f8680b46937d781",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato che una procedura automatica sovrascriva asset approvati?",
+      "compound_review": false
+    },
+    "AAA-200-R-178": {
+      "requirement_sha256": "a089ae8413962916478e46f54646ad2c16992b166b58856c643a91631519c63a",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai registrato dipendenze e stato reale delle attività?",
+      "compound_review": false
+    },
+    "AAA-200-R-179": {
+      "requirement_sha256": "e9107691e8a6484313296e77536b258322116c2a437512dda9ad39b2a70d069d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai ripreso da un checkpoint valido dopo un’interruzione, senza duplicare lavoro?",
+      "compound_review": false
+    },
+    "AAA-200-R-180": {
+      "requirement_sha256": "d91b71f5766093a5845b6291011eb58d8b2abc0ae3a62557a0c62f516984249c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai misurato il progresso tramite produzione effettiva, non tramite quantità di registrazioni o documenti?",
+      "compound_review": false
+    },
+    "AAA-200-S-181": {
+      "requirement_sha256": "953ad416dbaf79b977d85c4f22793c5f5b2b925101fd272e6d1327e042bfe4d9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato il modello da più angolazioni prima della consegna?",
+      "compound_review": false
+    },
+    "AAA-200-S-182": {
+      "requirement_sha256": "2a2b4df79b5428681857df59fed6c6089cd40b96736a2702096c1bda13083f3f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato allineamenti, proporzioni e assi?",
+      "compound_review": false
+    },
+    "AAA-200-S-183": {
+      "requirement_sha256": "15c0cdf6a656d9580f833ebd78b922d23cc2dcd9930c5eb200b8c37df3bade6d",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato tutte le intersezioni tra componenti?",
+      "compound_review": false
+    },
+    "AAA-200-S-184": {
+      "requirement_sha256": "70f14a98ec176dd254524365c78014dd2755e7fefe3d778aca396f58d36a2f03",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato normali, superfici e artefatti visivi?",
+      "compound_review": false
+    },
+    "AAA-200-S-185": {
+      "requirement_sha256": "fa28d26b868684657acf5434814052c936c774b1155612c98efc4ad4e4afa42c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai controllato la qualità dei materiali sull’asset esportato?",
+      "compound_review": false
+    },
+    "AAA-200-S-186": {
+      "requirement_sha256": "f00dc99a2addb904b3825dbf5b73e4361d660dd93c8a598cfa7a7a4bbf88152f",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato la coerenza dell’asset con il resto dell’ambiente?",
+      "compound_review": false
+    },
+    "AAA-200-S-187": {
+      "requirement_sha256": "3effff5b35c7806785f274442cd78b104371a7af32d915952bde6ba365ba98f1",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai ripetuto i controlli pertinenti dopo ogni correzione significativa?",
+      "compound_review": false
+    },
+    "AAA-200-S-188": {
+      "requirement_sha256": "c0cf9c261ab3c0fd5c811664d39cd90a39331ffc6bd951c61784151f96f965dc",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai distinto test automatici, ispezione visiva e test effettivi nel motore?",
+      "compound_review": false
+    },
+    "AAA-200-S-189": {
+      "requirement_sha256": "b260b8f8fbcf1b4f11093adfbd6ef35fd532748f8d61990280115e2edf8af2ef",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai bloccato la consegna quando è presente un errore critico?",
+      "compound_review": false
+    },
+    "AAA-200-S-190": {
+      "requirement_sha256": "ec8954d0e439f96f1ed68fb7914fd2521deb874e29880d6fe09e0fc04317086c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di trasferire sistematicamente al cliente il lavoro di individuazione dei difetti?",
+      "compound_review": false
+    },
+    "AAA-200-T-191": {
+      "requirement_sha256": "9f62e20ec9a65718d8c21339443afb418a4984ba877f123149be496ec06e06f9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai consegnato file concreti e utilizzabili, non soltanto relazioni?",
+      "compound_review": false
+    },
+    "AAA-200-T-192": {
+      "requirement_sha256": "ccea82a2077cfec7cfe37620f8f20b0df0fa9ed06c945869665ea5b5f73354b9",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che tutti i file richiesti siano presenti?",
+      "compound_review": false
+    },
+    "AAA-200-T-193": {
+      "requirement_sha256": "da6decb86a94f3fb82366ac15481ab1a40aa4cf732e3f8a9f4161c262271ad95",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai verificato che i file siano apribili e non corrotti?",
+      "compound_review": false
+    },
+    "AAA-200-T-194": {
+      "requirement_sha256": "23771dbb4cadd88036b7ec707fc3b8825dbbb49868752a1320dedd4b77eddfad",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai mantenuto corrispondenza tra sorgente, versione e asset consegnato?",
+      "compound_review": false
+    },
+    "AAA-200-T-195": {
+      "requirement_sha256": "286f68a3fa73b1a224a7e8c3d87e69ab73855decb5b9d189a719630989128424",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai documentato soltanto le informazioni necessarie a utilizzare e mantenere l’asset?",
+      "compound_review": false
+    },
+    "AAA-200-T-196": {
+      "requirement_sha256": "9b53119cfc02754624d408c4f6ccf5a5a233d57402538047b9338bb0ba95ed7c",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai dichiarato esplicitamente quali verifiche sono state eseguite e quali no?",
+      "compound_review": false
+    },
+    "AAA-200-T-197": {
+      "requirement_sha256": "846a1406af7dc87fdc7685546a39b9ff22d5a5a9e93035d5b1e3b96e9454e56e",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai evitato di presentare un candidato come approvato senza una reale approvazione?",
+      "compound_review": false
+    },
+    "AAA-200-T-198": {
+      "requirement_sha256": "fd5556ce5e363d6194b78b763c59d1a320451dfdcf4f42fb89edabd84a6dac05",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai analizzato gli errori ricorrenti e correggerne la causa, non soltanto i sintomi?",
+      "compound_review": false
+    },
+    "AAA-200-T-199": {
+      "requirement_sha256": "aeecd948f2a690fa3e15c940b0434c06d951bf38ebb6185c79810f0e96252504",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai migliorato gli strumenti e il metodo quando emergono problemi reali, senza proliferazione inutile di controlli?",
+      "compound_review": false
+    },
+    "AAA-200-T-200": {
+      "requirement_sha256": "8b12ca23637a851a051b83c459f1dfed49eb4ca783b1ca3938fdca29d1991882",
+      "source_sha256": "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9",
+      "question": "Hai considerato completato il lavoro soltanto quando il risultato soddisfa i requisiti concordati ed è stato verificato con prove appropriate?",
+      "compound_review": false
+    }
+  }
+}

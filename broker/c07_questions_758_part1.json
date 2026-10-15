@@ -1,0 +1,3108 @@
+{
+  "schema": "gg-c07-reviewed-part-v1",
+  "index": 1,
+  "questions": {
+    "Q": {
+      "requirement_sha256": "d2c59c147af43119d786c012cfe1eeeeb2c962038b2d17a40c2a2a073b2332a0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai sospeso le azioni quando non capivi la richiesta, fatto le domande necessarie e verificato la comprensione prima di procedere?",
+      "compound_review": true
+    },
+    "A": {
+      "requirement_sha256": "f6bc91cc7e54507869e1466b62a77fa561e781c8f8f698420ef1b17f6be24f37",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai letto integralmente le fonti reali pertinenti e lo stato corrente prima di analizzare o agire?",
+      "compound_review": false
+    },
+    "B": {
+      "requirement_sha256": "8025f8607160618d9b0727c5e5ade07d760b97c4f780fd48c6a37a98f08d8512",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai analizzato cause, dipendenze, vincoli, rischi e regressioni prima della proposta?",
+      "compound_review": false
+    },
+    "C": {
+      "requirement_sha256": "a21a0892e66d83e0d3ac8b1725956ead89758ad32b6abedd3c2f2029fdf467b3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai descritto cosa cambiare, cosa mantenere LOCKED, motivazioni e criteri di PASS/FAIL prima dell’implementazione?",
+      "compound_review": false
+    },
+    "D0": {
+      "requirement_sha256": "443d190223f2beb6b74cd38a784b343fae6357d5f21b4fe9b129890915abdd43",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’autorizzazione esplicita del proprietario prima di qualsiasi implementazione governata?",
+      "compound_review": true
+    },
+    "D": {
+      "requirement_sha256": "ecc1cec8b02a40cf7334ee97b461390c0850286ecc8f9241d512e98efbfb40a1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai svolto l’implementazione soltanto dopo autorizzazione e sotto i gate applicabili?",
+      "compound_review": false
+    },
+    "E": {
+      "requirement_sha256": "8a0b0380ef6501cb11781f43b8bd1930463cbc385546aac70214eb4e9b536ca6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai validato autonomamente il risultato prodotto rispetto al piano e alle prove richieste?",
+      "compound_review": false
+    },
+    "F": {
+      "requirement_sha256": "57b8fa6428e8a6a0af7de12b9847a968fcf38c1db1b8b44a5746d286180face5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai consegnato soltanto risultati consentiti, con stato, evidenze e persistenza verificata?",
+      "compound_review": true
+    },
+    "MG0": {
+      "requirement_sha256": "ec2dbfbf6edbe0fee73abb0156eb103822b207327e1e0072790b0a5405fe55ec",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato per questa regola i trigger MG0, corretto le cause dei fallimenti e ritestato l’esecuzione corrente?",
+      "compound_review": true
+    },
+    "G0": {
+      "requirement_sha256": "ac05b41bf56593e955fab8244fe0a4930177e149317a14a3cd68aad7a27358c2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai completato i 30 controlli canonici di preparazione pertinenti prima di dichiarare la fase pronta?",
+      "compound_review": true
+    },
+    "G1": {
+      "requirement_sha256": "d7382c4593c72450bd1041bedc5a1045523e70ee23345d215ded08dd0636eb0f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito l’interrogazione critica autonoma pertinente prima, durante e dopo la lavorazione?",
+      "compound_review": true
+    },
+    "G2": {
+      "requirement_sha256": "8e3bfdfef6fe5cc724ded7c2256ad7cbc3a5011dc259fcbb121d4da797c2b751",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dimostrato con prove le affermazioni e le questioni critiche pertinenti?",
+      "compound_review": true
+    },
+    "G3": {
+      "requirement_sha256": "fd5f7214e4d8f9bd3ddf1aa9fe1b786e0da193579941b79aa038b582548ad168",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza tecnica e visiva dell’insieme, non solo del singolo pezzo?",
+      "compound_review": true
+    },
+    "G4": {
+      "requirement_sha256": "e7229a7b6219126af8eeadfc9900d7f6b8a442a469f5acd0ea2f32e2f3ee4dbf",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito un tentativo avversario serio di bocciare il lavoro prima di consegnarlo?",
+      "compound_review": true
+    },
+    "CG1": {
+      "requirement_sha256": "b9c1f7ede29ad20811469c3de92340422a1e922b70dbf0cd30a44ad6ef707960",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e documentato le affermazioni implicite prima di trattarle come vere?",
+      "compound_review": true
+    },
+    "CG2": {
+      "requirement_sha256": "a3459f3017416a097d9102614ec79916fdc28f080eb97cddcf4ceb08535011cd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai tentato concretamente di confutare le affermazioni materiali invece di cercare soltanto conferme?",
+      "compound_review": true
+    },
+    "CG3": {
+      "requirement_sha256": "99b79a885de8094da814f2820f9460526faf08c1fcae8de862106f22d858d47a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato le prove contrarie e aggiornato il giudizio quando necessario?",
+      "compound_review": true
+    },
+    "CG4": {
+      "requirement_sha256": "99f816b29880b440101c1c3368f85290e80d9f914bf23ba662beba789174ba40",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dichiarato i limiti residui e fermato i PASS non dimostrati?",
+      "compound_review": true
+    },
+    "D-TEMPO": {
+      "requirement_sha256": "f7a7bf6de998471b965ee68e4c066ee2c0e6a91cd2f90687d1d9588f11fdb253",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai trattato il tempo come dato diagnostico, senza usarlo come giustificazione per diminuire la qualità?",
+      "compound_review": true
+    },
+    "D-METODO": {
+      "requirement_sha256": "76feb4cd5a7704803208e4308392460e7d687e71f0454872afd8e654a24e5b05",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai fatto convergere ogni iterazione eliminando un difetto, chiudendo un requisito o migliorando prove verificabili?",
+      "compound_review": true
+    },
+    "D-RISULTATO": {
+      "requirement_sha256": "2e41230179977f930592c9b790b6b7a3354f3c2e08866b682e5d82d037b2718a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai misurato il risultato concreto della fase rispetto a quanto richiesto, senza equipararlo a semplice attività svolta?",
+      "compound_review": true
+    },
+    "DEFINITION_OF_DONE": {
+      "requirement_sha256": "8d828d3302239db9e0e4fcdb34013bdd7e083aef3f76100e7043dd633f13fc52",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato il risultato con la definizione di finito e provato che è completo, non solo migliorato?",
+      "compound_review": true
+    },
+    "CROSS_PIECE_COHERENCE": {
+      "requirement_sha256": "0ff20ecdff7c6cffc944231a8af15d35603936e0c03e2521f73541d776171247",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato le parti prodotte in tempi diversi e risolto incoerenze di forma, quota, stile e raccordi?",
+      "compound_review": true
+    },
+    "AUTONOMOUS_PRE_PASS_QUESTION": {
+      "requirement_sha256": "8d2015055c284708238e8abcd0ff1666f4d7964d2329589ec05dfd07e167e1e9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito l’autodomanda critica obbligatoria prima di dichiarare PASS?",
+      "compound_review": true
+    },
+    "PROCESS_DESIGN_STOP_RULE": {
+      "requirement_sha256": "f8c3bb0408d7160dea2e8253edc49752ef24bf1838d5c26d9e94f463540a2ab7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai fermato la progettazione del processo quando non produceva più risultati utili sul deliverable?",
+      "compound_review": true
+    },
+    "NO_USER_AS_QA": {
+      "requirement_sha256": "fad1acc244fba8c329c484a7f54f60fa09483b760fa27ccc363ffdae3322f173",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito internamente QA tecnico e visivo senza delegare all’utente difetti rilevabili autonomamente?",
+      "compound_review": true
+    },
+    "DELIVERY_FIREWALL": {
+      "requirement_sha256": "fad1acc244fba8c329c484a7f54f60fa09483b760fa27ccc363ffdae3322f173",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai impedito la consegna di un candidato prima del superamento dei controlli richiesti?",
+      "compound_review": true
+    },
+    "FRESH_EYES": {
+      "requirement_sha256": "6d562f73de3759e89c46d387608ff544c446ca44f8f311c0fae55a56ccbeb36e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato il risultato con una revisione a occhi freschi secondo EXEC-016?",
+      "compound_review": true
+    },
+    "INTENTION_BLIND": {
+      "requirement_sha256": "8ea3d2ec432aec237091a0b760108c40438a8cb21ba7888577cf85d31c530194",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai giudicato il risultato osservabile senza usare le intenzioni di chi lo ha costruito come prova?",
+      "compound_review": true
+    },
+    "MACHINE_QA": {
+      "requirement_sha256": "fad1acc244fba8c329c484a7f54f60fa09483b760fa27ccc363ffdae3322f173",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito i controlli automatici e strumentali applicabili sui file reali?",
+      "compound_review": true
+    },
+    "VISUAL_QA": {
+      "requirement_sha256": "fad1acc244fba8c329c484a7f54f60fa09483b760fa27ccc363ffdae3322f173",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai svolto un’ispezione visiva multiangolo del risultato reale prima di mostrarlo all’utente?",
+      "compound_review": true
+    },
+    "ADVERSARIAL_QA": {
+      "requirement_sha256": "fad1acc244fba8c329c484a7f54f60fa09483b760fa27ccc363ffdae3322f173",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai tentato di identificare difetti e regressioni con una verifica avversaria indipendente?",
+      "compound_review": true
+    },
+    "EXPORT_REIMPORT": {
+      "requirement_sha256": "9040e2f768dc33d724d073c1586c850c7b4367a4efd906df29b30c03173e2fe7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la correttezza di esportazione e reimportazione quando richiesti dal target?",
+      "compound_review": true
+    },
+    "REGRESSION_QA": {
+      "requirement_sha256": "4de86a2b31f4d5d31ffd5b43fef93227e426f0ad21d30c7b65ba95a3ccf4d96d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai invalidato i PASS coinvolti dalle modifiche e riverificato le parti già accettate potenzialmente toccate?",
+      "compound_review": true
+    },
+    "MASTER_BEFORE_AFTER": {
+      "requirement_sha256": "a6fc420400f52264e0811a66f175872e4d23a2d472f4a6177ef106478e454abb",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai riletto il MASTER canonico prima e dopo l’azione significativa e verificato le variazioni pertinenti?",
+      "compound_review": true
+    },
+    "GOLDEN_CONTROLLER": {
+      "requirement_sha256": "c0db7a72a2e0283d6b7bbbdb36e0cbd9866abee20d3910709c414b1a97633ce3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai fatto passare l’azione governata attraverso il Golden Controller con prova verificabile?",
+      "compound_review": true
+    },
+    "WORK_STATE": {
+      "requirement_sha256": "9040e2f768dc33d724d073c1586c850c7b4367a4efd906df29b30c03173e2fe7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai mantenuto WORK_STATE coerente con MASTER, audit e lo stato reale del deliverable?",
+      "compound_review": true
+    },
+    "APPEND_ONLY_AUDIT": {
+      "requirement_sha256": "91a3c6711814f492e49d20f2943030fad1dc62002a91f19fdf3c33e26ec7088c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato le transizioni di stato in un audit verificabile e append-only senza riscrivere la storia?",
+      "compound_review": true
+    },
+    "LOCK_MATRIX": {
+      "requirement_sha256": "27652d4b314f6f2c707a66f89a41fd8dabf6d0f6be05a9d897eb51ac3a4c1992",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato i LOCK specifici dell’asset e impedito tutte le modifiche non autorizzate?",
+      "compound_review": true
+    },
+    "USER_AUTHORIZATION_D0": {
+      "requirement_sha256": "443d190223f2beb6b74cd38a784b343fae6357d5f21b4fe9b129890915abdd43",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai acquisito e verificato l’autorizzazione D0 esatta per l’azione corrente?",
+      "compound_review": true
+    },
+    "BLOCK_ON_UNKNOWN": {
+      "requirement_sha256": "4e12a0f23a6c01c23edf06255bd9a2a38af6073f7b9161d2d96c6da24f8eec16",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai impedito l’avanzamento in presenza di UNKNOWN o FAIL bloccanti?",
+      "compound_review": true
+    },
+    "DEPENDENCY_RECHECK": {
+      "requirement_sha256": "5b613f38278d43cac44f59a02881addaa2af310d1a939341baf750560dd30366",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai riverificato le dipendenze e invalidato le prove divenute obsolete dopo cambiamenti pertinenti?",
+      "compound_review": true
+    },
+    "SOURCE_HIERARCHY": {
+      "requirement_sha256": "13942718a05dacde8cb1889b636238e8f8420d8020796f4be825988d86bf6774",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato l’ordine di autorità delle fonti quando esistono differenze o conflitti?",
+      "compound_review": true
+    },
+    "ARCHITECTURAL_QUALITY_FLOOR": {
+      "requirement_sha256": "e94217fff7b2910b3891bad22f2546e9ac69929c0f9ba5b234f81d59ff31fa7c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il modello rispetti la soglia architettonica minima e non presenti difetti bloccanti?",
+      "compound_review": true
+    },
+    "HARD_FAILURE_CLASSES": {
+      "requirement_sha256": "e94217fff7b2910b3891bad22f2546e9ac69929c0f9ba5b234f81d59ff31fa7c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto tutte le classi di difetti esplicitamente definite come HARD FAIL?",
+      "compound_review": true
+    },
+    "ROUND_QUALITY": {
+      "requirement_sha256": "e754bf8a4129ee811d1b8de76761cb9b1a58e934d08ddc53505c2d18b4e9a70c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato qualità e coerenza in tutte le viste e direzioni richieste?",
+      "compound_review": true
+    },
+    "ARCHITECTURE_1TO1": {
+      "requirement_sha256": "3ac680d1521370c3db2d4e394cb5830342f4583c50e7f0a55da7cf1cd524708f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la corrispondenza 1:1 con la reference architettonica vincolante prima di generare dettagli?",
+      "compound_review": true
+    },
+    "FIVEM_TARGET": {
+      "requirement_sha256": "1fbbcf8f0b0bbd70311defda79ff1f731921181216684dc5ffafdd6eab872b02",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che formati e vincoli dell’asset siano compatibili con il target GTA V/FiveM?",
+      "compound_review": true
+    },
+    "REFERENCE_HIERARCHY": {
+      "requirement_sha256": "13942718a05dacde8cb1889b636238e8f8420d8020796f4be825988d86bf6774",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai seguito la gerarchia delle reference ed evitato di sostituire riferimenti vincolanti con immagini illustrative?",
+      "compound_review": true
+    },
+    "EXEC-001": {
+      "requirement_sha256": "83765a73c0cbc350fa03f446fb2b6191e12dca7e65a34ced6976e20655059358",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-001 alla fase corrente: «After each piece, verify D achieved exactly what C defined. If NO, return to the appropriate stage»?",
+      "compound_review": false
+    },
+    "EXEC-002": {
+      "requirement_sha256": "e26d5955cf040c9fc07b1bf73edac602af0f6cbb7f7aeeacc627687088fe65fd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-002 alla fase corrente: «If a change can affect something VERIFIED, invalidate that verification and re-check it»?",
+      "compound_review": false
+    },
+    "EXEC-003": {
+      "requirement_sha256": "e22ed8402d641a17ae4fcd9277e6f7633239f2df6379122248ace99bca2139c5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-003 alla fase corrente: «Re-check the full relevant dependency chain, not only the immediate interface»?",
+      "compound_review": false
+    },
+    "EXEC-004": {
+      "requirement_sha256": "bec2a20155d7ca95d33335bbc60dc9016247b61d2c3017149486183aae5f16e5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-004 alla fase corrente: «Define PASS criteria before implementation. Never adapt them afterward merely to make the result pass»?",
+      "compound_review": false
+    },
+    "EXEC-005": {
+      "requirement_sha256": "26e452695be9ac8896139eee2f927745b1d1718e3e19f6080ba805bd75b0e47e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-005 alla fase corrente: «VERIFIED requires real evidence: visual comparison, geometric inspection, test, log, re-import check, etc»?",
+      "compound_review": false
+    },
+    "EXEC-006": {
+      "requirement_sha256": "3583ef139d28f41ea7fd4665964a43980a91a186a8d00af4a5fd33bfee095c6f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-006 alla fase corrente: «Close mandatory OPEN issues before optional polish»?",
+      "compound_review": false
+    },
+    "EXEC-007": {
+      "requirement_sha256": "cc5fd3dbaef8dc4854bd2e60f963acfe96565f43f80bafd496094a97c4f5ea4e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-007 alla fase corrente: «If a piece exceeds budget: STOP, investigate, Abort Early/change approach or explicitly revise plan. Timebox never lowers acceptance criteria»?",
+      "compound_review": false
+    },
+    "EXEC-008": {
+      "requirement_sha256": "d9cfadaa9d9818968562e89bd27132acf47db7671993de502dc9c1adb6ac5a89",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-008 alla fase corrente: «After each VERIFIED piece preserve a rollback state. Do not stack patches over serious regressions»?",
+      "compound_review": false
+    },
+    "EXEC-009": {
+      "requirement_sha256": "06eda8bfe42f3931b87e5698ea89bc98400017ff80a47ebc03b184429da4af92",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-009 alla fase corrente: «Before delivery check whether any discovered issue was never registered. If yes: PROCESS FAIL / DELIVERY BLOCKED»?",
+      "compound_review": false
+    },
+    "EXEC-010": {
+      "requirement_sha256": "198f8ecae18d3e4d3f8976d3271fe3d78e7a9ef19bc707a770e4d71c58971482",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-010 alla fase corrente: «Before G0, verify that the required model/source, reference, images and prior state actually exist. Critical missing input → BLOCKED; do not invent around it»?",
+      "compound_review": false
+    },
+    "EXEC-011": {
+      "requirement_sha256": "829596262a276308973a6fbeed926aca369bb0f75bea937ba2ed812d6135812f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-011 alla fase corrente: «Distinguish FATTO / INFERENZA / ASSUNZIONE. A critical unverified assumption cannot become implementation»?",
+      "compound_review": false
+    },
+    "EXEC-012": {
+      "requirement_sha256": "c7bbf45a2e47b8d887529af182990a847e5fb95e6d02eab599046d4876177e31",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-012 alla fase corrente: «Before correction, explicitly test whether the proposed change addresses the cause or only the symptom»?",
+      "compound_review": false
+    },
+    "EXEC-013": {
+      "requirement_sha256": "aaf31e4a126e78a8ecf9c2be554c4c0e65f1a77a3abc003e4fe8d7812c5c587f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-013 alla fase corrente: «Open a full nested G0 cycle only for significant subcomponents that can change function, quality, dependencies or acceptance criteria. Avoid useless/paralyzing recursion»?",
+      "compound_review": false
+    },
+    "EXEC-014": {
+      "requirement_sha256": "138d13550197202854b43d0a8c2e6a49c0b19834006bbf1e3a7436ed5c22668f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-014 alla fase corrente: «After every piece, verify the whole genuinely improved and a local refinement did not degrade the asset/system»?",
+      "compound_review": false
+    },
+    "EXEC-015": {
+      "requirement_sha256": "d035085ef1074b44aaa39a296993a06fa84f1e2c972d0a2c43a2e3cf48e08552",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-015 alla fase corrente: «Before delivery ask: > “Lo consegnerei comunque se Diego non potesse correggermi?” If NO → DELIVERY BLOCKED. The user is not the beta tester for visual/technical/process defects that can be found internally»?",
+      "compound_review": true
+    },
+    "EXEC-016": {
+      "requirement_sha256": "6d562f73de3759e89c46d387608ff544c446ca44f8f311c0fae55a56ccbeb36e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-016 alla fase corrente: «Before an important DONE/VERIFIED state, deliberately change perspective: order of analysis, view, scale, critical role, player perspective or direct baseline/reference comparison. Then run a short fresh CG1→CG4 attack…»?",
+      "compound_review": true
+    },
+    "EXEC-017": {
+      "requirement_sha256": "b3ac68c2c7b4aa60caf4cc712a4c3b5015aaccba4fec684fac8965fbcd64ba8a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-017 alla fase corrente: «Require bidirectional traceability: requirement/critique → piece → implementation → evidence and: important piece → requirement/reason This prevents lost requirements and unjustified additions»?",
+      "compound_review": true
+    },
+    "EXEC-018": {
+      "requirement_sha256": "bbf763aa5f1eb0c2e3835de9ece308ebb75a255fb627ae3d95ab0871e94da50e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-018 alla fase corrente: «Search explicitly for requirement↔requirement, decision↔decision, piece↔piece contradictions. Resolve incompatibilities before D when possible and recheck at integration»?",
+      "compound_review": false
+    },
+    "EXEC-019": {
+      "requirement_sha256": "f480efb3448d0053edfe20e6162a09acd801d489c49197b4a464de463cb56860",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-019 alla fase corrente: «Excellence is not equal visual shouting everywhere. Verify focal → secondary → support, density, rhythm and rest zones. This applies to both a single asset and the Garden as a whole»?",
+      "compound_review": false
+    },
+    "EXEC-020": {
+      "requirement_sha256": "8ea3d2ec432aec237091a0b760108c40438a8cb21ba7888577cf85d31c530194",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-020 alla fase corrente: «Before DONE ask: > “Se non conoscessi il codice, il progetto e le mie intenzioni, ciò che vedo comunica da solo quello che dovrebbe?” If basic support, entrance, hierarchy or function needs mental explanation from the a…»?",
+      "compound_review": true
+    },
+    "EXEC-021": {
+      "requirement_sha256": "55777b5e416daf05e7e9e107b20366fd0e7cfa0ccb412a8b5b686f5dad29f1c5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-021 alla fase corrente: «Before D ask: > “Quando avrò finito, sarò realmente in grado di distinguere PASS da FAIL?” An acceptance criterion without a reliable observation/test path cannot honestly be certified»?",
+      "compound_review": false
+    },
+    "EXEC-022": {
+      "requirement_sha256": "1545945a25b14f1de7f0b5aa1847c896a191e63d28d7c939344a0dd8af846e3d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-022 alla fase corrente: «Perturb the test reasonably: distance, angle, light when relevant, player scale/view and nearby context. If a small reasonable variation exposes a defect, the result is not robust»?",
+      "compound_review": false
+    },
+    "EXEC-023": {
+      "requirement_sha256": "521f160a9d7345be3fae12e8e439faa160913a32802be11286da98cf929d49e3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-023 alla fase corrente: «Treat interfaces almost as autonomous pieces when appropriate: tetto→gronda, colonna→base, scala→podio, Market→Garden, roccia→acqua, percorso→ponte. Failures often live between individually valid systems»?",
+      "compound_review": false
+    },
+    "EXEC-024": {
+      "requirement_sha256": "393600630766ba7715b159f3210dd4180f2261419a42411230d4ee7f781a8c69",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-024 alla fase corrente: «Ten individually small compromises can accumulate into mediocrity. Ask not only whether each defect is small, but how many compromises of that class are accumulating in the whole»?",
+      "compound_review": false
+    },
+    "EXEC-025": {
+      "requirement_sha256": "1dfcf5f65dc5bc9eabc87c60f10df19b0f875ff00ac6045bf994273bd37e1924",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato il controllo EXEC-025 alla fase corrente: «A component VERIFIED in one context is not automatically VERIFIED in another. Distinguish component-valid-in-itself from component-valid-in-new-context. Reuse saves construction effort; it never removes contextual verif…»?",
+      "compound_review": true
+    },
+    "G0-01": {
+      "requirement_sha256": "50d6a7fdccc5baad20941c316cf6b1d7c90aeedda68755da54d0d7466f515707",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 1: «Le 300 domande non sono ancora state realmente eseguite pezzo per pezzo. Quindi D resta bloccato»?",
+      "compound_review": false
+    },
+    "G0-02": {
+      "requirement_sha256": "daed5e9b51ac8a0ccd7b1a3c010cc97abdd5ee54423a0c271460a947f65dc8ce",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 2: «Il registro globale esiste come regola, ma per il Pavilion il file operativo deve essere aggiornato con il nuovo workflow pezzo→G1→implementazione→verifica→connessioni»?",
+      "compound_review": false
+    },
+    "G0-03": {
+      "requirement_sha256": "2f7ef1253ea8bea775cc9b63e471d196bcfb7f9491817c702da2e929f10da5cd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 3: «Manca una baseline immutabile. Il GLB attuale deve essere conservato come riferimento BEFORE; altrimenti non possiamo dimostrare che un refinement migliori e non regredisca»?",
+      "compound_review": false
+    },
+    "G0-04": {
+      "requirement_sha256": "2ffc4d1632495d125d0e141c25025c719c859c69829d295bf55bcae263ad60f6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 4: «Manca la mappatura PAV→pezzo. Ogni PAV-001…011 deve avere uno o più componenti responsabili. Nessuna issue deve rimanere “generica”»?",
+      "compound_review": false
+    },
+    "G0-05": {
+      "requirement_sha256": "a9e7ce8af262803acc0f9fdb554b7caec6666f7f8b99d411c62f6ced1e074d7d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 5: «Mancano criteri di accettazione misurabili per ciascun PAV. Per esempio PAV-011 non può essere “cerchi migliori”: deve diventare “nessuna segmentazione percepibile alla distanza player prevista”»?",
+      "compound_review": false
+    },
+    "G0-06": {
+      "requirement_sha256": "778b5068f379599b0f30a43d45a5bde82a4068ad7f6be1ac371230682b185a85",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 6: «Manca la priorità/dipendenza dei pezzi. Non posso rifinire materiali prima di aver stabilizzato geometria e normals; non posso perfezionare dougong ignorando carpenteria/tetto»?",
+      "compound_review": false
+    },
+    "G0-07": {
+      "requirement_sha256": "4a60a9f0d2cde5b0a4444de557a53e3a9e3dae445c3e6df63700fd9313db9223",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 7: «Manca il budget interno dei 60 minuti. Se lascio un'unica deadline finale, rischio di spendere 45 minuti sul tetto e massacrare il resto»?",
+      "compound_review": false
+    },
+    "G0-08": {
+      "requirement_sha256": "a280e3f9527f4b5cb50ed705be2b44af06cc2437dc3be498b2115afa7d0373d3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 8: «Manca un checkpoint Abort Early per ogni pezzo, non soltanto quello globale a 30 minuti»?",
+      "compound_review": false
+    },
+    "G0-09": {
+      "requirement_sha256": "92ec4bcc0fdb2adf0484331b2abaf8e09047285695e15f7615ebaed06fd4d611",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 9: «Manca una regola anti-rebuild. Se una correzione locale comincia a trasformarsi in ricostruzione dell'intero Pavilion, STOP: devo dimostrare perché è necessaria»?",
+      "compound_review": false
+    },
+    "G0-10": {
+      "requirement_sha256": "e39ea22513a22637aa05b0a2c34b758c558d794f0068b17825faa573f49239ed",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 10: «Manca una regola anti-feature-creep. Nei 60 minuti non aggiungo dettagli nuovi mentre esistono PAV OPEN»?",
+      "compound_review": false
+    },
+    "G0-11": {
+      "requirement_sha256": "3ba3ace21b6731a7f93c98775542078bbfa2b47238d99ed4a90d7ddcb18c1a3b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 11: «Manca un controllo regressioni per ogni pezzo. Dopo aver sistemato il tetto devo verificare che non abbia rotto carpenteria, colonne, silhouette o interior»?",
+      "compound_review": false
+    },
+    "G0-12": {
+      "requirement_sha256": "3c042f5619f4e3c7943fd5ecb20181ec0374412af8d9b1bbf9f4b4c77fc8dc52",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 12: «Manca il controllo delle interfacce bidirezionale. Non basta tetto→colonne; devo controllare anche come la modifica delle colonne cambia la lettura/supporto del tetto»?",
+      "compound_review": false
+    },
+    "G0-13": {
+      "requirement_sha256": "93f2f4ec08e9f4ff2b9fc98508c5ee61d8967e0b521624927f52e1653dc4a6f0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 13: «Manca una vera reference target per ogni sistema. Non posso decidere che un dougong sia corretto semplicemente perché è più bello del precedente»?",
+      "compound_review": false
+    },
+    "G0-14": {
+      "requirement_sha256": "dddf868d74f87e14a15e66adb3d4cc73bb43dffc95da58968bcade59272c1920",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 14: «Manca una distinzione esplicita tra “accuratezza reference” e “qualità artistica”. Un pezzo può essere bello ma architettonicamente sbagliato»?",
+      "compound_review": false
+    },
+    "G0-15": {
+      "requirement_sha256": "59d36858b155a4e72650df627738b87dff5fbf01f2fc4c9b0f0bb333ab7d9da4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 15: «Manca il controllo della densità geometrica. ROUND_QUALITY migliora i cerchi, ma 64 segmenti indiscriminatamente ovunque può distruggere il budget FiveM»?",
+      "compound_review": false
+    },
+    "G0-16": {
+      "requirement_sha256": "5111abce1f18589a3bee994770a6d5944b922fc67939f0fda0ce621d93ba00ff",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 16: «Manca quindi un budget poly/LOD per il risultato destinato a FiveM. High quality non deve significare geometria incontrollata»?",
+      "compound_review": false
+    },
+    "G0-17": {
+      "requirement_sha256": "2cf91680638b29e9e20373f2511f024a78ac477e06698c16cca0a693189a46d7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 17: «Manca il controllo player-scale sistematico. Scale, sedute, tavolo, altezza corrimano, ingresso e spazio interno vanno verificati rispetto a un riferimento umano/GTA»?",
+      "compound_review": false
+    },
+    "G0-18": {
+      "requirement_sha256": "af24e035bbd83192f04b7043a0d2ed41a8b0cd9b770812b570ea5bd4be5c0e7b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 18: «Manca il controllo delle collisioni future. La geometria visiva deve essere costruita pensando a collisioni sensate, senza obbligarci dopo a collision mesh assurde»?",
+      "compound_review": false
+    },
+    "G0-19": {
+      "requirement_sha256": "dbf9869055d954ea273fd5a9987587feaac486a30f1ad6d46c295a74024a7ac2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 19: «Manca una verifica reale delle texture/PBR. Non basta che il GLB dica di contenere materiali: dobbiamo controllare material assignment, UV, normal, roughness e risultato visivo»?",
+      "compound_review": false
+    },
+    "G0-20": {
+      "requirement_sha256": "60aed537ef5d12ecce4d1dace9f30399b0058b7e411f37dd47dc8c361a6625a5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 20: «Manca una palette/material standard riutilizzabile Golden District. Altrimenti Pavilion, Tea House, gate ecc. finiranno con rossi/legni/pietre differenti»?",
+      "compound_review": false
+    },
+    "G0-21": {
+      "requirement_sha256": "d6d3b6e8fcecca53c039f699f19d9f8c4e7f65ffa31a5f20bde3a9f4c276b4a7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 21: «Manca la trasformazione del lavoro buono in kit modulare. Colonna, base, dougong, tegola/gronda, 美人靠 ecc. devono poter essere riutilizzati, altrimenti il piano dei tre giorni non scala»?",
+      "compound_review": false
+    },
+    "G0-22": {
+      "requirement_sha256": "059f7b4323fcfc7d718f7e76d1f0bd9f4167c55d5a4f6ee7c877ac636eeafb10",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 22: «Manca un controllo naming/hierarchy. Il modello attuale ha bisogno di una struttura pensata anche per Blender/Sollumz, non soltanto di essere bello»?",
+      "compound_review": false
+    },
+    "G0-23": {
+      "requirement_sha256": "f22ef1ce335050f27cea93db98c06bb8c4ad3ff71f474b6e267485e4fae20583",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 23: «Manca una verifica export→reimport obbligatoria finale, compreso Z-up, transforms, materials, normals e gerarchia»?",
+      "compound_review": false
+    },
+    "G0-24": {
+      "requirement_sha256": "6627cf75f15af0a1e4f1cb9cdc9c8764b7d1c8e1093d5c5af02eb229dec75d9e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 24: «Manca un controllo da viste fisse identiche BEFORE/AFTER. Senza camera equivalenti rischiamo di scambiare una vista migliore per un modello migliore»?",
+      "compound_review": false
+    },
+    "G0-25": {
+      "requirement_sha256": "0a9241cbffb8f9bd1038a8ebf789eaee9663238f6b9897b45d3750199746b4f7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 25: «Manca una verifica underside obbligatoria. È stata una delle aree che io stessa ho valutato male»?",
+      "compound_review": false
+    },
+    "G0-26": {
+      "requirement_sha256": "41278d1709b034db058a38d48e6f5c15acfdde2c1a0c82c1f9c8523735ca7b1a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 26: «Manca una verifica degli angoli peggiori, non soltanto front/hero view»?",
+      "compound_review": false
+    },
+    "G0-27": {
+      "requirement_sha256": "e0ede347d53761812245f5615a1a0e93be034b74d11774852a3dbfb54275eaf9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 27: «Manca una verifica delle compenetrazioni automatica/geometrica dove possibile, oltre all'ispezione visiva»?",
+      "compound_review": false
+    },
+    "G0-28": {
+      "requirement_sha256": "c259cec2222a52fe81501c43eb839f5965511cb017cdc236bd3fac0eb2307933",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 28: «Manca il criterio “cosa NON devo toccare”. La base è la migliore finora: dobbiamo esplicitare quali caratteristiche preservare durante ogni modifica»?",
+      "compound_review": false
+    },
+    "G0-29": {
+      "requirement_sha256": "5ab5fb7eb642b963a9e44cb57b0f8daf0559715e1cee47e0c19ca0cdb3dec795",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 29: «Manca una regola sul FAIL tardivo. Se al minuto 55 G4 trova un problema serio, non devo fare una patch da cinque minuti: delivery bloccata»?",
+      "compound_review": false
+    },
+    "G0-30": {
+      "requirement_sha256": "64bab03bf87a6f24fa4aabbd3400eff9ab024605895c389ccd43598abd48ed30",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto il controllo G0 n. 30: «E manca la cosa più importante per la promessa dei 60 minuti: devo distinguere “60 minuti per completare questi 11 refinement” da “60 minuti per ottenere un asset finale FiveM completo”. La seconda promessa, allo stato attuale, non è dimostrata e non devo spacciartela per tale»?",
+      "compound_review": false
+    },
+    "PROVOCATION-01": {
+      "requirement_sha256": "14f61871eebc3311ee23b73dec52b3950adf9490364a318928366260dae61596",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «prova» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-02": {
+      "requirement_sha256": "b60cf7e02ae800f1ec23aa76b983703b12147e24d0c268f9a52ae90bcb022c02",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «causa» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-03": {
+      "requirement_sha256": "87e1e63417898ab6a3bb148e75e41bc205889709b88e58568489ed2c39e5e049",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «catena» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-04": {
+      "requirement_sha256": "43a5c908cce1c37e625c2d4e83e77c45a49b264f28db05c3f2e6568a62baf46b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «contrario» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-05": {
+      "requirement_sha256": "541120c9c2fc974699d1fd38005e99b48f37bbd933a3001cc74388e09a436e95",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «rottura» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-06": {
+      "requirement_sha256": "e8f1ea4da157f1217ed7222b85ffd331f81ec0d6ba213d1ccc37c08215ad661e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «interfaccia» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-07": {
+      "requirement_sha256": "d71e253f993c0be0621bb23b29521dd57d450513def1bafd041a697c6447b7e4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «vista nascosta» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-08": {
+      "requirement_sha256": "9f5a5b695505b38692ee650a7ce2515fee2427e70cb49419a6f8427ba404966e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «assunzione» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-09": {
+      "requirement_sha256": "e23f229f25b06a1d85f635f73df20fd2d14f33868be319d7abf42c72c2b02f3b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «reference» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-10": {
+      "requirement_sha256": "33f9893e24398dc73da1bad01e65f889cc45b4c968b7d69b1e768a3497f4b478",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «regressione» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-11": {
+      "requirement_sha256": "86880dc07f601f878d3ed68ed765e14fd5811571a7ec6a1ee4ac625eeb38ad1a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «utente» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "PROVOCATION-12": {
+      "requirement_sha256": "065da6e257404464160edbdde2bf522829743f78c1af4a1a7c37b86ab465669e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai applicato la provocazione critica «ignoto» al risultato, registrando esito e prove?",
+      "compound_review": false
+    },
+    "Q-002": {
+      "requirement_sha256": "ed20ee4441737b8f1e8f819776692682c35ca7d53a3f62faa1332006bf13b9c0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai definito e documentato come deve apparire concretamente il risultato finito?",
+      "compound_review": false
+    },
+    "Q-003": {
+      "requirement_sha256": "8a6802a696504f37b1e996dd4ccf911c46dcf7be45b7b4d80ae35c369949f163",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai elencato e verificato le funzioni che il risultato deve svolgere?",
+      "compound_review": false
+    },
+    "Q-004": {
+      "requirement_sha256": "1cc811efed31fcd86c38a20573c8ff1dfcceb4d4ffdd69ac0f863ee55da7b64c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai elencato e verificato i comportamenti vietati del risultato?",
+      "compound_review": false
+    },
+    "Q-005": {
+      "requirement_sha256": "2cb6882a1e89435c04dcf9a2bfa6ca30a5da49b58e84c6a69f9660959d727a64",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e documentato lo scope esplicito?",
+      "compound_review": false
+    },
+    "Q-006": {
+      "requirement_sha256": "06458dfa5660d889181e1d4393046b602191bc13bbc5af5e8d706508770c56bb",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e documentato tutte le esclusioni dallo scope?",
+      "compound_review": false
+    },
+    "Q-007": {
+      "requirement_sha256": "bc8d974163451a1696f021743f3e9f8f10bdd04ca54f81a71499e4c2900f3d7a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato i requisiti obbligatori e verificato che siano tracciati?",
+      "compound_review": false
+    },
+    "Q-008": {
+      "requirement_sha256": "1e22bcfb8e1b70e1b1dbdc521d79c28b5480e7019a0ac6a649edc1b3033d22ff",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai distinto i requisiti desiderabili da quelli obbligatori?",
+      "compound_review": false
+    },
+    "Q-009": {
+      "requirement_sha256": "6daf24a55108f5bdfc3d0d0115c18a697627c1656f8abc49490dd74d59167129",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato le decisioni già LOCKED e verificato il loro rispetto?",
+      "compound_review": false
+    },
+    "Q-010": {
+      "requirement_sha256": "5d391c2f7ee10d7d1f2a20103239a0e70351ff62671ef3dff7d9f93fc8713b67",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato di non aver modificato involontariamente elementi LOCKED, ripristinando eventuali violazioni?",
+      "compound_review": false
+    },
+    "Q-011": {
+      "requirement_sha256": "625f4c66ed303a24cb1851b946b9d69fefe54de33f55fe9cba0de536a26dc451",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai definito criteri concreti di completamento?",
+      "compound_review": false
+    },
+    "Q-012": {
+      "requirement_sha256": "d4ba42fdb4ba84f82d451648cf2805270ae63b701f1ac6ddea8fa22af9c95eac",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai definito criteri concreti di fallimento?",
+      "compound_review": false
+    },
+    "Q-013": {
+      "requirement_sha256": "42d2f3b476ba874a6497736be36a4bcb4e7c7bf629c3f5147d17361f594eb89c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato la deadline reale, senza inventarne una?",
+      "compound_review": false
+    },
+    "Q-014": {
+      "requirement_sha256": "d20f2dd6c5378628d29c83401b91b6c4af2f9d27ef371a0d7668d294178e75e3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato lo scope con la scadenza e documentato che sia realisticamente realizzabile?",
+      "compound_review": false
+    },
+    "Q-015": {
+      "requirement_sha256": "137059d1dbd9f24ad5153a1f7fd869a5aa272b3451f48f365ea07cfef9acabe9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato e rimosso eventuale feature creep?",
+      "compound_review": false
+    },
+    "Q-016": {
+      "requirement_sha256": "5381f4ea4dcd30ccbd2e861b7f34d44a4e177b6b05eb12420ca929a3d6892ac6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato alternative più semplici e verificato che la soluzione scelta soddisfi integralmente l’obiettivo?",
+      "compound_review": false
+    },
+    "Q-017": {
+      "requirement_sha256": "d79e5c8e813b9937ec4a92d0f73289651cc1d8d494c47912673dfc9ec25fed51",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato, contro l’obiettivo concordato, di stare risolvendo il problema corretto?",
+      "compound_review": false
+    },
+    "Q-018": {
+      "requirement_sha256": "eefec12df528c50ddc608149591e20d21dfb8c56d53387163795928bbdae08ee",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il risultato richiesto dall’utente prevalga sulla soluzione più facile da costruire?",
+      "compound_review": false
+    },
+    "Q-019": {
+      "requirement_sha256": "1076c396f2d50e883fb893d70c37c966501ff0669f805b12e8a8c76d6684a03c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e motivato la parte del risultato più importante?",
+      "compound_review": false
+    },
+    "Q-020": {
+      "requirement_sha256": "e21987c10c1e4df7607601ee223e168127ed35e82d71f14eabe3680c84bd1fef",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato quali componenti siano meno importanti e documentato eventuali semplificazioni ammissibili?",
+      "compound_review": false
+    },
+    "Q-022": {
+      "requirement_sha256": "b118a4adc949d5ef4d2026169305b74d47b05ff30a4118c091e0bb5b0658fe15",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai realmente letto tutti gli input pertinenti?",
+      "compound_review": false
+    },
+    "Q-023": {
+      "requirement_sha256": "3b07336669342ce24dafd0b726e467ca6ae2299476b7e932fc10c8051a78fef8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato le reference authoritative per il lavoro?",
+      "compound_review": false
+    },
+    "Q-024": {
+      "requirement_sha256": "e7494de9da8f83dee86bc1b381dfdfb77d27da5692a496bd02905602e514d3e8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai distinto le reference illustrative da quelle authoritative?",
+      "compound_review": false
+    },
+    "Q-025": {
+      "requirement_sha256": "ee438d6fa117aac6dd16a92a2503f7edfb16ad16ee29b88b0fd6f081ba59e08e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato le reference e corretto eventuali mescolanze tra oggetti differenti?",
+      "compound_review": false
+    },
+    "Q-026": {
+      "requirement_sha256": "920e60f6b13bbfa6e4c6408c3a41825a53cc38d9d3f0e30e299882779bdf5609",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato le eventuali contraddizioni tra reference?",
+      "compound_review": false
+    },
+    "Q-027": {
+      "requirement_sha256": "938450d8e4c9d486b504e6a7864662ae721d532019ed51d41a0562789875b90a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risolto e documentato la precedenza fra reference in contraddizione, se presenti?",
+      "compound_review": false
+    },
+    "Q-028": {
+      "requirement_sha256": "d22cf6a1dfd19459c9ae3b4232fcf12b6d0edf584d944e8dc3cc0ce6798f1f4c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato le parti non visibili nelle reference?",
+      "compound_review": false
+    },
+    "Q-029": {
+      "requirement_sha256": "b18f8df9d1eee4943843f82eaf23e41df58a72b2b5ae56bead77b0a0fced315b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato documentazione per quelle parti?",
+      "compound_review": false
+    },
+    "Q-030": {
+      "requirement_sha256": "dfb2be648f976ec40e5747cc33542a17ac9890752683d91a1daae1d7374e3a40",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai escluso invenzioni evitabili ricercando le informazioni verificabili?",
+      "compound_review": false
+    },
+    "Q-031": {
+      "requirement_sha256": "4677ebf8c9c184580e9747ab7fccb4b99ff322a54479f6052520945f9f399ab2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato le informazioni KNOWN con la loro fonte?",
+      "compound_review": false
+    },
+    "Q-032": {
+      "requirement_sha256": "b4e958e2e38ba0f36c13bbb44d2deef5d3c600a6044b3d56d69ce2d46b3b1109",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato separatamente le informazioni DERIVED e le ipotesi necessarie?",
+      "compound_review": false
+    },
+    "Q-033": {
+      "requirement_sha256": "1132cc0142df773caedfcad7efd78d3e015e4ea23a7ea1904cc40ae613a9f793",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato le informazioni UNKNOWN ancora aperte?",
+      "compound_review": false
+    },
+    "Q-034": {
+      "requirement_sha256": "d7c6c6e61e68d494c228c4b31ac2820133d5828db9ef07c332a890e1dcd8933c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e classificato gli UNKNOWN critici?",
+      "compound_review": false
+    },
+    "Q-035": {
+      "requirement_sha256": "59fe7748f65f432adf4c1998bedcc21ba41776c5b70985219b152d9dc8492809",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e documentato tutte le assunzioni rilevanti?",
+      "compound_review": false
+    },
+    "Q-036": {
+      "requirement_sha256": "ebfa12d9ec912e3d2b6164a0ef00fcb104d74448f3f965c7dd968176d6b50002",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che ogni assunzione introdotta sia necessaria?",
+      "compound_review": false
+    },
+    "Q-037": {
+      "requirement_sha256": "d516b768aab13e51b6df34f80a2b851c93e24d0039f2aa12b144e2f04a9213fe",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato se le assunzioni possano essere sostituite da evidenze e fatto le verifiche possibili?",
+      "compound_review": false
+    },
+    "Q-038": {
+      "requirement_sha256": "c74c2d85e3e386e342ee46ebe599e38ff168f172787d95bb6954dcd56540d455",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai distinto esplicitamente i fatti verificati dalle deduzioni?",
+      "compound_review": false
+    },
+    "Q-039": {
+      "requirement_sha256": "fe7d50c836621031bd044d082f5abf6f9fcd39d9f08bce6745a34b96e5ef2623",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai messo alla prova le informazioni considerate ovvie ma non ancora verificate?",
+      "compound_review": false
+    },
+    "Q-040": {
+      "requirement_sha256": "1ca19c2297ed4eaffbdb6043a0611d898cd693f92277d7197b1025d2bd8aba6d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato le informazioni mancanti che potrebbero invalidare il lavoro?",
+      "compound_review": false
+    },
+    "Q-041": {
+      "requirement_sha256": "6ceadc849a982ea320072efc58772e7be96a34d611d1e91120354c1ede336bb5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dimostrato di comprendere l’oggetto o sistema che stai costruendo?",
+      "compound_review": false
+    },
+    "Q-042": {
+      "requirement_sha256": "a00000b5c562f8cdde3d090f8d2d93d0afe62c1ae23362c43ab5b4dd9dbc467d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato di saper spiegare il funzionamento del sistema senza rileggere il codice?",
+      "compound_review": false
+    },
+    "Q-043": {
+      "requirement_sha256": "49101527d628e28fda555dd5674b89ac72f2c5d1f66c22d68f8acb28bd6abdbd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e documentato i sistemi principali dell’oggetto o ambiente?",
+      "compound_review": false
+    },
+    "Q-044": {
+      "requirement_sha256": "84be59bd56f25b6d643c4255404e23b1ab78f7c97272bb4f1b21282e2d16c333",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato le interazioni tra i sistemi principali?",
+      "compound_review": false
+    },
+    "Q-045": {
+      "requirement_sha256": "fae7be4499486d8dc29cf4b926ec35f4bbd8e5dc15d50eac9c798fc08bcd18f4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai mappato le dipendenze fra i sistemi?",
+      "compound_review": false
+    },
+    "Q-046": {
+      "requirement_sha256": "fa1918d618f4bedccc736b436563ac6dcd1bae431c63e58b244b01deca40cc9e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ricostruito la catena completa delle dipendenze?",
+      "compound_review": false
+    },
+    "Q-047": {
+      "requirement_sha256": "cbd6eb40d9e4e4684169ab3e98d82ea058355434c016528ab7b36ce51cfcec0c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e risolto le eventuali dipendenze circolari?",
+      "compound_review": false
+    },
+    "Q-048": {
+      "requirement_sha256": "ce8963cd4637eea21003df5a9db8abe12286a0d49b97c79e962d66318f0c576b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la base prima di costruirci sopra?",
+      "compound_review": false
+    },
+    "Q-049": {
+      "requirement_sha256": "005dd2abd6f9f265cb0a8428f2013f5b5789503390f8d1507ac98b89628141e3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai motivato e verificato l’ordine di costruzione delle parti?",
+      "compound_review": false
+    },
+    "Q-050": {
+      "requirement_sha256": "e16b425e4fbbde51d3e7c0e98c6b705239bc70c20751c7df0129d0096b6929f1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che l’ordine di implementazione rispetti le dipendenze?",
+      "compound_review": false
+    },
+    "Q-051": {
+      "requirement_sha256": "90a22937281f4833e06bdb2381ee85bf809b534ca9a2053281adc0f1763691da",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e validato la base o il MASTER prima di replicarne elementi?",
+      "compound_review": false
+    },
+    "Q-052": {
+      "requirement_sha256": "58fbbc7db2646478f34de2954b09102d7b11b74968ebb1e1052523fcec0ebdec",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai validato la base prima di duplicarla?",
+      "compound_review": false
+    },
+    "Q-053": {
+      "requirement_sha256": "b6c17e76d6e721f672a01ac9551ce9d05611f09295c6c47730068a6a1561e08f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato l’effetto del fallimento di questa parte sulle altre?",
+      "compound_review": false
+    },
+    "Q-054": {
+      "requirement_sha256": "0916abb5142ed0d77dacd29343107d1d445528a1ab4e15e27bcee3c54c6f2a55",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato il punto più fragile dell’architettura?",
+      "compound_review": false
+    },
+    "Q-055": {
+      "requirement_sha256": "7174d4fe0813b4d9bf123c844004e7108ec0b8d90e3b2b7523b56e63d197f815",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato il single point of failure del sistema?",
+      "compound_review": false
+    },
+    "Q-056": {
+      "requirement_sha256": "a943dc635895a8d1e832a38e510bc60351d56f8eac1bc7e9a9fb4a09d738ac3c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eliminato le complessità non necessarie senza violare i requisiti?",
+      "compound_review": false
+    },
+    "Q-057": {
+      "requirement_sha256": "783891daa2d7d16cd252de7e9fec316c291c34efe3f57013679e758f38c855f4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che la soluzione sia comprensibile e manutenibile anche dopo settimane?",
+      "compound_review": false
+    },
+    "Q-058": {
+      "requirement_sha256": "23c84504cd676ee76641fb4110757cc9278ef85f6f746402ba1297ebb9d5d3d0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e documentato il debito tecnico introdotto, affrontando quello critico?",
+      "compound_review": false
+    },
+    "Q-059": {
+      "requirement_sha256": "4859b43d1cb0f3930e7ff80c9b4573f63c8bf41c2f6983b2afa57b69b24ff75c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto la causa anziché applicare un rattoppo superficiale?",
+      "compound_review": false
+    },
+    "Q-060": {
+      "requirement_sha256": "c07dfea0a6d1f7efeb502b34957ca3ce9a69605289813ccf11513af7cef0e4ac",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato con criteri tecnici se abbandonare l’approccio anziché continuare a rattopparlo?",
+      "compound_review": false
+    },
+    "Q-061": {
+      "requirement_sha256": "8596931743e63e91812dc2d1c3102637303ea8f34e77d897f7255e7ccc67d1de",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato con misure che le dimensioni siano corrette?",
+      "compound_review": false
+    },
+    "Q-062": {
+      "requirement_sha256": "6d614051078877a2cb7942d63549dd0f0e3baad7ce8005e165550da91910c4ae",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato con confronti reali che le proporzioni siano corrette?",
+      "compound_review": false
+    },
+    "Q-063": {
+      "requirement_sha256": "14a220e899d99935347b9bb2d70b2e8bffa37dd13bdecf1b03a1ebadc497067c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la scala rispetto alle dimensioni dell’utilizzatore?",
+      "compound_review": false
+    },
+    "Q-064": {
+      "requirement_sha256": "e2251fac94c28e17876d16901b895ea1582093bc1d8955c044e218719b18ff48",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato e verificato la coerenza delle coordinate?",
+      "compound_review": false
+    },
+    "Q-065": {
+      "requirement_sha256": "254f4004eee4e0690ab8f872b84ac20f5bd3c0e3fd2c5239b0b3e2ee4aa520ae",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza degli assi dei modelli e del mondo?",
+      "compound_review": false
+    },
+    "Q-066": {
+      "requirement_sha256": "3f2290eaae7fe8786c943bb04326d9e004dd8d83c0561aff999fce8d2ae9b013",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’orientamento corretto dei modelli rispetto alla scena?",
+      "compound_review": false
+    },
+    "Q-067": {
+      "requirement_sha256": "99f560b1f51d8367b79a7f4a115ff45ad4f605e85035b7417f8e243b3746c3e6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato gli origin e i pivot previsti per il modello?",
+      "compound_review": false
+    },
+    "Q-068": {
+      "requirement_sha256": "a2793944fe73ffe09c27c73f6e1130c87ffb518d54dde081f68d3a19e6f6f84a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le trasformazioni siano intenzionali e corrette?",
+      "compound_review": false
+    },
+    "Q-069": {
+      "requirement_sha256": "4fde3ef14bb76665f8e30e6b10a41796b0ec41ba04f170ada56c483504c33619",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e corretto scale non applicate che causano problemi?",
+      "compound_review": false
+    },
+    "Q-070": {
+      "requirement_sha256": "961515a5f85bea81e1e73fa17b778fc096c65fdb0f0a597b8cd50ad234c9b7df",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e corretto rotazioni problematiche?",
+      "compound_review": false
+    },
+    "Q-071": {
+      "requirement_sha256": "da7a4dc88386f3ac476f2138db24eb3981d06e91c5e3ab81d0c3affdb00a58bd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai misurato e verificato le simmetrie richieste?",
+      "compound_review": false
+    },
+    "Q-072": {
+      "requirement_sha256": "1bc3d4efe9ca565b1dc0c1702a7f2145d41005c787f329b3635de2136b0f0948",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che ogni asimmetria intenzionale risulti chiaramente tale?",
+      "compound_review": false
+    },
+    "Q-073": {
+      "requirement_sha256": "69ad26d0b80a8f0a174fd6a165d80d772c5d483ce514222b42e08088ee9ed492",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto gli elementi fuori posizione?",
+      "compound_review": false
+    },
+    "Q-074": {
+      "requirement_sha256": "855f1f581a290f67b19c5b959ffb7b8a668a62be885680484a3ff73daebf269e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto gli elementi sospesi?",
+      "compound_review": false
+    },
+    "Q-076": {
+      "requirement_sha256": "70e06ede3dca6e5526f0a8648ad075ea1c6d58def1c4f066579625095e98da35",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto i gap non intenzionali?",
+      "compound_review": false
+    },
+    "Q-077": {
+      "requirement_sha256": "202524bb967fd7fe03c2bc0ea97a26443be243ffaf6c6658d2494e96b70b0ced",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e rimosso le superfici duplicate?",
+      "compound_review": false
+    },
+    "Q-078": {
+      "requirement_sha256": "63b637c41f39acb17ebad7748020a85a8e4aeaa0d939e233f9ae6affcf189ee2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato e risolto le facce sovrapposte non intenzionali?",
+      "compound_review": false
+    },
+    "Q-079": {
+      "requirement_sha256": "41b9ca39c0dd31c010622802f4e4cd8d1552ec39862a5bd002dc62a017bedcfa",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato e corretto le degenerazioni geometriche?",
+      "compound_review": false
+    },
+    "Q-080": {
+      "requirement_sha256": "60d3d365df013095a2aad17a0c154ffebe4b148fb0d8368f00d21df594a05d84",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’orientamento corretto delle normali?",
+      "compound_review": false
+    },
+    "Q-081": {
+      "requirement_sha256": "59397a210423ba38e9484a34f38016cb1afc301c8d5704e53a6d896d0d8014a0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che ogni elemento che necessita di sostegno abbia un supporto reale?",
+      "compound_review": false
+    },
+    "Q-082": {
+      "requirement_sha256": "9311a5c5eb0ecc08c02ceb1fd553ef1ba4393a11cbdc262c45d161a16f866afd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ricostruito la continuità della catena dei supporti dall’alto al basso?",
+      "compound_review": false
+    },
+    "Q-083": {
+      "requirement_sha256": "d06a0a6e97bf1f014e5a04e3bdab0af10d4c9fe89eb188f46527cedee5baac63",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che gli elementi siano sostenuti da collegamenti reali e non dalla sola vicinanza?",
+      "compound_review": false
+    },
+    "Q-084": {
+      "requirement_sha256": "014daa58867b40994740eeadc18e18fa7628b126bfea683f11b68352aa18abb5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che i collegamenti fra componenti siano realmente presenti?",
+      "compound_review": false
+    },
+    "Q-085": {
+      "requirement_sha256": "e8d33ba469ae9c388758e393c4ca556240ee4643802001fb91a15eca73492934",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato i giunti con una logica costruttiva plausibile?",
+      "compound_review": false
+    },
+    "Q-086": {
+      "requirement_sha256": "cef32e529a57aff92113c1e4b5609dd8887b963768098b6de8a1a9251eeb858c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la plausibilità fisica dei collegamenti tra componenti?",
+      "compound_review": false
+    },
+    "Q-087": {
+      "requirement_sha256": "1a85548b8cae3dfa7d7a7e5a464880e5b6299096aef4c3b445d188ccb8fdd437",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che la struttura rappresentata possa essere assemblata in modo realistico?",
+      "compound_review": false
+    },
+    "Q-088": {
+      "requirement_sha256": "c32730eede4314bac3a125e116a80c6b5f1609d7f2e922d1320ac03d9db89f1b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che gli elementi portanti siano distinguibili da quelli decorativi?",
+      "compound_review": false
+    },
+    "Q-089": {
+      "requirement_sha256": "8c1ff71e8f5ea1c38211673371a6a2241dbd944216e3da3b29a039f413e86ea2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le decorazioni non nascondano una struttura incompleta?",
+      "compound_review": false
+    },
+    "Q-090": {
+      "requirement_sha256": "20e750e6109f990a9aebb8c9a75d4a788de26628426d3e1ad92fe35bd80cec9c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risposto con evidenze concrete alla domanda «Se rimuovo le decorazioni, il sistema continua ad avere senso» e documentato la risposta?",
+      "compound_review": false
+    },
+    "Q-091": {
+      "requirement_sha256": "322f0a5cbcd9a18c9f315177a313055322ff96d97965bd389acea37f10fc46b4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ricostruito e verificato il percorso di trasferimento dei carichi?",
+      "compound_review": false
+    },
+    "Q-092": {
+      "requirement_sha256": "548369d3d615022820bb69fa1547b7cee8aad092a4ac949860e75898b1a4a694",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e corretto le interruzioni nella catena strutturale?",
+      "compound_review": false
+    },
+    "Q-093": {
+      "requirement_sha256": "7a602cfad53cfba1c991e7fa02e9fa2f4e35b1c73ef0116b9821573a48ebc4a0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato ed eliminato elementi che sembrano levitare?",
+      "compound_review": false
+    },
+    "Q-094": {
+      "requirement_sha256": "cca621bced61c06319809b2d7727d2bc5e6beee3f88ff58e86e805b3c73420c3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto gli elementi che sembrano incollati senza giustificazione?",
+      "compound_review": false
+    },
+    "Q-095": {
+      "requirement_sha256": "4e12133442c0db83d165a4b373cc8ee9788faa3db5f73c6b464363aa0be04451",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risolto gli elementi che terminano nel nulla?",
+      "compound_review": false
+    },
+    "Q-096": {
+      "requirement_sha256": "a3cf38d635544f47a31bb247b9dfb596218f28355799c26cc984dbf3787b95af",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato che tutte le parti da collegare si tocchino correttamente?",
+      "compound_review": false
+    },
+    "Q-097": {
+      "requirement_sha256": "83b1946bd9ed8373c48200935bd1670afec6e18d2a8cca1fff4f5c3d9c01fad4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che siano separate le parti che non devono entrare in contatto?",
+      "compound_review": false
+    },
+    "Q-098": {
+      "requirement_sha256": "ab9d17fd6121868b945cbf702dae8104faa8f9d2f760d3fe13735b89a47421ff",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la plausibilità degli spessori rispetto alle reference?",
+      "compound_review": false
+    },
+    "Q-099": {
+      "requirement_sha256": "7a02871b327fdf7522b3e33a709fb70ee0c38cfb1817117f71cd8c9f637ea90b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la plausibilità degli aggetti rispetto alla struttura?",
+      "compound_review": false
+    },
+    "Q-100": {
+      "requirement_sha256": "b53fd8642458c394f36cd6fb14f0343cd41948d6eae459a3322a95351dad8ef6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato il modello anche dal basso, verificandone la credibilità strutturale?",
+      "compound_review": false
+    },
+    "Q-101": {
+      "requirement_sha256": "bc021385d38623b7698e6c1e85933bd54861a06a27f4c84472fd59bdf73732b5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dimostrato che l’oggetto svolga effettivamente la funzione prevista?",
+      "compound_review": false
+    },
+    "Q-102": {
+      "requirement_sha256": "a8a38d1f01cf0c2504e11c0a2f02369da5cb0e51910156f0db239ab64abde8b1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il modello sia realmente utilizzabile da una persona?",
+      "compound_review": false
+    },
+    "Q-103": {
+      "requirement_sha256": "4696bfdf9a776efb536119c83c51c24ef9d137c461b7f8a0ffcc044c161aba2c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il percorso di accesso sia percorribile?",
+      "compound_review": false
+    },
+    "Q-104": {
+      "requirement_sha256": "5d91ab69409c5155047418935bd843da60bc582b21d1d2489f5300c85fa88f0f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che l’ingresso sia riconoscibile dal punto di vista del giocatore?",
+      "compound_review": false
+    },
+    "Q-105": {
+      "requirement_sha256": "a54d5396c7d87d088176cd89cbfcf61aa2db997898900c5d595b2b7bd503a835",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il percorso di ingresso sia libero?",
+      "compound_review": false
+    },
+    "Q-106": {
+      "requirement_sha256": "71458ac83496bb5207de422a6c6480560e9a3199f31be928e555db611f7db013",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e rimosso gli ostacoli involontari?",
+      "compound_review": false
+    },
+    "Q-107": {
+      "requirement_sha256": "1ef98a8ea184708e5bee825b92f6071a4bed4aad2286dc8b2d90a3c7c90791f9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai misurato e verificato che lo spazio per il movimento sia sufficiente?",
+      "compound_review": false
+    },
+    "Q-108": {
+      "requirement_sha256": "fbbdfe9aec23801031cad201981599a29bcb09a473783b818050f4abca150285",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato la raggiungibilità degli elementi utilizzabili?",
+      "compound_review": false
+    },
+    "Q-109": {
+      "requirement_sha256": "f66f3d2d4b66533ce588eb8fcf20c2b438c67f8886b3b15d670729795567805d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le sedute siano effettivamente utilizzabili?",
+      "compound_review": false
+    },
+    "Q-110": {
+      "requirement_sha256": "e935020f1353b97f4106553aba8d75f598745c780a535c6c94d27a4fda7b55f1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato quote e distanza dei tavoli rispetto alle sedute?",
+      "compound_review": false
+    },
+    "Q-111": {
+      "requirement_sha256": "ca2dd1bb07b04733185c42a4f9eab917a57c169dec195f48fa1019837a86bc44",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato che gli oggetti siano orientati verso chi deve utilizzarli?",
+      "compound_review": false
+    },
+    "Q-112": {
+      "requirement_sha256": "b2ef4c14c87417cd9614544f81b3e6b7b68d2a86cc0ede263a0982fac8bdd2df",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato ed eliminato le collisioni funzionali anche se la geometria non si interseca?",
+      "compound_review": false
+    },
+    "Q-113": {
+      "requirement_sha256": "eed1df70fde24dc78b619ca36ec78a0afe3358c8d1feb8a7c5464d071253baf8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato l’esperienza di utilizzo all’altezza reale del giocatore?",
+      "compound_review": false
+    },
+    "Q-114": {
+      "requirement_sha256": "32334930e7c0c2d76e25ef01658ec0d20c7caa87017fbec9135ae25d57b3d372",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato e documentato ciò che vede il giocatore entrando?",
+      "compound_review": false
+    },
+    "Q-115": {
+      "requirement_sha256": "f117bb9766216040e5be53e7ecad80b977bc118d65ae6dc67ccb60ec677379ff",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato e documentato ciò che vede il giocatore girandosi?",
+      "compound_review": false
+    },
+    "Q-116": {
+      "requirement_sha256": "eadd468769fd8686caa2b46ae1f784cbe84a07d5985b91779ee0573c2441d7d4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato e documentato ciò che vede il giocatore guardando verso l’alto?",
+      "compound_review": false
+    },
+    "Q-117": {
+      "requirement_sha256": "24e3b8a3de2fac928d15227dc6283739c38268969419ab29f62596f6e3744092",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato e documentato ciò che vede il giocatore uscendo?",
+      "compound_review": false
+    },
+    "Q-118": {
+      "requirement_sha256": "ae2d5a6a273a870311bcf7bd9da828ba946599ffc75a29e60c126e3b246acb54",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e risolto gli spazi morti involontari?",
+      "compound_review": false
+    },
+    "Q-119": {
+      "requirement_sha256": "166b546d044aa45979812dc717f80145814697bff5ca47d3ce4c7e3fb66c9ede",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dimostrato con il risultato realizzato la funzione dichiarata?",
+      "compound_review": false
+    },
+    "Q-120": {
+      "requirement_sha256": "60b0d5563146b70fcb669d17d7242ecb87e32825886f3443eb3c56e647c09a95",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dimostrato la funzione con un controllo reale, senza limitarti alla simulazione visiva?",
+      "compound_review": false
+    },
+    "Q-121": {
+      "requirement_sha256": "bbd5de109f7735ca08d5fd5342ac5e401fb9ffd187e2ec71b730aff1c15d2aa4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che tutti i componenti promessi esistano nel risultato?",
+      "compound_review": false
+    },
+    "Q-122": {
+      "requirement_sha256": "02d6d31154c968f651a2d264ae9a5fd2043c02d32e7687438fd742acdf30a126",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che nessun sistema obbligatorio sia completamente assente?",
+      "compound_review": false
+    },
+    "Q-123": {
+      "requirement_sha256": "c92fa7cf44f236bb91a934946f6f8e3031b8475bb7bda53ad0a6d05b35daa245",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che exterior e interior siano entrambi completi quando richiesti?",
+      "compound_review": false
+    },
+    "Q-124": {
+      "requirement_sha256": "2c83be2a6f4f02198497feca6394fcc08832afb978e5f25747bbb64dba40d427",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il retro sia completo e curato quanto il fronte?",
+      "compound_review": false
+    },
+    "Q-125": {
+      "requirement_sha256": "10cf0f5e846553ea734c36969b53737a8bc016c788f84539ae0cbf0f1db394dc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che entrambi i lati siano completi?",
+      "compound_review": false
+    },
+    "Q-126": {
+      "requirement_sha256": "dd032f709c30fc764a8d3299b4ce6f0b678f5a4a16b642fd6eb16fc7c0b69a0d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il sottotetto sia completo?",
+      "compound_review": false
+    },
+    "Q-127": {
+      "requirement_sha256": "24742d7d9da21353bf819bc363961f46118833141f3e037acef57c895a38340b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato anche le parti normalmente nascoste, correggendone i difetti visivi?",
+      "compound_review": false
+    },
+    "Q-128": {
+      "requirement_sha256": "0c245c88c7548704a63fb29a74867fb105f75e08eea6f63ca9873fe52b79d9da",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato il modello oltre le sole viste migliori?",
+      "compound_review": false
+    },
+    "Q-129": {
+      "requirement_sha256": "6227664981054cc1d2a3f4725027b30ee65570c02cc80f49b4b99a872d3aa652",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato una qualità coerente su tutte le facciate e non solo su quella principale?",
+      "compound_review": false
+    },
+    "Q-130": {
+      "requirement_sha256": "057e87fb90c352d6e5af980e7f2bb21013aadf8280048a0c7a9aa5214c047d75",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che ogni apertura abbia una ragione funzionale o progettuale?",
+      "compound_review": false
+    },
+    "Q-131": {
+      "requirement_sha256": "18fadf85e4e0ad3cb746af40cffee59a5cc58ec32e02d10be358353f6d0051d2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la collocazione coerente di ogni elemento decorativo?",
+      "compound_review": false
+    },
+    "Q-132": {
+      "requirement_sha256": "cb9c04853daa25188c9e51b39e579aeccda5ad7258eed504f30547822ec5854c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato l’inventario e verificato che tutti gli elementi ripetuti previsti siano presenti?",
+      "compound_review": false
+    },
+    "Q-133": {
+      "requirement_sha256": "a19672a654f36d7442ebf742ec37a22ac82fa5945a32d61f8f4a4f3778aa52dd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e rimosso i duplicati accidentali?",
+      "compound_review": false
+    },
+    "Q-134": {
+      "requirement_sha256": "ecd179f263a8b357a4e14020297ce11163e8e43f654c3b3f962b3cd5c2effeb5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e rimosso i placeholder residui?",
+      "compound_review": false
+    },
+    "Q-135": {
+      "requirement_sha256": "2dd94d8085f0ff082a7351ddee5f36e3267a3c07464c4e59f13cddd9f1353922",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e rimosso o tracciato esplicitamente gli elementi temporanei?",
+      "compound_review": false
+    },
+    "Q-136": {
+      "requirement_sha256": "eb844be83d19f7db5f9e218d27d9bd33de7fe349f21c7c415c89c399b4e3fe2f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e rimosso gli oggetti di debug dalla consegna?",
+      "compound_review": false
+    },
+    "Q-137": {
+      "requirement_sha256": "816f8aa40ecbd7f7473edc1403c010f58bd7b06cd2eea0f90b8df2c63aca9d7d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che nessun helper non previsto finisca nella consegna?",
+      "compound_review": false
+    },
+    "Q-138": {
+      "requirement_sha256": "5cf028ab33957f8dbfe51e9ac2e763752754324ae0103ab9973b3b864cf94dba",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai esplicitato tutte le parti rimandate anziché presentarle come complete?",
+      "compound_review": false
+    },
+    "Q-139": {
+      "requirement_sha256": "90ce72d2ccf94b73966d81b8e083506a9c40d2845a729ad04140bd8aa21cb440",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai evitato di definire completo un modello che è ancora una shell?",
+      "compound_review": false
+    },
+    "Q-140": {
+      "requirement_sha256": "6ced78a48966658c8134aa60ca2400de7e1f5bfe33e1a6fd1979d716afb17b21",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato i requisiti con gli elementi effettivamente realizzati, risolvendo le omissioni?",
+      "compound_review": false
+    },
+    "Q-141": {
+      "requirement_sha256": "7031d010c895be4bf58423d4e870bcdb1a4ec3b57ff6442149c1c2966a0fffa7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato i materiali con la direzione artistica approvata?",
+      "compound_review": false
+    },
+    "Q-142": {
+      "requirement_sha256": "938a45afaf48efd2a92ce18ee5eb17d574485a68b6b1b33c9e34f3722e368b9b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che ogni superficie abbia il materiale previsto?",
+      "compound_review": false
+    },
+    "Q-143": {
+      "requirement_sha256": "f66b17336085f0e7574523d0f088fdecc852476bdc5b5d7dacd933dadc14f758",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e sistemato tutti i materiali mancanti?",
+      "compound_review": false
+    },
+    "Q-144": {
+      "requirement_sha256": "c3082129dbeac62f54c5f8b6a234c434a888bb6ed685d36fbaa01a00a01909ce",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto le assegnazioni dei materiali agli oggetti sbagliati?",
+      "compound_review": false
+    },
+    "Q-145": {
+      "requirement_sha256": "379538da53b4fe3676c3c1b71ab19bbf2fbcccc43465c907b39ce39d28583ee8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che esistano i file reali di tutte le texture richieste?",
+      "compound_review": false
+    },
+    "Q-146": {
+      "requirement_sha256": "bc119436e764274908eb7d98494afb3d3cae0d8ef65f1adea3686ef5fb189cdf",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le texture siano leggibili e adeguate?",
+      "compound_review": false
+    },
+    "Q-147": {
+      "requirement_sha256": "b0877eb88e8ba3895e3fa1b31f51ac29efd4e0933d3042253348379299baae6a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che i percorsi alle risorse funzionino nell’ambiente di destinazione?",
+      "compound_review": false
+    },
+    "Q-148": {
+      "requirement_sha256": "ce35626d19160ef7a65033fad81b7d7cf052aa8ddbd12b6aa1bb6b43cd6c7adc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le texture siano incorporate quando richiesto?",
+      "compound_review": false
+    },
+    "Q-149": {
+      "requirement_sha256": "a2c964ee01d52aeae64f9af1dd58933dfe03684e8be9e7e002f1d4f8ef5a9a34",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’assenza di errori critici nel mapping UV?",
+      "compound_review": false
+    },
+    "Q-150": {
+      "requirement_sha256": "5ecfeca89dcb6df40bac152a07217b4a4f5862577b2177ddf73e3c838437652c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza della scala delle texture?",
+      "compound_review": false
+    },
+    "Q-151": {
+      "requirement_sha256": "bad93882b64820f15e782d04c4616bd8d3057ae81b9bcc1c6afd7af7ad9871b1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto variazioni incoerenti di mapping tra oggetti equivalenti?",
+      "compound_review": false
+    },
+    "Q-152": {
+      "requirement_sha256": "d8647ae123be32271cbe643eda89cb4217d890b88e96595031d8953f9aaf9270",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che roughness e normal map diano una risposta fisicamente plausibile?",
+      "compound_review": false
+    },
+    "Q-153": {
+      "requirement_sha256": "0386c7f24a81909c5c5fb4d63d356a7a382b4366dcc18b3deb5f35ef64881cde",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato con illuminazioni differenti la risposta plausibile dei materiali?",
+      "compound_review": false
+    },
+    "Q-154": {
+      "requirement_sha256": "1973c6eb3e550ad7e0bf63dc123124ab30e25f31c8838628a2ebe2345c1e948a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto le superfici sovraesposte o bruciate?",
+      "compound_review": false
+    },
+    "Q-155": {
+      "requirement_sha256": "e2c8abd39525c00b790b56f6b4aa49536c9618cc10e0e70999535d1222a74b8d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto le superfici eccessivamente scure?",
+      "compound_review": false
+    },
+    "Q-156": {
+      "requirement_sha256": "52eaa6c315be258e93fa8ad7248d65a9337da0c429deb8caa096e8767c1cf94f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il vetro reagisca visivamente come vetro?",
+      "compound_review": false
+    },
+    "Q-157": {
+      "requirement_sha256": "88c07bb57b74128127f0f539a390ee7ade3f61db4e625acfc2583630c6703b91",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il legno abbia una risposta visiva credibile?",
+      "compound_review": false
+    },
+    "Q-158": {
+      "requirement_sha256": "daed32f5dcf4b8d9bcca2a26f4d922fc7a5b488eb474ee12947ffee3c2c7a6da",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che metallo e pietra siano distinguibili in scena?",
+      "compound_review": false
+    },
+    "Q-159": {
+      "requirement_sha256": "99240c59a4f018ab8d4a38b145208a2c84144e5f0cb50c392881502f4c069e6d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato i colori con le reference vincolanti?",
+      "compound_review": false
+    },
+    "Q-160": {
+      "requirement_sha256": "0730004a2f6808e1b5d6e1a3cb560db1b8018b92664cd1f33fe10a078d93592e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che illuminazioni alternative non rivelino difetti geometrici mascherati dai materiali?",
+      "compound_review": false
+    },
+    "Q-161": {
+      "requirement_sha256": "daf590eac0c9ccc277fd47ba21e6d7e9b5be79e8d55fc7bb909fef1840f81c70",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’esistenza e l’apertura del file sorgente?",
+      "compound_review": false
+    },
+    "Q-162": {
+      "requirement_sha256": "5a569b6e8700370da7af0c47dee9f7219297a8e239aa036156412007bc612f77",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’esistenza e l’apertura del file finale?",
+      "compound_review": false
+    },
+    "Q-163": {
+      "requirement_sha256": "44ade966e0dd57842981b7d705a3f5ffd5357cbb0fd1a47f26e078cc91171f00",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la corrispondenza del formato ai requisiti?",
+      "compound_review": false
+    },
+    "Q-164": {
+      "requirement_sha256": "25cdb8eae532759fd495d5aae876a388982a9ef3e51e440ae6541ba49c589e64",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’integrità del file finale?",
+      "compound_review": false
+    },
+    "Q-165": {
+      "requirement_sha256": "1af860ccfdcae8cb71ea0e8bc9ce32e687b1152c2340b1cd103fd789ba24e0da",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai riaperto realmente il file esportato senza errori?",
+      "compound_review": false
+    },
+    "Q-166": {
+      "requirement_sha256": "75db17598e74b152b97233dfc9b375fbecdc267b54da4bed470d05b5bc3e1e2d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il reimport conservi tutti i dati richiesti?",
+      "compound_review": false
+    },
+    "Q-167": {
+      "requirement_sha256": "9b5ed980540d5971d490de2b06634c0dc821888a804cf8b9cc1a3df7dd9be8fa",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che l’esportazione e il reimport non alterino la geometria in modo non autorizzato?",
+      "compound_review": false
+    },
+    "Q-168": {
+      "requirement_sha256": "8b6440bba234f50e973ad3361a8221974e95dfa4177a646896145cdf95023c9f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che esportazione e reimport conservino i materiali richiesti?",
+      "compound_review": false
+    },
+    "Q-169": {
+      "requirement_sha256": "4405114d046763f430be52dfa00dd6b74863f4f47552c755333565d07e808ec1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che esportazione e reimport conservino le trasformazioni?",
+      "compound_review": false
+    },
+    "Q-170": {
+      "requirement_sha256": "30a97f5884159e0e31c08ceeb334933d7c7c50dddf36c87c414ee49cca522e71",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che esportazione e reimport conservino la gerarchia prevista?",
+      "compound_review": false
+    },
+    "Q-171": {
+      "requirement_sha256": "bf746d0689464f335af864e7cd5b23deb31b68e5e1e6aefed07e38dd00d6824e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eliminato dipendenze non dichiarate da percorsi assoluti?",
+      "compound_review": false
+    },
+    "Q-172": {
+      "requirement_sha256": "11bc5035fadc295402ee77431c2ce87296c8a75ffaab047318a5340fd98ccf71",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la portabilità oltre la tua macchina?",
+      "compound_review": false
+    },
+    "Q-173": {
+      "requirement_sha256": "02681c13d36170a8d0f34f63d2cc70dcfd374e6773a35dffe9942e3aea4f2b8e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai incluso o dichiarato tutte le dipendenze esterne effettivamente necessarie?",
+      "compound_review": false
+    },
+    "Q-174": {
+      "requirement_sha256": "b1fa8fee1b10e911405cabc4a2db8a6238d87eb78e308c8006de5229ecb0f4c3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dichiarato le versioni software da cui il risultato dipende?",
+      "compound_review": false
+    },
+    "Q-175": {
+      "requirement_sha256": "c63394807b6720ab7541f6aa3e1fe31fe6ff3f34a75d844fdd81f327d7c8f735",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e rimosso le dipendenze esterne non necessarie?",
+      "compound_review": false
+    },
+    "Q-176": {
+      "requirement_sha256": "72ab54cb0dca148ca25c42444d413db719228a2dca88403ef54a6a5b370de0c9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il pacchetto contenga tutte le risorse necessarie?",
+      "compound_review": false
+    },
+    "Q-177": {
+      "requirement_sha256": "ccff11192f748f9458f705b048a143fb49f93be40582785dceece53dcfc59ef3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai rimosso dal pacchetto i file inutili o confondenti?",
+      "compound_review": false
+    },
+    "Q-178": {
+      "requirement_sha256": "6eb44b1c1092551139a634a97007fb30e01379c4f28ee855ec02ce2f4b2e1432",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che esista un unico punto d’ingresso chiaramente indicato?",
+      "compound_review": false
+    },
+    "Q-179": {
+      "requirement_sha256": "82c07d5e6a037dab22970cbf944ebb8baa5b1d23476f0f6c7d014b7eee1163d8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eliminato l’ambiguità tra file che l’utente dovrebbe scegliere?",
+      "compound_review": false
+    },
+    "Q-180": {
+      "requirement_sha256": "fac719a49ac3312d9d29043fbd0a1c5d058b765b759499edaa2aaa580473ac2e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eliminato i passaggi manuali richiesti all’utente che avresti potuto gestire tu?",
+      "compound_review": false
+    },
+    "Q-181": {
+      "requirement_sha256": "5820b1ea2538c4e150789c912b3329073abdeb11b85edce36224cfbcddc4ae08",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai simulato o documentato il comportamento al primo errore runtime?",
+      "compound_review": false
+    },
+    "Q-182": {
+      "requirement_sha256": "5cf825b266787e31ce9ac310e514485d4f8f25bf17d8177a645cc885689a8854",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che un fallimento non lasci stati corrotti o sporchi?",
+      "compound_review": false
+    },
+    "Q-183": {
+      "requirement_sha256": "2c084b5634e0d6ddbd8cde791ba029dfef2875c0efe4652f993598e149649a6e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che i retry non producano duplicati?",
+      "compound_review": false
+    },
+    "Q-184": {
+      "requirement_sha256": "f097e660343ed3ace5dfa595fed223f3562bf855e8fe75f02309f90f23f501ad",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che una terminazione parziale non corrompa il risultato?",
+      "compound_review": false
+    },
+    "Q-185": {
+      "requirement_sha256": "b61b4a038303fca335e8585b7a194f29fc31dccd27e84003f71eba8b6357dc38",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che nessuna operazione distruttiva preceda il preflight?",
+      "compound_review": false
+    },
+    "Q-186": {
+      "requirement_sha256": "0da0cd36836665bc8a9012e3850f495dd42e9ef384ef941ffa3fa077210b2124",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che gli errori vengano rilevati e segnalati nel punto corretto?",
+      "compound_review": false
+    },
+    "Q-187": {
+      "requirement_sha256": "7971bda887585257545492301b16d2a26b183ff319313eb4e27f7570afb77324",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato falsi PASS nei test e impedito che vengano accettati?",
+      "compound_review": false
+    },
+    "Q-188": {
+      "requirement_sha256": "81044ef3b98036315b1ebc79b10a7644df3b785675a7d4d7d5effaa055a5cf74",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato criticamente e documentato la risposta a «Sto verificando l'effetto oppure soltanto che una funzione sia stata chiamata» e risolto gli eventuali problemi?",
+      "compound_review": false
+    },
+    "Q-189": {
+      "requirement_sha256": "7dccf32a2892471572e515618bd9079def69e84e6a2837278483eb9be1c3ecf2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato criticamente e documentato la risposta a «Sto verificando il contenuto oppure soltanto che un file esista» e risolto gli eventuali problemi?",
+      "compound_review": false
+    },
+    "Q-190": {
+      "requirement_sha256": "e632ba0f48f87b43b00cc1162dcb2f816dcc04050dc67bf940dde9d450686672",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato criticamente e documentato la risposta a «Sto verificando il risultato oppure soltanto l'intenzione» e risolto gli eventuali problemi?",
+      "compound_review": false
+    },
+    "Q-191": {
+      "requirement_sha256": "f0bd791dbcc5e30ed36af8398fc1b0c59ce5d04f729c0ae575410ee79607364a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e testato almeno il caso limite più ovvio?",
+      "compound_review": false
+    },
+    "Q-192": {
+      "requirement_sha256": "b19c7c0f11202dfe5fb3e36acdffa6144dc4b5dc1b48ce9595c2723a458418e8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e testato almeno un caso limite non ovvio?",
+      "compound_review": false
+    },
+    "Q-193": {
+      "requirement_sha256": "a6bd888972b285657b231683c5bb77adcf0862d985a6bfd9295744f97b9ec889",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato il caso di input vuoto?",
+      "compound_review": false
+    },
+    "Q-194": {
+      "requirement_sha256": "0e9ca4857839cabaf8779b29154dc159d637b4127413a9ceef2448102b7d9a01",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato il caso di input massimo?",
+      "compound_review": false
+    },
+    "Q-195": {
+      "requirement_sha256": "395e6f564181317cdec08db25cd0c27f54f3116830dee3f35a19e679881c9f64",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato l’operazione ripetuta?",
+      "compound_review": false
+    },
+    "Q-196": {
+      "requirement_sha256": "3aecf3ce1320a70580ecc8825986627d4c44b743ed6ab7d55caf18d19f275be0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato l’interruzione dell’operazione?",
+      "compound_review": false
+    },
+    "Q-197": {
+      "requirement_sha256": "c2f61efe6f096453518776f62892a6779ebb661ff10f51123ab0fe2e6880dbbc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato un diverso ordine delle operazioni?",
+      "compound_review": false
+    },
+    "Q-198": {
+      "requirement_sha256": "5061b960477a1aff4d6446a396beaae6aea96f894c0f3e672d1c2e4ac155c34e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato la mancanza di una dipendenza?",
+      "compound_review": false
+    },
+    "Q-199": {
+      "requirement_sha256": "57b86ace5ae629463da9f5fcfaa98bf2518198046426f2babff9c8108ed3f0b4",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai testato dati validi ma inattesi?",
+      "compound_review": false
+    },
+    "Q-200": {
+      "requirement_sha256": "8bd80e809f9e16d32abca3cc4460a9179c9067ca5fe436261725fd0c62b6d592",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato regressioni potenzialmente introdotte dall’ultima modifica?",
+      "compound_review": false
+    },
+    "Q-201": {
+      "requirement_sha256": "8402db94187ffdc761e70508ad626be6c24142451aa2515b6247315858d82c3c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito verifiche di regressione sugli elementi già funzionanti dopo la correzione?",
+      "compound_review": false
+    },
+    "Q-202": {
+      "requirement_sha256": "beff776543a4a5e8c8301ea8a9c29906d7d7f3d0c299c1ac298d33634dad096b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e corretto la causa reale anziché il sintomo?",
+      "compound_review": false
+    },
+    "Q-203": {
+      "requirement_sha256": "10f9487bd66d08654dc0c5541c69d4270fff27250383465d5cfeadcf5879a551",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato precedenti dello stesso difetto e aggiornato la prevenzione delle recidive?",
+      "compound_review": false
+    },
+    "Q-204": {
+      "requirement_sha256": "cf61be696272e402ffa4d06aa39807f0eb9f668e932291559df9e2ca2b7e07e7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risposto con evidenze concrete alla domanda «Se sì, perché sto ancora usando lo stesso approccio» e documentato la risposta?",
+      "compound_review": false
+    },
+    "Q-205": {
+      "requirement_sha256": "23bab45f2c1de068f699ccabf924abd035bc6edce21f16dbcf77ef72434f219e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato concretamente se è necessario applicare Abort Early?",
+      "compound_review": false
+    },
+    "Q-206": {
+      "requirement_sha256": "221c16e44f0dcb47240cfa651956e9f3d3a58e4b4e6cc54b142f930023567fc7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai rilevato e documentato il tempo residuo effettivo?",
+      "compound_review": false
+    },
+    "Q-207": {
+      "requirement_sha256": "3d7328a216f5f4125fcda79e268f12726981781bbc01926139e0ddf6f0417c95",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato lavoro residuo e budget disponibile senza promettere scadenze non dimostrate?",
+      "compound_review": false
+    },
+    "Q-208": {
+      "requirement_sha256": "3e32f7cd9d5496b90e8743259a01b95f8977359a078a7900f0815ed04c22a1b9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato attività che consumano tempo senza migliorare il risultato?",
+      "compound_review": false
+    },
+    "Q-209": {
+      "requirement_sha256": "127b6abdd118465175a7a4ce107ca8127693be7550b75101ff18583cb885e603",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato il rischio di perseverare nell’approccio solo per il tempo già investito?",
+      "compound_review": false
+    },
+    "Q-210": {
+      "requirement_sha256": "1b85f533ebee4969ef08f56c04a7eefa207a7f138a5a837e73e6a78e83ffc09a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato e applicato le semplificazioni possibili senza sacrificare requisiti?",
+      "compound_review": false
+    },
+    "Q-211": {
+      "requirement_sha256": "7db9dd4f60c2f4b432782e4528737fbb7b0b6bd4f94a2c9b563abc5bf96ffb1d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato se sia eliminabile almeno un livello tecnico privo di utilità?",
+      "compound_review": false
+    },
+    "Q-212": {
+      "requirement_sha256": "464ff47b5e292e07e47e61aa8aa5b05d592ef20bb68f11e1238f2a300f5a5416",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato se consegnare direttamente l’artefatto anziché il generatore?",
+      "compound_review": false
+    },
+    "Q-213": {
+      "requirement_sha256": "5a4acb9b06b19c18e3df159f2f0e578b37a7a1c9246593f995f3ff778098c5bd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato l’impatto sul risultato del cambio di pipeline?",
+      "compound_review": false
+    },
+    "Q-214": {
+      "requirement_sha256": "8b701d19c497029fd613272606710763021faee582458eb9b6deb30c1c5b1171",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai rivalidato tutto dopo aver cambiato pipeline?",
+      "compound_review": false
+    },
+    "Q-215": {
+      "requirement_sha256": "622ef42cc067a024bf216aca73097adc385bde5cbee942fab05936f002df219d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che la soluzione più veloce rimanga sufficientemente robusta?",
+      "compound_review": false
+    },
+    "Q-216": {
+      "requirement_sha256": "9173c146d47bf39640c34ca017d7429ed4e8b47146f0dc3324db62805efab352",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai dichiarato e autorizzato ogni eventuale sacrificio di requisiti dovuto alla deadline?",
+      "compound_review": false
+    },
+    "Q-217": {
+      "requirement_sha256": "ecf095767854a657893427db19af90c15ec8bad90c64ca1148827093aa3a3c5e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai preservato i controlli QA obbligatori malgrado la deadline?",
+      "compound_review": false
+    },
+    "Q-218": {
+      "requirement_sha256": "6d2555ae2fe7f96c810e5e9c1c74a165e1a493c51518934defe31285502ff5b2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai evitato feature non richieste quando mancano requisiti obbligatori?",
+      "compound_review": false
+    },
+    "Q-219": {
+      "requirement_sha256": "3dc646b8d579dd43f69f207851ce22e403d52a15219aec4b691c8bc2e11228aa",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato il controllo più importante da preservare anche con tempo molto limitato?",
+      "compound_review": false
+    },
+    "Q-220": {
+      "requirement_sha256": "c628932c6ca4b55e97bb41c86cf697fea99c683f357b96d878bbefbc0b91a198",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai fermato la consegna se il lavoro non può essere chiuso correttamente?",
+      "compound_review": false
+    },
+    "Q-221": {
+      "requirement_sha256": "d1db2dc68e9c68866faf3397e1e3dbf43456cf084454d217cbbcac0ce49fdc3c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito una revisione del modello ignorando volutamente come lo hai costruito?",
+      "compound_review": false
+    },
+    "Q-222": {
+      "requirement_sha256": "cdf3749b8580dec435b8168d3b5c227aa276a8ef337c7262042c4bb3dd51f9b7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il prodotto appaia realmente finito secondo le reference?",
+      "compound_review": false
+    },
+    "Q-223": {
+      "requirement_sha256": "d3e7ccbd5d4fc8f440035238264a641dc33d3076ea957643171664ad9bf6e5c7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato e risolto gli aspetti che fanno apparire il risultato una bozza?",
+      "compound_review": false
+    },
+    "Q-224": {
+      "requirement_sha256": "47a3fdab267066468403310a1c8f3aa99d0233497681fa1fbf6d94c7afd2151c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto gli aspetti che fanno sembrare il modello un assemblaggio incoerente di pezzi?",
+      "compound_review": false
+    },
+    "Q-225": {
+      "requirement_sha256": "c203502fe0a9335ebf32abe2885546a3153010296b99e84b52fb481506a75177",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato che tutte le parti condividano lo stesso linguaggio visivo?",
+      "compound_review": false
+    },
+    "Q-226": {
+      "requirement_sha256": "2fbb1a59d8d1223df376cacdd7984097ceb42a5a52b513efd9cb9e552cc74fef",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza delle proporzioni nell’insieme?",
+      "compound_review": false
+    },
+    "Q-227": {
+      "requirement_sha256": "3df7e863a6ffed2c6a5e2dc541373238c15b092eccc6159824e9aa462df9bdd0",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la qualità della silhouette da più prospettive?",
+      "compound_review": false
+    },
+    "Q-228": {
+      "requirement_sha256": "03612b2a7bd3e29dbe03be80411d0eb9b801e22af9980be17d95fea1194ab2fc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il dettaglio sia coerente fra le varie zone?",
+      "compound_review": false
+    },
+    "Q-229": {
+      "requirement_sha256": "75a8abe56c615f35d11bf7809da73d84773bfd47661141825f19694e4eeefd2c",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che tutte le zone abbiano un livello di finitura coerente?",
+      "compound_review": false
+    },
+    "Q-230": {
+      "requirement_sha256": "7982944db1487b138f576f48879cd6c6f7eb5e67dcf6d58e34b3bd658dd4d0c2",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato interior ed exterior e verificato che appartengano allo stesso edificio?",
+      "compound_review": false
+    },
+    "Q-231": {
+      "requirement_sha256": "f2b0a31593bd6df47051c8357910496a1d9d6d750852db6c609d8c963581f29b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza stilistica fra materiali e geometria?",
+      "compound_review": false
+    },
+    "Q-232": {
+      "requirement_sha256": "43f0104a482488d830c915e6186dcbf97e67d8ed9ad58fa2a299a76768e8da49",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che la funzione dell’oggetto sia riconoscibile dall’aspetto?",
+      "compound_review": false
+    },
+    "Q-233": {
+      "requirement_sha256": "8d2f175a1635f6f4d272de34db67786e55e39d1d414a8da7255151cfef3f129f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato e corretto gli elementi visivamente errati che attirano l’attenzione?",
+      "compound_review": false
+    },
+    "Q-234": {
+      "requirement_sha256": "86c796c3acc7decb2bed6488b030a41b635e3a2581dd57a7ecffc609100758c3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai investigato e corretto ciò che appare incoerente anche senza una causa immediatamente evidente?",
+      "compound_review": false
+    },
+    "Q-235": {
+      "requirement_sha256": "0c0fd91d79b68639c288b3059d5145048a6b9806d04de8fde1767ab803dd4169",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai investigato ogni anomalia percepita anziché ignorarla?",
+      "compound_review": false
+    },
+    "Q-236": {
+      "requirement_sha256": "a13378ec2ec1728fda977d1cbdf9306f696ffb7d1370757e584cdac1c1c3bfa7",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito il confronto diretto con la reference originale?",
+      "compound_review": false
+    },
+    "Q-237": {
+      "requirement_sha256": "6da73f22b79bc6f1169c29787f5566fe46ee257f24fce857470316fc9a8ffef6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai documentato le cinque differenze più evidenti rispetto alla reference?",
+      "compound_review": false
+    },
+    "Q-238": {
+      "requirement_sha256": "e9260d3fc99f2e6c107d1e76edb09ed3af56d0c6312cd714c10852d14e9484ab",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato quali differenze dalla reference siano intenzionali?",
+      "compound_review": false
+    },
+    "Q-239": {
+      "requirement_sha256": "c1cbb2945a46b1f9d1156a133782c6e4c9b1a3d56a88a8ecee5f33c39cdfb7ea",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che le differenze intenzionali siano accettabili secondo i criteri concordati?",
+      "compound_review": false
+    },
+    "Q-240": {
+      "requirement_sha256": "04c3321d8461b7b1f240d366b9ecce36b40b743d3cb9ab0dc525479a68a662a6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai bloccato la consegna in presenza di differenze non accettabili?",
+      "compound_review": false
+    },
+    "Q-241": {
+      "requirement_sha256": "ae018d74da7033ae4ba8760e9008f10abc9e1f1b7692e411a2250cb3bf622ab6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato i punti da cui un revisore potrebbe bocciare il lavoro rapidamente?",
+      "compound_review": false
+    },
+    "Q-242": {
+      "requirement_sha256": "3407fe9a999898df9902760f27763785fff8a205b064955695e568790ff0d80a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai guardato proprio lì?",
+      "compound_review": false
+    },
+    "Q-243": {
+      "requirement_sha256": "048e0c092133ffedd3fdc42380251d165ca0bed36481830322bb97b3d90d3284",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ispezionato anche la vista peggiore e non soltanto quella migliore?",
+      "compound_review": false
+    },
+    "Q-244": {
+      "requirement_sha256": "c89808976cf5894bd5cc57d37226d484f9e98c9bcc7a1f38186fbe5efd321348",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato fronte?",
+      "compound_review": false
+    },
+    "Q-245": {
+      "requirement_sha256": "ac32b4e22948c1566e10a663acb7a738733247d9ab34fbfbf3c2aaaf3325aa63",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato retro?",
+      "compound_review": false
+    },
+    "Q-246": {
+      "requirement_sha256": "3c8374d67f6e20a37bfa70557f684ce1e62d2cc4b3d589ae8afa5703e2f62069",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato entrambi i lati?",
+      "compound_review": false
+    },
+    "Q-247": {
+      "requirement_sha256": "c8e146597b2e763850fb1c8751836c11f10841a78b4fbdff8c24f24d78f01b1b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato dall'alto?",
+      "compound_review": false
+    },
+    "Q-248": {
+      "requirement_sha256": "b390980936c8856910b9fe1fec29df0b923252c400876ef2832b7e3e48460b85",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato dal basso?",
+      "compound_review": false
+    },
+    "Q-249": {
+      "requirement_sha256": "c0d094d53854fc6f6a959a27f16191ce1e4bd29f728b3303899c0db4419f10d3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato da vicino?",
+      "compound_review": false
+    },
+    "Q-250": {
+      "requirement_sha256": "5f9b6ee8e5a3d98a0dca782976c9ffbfd220157aff10c544c2f0608e2cb90c7d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato da lontano?",
+      "compound_review": false
+    },
+    "Q-251": {
+      "requirement_sha256": "a8183b34be4c6572812dfb3ad748dab47ae3ed492e4d3779f66ec5bc91db7fd8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato dall'altezza reale dell'utilizzatore?",
+      "compound_review": false
+    },
+    "Q-252": {
+      "requirement_sha256": "7a9a41f196cd47dd061c89094263dcfd18ddf41e69bec1cffe04c61e7090a91f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato l'interior dall'ingresso?",
+      "compound_review": false
+    },
+    "Q-253": {
+      "requirement_sha256": "065a87593c56b4653259fa492f53d93d4b780f5ff5d46b97d97ff4663ceeac5b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato gli angoli difficili?",
+      "compound_review": false
+    },
+    "Q-254": {
+      "requirement_sha256": "3459e8fe9182834a2096dc951d198a651b875901e2342ccb0369c61f5b1c4f5f",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato compenetrazioni deliberatamente?",
+      "compound_review": false
+    },
+    "Q-255": {
+      "requirement_sha256": "71ba86757786766053924fc2d1525fe75aa24e56f81fbee2096006f3d7812a51",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato elementi sospesi deliberatamente?",
+      "compound_review": false
+    },
+    "Q-256": {
+      "requirement_sha256": "55401e55b9211f330c75ddd2565c0b85a851b600c341676f5c34795ffd7b20e8",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato omissioni deliberatamente?",
+      "compound_review": false
+    },
+    "Q-257": {
+      "requirement_sha256": "38e41213dc7a833b204c0bf62f4667ca140f6e81b1d7500954116cd3a49d1098",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato regressioni deliberatamente?",
+      "compound_review": false
+    },
+    "Q-258": {
+      "requirement_sha256": "451fb9a90d1fa104e3475a09f6b545d622a86ad2b1ab2887bdf7e9ef37b8e18a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai cercato errori banali deliberatamente?",
+      "compound_review": false
+    },
+    "Q-259": {
+      "requirement_sha256": "e207acd0666e99b2780f64d387e6aa3f2a8293085fe4cf350084459f4644b782",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato e controllato il difetto più evidente che l’utente potrebbe trovare subito?",
+      "compound_review": false
+    },
+    "Q-260": {
+      "requirement_sha256": "f741423a594896fb190c979eb66475252815441e34ebae40a25f927318204323",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai svolto personalmente la verifica del rischio identificato in Q-259?",
+      "compound_review": false
+    },
+    "Q-261": {
+      "requirement_sha256": "54a77d28f93da666038da66ed13e25d6f91913e6d4a35b069830ddc57d8f8959",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai svolto internamente il QA che non deve essere delegato all’utente?",
+      "compound_review": false
+    },
+    "Q-262": {
+      "requirement_sha256": "47ebceb540f42bbbbe207ed23510ef2c6580c1bf9f200c4911d2a53a5e2af217",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai svolto internamente il debugging che non deve essere delegato all’utente?",
+      "compound_review": false
+    },
+    "Q-263": {
+      "requirement_sha256": "c72a23509cba04ae3ac300e248b1b1f6344ef6b7de06280e01c6f2d71983bae5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ricavato autonomamente le informazioni disponibili senza richiederle di nuovo all’utente?",
+      "compound_review": false
+    },
+    "Q-264": {
+      "requirement_sha256": "699a7d690c388e458ac3935941eb2eac9d528f838b12fa4e946a680748b26769",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risolto autonomamente le decisioni tecniche di tua competenza?",
+      "compound_review": false
+    },
+    "Q-265": {
+      "requirement_sha256": "35712eade1d66e8e1d778ecfef7caa11d71ec771c17c0688e87fd75a0941b368",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai chiesto l’approvazione dell’utente soltanto per decisioni artistiche/progettuali di sua competenza?",
+      "compound_review": false
+    },
+    "Q-266": {
+      "requirement_sha256": "5bbb662e65ce57accb445ec63e2cf48e7e19a210b327d65804c05d4ba9279b94",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai mostrato il risultato richiesto anziché soltanto il processo di lavorazione?",
+      "compound_review": false
+    },
+    "Q-267": {
+      "requirement_sha256": "79d1c2fef560e33f316140032076d0b89ed711d1c89e84404fb4587d279418f5",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai semplificato le istruzioni di consegna eliminando passaggi non necessari?",
+      "compound_review": false
+    },
+    "Q-268": {
+      "requirement_sha256": "dfd96ba7d92cf2707b9dccb76f83b1bad05ede9aba2d3a2ab32377d5b66d6f0b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai ridotto i passaggi operativi senza sacrificare i requisiti?",
+      "compound_review": false
+    },
+    "Q-269": {
+      "requirement_sha256": "922b8d78887b1252007aacb5b120944f1efad3ef1e281cbd0ebf3cc873e00a52",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il nome del file comunichi lo stato reale del deliverable?",
+      "compound_review": false
+    },
+    "Q-270": {
+      "requirement_sha256": "6d2d78ca4686df63ad8b332acf52ef7d53d87657fecdc22c1990a09ce3fd56b3",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai evitato l’etichetta FINAL su elementi ancora privi di approvazione?",
+      "compound_review": false
+    },
+    "Q-271": {
+      "requirement_sha256": "adff2bea3713bcf0df461b7b4bd9ecea007e49294de8dfd2a71082ebddd92a01",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai evitato l’etichetta CANDIDATE prima del superamento dei gate richiesti?",
+      "compound_review": false
+    },
+    "Q-272": {
+      "requirement_sha256": "8a5818b8985599b3b9f1351fd862974e84a3ac6cefecbe15d4132cfbc3192ca1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai confrontato ogni stato dichiarato con le prove che lo sostengono?",
+      "compound_review": false
+    },
+    "Q-273": {
+      "requirement_sha256": "d97663647e83a31fcfb6e09d619040b2aeae9fbff60396018dabc48d449205ea",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai elencato le verifiche che puoi realmente certificare?",
+      "compound_review": false
+    },
+    "Q-274": {
+      "requirement_sha256": "0d2690ec2836b31540d9e10b6aa7a9ebcf5afdfba33cb0262afe21c2b58c7794",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai elencato le verifiche che non puoi ancora certificare?",
+      "compound_review": false
+    },
+    "Q-275": {
+      "requirement_sha256": "7ca07dd01fc43105bbeb06df0aa97dd58571bf1fff12544385f2e0d364fcfe5b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato esplicitamente gli UNKNOWN invece di nasconderli dietro formule vaghe?",
+      "compound_review": false
+    },
+    "Q-276": {
+      "requirement_sha256": "3e3d4e7e2fabc80960230eb3975cda4a3abd6b4ba50ed5318237a45bb3e25411",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai evitato promesse prive di supporto probatorio?",
+      "compound_review": false
+    },
+    "Q-277": {
+      "requirement_sha256": "37ade09bfcf532023addca21105f025fc96866332e90b398b2c6ac397907efab",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai identificato le verifiche ancora necessarie prima di formulare la promessa?",
+      "compound_review": false
+    },
+    "Q-278": {
+      "requirement_sha256": "a188c7f1f5b92a30cd4785381d45618db07058bc7a4793c30d16a3028fff78e6",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato tutti i FAIL ancora aperti e bloccato l’avanzamento se critici?",
+      "compound_review": false
+    },
+    "Q-279": {
+      "requirement_sha256": "543ddd76251f7b2fc1432bfc97bfdc02fa3ed0b716355b282abd61a94400cce9",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai individuato tutti gli UNKNOWN critici e impedito la chiusura finché restano aperti?",
+      "compound_review": false
+    },
+    "Q-281": {
+      "requirement_sha256": "20c1b3d74e4538fc66fa5e041653884b3da907a9555aa6def17b8967a02fb76d",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato le nuove domande emerse dalle risposte precedenti?",
+      "compound_review": false
+    },
+    "Q-282": {
+      "requirement_sha256": "0537f95f14af763364b37ba369ecf1103f63c28a119a28945f47b4d3f67988ab",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai registrato nella checklist tutte le nuove domande emerse?",
+      "compound_review": false
+    },
+    "Q-283": {
+      "requirement_sha256": "4ab25c6b67f92ab6786e5567bdec650f70d4563109c30b83c97388c931bc3ab1",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai controllato se le nuove risposte generano ulteriori domande sostanziali?",
+      "compound_review": false
+    },
+    "Q-284": {
+      "requirement_sha256": "53b8da9b1db070c23a48e61a4f479ba9afa7fd72e6759ab30bc352599ac79f85",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai documentato che la ricerca delle domande ha raggiunto una ragionevole saturazione?",
+      "compound_review": false
+    },
+    "Q-285": {
+      "requirement_sha256": "143d3850563ba0b146913b1f8aa4a2fa09f39dc14f2c727fd2b02156c56a9d34",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che la fine delle domande non sia stata decisa arbitrariamente?",
+      "compound_review": false
+    },
+    "Q-286": {
+      "requirement_sha256": "82da1c6c810113be0cb46fd85871805fa4848afa4cb3614ccce3f8362d70b742",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito tutte le domande pertinenti selezionate?",
+      "compound_review": false
+    },
+    "Q-287": {
+      "requirement_sha256": "a9946c75c1cda56eeb9d472cec31347c6002ea4f632a67f47e8e4ea009d804bd",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai raccolto prove verificabili per tutte le risposte importanti?",
+      "compound_review": false
+    },
+    "Q-288": {
+      "requirement_sha256": "2e1d83600339a3176d301788b016cd1d3d5cc2f22e2de69af7c5b70d1add232a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai corretto e ritestato ogni FAIL rilevante?",
+      "compound_review": false
+    },
+    "Q-289": {
+      "requirement_sha256": "652541ef98f0cd9b9d755b694e7bab395b6396b645ce3dac32ad1fa8e1414469",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai risolto ogni UNKNOWN critico prima dell’avanzamento?",
+      "compound_review": false
+    },
+    "Q-290": {
+      "requirement_sha256": "707edff1551d1b87a9f80fc37d39fb044323c826a1d556345e1da998267f4f35",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato, con prove, che G2 possa dichiarare PROVED le questioni critiche?",
+      "compound_review": false
+    },
+    "Q-291": {
+      "requirement_sha256": "73fe3bacc4c104b72a4e9b80ec178630c23fdec8684483cce2a9910c2c20281a",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato la coerenza complessiva del sistema ai criteri G3?",
+      "compound_review": false
+    },
+    "Q-292": {
+      "requirement_sha256": "3a5d874c2bafcee739692077e2005d0241c81e0f4ebef6fc7b535f296b25cf28",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito il tentativo avversario previsto da G4 per bocciare il risultato?",
+      "compound_review": false
+    },
+    "Q-293": {
+      "requirement_sha256": "6d547a3c94c5cd3ef57785c8961f46404103ae43ce9f5cd1e5a644eb5e82de9e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato con il QA finale che il risultato soddisfi i requisiti?",
+      "compound_review": false
+    },
+    "Q-294": {
+      "requirement_sha256": "c1ecac434b976fc8c3b40ce4bb3f75fa2a549784f217bedf6ce22951438e9eee",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato se l’ultima modifica imponga la ripetizione dei controlli precedenti?",
+      "compound_review": false
+    },
+    "Q-295": {
+      "requirement_sha256": "87327a5c8aa979c5962e61c9507be5ee410e61690162405823605cd4f3838b60",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai rieseguito i controlli dopo l'ultima modifica?",
+      "compound_review": false
+    },
+    "Q-296": {
+      "requirement_sha256": "bdcef53e84d7e970e46eb194338f8128b17b944ed7f243e11886a743657b2d90",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai escluso che la consegna sia motivata soltanto dall’esaurimento del tempo?",
+      "compound_review": false
+    },
+    "Q-297": {
+      "requirement_sha256": "f65486493cdc1eb3ec46aa713c175730c1e65f677d0f21b92bd77eb70afea243",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato che il risultato sarebbe consegnabile anche senza la pressione della deadline?",
+      "compound_review": false
+    },
+    "Q-298": {
+      "requirement_sha256": "612cf049d4768c54a50d853d347467024332394f0067af0e4c1104eb1f72eb10",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai valutato il risultato come se provenisse da un altro sviluppatore e superato il relativo QA?",
+      "compound_review": false
+    },
+    "Q-299": {
+      "requirement_sha256": "6d7624c736e194447fe8b8ce9d8a3f9431026091fb3eb0e4084ff92e3ae69385",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato, sulla base dei gate e delle prove correnti, che sia autorizzato proseguire?",
+      "compound_review": false
+    },
+    "Q-300": {
+      "requirement_sha256": "77bafac68ab596494a706707d7032fe6b0b29d0b82234d71ab7b04491576e3fc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai verificato, sulla base dei gate e delle prove correnti, che sia autorizzata la consegna?",
+      "compound_review": false
+    },
+    "LEGACY_G0": {
+      "requirement_sha256": "1c864db369e0d82e9ba9f3e2300b19b381a320ad696527d0601c6d0cf70efb26",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G0 sul controllo storico «Reference Lock — before scene mutation; source dimensions/resources/package invariants must be valid»?",
+      "compound_review": false
+    },
+    "LEGACY_G1": {
+      "requirement_sha256": "6ab5c9b8fb93a3b84d355284675d7fcf4f38e20a361f474faa96d667fc6cae79",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G1 sul controllo storico «Platform + Stairs — centering, direction, rise order and taper»?",
+      "compound_review": false
+    },
+    "LEGACY_G2": {
+      "requirement_sha256": "449d5c1c7229dd94b4338d943ae66a41a1ac531755f9b3a377193ce4e550d8aa",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G2 sul controllo storico «Columns + Structure — six-column invariant, structural continuity, equal heights/transforms/entrance axis»?",
+      "compound_review": false
+    },
+    "LEGACY_G3": {
+      "requirement_sha256": "5c2f0e06b3cdad9cd8f9afcfbc6c1d04ce8e3c367326c03cacd9c16f2dca4e83",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G3 sul controllo storico «Roof — roof carried by frame, roof-beam clearance, tile/ridge/rafter/corner-lift system»?",
+      "compound_review": false
+    },
+    "LEGACY_G4": {
+      "requirement_sha256": "b1d160da9fab856e08b5ec3590d2813553f41a798df545c5ddff5a3dcaf96356",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G4 sul controllo storico «Perimeter — seating/frieze semantics, column clearance, count and entrance clearance»?",
+      "compound_review": false
+    },
+    "LEGACY_G5": {
+      "requirement_sha256": "2324dac8863b554ecb81da22be56bac88cb7440aa3cf1c344c7bdad6397deb9b",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G5 sul controllo storico «Interior — table/stools/coffer/lanterns, collisions, axis/attachment and entrance clearance»?",
+      "compound_review": false
+    },
+    "LEGACY_G6": {
+      "requirement_sha256": "2167a70fbeada96ef6723a9e3222c3bda166720d2d0726961bd70c532b0f26ba",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G6 sul controllo storico «Geometry Audit — naming/scale/UV/material/non-manifold/degenerate/normal checks»?",
+      "compound_review": false
+    },
+    "LEGACY_G6B": {
+      "requirement_sha256": "3258917f2e530b42185189d7c3910994b983f4d5524437273b451e8bd0f1cefc",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G6B sul controllo storico «— clean inspectable scene (later runtime package)»?",
+      "compound_review": false
+    },
+    "LEGACY_G7": {
+      "requirement_sha256": "564e992c9cf69728f70b6c8fbea1a5131b91a4323357c2919b8a151b98d756cf",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G7 sul controllo storico «Visual Evidence — mandatory QA views can be generated; generation itself does not mean semantic approval»?",
+      "compound_review": false
+    },
+    "LEGACY_G8": {
+      "requirement_sha256": "8fb91a70353e05affbef62d455f6dd95f0a9512416065d2a2095d778a1f5fa8e",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G8 sul controllo storico «Material/UV — image maps/material/UV integrity»?",
+      "compound_review": false
+    },
+    "LEGACY_G9": {
+      "requirement_sha256": "09158f69bfcc6b8f0c319006d0c82b369cc1b3c21ad9df607ceae3de74fdc1eb",
+      "source_sha256": "b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165",
+      "question": "Hai eseguito e registrato la verifica G9 sul controllo storico «Sollumz/FiveM — intentionally UNVERIFIED until later approved/runtime stages»?",
+      "compound_review": false
+    },
+    "ASSISTANT_BEHAVIOR_PROTOCOL": {
+      "requirement_sha256": "75b0fa388ad4a8c1c7471adac2451d0a8c10fcbf95b9686f122588188a70335d",
+      "source_sha256": "75b0fa388ad4a8c1c7471adac2451d0a8c10fcbf95b9686f122588188a70335d",
+      "question": "Hai applicato i controlli obbligatori del protocollo comportamentale nelle fasi pertinenti e verificato i 110 divieti di recidiva?",
+      "compound_review": true
+    },
+    "110_ERROR_REGISTRY": {
+      "requirement_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai verificato i 110 errori storici e attivato i controlli preventivi pertinenti alla fase?",
+      "compound_review": true
+    },
+    "INTEGRAL_110_INSTRUCTIONS": {
+      "requirement_sha256": "b0f7ce762ae49d7c190273329bca98a4dcd3f019e461bfc9ffade8700305aafc",
+      "source_sha256": "b0f7ce762ae49d7c190273329bca98a4dcd3f019e461bfc9ffade8700305aafc",
+      "question": "Hai seguito integralmente le istruzioni comportamentali attive e i 110 controlli di regressione pertinenti?",
+      "compound_review": true
+    },
+    "OPERATING_CONTRACT": {
+      "requirement_sha256": "dfbed18000b111dd7d6c976da1636e3ff79d338e9946c66aea5d9efd3c8cbbdb",
+      "source_sha256": "dfbed18000b111dd7d6c976da1636e3ff79d338e9946c66aea5d9efd3c8cbbdb",
+      "question": "Hai rispettato il contratto operativo dell’assistente e documentato eventuali limiti o blocchi?",
+      "compound_review": true
+    },
+    "DEVELOPER_RULES_CANONICAL": {
+      "requirement_sha256": "b0f7ce762ae49d7c190273329bca98a4dcd3f019e461bfc9ffade8700305aafc",
+      "source_sha256": "b0f7ce762ae49d7c190273329bca98a4dcd3f019e461bfc9ffade8700305aafc",
+      "question": "Hai rispettato le istruzioni di sviluppo canoniche applicabili, senza bypass delle autorizzazioni?",
+      "compound_review": true
+    },
+    "BEHAVIOR-001": {
+      "requirement_sha256": "139f76600bd6411cc0705f0c000880fcc25723be88d3f21c102fd0abf04bed6f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Restare nel workstream richiesto»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-002": {
+      "requirement_sha256": "d2691ddf1d3186f8eeb268e5ecc9e2f6157ed95684f08dd95297b618b805165a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Rispondere prima al problema attivo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-003": {
+      "requirement_sha256": "4ebf3d626ab37bd0cd14a7b2bb039b0129efec9e6a5530d424765c18297481d5",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Misurare il requisito principale per primo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-004": {
+      "requirement_sha256": "88c46e759a1ef3125a5a91c9fab42a5666edb08f193cd9e6c1fe58977db21b0c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non ottimizzare un elemento secondario prima del collo di bottiglia»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-005": {
+      "requirement_sha256": "e1455daf938d20854f9cb2bd6b761680bcb44909b48ecdfcf8afa3c9af500400",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Misurare il progresso nel deliverable richiesto»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-006": {
+      "requirement_sha256": "e0315b9cf349005a135751224aa46f81872915bcaeda861ca88cdd144f40cc6f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Trattare ogni cambio di workstream come STOP»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-007": {
+      "requirement_sha256": "a80b88910a2e39165b2da2468a1346e84ea236faefc485b7e9c13aad75b8b480",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Completare A→B→C prima di costruire D»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-008": {
+      "requirement_sha256": "b033e68958a5be92dfccf6bd375c1b38f5d51fa334f90e5f3d9422dc251d7a77",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ricostruire obiettivo corrente e ultimo stato verificato»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-009": {
+      "requirement_sha256": "4ade12182494da8a41b645f53038b399c665e7fcebbbf63b61b4e226c7f3be71",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non trasformare una contestazione in un progetto parallelo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-010": {
+      "requirement_sha256": "19605ad5babbde6ba7d2807880d2c43257f12dc62d26893c0c439eb6c085517f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Distinguere attività, progresso e consegna»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-011": {
+      "requirement_sha256": "633d4a90f7d01c58ed5e7950bb0121ebdf22daed3c98db7246a7e0f5fa396a7a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Prezzo verificato prima del codice»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-012": {
+      "requirement_sha256": "23a651470f22618889b459bafa34b261a51576e8e2d0354457401020201e2d08",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Escludere opzioni a pagamento prima della proposta»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-013": {
+      "requirement_sha256": "fd53678770f9d086fd019bc7af987ce82544e7d8b95842dea63939e00afef568",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare fatturazione e prerequisiti»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-014": {
+      "requirement_sha256": "2f22801a52191e56be3a4b5bc6f75c3916e5924785e7e06cbf8d3a4865c2bafa",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Eseguire preflight dei vincoli prima dell'implementazione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-015": {
+      "requirement_sha256": "98d8dbb10d22a84924dc6ae73a080baba1dfab580386ec90224c30da17801ccb",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Proibire ogni dipendenza dal PC personale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-016": {
+      "requirement_sha256": "b98a73b0d6ede2966254de2973f1b6f6768639df150e719ee56b374fbf8188e2",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare fattibilità teorica da capacità disponibile»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-017": {
+      "requirement_sha256": "4eb1af854c0e8d1760b3c5eb411f62aba6c0b60312e0d1c681be1f1f0e4bfb4d",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Validare obiettivo, costo, ambiente e autorizzazione insieme»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-018": {
+      "requirement_sha256": "340d91f930505dda297794b83cf842017aecb1e29a3edecef0c8933c01b19cad",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ogni dipendenza richiede prova causale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-019": {
+      "requirement_sha256": "b63e5b4a25d4ba912a50b463acb70135cf3d6b3710508e4fab974e171d41b3a2",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Mai convertire proposta in capacità attiva»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-020": {
+      "requirement_sha256": "6c43f6ae206d64ada0336f0ff58bad00b69c9df7377dc149a11636e2bd93b142",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Correggere la sequenza, non aumentare la burocrazia»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-021": {
+      "requirement_sha256": "496b230f9378eab59fd508ed186a04c5805f42c03d2d5bdee505171a2f5306ec",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Esplicitare tempo di calendario vs lavoro effettivo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-022": {
+      "requirement_sha256": "43be0f57cb0f645bf4fb731a8ef8ab1b8a0e134fb08316b67d6e539b1004b6e3",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Contabilizzare tempo attivo e tempo inattivo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-023": {
+      "requirement_sha256": "1ffe9b7d4a4ff42e70fd2ae744f41cecff627f1cdae5e03f051f678d6d28ebc9",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Delimitare lo strumento e la configurazione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-024": {
+      "requirement_sha256": "e5c0aacdcec9fae41e02d4a079ec67548757a7146fc3cafbd906f081d801a6d0",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non proclamare impossibilità senza verifica»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-025": {
+      "requirement_sha256": "0313036fa5a79eb0b8c1213e8c59e2dbf49b3a57a115ad7d1e8ee3ce271dbd35",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Un'osservazione non prova un limite di piattaforma»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-026": {
+      "requirement_sha256": "1594f7b7a4241ccf7938940f755cb09cd904fee150faaf71cd391d148f212768",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Richiedere evento provider o causa UNKNOWN»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-027": {
+      "requirement_sha256": "7a741b2c504f7aef947c5a46104e9cb6eed42c285148260118ff3e91b110afc5",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «last_run_time non equivale a final checkpoint»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-028": {
+      "requirement_sha256": "cce28cbe79ceada53c34c5544352296a8dfd41957f0fd1bf7e2e65cdc86d2cfc",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Provare diagnostica e segnalazione end-to-end»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-029": {
+      "requirement_sha256": "7f66494b870377d675f32cdee2ea67fdcdfade37016999dac6bc0ca1fbe31f01",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Distinguere test isolato da produzione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-030": {
+      "requirement_sha256": "ccbaeeab2e73aeb9cc01b42b0af2094d7f9de6f54098e0d5a97b33283f2da66a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare guasto generale e difetto applicativo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-031": {
+      "requirement_sha256": "883085518c8c442a40fa1fd767d34a5b25e3728d53494329423f9df5bcb9de94",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Misurare duty cycle prima di ampliare la pipeline»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-032": {
+      "requirement_sha256": "bf6fa688fa3ad71d5d4ee04975a8a016760343b05e89b77ed21d1919ca2f4aca",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Etichettare sempre le simulazioni numeriche»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-033": {
+      "requirement_sha256": "edf8934c23d1acedb2e74334dc43618a728ed8dc51444e0a5f0acd4638e44280",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Calcolare solo da dati osservati o qualificare ipotesi»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-034": {
+      "requirement_sha256": "2662faf2f8fb1aa7fddb5c83343b514a9a8fa55ce9d9420f57b321e05954d33a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non prevedere completamenti da estrapolazioni deboli»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-035": {
+      "requirement_sha256": "d85d04c62081149ee9a33208745d9f138bdd365e26ff8db1dfb6e5ab7b641e4c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare fine lavoro, audit e persistenza»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-036": {
+      "requirement_sha256": "b0bf8583683cca16b04319e81d9c380369c8ccf88fa69099dd6f56570a6b8a33",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Registrare fonte dell'evento o UNKNOWN»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-037": {
+      "requirement_sha256": "cf97286b9ad7304c7f5e24f250694c88295c00e889893f452b135473170246ed",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Guardian deve avere prova di effettiva ispezione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-038": {
+      "requirement_sha256": "c22ce752efef79cdd8b7730391093f83f24f66e99256e53e9741825594ec35de",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Segnalazione e rilevazione sono capacità distinte»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-039": {
+      "requirement_sha256": "e6fea0aad2fb99fe132b0466f6a902ec6eb696665a869da0f89de0a2c0a6cb11",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Limitare il PASS all'ambiente testato»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-040": {
+      "requirement_sha256": "7ff49e9007da3630ea332bdfa8a6d06b1602d85f604f2de8d4f8b8040fa4229f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Recupero e assenza di attesa sono requisiti distinti»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-041": {
+      "requirement_sha256": "57cc70ca903545337d47f8e99f7378aff34c064def6559b9cdaa220471350f3f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Test unitario != requisito complessivo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-042": {
+      "requirement_sha256": "69934cea504d52aacab53be5404538e95112b9e759847cd3f928b2b338f78ec9",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Dichiarare sempre ambiente e significato della misura»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-043": {
+      "requirement_sha256": "ed8e29ba2972a1981447257d433c38496f27a1bdf6e75ac3e3af4deebbdcfe47",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Usare «candidato collaudato localmente»»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-044": {
+      "requirement_sha256": "00490087641c73e2a89f10fa26b5b9c5e6a64b275360ea86bbbd81a18112c00c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Rapporto != modello FiveM»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-045": {
+      "requirement_sha256": "9aa631ac209cd7787732e919860a95687b333a0dc29ae1c1df896f0bc12125a8",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare misurazioni e asset game-ready»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-046": {
+      "requirement_sha256": "a922d52162e2fe58231d39c5f5ea4c95161fb3e5ab1ec44eea1b3e76d11d9052",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare funzione reale, non solo esistenza file»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-047": {
+      "requirement_sha256": "361e87191fd406327d7d48e81deb3a4c8c7799dcc53e756c808d59477c22f714",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Osservare una run reale con il prompt nuovo»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-048": {
+      "requirement_sha256": "697386b5d275ee91d513154ae577230f39d9b12e1eede42c62960cc5a40bf8e4",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Il test del programma non prova enforcement globale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-049": {
+      "requirement_sha256": "19f59e4411b08976f57111f24c188584843ac96849fba53ec883b30965c3efdc",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controlli formali != qualità artistica»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-050": {
+      "requirement_sha256": "23538315e2d62c4465e9c0367fac3ff8ee39fcf2894e8fbcf13dbc6ae7b1c794",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ogni claim di persistenza richiede readback vero»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-051": {
+      "requirement_sha256": "890465d4a658f487f0617e6a6bf77de9e7c28bd47841a2357696ff38c4991965",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non definirlo «obbligatorio» senza hook reale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-052": {
+      "requirement_sha256": "ab4e92cb53c84ca0fb65278412359d2a8c010d587fe23ccdfee779a2ff17de9d",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Delimitare potere effettivo del gate»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-053": {
+      "requirement_sha256": "79536319d4c1834f2ac3694e076961ec8c5dec7fa7b963b3ebaa92d499103114",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Specificare dove il blocco opera davvero»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-054": {
+      "requirement_sha256": "f0718f4ca55d4739bd2914c2ac8ba63c199df70b577f364a86c16cf104a8acfc",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Prima individuare enforcement disponibile»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-055": {
+      "requirement_sha256": "aa1ecfb87d1b2cd8dc0c28cde92dc6d0802dfff2e595d43b59f9e40e1f9e010a",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Esplicitare che istruzioni non sono sandbox/validator universale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-056": {
+      "requirement_sha256": "8ab7a9b07f53cba27c8837598fbb1b10bfedcf621b19b98a1581010db2ec8fda",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Distinguere file preparato e impostazione realmente attiva»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-057": {
+      "requirement_sha256": "aef985a57305f2686892cea2c0c9bb5c5dd1902758a5b2cacd53768b89832a1c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non promettere enforcement senza percorso non aggirabile»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-058": {
+      "requirement_sha256": "d56bb9c75766a711c972515ccb548d6650d0c62153b993a1cac58f79d16e42d5",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Mantenere responsabilità e obiettivi distinti»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-059": {
+      "requirement_sha256": "d38e6bd7191bb0026772521f3fa50471e3b33fe7587b2e681b572d1b468e48af",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Governance strumentale, non sostitutiva del lavoro»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-060": {
+      "requirement_sha256": "8603a8f6aa77dd46e4c13826ffb21fe5d9559a4e01eaa6bf675572be119f9551",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Portare i limiti verificati nella prima frase utile»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-061": {
+      "requirement_sha256": "a90ca6d0c8a0583671d37774a4d2631d4b46fa5ca4f40e4a49c81cce28d353e8",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Recuperare e leggere il MASTER reale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-062": {
+      "requirement_sha256": "bfbdd0c84eab7c5c64f0ca9306e1503e4004e585e5ea0326561abbc3b689aeef",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Confermare versione e path reali»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-063": {
+      "requirement_sha256": "7e6fe0492b73839add2af5864f72fccb36ea075f584bdad515b913ffc566433e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Approval utente separato dal PASS meccanico»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-064": {
+      "requirement_sha256": "54ffb53ac1f78e01f33d02692867ad3c124357bb743e2e7c00a7c8e8451ccdd6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non inventare quote o misure»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-065": {
+      "requirement_sha256": "f32bc620207e1c5230349c29a76a0ec256bb95b7a8cfd50832c99cc3468345ee",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Applicare stop e rollback»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-066": {
+      "requirement_sha256": "b1d9742e1fd14f8f6cf2f4526a7b4bbd72f59c9af22102b993f5bae18b351c00",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Preservare PENDING e stato LOCK»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-067": {
+      "requirement_sha256": "d006184d46474898253be00d604432b1d907f9a5f2d0d747479c649bd6fe5bd1",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Sincronizzare MASTER, WORK_STATE, audit e handoff»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-068": {
+      "requirement_sha256": "663c9d03f075fb7cdbf9f75a7d89022ee4d87129b94649e5c86e954e77e6cfcd",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità del grafo in uso»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-069": {
+      "requirement_sha256": "d03c3825d7674b7c5aab213445f7cc1d9f9d73c93b045e56b1ee59bc5a327130",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Persistenza fallita = BLOCKED, non DONE»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-070": {
+      "requirement_sha256": "3119f46373b901e1920e757752a26245ece7aab66dce5fd71b44585ba63ea6ef",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Se si chiede testo integrale, salvarlo integralmente»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-071": {
+      "requirement_sha256": "bd0ece66758674bb08e23dcb9ac3a68a9558c0c7f776f5d67779e641fd851dce",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «QA visivo e topologico della catena strutturale»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-072": {
+      "requirement_sha256": "28857fbae4a902e61f2426227977ddeab035f1ae2fd0397decdfed17fbe9bb42",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare tutti i punti di contatto e appoggio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-073": {
+      "requirement_sha256": "0d7970f7fa74cfe252b2885d816a389c6dcb04ed8805f120349457e63866fb1e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Vietare consegna senza verifica delle connessioni»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-074": {
+      "requirement_sha256": "1c66571a971613a4faba2810ae31df30ed8e3aa58fa0d9b3312e68a264aabb97",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non usare il cliente come QA primario»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-075": {
+      "requirement_sha256": "6b43e6d7e066a5a775acfd73b1b1f4739670706d7e9c37cc76fe1ba9d0b99a55",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non conservare versioni HARD FAIL come baseline»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-076": {
+      "requirement_sha256": "fd79c4a3356dfcf75dd29fade08f93e8b31805a3f8772f6eb418d34193d410af",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Separare geometria, materiali, runtime e accettazione»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-077": {
+      "requirement_sha256": "05f3d97d0a848a186fd82a961949430956d50348ff63de18764a6d34581ad2ce",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare anche la consegna effettiva, non solo il file»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-078": {
+      "requirement_sha256": "11978d52e590f33aa7a36807ef388312cfa5d90f094b331c3ff48f3a4c5996a6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Confrontare misure di riferimento e ingombro risultante»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-079": {
+      "requirement_sha256": "366084c2b6daec728c83adfb054cee05bdbe9060e5fa906a29bcb44daa397ff6",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità architettonica prima del dettaglio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-080": {
+      "requirement_sha256": "ac6e0e6a07a786b3dec4a463634a2e103392b20da7d507255efe8ab002b8326e",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Ricercare le compenetrazioni da più visuali»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-081": {
+      "requirement_sha256": "24e0280b63ed15aaa8754d20ad05f865064cb636f77a598407c67d9f0daac6fb",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Valutare l'idoneità degli strumenti all'inizio»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-082": {
+      "requirement_sha256": "2996ee1a4bd64faa0dd1bd275b3badade8de2656e1651c3061990155a9432e53",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Applicare Abort Early sulla tecnica fallimentare»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-083": {
+      "requirement_sha256": "c58debcdddf2d89e85753a30bd773a649c9afe8f981239e4fb56eca0e8ca9e75",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Non ripetere patch su una base invalida»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-084": {
+      "requirement_sha256": "50e6e4d08ecc95432023f59af97a277168a4f0f6dcbce1bca249c5de86a195ed",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Validare volume tridimensionale e silhouette»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-085": {
+      "requirement_sha256": "57c674fd13a3c385bf73f054df6f26f464081674df14c234c58fc5b43c4e540b",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare identità anatomica e stile reference»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-086": {
+      "requirement_sha256": "70f50dbd8c607d1543555ce4ea697b1f926be8f151c2b90543dd6540e4cd850c",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controllare variazione volumetrica organica»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-087": {
+      "requirement_sha256": "6f9f335ecd589df414cff5ce4fd2cdcb8fac7a7f0380ad968b51293e0591c89b",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Verificare articolazioni e raccordi organici»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-088": {
+      "requirement_sha256": "3aba17f2910f63358a31c6bbd11b56af9ce2ef994ffd3f4d339589fd70f0c750",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «Controllare connessione fisica e posa»?",
+      "compound_review": false
+    },
+    "BEHAVIOR-089": {
+      "requirement_sha256": "a4f46b313d18d1c06bf67ce6a5099af486550ef3ae7daff7d13d730d2fd30b0f",
+      "source_sha256": "59f0565ca0842206b2649caa3d9a17c939507c3f74d445a21246732d00261e55",
+      "question": "Hai applicato la misura preventiva prevista: «QA visivo indipendente da quello meccanico»?",
+      "compound_review": false
+    }
+  }
+}
