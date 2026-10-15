@@ -187,6 +187,20 @@ class ControlledJudgment:
             work, _, _ = self.prepare(row)
             return work
 
+    def expected_question_batch(self):
+        """Offer the exact due-question challenge without authorizing work."""
+        with self.locked():
+            row = self.plan()
+            work, _, _ = self.prepare(row)
+            st = self.c.asset_state(self.asset)
+            from c07_live_answer_gate import challenge
+            checkpoint = {'asset': self.asset, 'next_step': st['next_step'],
+                          'last_audit_hash': st['last_audit_hash'],
+                          'plan_record_hash': row['record_hash']}
+            return {'work': work, 'question_batch':
+                    challenge(self.inventory, row['plan'], work, checkpoint),
+                    'advancement_authorized': False}
+
     def begin(self, origin, offers, answer_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
@@ -432,7 +446,7 @@ def main(argv=None):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
         if args.command == 'request':
-            result = {'work': bridge.expected_work(), 'advancement_authorized': False}
+            result = bridge.expected_question_batch()
         elif args.command == 'enroll':
             result = {'plan_record_hash': bridge.enroll_plan(data(args.plan)),
                       'advancement_authorized': False}
