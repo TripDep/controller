@@ -117,7 +117,7 @@ def inspect(inventory, plan, *, registry_raw=None, master_raw=None,
     else:
         rows, audit_tail = [], None
 
-    entries, missing, observed = {}, [], []
+    entries, missing, observed, mg0_failures = {}, [], [], []
     for index, rid in enumerate(ids, 1):
         item = rules[rid]
         requirement = item.get('requirement')
@@ -163,6 +163,8 @@ def inspect(inventory, plan, *, registry_raw=None, master_raw=None,
                                   'individual_rule_mg0']
             require(mg0 in ('FAIL', 'UNKNOWN'),
                     'C07_110_MG0_CANNOT_SELF_CERTIFY_PASS:' + rid)
+            if mg0 == 'FAIL':
+                mg0_failures.append(rid)
         if due and (rid not in reviewed or rid not in plan['enrolled']):
             missing.append(rid)
         entries[rid] = {
@@ -192,6 +194,7 @@ def inspect(inventory, plan, *, registry_raw=None, master_raw=None,
         'due': due_count, 'future_or_not_applicable': 110 - due_count,
         'missing_due_semantic_implementations': sorted(missing),
         'recurrence_observed_rule_ids': sorted(observed),
+        'uncorrected_mg0_rule_ids': sorted(mg0_failures),
         'audit_scoped_to_attempt': have_any_audit,
         'audit_tail': audit_tail,
         'source_integrity_passes': 110,
@@ -211,6 +214,9 @@ def require_operational_scope(inventory, plan, **context):
         require(not report['recurrence_observed_rule_ids'],
                 'C07_110_OBSERVED_REGRESSIONS_REQUIRE_CORRECTION:' +
                 ','.join(report['recurrence_observed_rule_ids'][:10]))
+        require(not report['uncorrected_mg0_rule_ids'],
+                'C07_110_MG0_PROCESS_FAIL_REQUIRES_CORRECTION:' +
+                ','.join(report['uncorrected_mg0_rule_ids'][:10]))
         # Absence of a reported recurrence is never an individual prevention PASS.
     return report
 
