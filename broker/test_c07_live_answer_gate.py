@@ -77,6 +77,22 @@ class AnswerGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'ANSWER_UNREVIEWED_OR_NOT_DUE'):
             self.review(p)
 
+    def test_controller_question_batch_is_attempt_bound_read_only(self):
+        batch = gate.challenge(self.inventory, self.plan, self.work, self.checkpoint)
+        self.assertEqual(batch['question_count'], 2)
+        self.assertEqual({q['question_id'] for q in batch['questions']},
+                         {'AAA-200-G-067:CHECK', 'AAA-200-G-067:REMAIN'})
+        self.assertTrue(all(q['source_sha256'] == 'c'*64 for q in batch['questions']))
+        self.assertEqual(batch['attempt_id'], self.work['attempt_id'])
+        self.assertEqual(batch['checkpoint']['plan_record_hash'],
+                         self.checkpoint['plan_record_hash'])
+        self.assertFalse(batch['advancement_authorized'])
+
+    def test_controller_due_not_manipulated_by_answerer(self):
+        batch = gate.challenge(self.inventory, self.plan, self.work, self.checkpoint)
+        self.assertNotIn('Q-075:DEFECT', {q['question_id'] for q in batch['questions']})
+        self.assertEqual(batch['due_rules_sha256'], gate.digest(['AAA-200-G-067']))
+
     def test_evidence_reference_never_self_verifies(self):
         p = [answer(self.ledger, 'AAA-200-G-067:CHECK', 'YES',
                     refs=[{'ref': 'untrusted', 'sha256': 'f'*64}]),
