@@ -9,6 +9,7 @@ import json
 
 import c07_answer_semantics as answer_contract
 import c07_operation_scope as scope
+import c07_compound_subchecks as composites
 
 
 def digest(value):
@@ -27,6 +28,7 @@ def challenge(inventory, plan, work, checkpoint):
         raise ValueError('C07_TRUSTED_CHECKPOINT_REQUIRED')
     due = scope.inspect(inventory, plan)['due']
     ledger = answer_contract.build(inventory)
+    compound_contract = composites.inspect(inventory, due) if inventory.get('rule_count') == 763 else None
     questions = []
     for rid in due:
         entry = ledger['entries'][rid]
@@ -55,6 +57,9 @@ def challenge(inventory, plan, work, checkpoint):
         'question_count': len(questions),
         'compound_due': sorted({q['rule_id'] for q in questions
                                 if q['compound_subchecks_pending']}),
+        'compound_source_subchecks': compound_contract['due_composites'] if compound_contract else {},
+        'compound_source_count': compound_contract['canonical_composite_count'] if compound_contract else 0,
+        'compound_independent_semantic_proof': False,
         'questions': questions,
         'answer_packet_schema_fields': [
             'rule_id', 'question_id', 'requirement_sha256', 'master_sha256',
@@ -63,7 +68,7 @@ def challenge(inventory, plan, work, checkpoint):
         'advancement_authorized': False,
     }
 
-def inspect(inventory, plan, work, packets, checkpoint):
+def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
     """Return a reviewable STOP/continuation report, never a work PASS.
 
     plan is the enrolled/approved Controller plan, not producer-supplied
@@ -93,6 +98,12 @@ def inspect(inventory, plan, work, packets, checkpoint):
                 'required_correction': 'ANSWER_THIS_DUE_QUESTION'}
                for qid in assessed['missing']]
     compound = [rid for rid in due if ledger['entries'][rid]['compound_subchecks_pending']]
+    composite_contract = (composites.inspect(inventory, due)
+                          if inventory.get('rule_count') == 763 else None)
+    composite_answers = (composites.assess(
+        composite_contract, subcheck_packets if subcheck_packets is not None else [],
+        attempt_id=work['attempt_id'], operation_sha256=work['operation_sha256'])
+        if composite_contract else None)
     reasons = []
     if failures:
         reasons.append('ADMITTED_DEFECT_OR_UNPERFORMED_CHECK')
@@ -100,6 +111,10 @@ def inspect(inventory, plan, work, packets, checkpoint):
         reasons.append('DUE_QUESTIONS_NOT_ANSWERED')
     if compound:
         reasons.append('COMPOUND_RULES_REQUIRE_INDEPENDENT_SUBCHECKS')
+    if composite_answers and composite_answers['failed']:
+        reasons.append('ADMITTED_COMPOUND_SUBCONTROL_FAILURE')
+    if composite_answers and composite_answers['missing']:
+        reasons.append('MISSING_COMPOUND_SUBCONTROL_ANSWERS')
     # Even full positive answers are still UNKNOWN. A separate native validator
     # and individually checked MG0 must determine actual eligibility.
     return {
@@ -120,6 +135,8 @@ def inspect(inventory, plan, work, packets, checkpoint):
         'failed': failures,
         'missing': missing,
         'compound_subchecks_unverified': compound,
+        'compound_source_subchecks': composite_contract['due_composites'] if composite_contract else {},
+        'compound_answer_assessment': composite_answers,
         'unverified_evidence_refs': [
             {'question_id': packet['question_id'], 'evidence_refs': packet['evidence_refs']}
             for packet in packets if packet['evidence_refs']],
