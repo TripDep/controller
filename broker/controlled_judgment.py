@@ -89,6 +89,11 @@ class ControlledJudgment:
             validate_reviewed(plan['enrolled'],self.inventory)
             from c07_operation_scope import require_due_enrolled
             require_due_enrolled(self.inventory, plan)
+            # Canonical full inventory always gets exact 153-source gate.
+            # Tiny synthetic Controller fixtures have no source digest map.
+            if self.inventory.get('rule_count') == 763 or 'source_digests' in self.inventory:
+                from c07_non_aaa_153 import require_operational_scope
+                require_operational_scope(self.inventory, plan)
             rec = self.append('SUPERVISOR_PLAN_ENROLLED', plan=copy.deepcopy(plan),
                               plan_sha256=j.digest(plan), status_step=active['step'])
             return rec['record_hash']
@@ -108,6 +113,9 @@ class ControlledJudgment:
         validate_reviewed(row['plan']['enrolled'],self.inventory)
         from c07_operation_scope import require_due_enrolled
         require_due_enrolled(self.inventory, row['plan'])
+        if self.inventory.get('rule_count') == 763 or 'source_digests' in self.inventory:
+            from c07_non_aaa_153 import require_operational_scope
+            require_operational_scope(self.inventory, row['plan'])
         return row
 
     def local_file(self, relative):
