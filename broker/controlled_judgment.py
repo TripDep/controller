@@ -187,7 +187,7 @@ class ControlledJudgment:
             work, _, _ = self.prepare(row)
             return work
 
-    def begin(self, origin, offers):
+    def begin(self, origin, offers, answer_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
         Any interruption after reservation leaves the operation consumed. No
@@ -222,6 +222,23 @@ class ControlledJudgment:
             row = self.plan()
             plan = row['plan']
             work, previous, prior_decision = self.prepare(row)
+            # C07: receive real answers bound to the exact Controller operation.
+            # This never awards PASS: independent native Git rule/MG0 proof is
+            # required afterwards. Current composite rules remain STOP until
+            # individually verified.
+            if self.inventory.get('rule_count') == 763:
+                from c07_live_answer_gate import inspect as inspect_answers
+                answer_report = inspect_answers(
+                    self.inventory, plan, work,
+                    answer_packets if answer_packets is not None else [],
+                    {'asset': self.asset, 'next_step': st['next_step'],
+                     'last_audit_hash': st['last_audit_hash'],
+                     'plan_record_hash': row['record_hash']})
+                self.append('SUPERVISOR_ASSISTANT_ANSWER_GATE', report=answer_report)
+                print('C07_ANSWER_GATE_REPORT:' + json.dumps(answer_report, sort_keys=True))
+                j.need(answer_report['may_request_native_proof'],
+                       'CONTROLLED_ASSISTANT_ANSWERS_STOP:' +
+                       ','.join(answer_report['blocking_reasons']))
             # Independently replay canonical MG0 process-falsification signals
             # from the complete current Controller audit for EVERY due rule and
             # the exact attempt. An uncorrected observed process failure STOPs
@@ -398,6 +415,7 @@ def main(argv=None):
     parser.add_argument('--plan', type=Path)
     parser.add_argument('--origin', type=Path)
     parser.add_argument('--offers', type=Path)
+    parser.add_argument('--answers', type=Path)
     parser.add_argument('--close-record', type=Path)
     args = parser.parse_args(argv)
     try:
@@ -419,7 +437,8 @@ def main(argv=None):
             result = {'plan_record_hash': bridge.enroll_plan(data(args.plan)),
                       'advancement_authorized': False}
         elif args.command == 'begin':
-            result = bridge.begin(data(args.origin), data(args.offers))
+            result = bridge.begin(data(args.origin), data(args.offers),
+                                  data(args.answers) if args.answers else None)
         else:
             result = bridge.close(**data(args.close_record))
         print(json.dumps(result, sort_keys=True))
