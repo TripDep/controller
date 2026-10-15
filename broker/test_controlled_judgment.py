@@ -146,6 +146,58 @@ class Tests(unittest.TestCase):
         self.s.enroll_plan(self.plan)
         self.c.close('TEST',step['step'],step['token'],'PASS','unit','unit',[],True)
 
+    def answer_gate_event(self, proof_eligible=False):
+        original = self.s.expected_work()
+        row = self.s.plan()
+        st = self.c.asset_state('TEST')
+        report = {
+            'schema': 'gg-c07-live-answer-gate-v1',
+            'asset': 'TEST', 'phase': original['phase'],
+            'master_sha256': original['master_sha256'],
+            'work_item_sha256': original['work_item_sha256'],
+            'attempt_id': original['attempt_id'],
+            'attempt_number': original['attempt_number'],
+            'previous_attempt_id': original['previous_attempt_id'],
+            'operation_sha256': original['operation_sha256'],
+            'checkpoint': {'asset':'TEST','next_step':st['next_step'],
+                           'last_audit_hash':st['last_audit_hash'],
+                           'plan_record_hash': row['record_hash']},
+            'plan_record_hash': row['record_hash'],
+            'answer_verdict': 'UNKNOWN' if proof_eligible else 'FAIL',
+            'may_request_native_proof': proof_eligible,
+            'blocking_reasons': [] if proof_eligible else
+                                ['ADMITTED_DEFECT_OR_UNPERFORMED_CHECK']}
+        self.s.append('SUPERVISOR_ASSISTANT_ANSWER_GATE', report=report)
+        return original
+
+    def test_admitted_answer_fail_advances_attempt_without_advancing_step(self):
+        first = self.answer_gate_event()
+        subsequent = self.s.expected_work()
+        self.assertEqual(subsequent['attempt_number'], first['attempt_number'] + 1)
+        self.assertEqual(subsequent['previous_attempt_id'], first['attempt_id'])
+        self.assertNotEqual(subsequent['attempt_id'], first['attempt_id'])
+        self.assertEqual(subsequent['operation_sha256'], first['operation_sha256'])
+        self.assertEqual(self.s.expected_work(), subsequent)
+        row = self.s.plan()
+        work, previous_native, prior = self.s.prepare(row)
+        self.assertIsNone(previous_native)
+        self.assertEqual(prior['prior_source'], 'CONTROLLER_AUDITED_ANSWER_FAIL')
+        self.assertEqual(prior['attempt_id'], first['attempt_id'])
+
+    def test_uncertain_positive_answer_without_native_decision_blocks_retry(self):
+        self.answer_gate_event(proof_eligible=True)
+        with self.assertRaisesRegex(j.Blocked,
+                                    'CONTROLLED_ANSWER_ATTEMPT_REQUIRES_RECONCILIATION'):
+            self.s.expected_work()
+
+    def test_failed_answer_changed_checkpoint_rejected(self):
+        self.answer_gate_event()
+        self.c.asset_state('TEST')['next_step'] += 1
+        self.c.save()
+        with self.assertRaisesRegex(j.Blocked,
+                                    'CONTROLLED_ANSWER_RETRY_CONTEXT_DRIFT'):
+            self.s.expected_work()
+
     def test_mutating_close_requires_controller_registered_real_binary(self):
         self.reenroll_mutation()
         offers,_=self.issue()
