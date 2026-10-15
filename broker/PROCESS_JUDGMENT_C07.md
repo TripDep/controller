@@ -76,3 +76,23 @@ cases prove the wiring only; no actual asset semantics or MG0 is certified.
 Historical phase/
 asset applicability is conservative until reconciled; it is not a producer
 waiver. No new host, service, key purchase or asset upload is introduced.
+
+## C07 typed-question polarity foundation (partial, 15 October 2026)
+
+The reviewed source-bound `c07_answer_semantics.py` contract distinguishes:
+- `CONTROL_PERFORMED`: NO admits an unperformed required check -> FAIL.
+- `DEFECT_PRESENT`: YES admits a remaining problem -> FAIL; NO by itself is UNKNOWN.
+- `REQUIREMENT_SATISFIED`: NO admits an unmet requirement -> FAIL.
+- `OPEN_ANALYSIS`: demands a substantive narrative, not a forced YES/NO.
+
+The first five reviewed canonical IDs are AAA-200-G-067, Q-075, Q-021,
+Q-001 and Q-280. All other 758 of the 763 remain `REVIEW_REQUIRED`; no
+keyword-based or model-inferred polarity can turn them into PASS. Source text,
+requirement hash, exact attempt and operation bindings are checked. Duplicate,
+inconsistent, stale or malformed answer packets are rejected.
+
+Evidence references supplied by the producer do NOT establish independent
+proof, asset quality or native-origin authentication. This pure contract
+returns FAIL/UNKNOWN, never operational PASS, and does not itself intercept
+ChatGPT messages or run the Controller begin/close lifecycle. This stage is
+not C07 completion, C08 positive correction or C09 full acceptance.
