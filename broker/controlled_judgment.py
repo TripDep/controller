@@ -148,36 +148,74 @@ class ControlledJudgment:
     def prepare(self, row):
         plan = row['plan']
         records = self.records()
-        decisions = [r for r in records if r['event'] == 'SUPERVISOR_NATIVE_DECISION']
-        previous = decisions[-1] if decisions else None
+        # Preserve failed assistant-answer attempts, not only native Git STOPs.
+        # Otherwise begin can append an answer FAIL and a new request silently
+        # reuses the old attempt_id, breaking C08 correction lineage.
+        last_gate = next((r for r in reversed(records) if r['event'] in
+                          ('SUPERVISOR_NATIVE_DECISION',
+                           'SUPERVISOR_ASSISTANT_ANSWER_GATE')), None)
+        answer_parent = (last_gate if last_gate and last_gate['event'] ==
+                         'SUPERVISOR_ASSISTANT_ANSWER_GATE' else None)
+        previous = (last_gate if last_gate and last_gate['event'] ==
+                    'SUPERVISOR_NATIVE_DECISION' else None)
         if previous and previous['decision']['action'] == 'READY_FOR_EXACT_OPERATION':
             operation = previous['decision']['operation_sha256']
             completed = [r for r in records if r['event'] == 'SUPERVISOR_OPERATION_CLOSED' and
                          r['operation_sha256'] == operation and r['result'] == 'PASS']
-            # A newly enrolled exact operation may follow a completed operation.
-            # Changing the plan must never erase an unresolved failed attempt.
             if previous['plan_record_hash'] != row['record_hash'] and len(completed) == 1:
                 previous = None
         j.need(not previous or previous['decision']['action'] in
                ('STOP_CORRECT_RESUBMIT', 'STOP_CONTEXT_RECHECK'), 'CONTROLLED_PREVIOUS_NOT_FAILED')
         st = self.c.asset_state(self.asset)
-        # Bind to the actual Controller position. No caller-supplied step/attempt.
         position = {'next_step': st['next_step'], 'plan_record_hash': row['record_hash'],
                     'operation': plan['operation'], 'work_item_sha256': j.digest(self.asset)}
+        operation_sha = j.digest(position)
+        if answer_parent:
+            report = answer_parent['report']
+            j.need(report.get('plan_record_hash') == row['record_hash'] and
+                   report.get('checkpoint', {}).get('plan_record_hash') == row['record_hash'] and
+                   report['checkpoint'].get('next_step') == st['next_step'] and
+                   report.get('operation_sha256') == operation_sha and
+                   report.get('master_sha256') == plan['master_sha256'] and
+                   report.get('work_item_sha256') == j.digest(self.asset),
+                   'CONTROLLED_ANSWER_RETRY_CONTEXT_DRIFT')
+            # A claimed eligible answer that was interrupted before native
+            # judgment is UNCERTAIN, not permission to repeat an operation.
+            j.need(report.get('may_request_native_proof') is False and
+                   report.get('blocking_reasons') and
+                   report.get('answer_verdict') in ('FAIL', 'UNKNOWN'),
+                   'CONTROLLED_ANSWER_ATTEMPT_REQUIRES_RECONCILIATION')
+            j.need(type(report.get('attempt_number')) is int and
+                   report['attempt_number'] > 0 and
+                   j.evidence.is_sha(report.get('attempt_id')),
+                   'CONTROLLED_ANSWER_RETRY_LINEAGE_INVALID')
+        parent = answer_parent['report'] if answer_parent else (
+            previous['decision'] if previous else None)
+        parent_record_hash = (answer_parent or previous or {}).get('record_hash')
         work = {k: copy.deepcopy(plan[k]) for k in ('phase', 'asset_type', 'profiles',
                 'master_sha256', 'asset_specific_extensions_verified', 'guardian_required',
                 'mode', 'closure_requested')}
-        work.update(work_item_sha256=j.digest(self.asset), operation_sha256=j.digest(position),
+        work.update(work_item_sha256=j.digest(self.asset), operation_sha256=operation_sha,
                     work_dependencies={key: hashlib.sha256(self.local_file(path).read_bytes()).hexdigest()
                                        for key, path in plan['dependency_files'].items()},
-                    attempt_number=previous['decision']['attempt_number'] + 1 if previous else 1,
-                    previous_attempt_id=previous['decision']['attempt_id'] if previous else None)
-        work['attempt_id'] = j.digest({'work': work, 'prior_record': previous['record_hash'] if previous else None})
+                    attempt_number=parent['attempt_number'] + 1 if parent else 1,
+                    previous_attempt_id=parent['attempt_id'] if parent else None)
+        work['attempt_id'] = j.digest({'work': work, 'prior_record': parent_record_hash})
         j.validate_work(work, self.inventory)
         old_decision = None
         if previous:
             old_decision = j.native_decision(self.api, previous['origin'], previous['issuer'])
             j.need(old_decision == previous['decision'], 'CONTROLLED_PRIOR_NATIVE_CHANGED')
+        elif answer_parent:
+            # Verified native origin is NOT claimed for an assistant admission.
+            # This narrow Controller-audit STOP establishes correction lineage
+            # only. Current independent Git/MG0 proofs are still compulsory.
+            old_decision = {
+                'work_item_sha256': answer_parent['report']['work_item_sha256'],
+                'attempt_id': answer_parent['report']['attempt_id'],
+                'attempt_number': answer_parent['report']['attempt_number'],
+                'action': 'STOP_CORRECT_RESUBMIT',
+                'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
         return work, previous, old_decision
 
     def expected_work(self):
@@ -384,10 +422,29 @@ class ControlledJudgment:
                 if work['attempt_number'] > 1:
                     old = [r for r in records if r['event'] == 'SUPERVISOR_NATIVE_DECISION'
                            and r['decision'].get('attempt_id') == work['previous_attempt_id']]
-                    j.need(len(old) == 1, 'CONTROLLED_POST_CORRECTION_LINEAGE')
-                    prior_decision = j.native_decision(self.api, old[0]['origin'], old[0]['issuer'])
-                    j.need(prior_decision == old[0]['decision'], 'CONTROLLED_POST_PRIOR_GIT_CHANGED')
-                    prior_context = old[0]['contexts']
+                    if len(old) == 1:
+                        prior_decision = j.native_decision(self.api, old[0]['origin'], old[0]['issuer'])
+                        j.need(prior_decision == old[0]['decision'], 'CONTROLLED_POST_PRIOR_GIT_CHANGED')
+                        prior_context = old[0]['contexts']
+                    else:
+                        # Earlier admission failed before native Git; verify
+                        # its append-only Controller provenance and exact lineage.
+                        prior_gate = [r for r in records if
+                            r['event'] == 'SUPERVISOR_ASSISTANT_ANSWER_GATE' and
+                            r.get('report',{}).get('attempt_id') == work['previous_attempt_id']]
+                        j.need(not old and len(prior_gate) == 1 and
+                               prior_gate[0]['report'].get('may_request_native_proof') is False and
+                               prior_gate[0]['report'].get('blocking_reasons') and
+                               prior_gate[0]['report'].get('attempt_number') == work['attempt_number'] - 1 and
+                               prior_gate[0]['report'].get('work_item_sha256') == work['work_item_sha256'] and
+                               prior_gate[0]['report'].get('operation_sha256') == work['operation_sha256'],
+                               'CONTROLLED_POST_CORRECTION_LINEAGE')
+                        prior_decision = {
+                            'work_item_sha256': work['work_item_sha256'],
+                            'attempt_id': work['previous_attempt_id'],
+                            'attempt_number': work['attempt_number'] - 1,
+                            'action': 'STOP_CORRECT_RESUBMIT',
+                            'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
                 post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
                 post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
                 fresh = j.judge(self.inventory, work, post_offers, post_backend,
