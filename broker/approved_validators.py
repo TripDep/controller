@@ -68,6 +68,9 @@ def validate(enrolled,inventory):
                 re.fullmatch('[a-f0-9]{40}',issuer['workflow_blob']) and
                 re.fullmatch('[a-f0-9]{40}',issuer['public_sha']),
                 'VALIDATOR_GIT_ORIGIN_MISSING:'+rid)
+        if validator==PLANNING_VALIDATOR:
+            require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
+                    'VALIDATOR_PLANNING_EVIDENCE_IMMUTABLE_REF:'+rid)
         if validator==R173_VALIDATOR:
             require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
                     'VALIDATOR_R173_EVIDENCE_IMMUTABLE_REF:'+rid)
