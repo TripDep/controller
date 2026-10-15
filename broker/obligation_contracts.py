@@ -11,11 +11,14 @@ import json
 import os
 import re
 from collections import Counter
+from pathlib import Path
 
 import family_coverage as coverage
 import approved_validators as approved
 
-CURRENT_MASTER='5ba978ec0543d898b1f376b2d3528aa08a36a6b46be6e429abbbc1bef87fc116'
+# Read the protected Controller's current canonical Master pin.
+CURRENT_MASTER=json.loads((Path(__file__).resolve().parent.parent /
+                           'supervisor/policy.json').read_text(encoding='utf-8'))['canonical_master_sha256']
 
 class Blocked(ValueError): pass
 def need(ok, code):
