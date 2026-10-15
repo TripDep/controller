@@ -32,6 +32,9 @@ jobs:
       - name: C07 AAA200 individual semantic/quality negative-test suite
         working-directory: broker
         run: python3 -m unittest -v test_c07_aaa200
+      - name: C07 300+ canonical source and false-answer regression
+        working-directory: broker
+        run: python3 -m unittest -v test_c07_questions_300
       - name: Syntax and policy checks
         run: |
           python3 -m py_compile supervisor/controller.py broker/verify_app_installation.py

@@ -98,6 +98,8 @@ class ControlledJudgment:
                 require_behavior_110(self.inventory, plan)
                 from c07_aaa200 import require_operational_scope as require_aaa200
                 require_aaa200(self.inventory, plan)
+                from c07_questions_300 import require_operational_scope as require_questions_300
+                require_questions_300(self.inventory, plan)
             rec = self.append('SUPERVISOR_PLAN_ENROLLED', plan=copy.deepcopy(plan),
                               plan_sha256=j.digest(plan), status_step=active['step'])
             return rec['record_hash']
@@ -124,6 +126,8 @@ class ControlledJudgment:
             require_behavior_110(self.inventory, row['plan'])
             from c07_aaa200 import require_operational_scope as require_aaa200
             require_aaa200(self.inventory, row['plan'])
+            from c07_questions_300 import require_operational_scope as require_questions_300
+            require_questions_300(self.inventory, row['plan'])
         return row
 
     def local_file(self, relative):
