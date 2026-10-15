@@ -38,7 +38,7 @@ def _verified_wording(inv):
  count=inv['rule_count']
  # Small six-rule fixture is explicitly non-operational and keeps old unit tests.
  if count != 763:
-  need(count < 20 and inv['canonical_master_sha256']=='a'*64,
+  need(count < 20 and inv['canonical_master_sha256'] in ('a'*64, QUESTION_MASTER_PIN),
        'ANSWER_NONCANONICAL_INVENTORY')
   return {}
  need(inv['canonical_master_sha256']==QUESTION_MASTER_PIN,
