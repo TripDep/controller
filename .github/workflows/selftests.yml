@@ -23,6 +23,9 @@ jobs:
       - name: Verify staged broker v5 modules and negative gates without credentials
         working-directory: broker
         run: python3 -m unittest discover -p 'test_*.py' -v
+      - name: Explicit C07 153 canonical sources and MG0 fail-closed tests
+        working-directory: broker
+        run: python3 -m unittest -v test_c07_non_aaa_153
       - name: Syntax and policy checks
         run: |
           python3 -m py_compile supervisor/controller.py broker/verify_app_installation.py
