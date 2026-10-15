@@ -1,7 +1,10 @@
 """Regression tests for polarity, provenance and fail-closed declarations."""
 import copy
 import hashlib
+import json
 import unittest
+from pathlib import Path
+from unittest.mock import patch
 import c07_answer_semantics as s
 
 def sha(t):return hashlib.sha256(t.encode('utf-8')).hexdigest()
@@ -104,4 +107,55 @@ class PolarityRegression(unittest.TestCase):
            refs=[{'ref':'looks fine','sha256':'fake'}])
   with self.assertRaisesRegex(s.Blocked,'ANSWER_UNTRUSTED_EVIDENCE_SCHEMA'):
    assess(self.l,[x])
+
+class Reviewed758Regression(unittest.TestCase):
+ def manifest(self):
+  base=Path(s.__file__).resolve().parent
+  a=json.loads((base/s.QUESTION_FILES[0]).read_text(encoding='utf-8'))['questions']
+  b=json.loads((base/s.QUESTION_FILES[1]).read_text(encoding='utf-8'))['questions']
+  for rid in set(a)&set(b):self.assertEqual(a[rid],b[rid])
+  return {**a,**b}
+ def inventory(self):
+  manifest=self.manifest()
+  rows={rid:{'requirement_sha256':v['requirement_sha256'],
+             'source_sha256':v['source_sha256']} for rid,v in manifest.items()}
+  for rid,(clause,_) in s.REVIEWED.items():
+   rows[rid]={'requirement_sha256':sha(clause),'source_sha256':'a'*64}
+  return {'canonical_master_sha256':s.QUESTION_MASTER_PIN,
+          'rule_count':763,'rules':rows}
+ def test_758_unique_source_bound_and_72_compound_pending(self):
+  inv=self.inventory();wording=s._verified_wording(inv)
+  self.assertEqual(len(wording),758)
+  self.assertEqual(sum(x['compound_review'] for x in wording.values()),72)
+  specs=s.questions_for(inv)
+  self.assertEqual(sum(len(x['questions']) for x in specs.values()),764)
+  self.assertEqual(sum(x['classification']=='YES_NO_WORDING_REVIEWED_PROOF_PENDING'
+                       for x in specs.values()),758)
+  self.assertEqual(specs['Q-061']['questions'][0]['type'],'REQUIREMENT_SATISFIED')
+  self.assertIn('dimensioni',specs['Q-061']['questions'][0]['text'])
+  self.assertFalse(any('Hai effettuato il controllo previsto dalla regola canonica' in q['text']
+                       for x in specs.values() for q in x['questions']))
+ def test_758_cannot_hide_missing_or_changed_rule(self):
+  i=self.inventory()
+  del i['rules']['Q-061']
+  with self.assertRaisesRegex(s.Blocked,'ANSWER_758_MEMBERSHIP'):s._verified_wording(i)
+  i=self.inventory();i['rules']['Q-061']['requirement_sha256']='0'*64
+  with self.assertRaisesRegex(s.Blocked,'ANSWER_758_SOURCE_DRIFT:Q-061'):s._verified_wording(i)
+ def test_old_master_blocks_758_reuse(self):
+  i=self.inventory();i['canonical_master_sha256']='e'*64
+  with self.assertRaisesRegex(s.Blocked,'ANSWER_758_LIBRARY_MASTER_DRIFT'):s._verified_wording(i)
+ def test_yes_no_statement_is_still_not_a_work_pass(self):
+  # The real source-bound manifest is also checked above; this unit fixture
+  # deliberately binds one revised question to an isolated answer packet.
+  i=fixture()
+  wording={'BEHAVIOR-051':{'question':'Hai evitato di aggirare il controllo?',
+             'compound_review':False}}
+  with patch.object(s,'_verified_wording',return_value=wording):
+   l=s.build(i)
+  q='BEHAVIOR-051:REQUIREMENT'
+  self.assertEqual(assess(l,[answer(l,q,'NO')])['status'],'FAIL')
+  yes=assess(l,[answer(l,q,'YES',refs=[{'ref':'PR','sha256':'c'*64}])])
+  self.assertEqual(yes['status'],'UNKNOWN')
+  self.assertFalse(yes['advancement_authorized'])
+
 if __name__=='__main__':unittest.main()
