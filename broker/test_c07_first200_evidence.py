@@ -9,7 +9,7 @@ HEX='a'*64
 def fixtures():
     ids=['110_ERROR_REGISTRY','A'] + [
       'AAA-200-'+chr(ord('A')+(i-1)//10)+'-'+str(i).zfill(3)
-      for i in range(1,201)]
+      for i in range(1,199)]
     # Remaining 563 IDs are irrelevant to this fixed-segment unit fixture.
     allids=ids+['Q-%03d'%i for i in range(1,564)]
     inv={'schema':'gg-effective-family-inventory-v1',
