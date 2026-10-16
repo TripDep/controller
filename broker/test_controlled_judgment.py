@@ -261,6 +261,41 @@ class Tests(unittest.TestCase):
                 with self.assertRaisesRegex(j.Blocked,'REGISTERED_SOURCE_CHANGED'):
                     self.s.probe_registered_glb(sha,'MACHINE_QA')
 
+    def test_registered_glb_batch_uses_one_real_audited_artifact_for_canonical_ids(self):
+        """Only a real Controller-audited file qualifies, never a producer report."""
+        from test_glb_machine_qa import synthetic_glb
+        from glb_rule_bridge import verify_live_batch
+        path=self.root/'native_batch_controller.glb'
+        path.write_bytes(synthetic_glb())
+        opened=self.c.begin('TEST','Register batch GLB fixture','STATUS',[],[],
+                            'attach real unit GLB',[])
+        attached=self.c.record_artifact('TEST',path,'C07_UNIT_SOURCE')
+        self.c.close('TEST',opened['step'],opened['token'],'PASS','unit','unit',[],True)
+        sha=attached['evidence_operation']['sha256']
+        due=sorted(self.inv['rules'])  # fixture IDs, not a fake 763-rule inventory
+        with patch('c07_operation_scope.inspect',return_value={'due':due,
+                                                               'missing_due_validators':[]}):
+            work=self.s.expected_work()
+            # Unit setup has no canonical AAA rules: only fake applicability,
+            # never fake source bytes, hash, golden audit or native readback.
+            with patch.object(self.s,'prepare',return_value=(work,None,None)):
+                with patch('glb_rule_bridge.verify_live_batch',
+                           wraps=verify_live_batch) as checker:
+                    report=self.s.probe_registered_glb_batch(sha,due)
+                    self.assertEqual(checker.call_count,1)
+                results=report['native_negative_rule_observations']
+                self.assertEqual(results['rule_count'],2)
+                self.assertEqual(results['native_observation_counts']['UNKNOWN'],2)
+                self.assertEqual(report['source_record_hash'],
+                      next(r['record_hash'] for r in self.s.records()
+                           if r['event']=='ARTIFACT_RECORDED'))
+                self.assertFalse(report['advancement_authorized'])
+                with self.assertRaisesRegex(j.Blocked,'CANONICAL_DUE_RULES_REQUIRED'):
+                    self.s.probe_registered_glb_batch(sha,['AAA-200-Z-999'])
+                path.write_bytes(path.read_bytes()+b'changed')
+                with self.assertRaisesRegex(j.Blocked,'REGISTERED_SOURCE_CHANGED'):
+                    self.s.probe_registered_glb_batch(sha,due)
+
     def test_visual_deck_controller_probe_requires_audited_glb_and_due_visual_qa(self):
         """Scope/audit transport fixture; all real PNG hash attacks tested separately."""
         from test_glb_machine_qa import synthetic_glb
