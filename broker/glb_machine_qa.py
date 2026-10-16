@@ -13,6 +13,10 @@ import math
 import struct
 from pathlib import Path
 
+from glb_triangle_crossings import inspect as inspect_crossings
+
+MAX_TRIANGLES_FOR_CROSSING = 100000
+
 MAX_BYTES = 250_000_000
 MAX_VERTICES = 6_000_000
 MAX_TRIANGLES = 12_000_000
@@ -96,7 +100,7 @@ def aabb(coords):
     return [[min(v[k] for v in coords) for k in range(3)], [max(v[k] for v in coords) for k in range(3)]]
 
 def overlaps(a,b):
-    return all(max(a[0][k],b[0][k])<min(a[1][k],b[1][k]) for k in range(3))
+    return all(max(a[0][k],b[0][k])<=min(a[1][k],b[1][k])+1e-9 for k in range(3))
 
 def audit_bytes(raw):
     g,blob=parse(raw)
@@ -121,6 +125,7 @@ def audit_bytes(raw):
     require(all_mesh,'NO_RENDERABLE_NODES')
     num_verts=0;num_triangles=0;num_degenerate=0;num_bad_indices=0
     num_mesh_primitives=0;num_nonfinite=0;num_nontriangles=0;bounding=[];mats=g.get('materials',[])
+    crossing_groups=[];crossing_storage=0;crossing_storage_exceeded=False
     for nid,mid,transform in all_mesh:
         mesh=meshes[mid]
         for pid,primitive in enumerate(mesh.get('primitives',[])):
@@ -153,15 +158,37 @@ def audit_bytes(raw):
             bad=sum(1 for i in indices if i<0 or i>=len(positions))
             num_bad_indices+=bad
             if bad:continue
+            group_triangles=[]
+            if crossing_storage + len(indices)//3 > MAX_TRIANGLES_FOR_CROSSING:
+                crossing_storage_exceeded=True
             for i in range(0,len(indices),3):
                 a,b,c=[transformed[indices[i+k]] for k in range(3)]
+                if not crossing_storage_exceeded:
+                    group_triangles.append((a,b,c))
                 u=[b[k]-a[k] for k in range(3)];v=[c[k]-a[k] for k in range(3)]
                 cross=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
                 # A triangle exactly collapsed (within double-float tolerance)
                 if sum(x*x for x in cross)<=1e-24:num_degenerate+=1
+            if not crossing_storage_exceeded:
+                crossing_groups.append({'key':(nid,pid),'triangles':group_triangles})
+                crossing_storage += len(group_triangles)
+            else:
+                crossing_groups.clear()
     candidate_pairs=[]
     for a,b in itertools.combinations(bounding,2):
         if overlaps(a['bounds'],b['bounds']):candidate_pairs.append([a['node'],a['primitive'],b['node'],b['primitive']])
+    if crossing_storage_exceeded:
+        cross_report={'schema':'gg-c07-bounded-strict-triangle-crossings-v1',
+                      'strict_surface_crossing_pairs_found':0,
+                      'strict_crossing_examples':[],
+                      'candidate_triangle_pairs_tested':0,
+                      'all_requested_pairs_fully_scanned':False,
+                      'unresolved_pairs':[{'reason':'GLB_TRIANGLE_STORAGE_BUDGET_EXCEEDED'}],
+                      'contact_and_coplanar_cases':'NOT_COVERED',
+                      'defect_classification':'UNKNOWN_REQUIRES_ASSET_RULE_CONTEXT',
+                      'individual_mg0':'UNKNOWN','advancement_authorized':False}
+    else:
+        cross_report=inspect_crossings(crossing_groups,candidate_pairs)
     if num_bad_indices:errors.append('INDEX_OUT_OF_RANGE:'+str(num_bad_indices))
     if num_nonfinite:errors.append('NONFINITE_POSITIONS:'+str(num_nonfinite))
     if num_degenerate:errors.append('DEGENERATE_TRIANGLES:'+str(num_degenerate))
@@ -183,12 +210,13 @@ def audit_bytes(raw):
       'geometry_groups_with_bounds':len(bounding),
       'aabb_overlap_candidates_count':len(candidate_pairs),
       'aabb_overlap_candidates_first_15':candidate_pairs[:15],
+      'triangle_surface_crossing_evidence':cross_report,
       'errors':sorted(set(errors)),'unsupported_requires_independent_check':sorted(set(unsupported)),
       'machine_evidence_status':'FAIL' if errors else 'UNKNOWN_UNSUPPORTED_INPUT' if unsupported else 'NO_FATAL_STRUCTURAL_DEFECT_DETECTED',
       'overlaps_confirmed':False,
       'visual_qa':'UNKNOWN','materials_pbr_qa':'UNKNOWN','fivem_runtime':'UNKNOWN','mg0':'UNKNOWN',
       'asset_acceptance':'NOT_AUTHORIZED','overall_rule_semantics':'UNKNOWN',
-      'note':'AABB candidates are not triangle interpenetration proof; this scan never grants asset PASS.'}
+      'note':'Strict triangle piercings are geometric observations, not automatically forbidden defects. Zero findings, budget truncation, coplanar geometry, touch, and untested groups cannot support a collision-free PASS.'}
 
 def examine(path,expected_sha256):
     path=Path(path)
