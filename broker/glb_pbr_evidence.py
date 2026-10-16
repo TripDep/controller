@@ -62,24 +62,30 @@ def uv_count_and_finiteness(g,bin_blob,accessor_id,expected_count,limit):
     accessors=g.get('accessors',[]);views=g.get('bufferViews',[])
     require(type(accessor_id) is int and 0<=accessor_id<len(accessors),'PBR_UV_ACCESSOR_REF')
     a=accessors[accessor_id]
-    require(a.get('type')=='VEC2' and a.get('componentType')==5126,
-            'PBR_UV_FORMAT_NOT_FLOAT2_SUPPORTED')
+    component=a.get('componentType')
+    require(a.get('type')=='VEC2' and component in (5126,5120,5121,5122,5123),
+            'PBR_UV_FORMAT_UNSUPPORTED')
+    if component != 5126:
+        require(a.get('normalized') is True,'PBR_INTEGER_UV_REQUIRES_NORMALIZED')
+    component_fmt={5126:'f',5120:'b',5121:'B',5122:'h',5123:'H'}[component]
+    component_size=struct.calcsize('<'+component_fmt)
+    uv_bytes=component_size*2
     require('sparse' not in a and 'bufferView' in a,'PBR_UV_SPARSE_OR_UNBACKED_UNSUPPORTED')
     count=a.get('count')
     require(type(count) is int and count==expected_count,'PBR_UV_VERTEX_COUNT_MISMATCH')
     vid=a['bufferView'];require(type(vid) is int and 0<=vid<len(views),'PBR_UV_VIEW_MISSING')
     v=views[vid];require(v.get('buffer')==0,'PBR_UV_EXTERNAL_BUFFER')
     start=v.get('byteOffset',0);offset=a.get('byteOffset',0)
-    length=v.get('byteLength');stride=v.get('byteStride',8)
+    length=v.get('byteLength');stride=v.get('byteStride',uv_bytes)
     require(all(type(k) is int and k>=0 for k in (start,offset,length)) and
-            type(stride) is int and stride>=8 and stride%4==0,
+            type(stride) is int and stride>=uv_bytes and stride%component_size==0,
             'PBR_UV_INVALID_STRIDE_OR_OFFSET')
     first=start+offset
     require(start+length<=len(bin_blob) and
-            (count==0 or first+(count-1)*stride+8<=start+length),
+            (count==0 or first+(count-1)*stride+uv_bytes<=start+length),
             'PBR_UV_OUTSIDE_BUFFER_VIEW')
     if count>limit: return 'NOT_SAMPLED_BUDGET',0
-    unpack=struct.Struct('<ff').unpack_from
+    unpack=struct.Struct('<'+component_fmt*2).unpack_from
     bad=sum(1 for i in range(count) if any(not math.isfinite(x) for x in unpack(bin_blob,first+i*stride)))
     return 'COMPLETE_FINITE_CHECK',bad
 
