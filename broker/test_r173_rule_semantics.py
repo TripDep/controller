@@ -47,10 +47,13 @@ class Tests(unittest.TestCase):
              'advancement_authorized':False,'qa_metadata_contents_and_consistency':'PASS'}),patch.object(r,'CATALOG_SHA',r.sha(can)):
             return r.inspect(raw,can)
 
-    def test_nine_distinct_real_requirement_predicates(self):
+    def test_eleven_real_rules_with_two_documentary_fail_findings(self):
         verdict=self.report()
         self.assertEqual(set(verdict['results']),set(r.RULES))
-        self.assertTrue(all(x['documentary_result']=='PASS' for x in verdict['results'].values()))
+        self.assertEqual(sum(x['documentary_result']=='PASS' for x in verdict['results'].values()),9)
+        self.assertEqual({rid for rid, value in verdict['results'].items()
+                          if value['documentary_result']=='FAIL'},
+                         {'AAA-200-B-013','AAA-200-B-019'})
         self.assertEqual(verdict['individual_rule_mg0_passes'],0)
         self.assertFalse(verdict['advancement_authorized'])
 
@@ -87,7 +90,9 @@ class Tests(unittest.TestCase):
         w=work();w['master_sha256']=r.MASTER_SHA;w['phase']='P0';w['asset_type']='terrain'
         packets=r.packets_for_current_work(doc,w,inv)
         self.assertEqual(len(packets),len(r.RULES))
-        self.assertTrue(all(p['rule']['result']=='PASS' for p in packets.values()))
+        self.assertEqual({rid for rid,p in packets.items() if p['rule']['result']=='FAIL'},
+                         {'AAA-200-B-013','AAA-200-B-019'})
+        self.assertTrue(all(p['rule']['result'] in ('PASS','FAIL') for p in packets.values()))
         self.assertTrue(all(p['mg0']['result']=='UNKNOWN' for p in packets.values()))
 
     def test_native_consumer_rechecks_actual_rule_checks_and_does_not_accept_pass_tag(self):
@@ -175,6 +180,74 @@ class Tests(unittest.TestCase):
         item['raw_text']=json.dumps(v)
         report=self.report(json.dumps(packet).encode(),cat)
         self.assertEqual(report['results']['AAA-200-B-020']['documentary_result'],'FAIL')
+
+    def test_b013_reports_only_observed_format_extent_no_scale_or_absolute_coordinates(self):
+        row = self.report()['results']['AAA-200-B-013']
+        self.assertEqual(row['documentary_result'],'FAIL')
+        self.assertEqual(row['documentary_checks'], {
+            'glb_output_format_explicit':True,
+            'metric_extent_expressed':True,
+            'native_unit_scale_independently_verified':False,
+            'absolute_world_coordinates_verified':False})
+        self.assertEqual(row['individual_rule_mg0'],'UNKNOWN')
+
+    def test_b019_measured_complexity_is_not_an_evidenced_time_estimate(self):
+        row = self.report()['results']['AAA-200-B-019']
+        self.assertEqual(row['documentary_result'],'FAIL')
+        self.assertEqual(row['documentary_checks'],{
+            'complexity_from_route_and_contacts':True,
+            'slope_risk_quantity_source_bound':True,
+            'effort_estimate_provenance_present':False,
+            'schedule_source_documented':False})
+        self.assertEqual(row['individual_rule_mg0'],'UNKNOWN')
+
+    def test_b013_missing_metric_extent_cannot_be_reported_as_verified(self):
+        raw,cat=fixture();packet=json.loads(raw)
+        item=packet['reports']['R173_SOURCE_GEOMETRY_QA.json']
+        source=json.loads(item['raw_text']);source['total_length_m']=0
+        item['raw_text']=json.dumps(source)
+        result=self.report(json.dumps(packet).encode(),cat)['results']['AAA-200-B-013']
+        self.assertFalse(result['documentary_checks']['metric_extent_expressed'])
+        self.assertEqual(result['documentary_result'],'FAIL')
+
+    def test_b019_missing_graded_risk_is_detected(self):
+        raw,cat=fixture();packet=json.loads(raw)
+        item=packet['reports']['R173_SOURCE_GEOMETRY_QA.json']
+        source=json.loads(item['raw_text']);source['slope_over_5percent_total_m']=0
+        item['raw_text']=json.dumps(source)
+        result=self.report(json.dumps(packet).encode(),cat)['results']['AAA-200-B-019']
+        self.assertFalse(result['documentary_checks']['slope_risk_quantity_source_bound'])
+        self.assertEqual(result['documentary_result'],'FAIL')
+
+    def test_native_readback_rejects_forged_b013_pass_and_mg0_pass(self):
+        report=self.report()
+        inv=inventory();inv['canonical_master_sha256']=r.MASTER_SHA
+        inv['families']['AAA-200']=list(r.RULES)
+        for rid in r.RULES:
+            req=r.RULES[rid][1]
+            inv['rules'][rid]={'family':'AAA-200','source_sha256':r.CATALOG_SHA,
+                               'requirement_sha256':r.sha(req.encode()),'requirement':req}
+        w=work();w['master_sha256']=r.MASTER_SHA
+        w['phase']='P0';w['asset_type']='terrain'
+        packet=r.packets_for_current_work(report,w,inv)['AAA-200-B-013']
+        expected=packet['binding']
+        spec={'validator_id':r.VALIDATOR,'criteria':list(packet['rule']['checks']),
+              'source_ref':'e'*40,'requirement_sha256':expected['requirement_sha256']}
+        class API:
+            def call(self, method, path):
+                return {}
+        with patch('broker_live_review.decode_file',return_value=b'fixture'),patch.object(r,'inspect',return_value=report):
+            original=r.native_rule_readback(API(),packet,expected,spec)
+            self.assertEqual(original['documentary_result'],'FAIL')
+            forged=copy.deepcopy(packet)
+            forged['rule']['result']='PASS'
+            forged['rule']['checks']={k:True for k in forged['rule']['checks']}
+            with self.assertRaisesRegex(ValueError,'R173_RULE_NATIVE_CONTENT_OR_RESULT_MISMATCH'):
+                r.native_rule_readback(API(),forged,expected,spec)
+            forged=copy.deepcopy(packet)
+            forged['mg0']['result']='PASS'
+            with self.assertRaisesRegex(ValueError,'R173_RULE_NATIVE_FALSE_MG0'):
+                r.native_rule_readback(API(),forged,expected,spec)
 
     def test_real_work_scope_mismatch_blocked(self):
         doc=self.report();inv=inventory();w=work()
