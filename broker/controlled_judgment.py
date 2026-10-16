@@ -599,6 +599,52 @@ class ControlledJudgment:
             j.need(active and active['step'] == step and active['token'] == token, 'CONTROLLED_STEP_TOKEN')
             rows = [r for r in self.records() if r['event'] == 'SUPERVISOR_OPERATION_OPENED' and r['step'] == step]
             j.need(len(rows) == 1, 'CONTROLLED_OPEN_RECORD')
+            # C07 R112: mandatory exact-attempt replay of source/owner/GLB
+            # negative semantic evidence. No prior green CI or missing error
+            # can be treated as a rule or individual MG0 PASS.
+            if result.upper() == 'PASS' and self.inventory.get('rule_count') == 763:
+                from c07_negative_semantic_replay import inspect as replay_negatives
+                events = self.records()
+                reservations = [r for r in events
+                                if r['record_hash'] == rows[0]['reservation_hash']
+                                and r.get('event') == 'SUPERVISOR_OPERATION_RESERVED']
+                j.need(len(reservations) == 1,
+                       'CONTROLLED_R112_EXACT_RESERVATION_REQUIRED')
+                reserved_work = reservations[0]['work']
+                plans = [r for r in events
+                         if r['record_hash'] == reservations[0]['plan_record_hash']
+                         and r.get('event') == 'SUPERVISOR_PLAN_ENROLLED']
+                j.need(len(plans) == 1,
+                       'CONTROLLED_R112_PINNED_ENROLLED_PLAN_REQUIRED')
+                replay = replay_negatives(
+                    self.inventory, plans[0]['plan'],
+                    self.c.audit_path(self.asset).read_bytes(),
+                    self.asset, reserved_work['attempt_id'], batch_size=200)
+                j.need(replay['rule_count'] == 763
+                       and replay['batch_counts'] == [200,200,200,163]
+                       and replay['positive_semantic_passes'] == 0
+                       and replay['individual_mg0_passes'] == 0
+                       and replay['advancement_authorized'] is False,
+                       'CONTROLLED_R112_UNTRUSTED_SEMANTIC_REPLAY')
+                self.append(
+                    'SUPERVISOR_C07_NEGATIVE_RULE_REPLAY',
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    audit_input_sha256=replay['audit_sha256'],
+                    replay_sha256=replay['report_sha256'],
+                    batch_rule_digests=[x['detail_sha256'] for x in replay['batches']],
+                    failed_due_rule_ids=replay['semantic_negative_fail_rule_ids'],
+                    untrusted_owner_review_rule_ids=
+                        replay['unverified_owner_review_rule_ids'],
+                    result=('BLOCKED' if replay['next_action']=='STOP_CORRECT_REVIEW'
+                            else 'UNKNOWN_NEEDS_POSITIVE_SEMANTICS_AND_MG0'),
+                    work_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(replay['next_action'] != 'STOP_CORRECT_REVIEW',
+                       'CONTROLLED_R112_SEMANTIC_FAILURE_STOP:'+
+                       ','.join(replay['semantic_negative_fail_rule_ids']+
+                                replay['unverified_owner_review_rule_ids']))
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']
