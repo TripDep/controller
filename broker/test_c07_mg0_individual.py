@@ -114,11 +114,9 @@ class Tests(unittest.TestCase):
     def test_batch_763_rule_ids_one_audit_readback_same_individual_results(self):
         """763 complete decisions from one canonical audit verification, not 763 scans."""
         from unittest.mock import patch
-        ids=sorted({'Q-%03d' % n for n in range(1,764)} | {RULE})
-        # Explicitly 763 exact rule IDs, including the fixture's one AAA-200.
-        ids=ids[:762] + [RULE]
-        ids=sorted(ids)
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        # 762 distinct simulated Q identifiers + one real fixture rule.
+        ids=sorted(['Q-%03d' % n for n in range(1,763)] + [RULE])
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         with patch.object(mg,'audit_check',wraps=mg.audit_check) as checked:
             report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),ids,ATTEMPT)
             self.assertEqual(checked.call_count,1)
@@ -135,7 +133,7 @@ class Tests(unittest.TestCase):
         self.add('STEP_CLOSE',True,result='PASS')
         self.add('USER_REVIEW',True,result='FAIL',detected_by='OWNER',
                  owner_evidence_sha256='e'*64,assistant_preflight_passed=True)
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         ids=sorted([RULE,'Q-002','Q-003'])
         report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),ids,ATTEMPT)
         self.assertEqual(report['failed_rule_ids'],[RULE])
@@ -151,14 +149,14 @@ class Tests(unittest.TestCase):
                      'MG0_AFFECTED_STATES_INVALIDATED','MG0_RULE_REAPPLIED'):
             self.add(kind,True,result='PASS',trigger_record_hash=review['record_hash'],
                      evidence_operation='unit evidence')
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT)
         self.assertEqual(report['counts']['UNKNOWN'],1)
         self.assertEqual(report['counts']['PASS'],0)
         self.assertFalse(report['advancement_authorized'])
 
     def test_batch_tampering_and_duplicate_or_unsorted_rule_ids_fail_closed(self):
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         for ids in ([],[RULE,RULE],['Q-003','Q-001']):
             with self.assertRaisesRegex(IntakeBlocked,'BATCH_EXACT_SORTED_UNIQUE'):
                 mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),ids,ATTEMPT)
@@ -167,13 +165,13 @@ class Tests(unittest.TestCase):
                 mg.inspect_batch(MASTER,raw,ASSET,wrong,[RULE],ATTEMPT)
         rows=copy.deepcopy(self.rows)
         rows[0]['event']='FORGED_GREEN_PASS'
-        changed=b'\\n'.join(canonical(r) for r in rows)+b'\\n'
+        changed=b'\n'.join(canonical(r) for r in rows)+b'\n'
         with self.assertRaisesRegex(IntakeBlocked,'INTAKE_AUDIT_RECORD'):
             mg.inspect_batch(MASTER,changed,ASSET,sha(MASTER),[RULE],ATTEMPT)
 
     def test_batch_all_five_canonical_triggers_are_checked_only_once(self):
         damaged=MASTER.replace(mg.TRIGGERS[3].encode(),b'missing pattern')
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         with self.assertRaisesRegex(IntakeBlocked,'C07_MG0_FIVE_CANONICAL'):
             mg.inspect_batch(damaged,raw,ASSET,sha(damaged),[RULE],ATTEMPT)
 
