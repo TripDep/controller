@@ -70,7 +70,10 @@ class DeckTests(unittest.TestCase):
         self.assertEqual(v['paired_unique_angles'],8)
         self.assertEqual(v['model_render_content_authenticity'],
                          'NOT_PROVEN_BY_HASHES')
-        self.assertEqual(v['pixel_content_analysis']['measured_views'],8)
+        # A solid-color synthetic PNG has no visible geometry: fail closed
+        # rather than pretending all eight views were visually measurable.
+        self.assertEqual(v['pixel_content_analysis']['measured_views'],0)
+        self.assertEqual(len(v['pixel_content_analysis']['unverified_views']),8)
         self.assertEqual(v['pixel_content_analysis']['semantic_verdict'],'UNKNOWN')
         self.assertEqual(v['pixel_content_analysis']['individual_mg0'],'UNKNOWN')
         self.assertTrue(v['visual_review_hold'])
