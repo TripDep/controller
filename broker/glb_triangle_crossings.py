@@ -9,6 +9,7 @@ from bisect import bisect_right
 import math
 
 MAX_CANDIDATE_TESTS = 120000
+MAX_BROADPHASE_VISITS = 2000000
 MAX_EXAMPLES = 12
 EPSILON = 1e-9
 
@@ -69,6 +70,7 @@ def inspect(groups, candidate_pairs, max_tests=MAX_CANDIDATE_TESTS):
         raise ValueError('C07_CROSSING_BUDGET_INVALID')
     keyed = {tuple(item['key']):item['triangles'] for item in groups}
     pairs_tested=0
+    broadphase_visits=0
     strict=0
     incomplete=[]
     samples=[]
@@ -86,6 +88,10 @@ def inspect(groups, candidate_pairs, max_tests=MAX_CANDIDATE_TESTS):
             bounds_a=bbox(tri_a)
             stop=bisect_right(b_mins,bounds_a[1][0]-EPSILON)
             for bounds_b,bi,tri_b in b_order[:stop]:
+                broadphase_visits += 1
+                if broadphase_visits > MAX_BROADPHASE_VISITS:
+                    was_cut=True
+                    break
                 if bounds_b[1][0] <= bounds_a[0][0]+EPSILON:
                     continue
                 if not bbox_strict_overlap(bounds_a,bounds_b):
@@ -101,7 +107,9 @@ def inspect(groups, candidate_pairs, max_tests=MAX_CANDIDATE_TESTS):
                                         'group_b':list(right),'triangle_b':bi})
             if was_cut:break
         if was_cut:
-            incomplete.append({'pair':pair,'reason':'CROSSING_PAIR_TEST_BUDGET_EXCEEDED'})
+            incomplete.append({'pair':pair,'reason':('CROSSING_BROADPHASE_BUDGET_EXCEEDED' if
+                                broadphase_visits > MAX_BROADPHASE_VISITS else
+                                'CROSSING_PAIR_TEST_BUDGET_EXCEEDED')})
             break
     if not incomplete and any(
          tuple((p[0],p[1])) == tuple((p[2],p[3])) for p in candidate_pairs):
@@ -110,6 +118,8 @@ def inspect(groups, candidate_pairs, max_tests=MAX_CANDIDATE_TESTS):
             'strict_surface_crossing_pairs_found':strict,
             'strict_crossing_examples':samples,
             'candidate_triangle_pairs_tested':pairs_tested,
+            'broadphase_pairs_considered':broadphase_visits,
+            'broadphase_pair_budget':MAX_BROADPHASE_VISITS,
             'candidate_pair_budget':max_tests,
             'all_requested_pairs_fully_scanned':not bool(incomplete),
             'unresolved_pairs':incomplete,
