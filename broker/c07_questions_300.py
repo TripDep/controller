@@ -100,6 +100,9 @@ def inspect(inventory, plan, *, master_raw=None,
     else:
         rows, tail = (), None
 
+    from c07_contextual_questions import select as context_select
+    context = context_select(inventory,plan)
+    excluded = set(context['excluded'])
     found={}; missing=[]; audit_fails=[]; mg0_fails=[]
     for rid in expected:
         row=rules[rid]
@@ -120,7 +123,7 @@ def inspect(inventory, plan, *, master_raw=None,
         # Global base bank has no source-declared N/A for a particular work item.
         # A work-specific selection requires independent proof; never create one.
         need(applicability=='PASS', 'C07_300_BASE_BANK_UNEXPECTED_WAIVER:'+rid)
-        if rid not in reviewed or rid not in plan['enrolled']:
+        if rid not in excluded and (rid not in reviewed or rid not in plan['enrolled']):
             missing.append(rid)
         scoped=[r for r in rows if r.get('rule_id')==rid and
                 r.get('attempt_id')==attempt_id]
@@ -136,10 +139,11 @@ def inspect(inventory, plan, *, master_raw=None,
             if mg0=='FAIL': mg0_fails.append(rid)
         found[rid]={
             'canonical_question':question,
+            'context_selection':context['rows'][rid],
             'requirement_sha256':row['requirement_sha256'],
             'source_sha256':row['source_sha256'],
             'canonical_integrity':'PASS',
-            'question_selection':'UNKNOWN_CONTEXT_SELECTION_NOT_PROVED',
+            'question_selection':context['rows'][rid]['selection'],
             'answer_evidence_verified':False,
             'semantic_verdict':'UNKNOWN',
             'individual_mg0':mg0,
@@ -157,6 +161,10 @@ def inspect(inventory, plan, *, master_raw=None,
         'required_dynamic_discovery_questions':list(DYNAMIC_IDS),
         'additional_material_questions': 'UNRESOLVED_CONTEXT_DERIVED_NOT_FIXED_300',
         'independent_context_applicability_confirmed':0,
+        'owner_reviewed_context_exclusions':len(excluded),
+        'context_due_count':context['due_count'],
+        'context_exclusions_with_reasons':{rid:context['rows'][rid] for rid in context['excluded']},
+        'context_scope_is_not_independent_asset_proof':True,
         'missing_due_semantic_validators':missing,
         'observed_question_failure_ids':audit_fails,
         'observed_uncorrected_mg0_ids':mg0_fails,
