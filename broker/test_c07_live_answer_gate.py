@@ -20,7 +20,9 @@ class AnswerGateTests(unittest.TestCase):
         self.checkpoint = {'asset': 'TEST', 'next_step': 3,
                            'last_audit_hash': 'f'*64, 'plan_record_hash': 'e'*64}
         self.patches = [patch.object(gate.scope, 'inspect', return_value={
-            'due': ['AAA-200-G-067']}),
+            'due': ['AAA-200-G-067'], 'missing_due_validators': [],
+            'due_without_reviewed_native_verifier': [],
+            'due_reviewed_but_not_enrolled': []}),
             patch.object(contract, 'build', return_value=self.ledger)]
         for p in self.patches:
             p.start()
@@ -199,6 +201,83 @@ class AnswerGateTests(unittest.TestCase):
         self.assertEqual(result['next_required_action'], 'CORRECT_FAILED_QUESTIONS')
         self.assertIn('ADMITTED_COMPOUND_SUBCONTROL_FAILURE',
                       result['blocking_reasons'])
+
+    def test_missing_native_implementation_blocks_even_fully_positive_answers(self):
+        rid = 'AAA-200-G-067'
+        packets = [answer(self.ledger, rid+':CHECK', 'YES'),
+                   answer(self.ledger, rid+':REMAIN', 'NO')]
+        with patch.object(gate.scope, 'inspect', return_value={
+                'due': [rid], 'missing_due_validators': [],
+                'due_without_reviewed_native_verifier': [rid],
+                'due_reviewed_but_not_enrolled': []}):
+            result = self.review(packets)
+            batch = gate.challenge(self.inventory, self.plan,
+                                   self.work, self.checkpoint)
+        self.assertEqual(result['answer_verdict'], 'UNKNOWN')
+        self.assertEqual(result['native_semantic_verifier_gaps']
+                         ['due_without_reviewed_native_verifier']['count'], 1)
+        self.assertIn('DUE_NATIVE_SEMANTIC_VERIFIER_NOT_IMPLEMENTED',
+                      result['blocking_reasons'])
+        self.assertEqual(result['next_required_action'],
+                         'IMPLEMENT_AND_REVIEW_MISSING_NATIVE_VERIFIERS')
+        self.assertFalse(result['may_request_native_proof'])
+        self.assertFalse(batch['native_semantic_verifier_gaps']
+                         ['ready_for_native_proof_request'])
+        self.assertFalse(result['advancement_authorized'])
+
+    def test_reviewed_but_unenrolled_native_verifier_blocks(self):
+        rid = 'AAA-200-G-067'
+        packets = [answer(self.ledger, rid+':CHECK', 'YES'),
+                   answer(self.ledger, rid+':REMAIN', 'NO')]
+        with patch.object(gate.scope, 'inspect', return_value={
+                'due': [rid], 'missing_due_validators': [rid],
+                'due_without_reviewed_native_verifier': [],
+                'due_reviewed_but_not_enrolled': [rid]}):
+            result = self.review(packets)
+        self.assertIn('MISSING_CONTROLLER_ENROLLED_NATIVE_VERIFIERS',
+                      result['blocking_reasons'])
+        self.assertFalse(result['may_request_native_proof'])
+        self.assertEqual(result['native_semantic_verifier_gaps']
+                         ['due_reviewed_but_not_enrolled']['count'], 1)
+
+    def test_native_coverage_source_drift_blocks_in_real_inventory_shape(self):
+        self.inventory['rule_count'] = 763
+        fake = {'due': ['AAA-200-G-067']}
+        with patch.object(gate.scope, 'inspect', return_value=fake):
+            with self.assertRaisesRegex(ValueError, 'SOURCE_REPORT_INCOMPLETE'):
+                self.review([])
+        self.inventory['rule_count'] = 7
+
+    def test_native_gap_paging_keeps_digest_and_rejects_unknown_ids(self):
+        due = ['AAA-200-G-067'] + ['Q-%03d' % n for n in range(1, 31)]
+        report = {
+            'due': due, 'missing_due_validators': due,
+            'due_without_reviewed_native_verifier': due[1:],
+            'due_reviewed_but_not_enrolled': [due[0]]
+        }
+        gaps = gate.native_gaps(report, self.inventory)
+        self.assertEqual(gaps['missing_due_validators']['count'], 31)
+        self.assertEqual(len(gaps['missing_due_validators']['first_20']), 20)
+        self.assertTrue(gaps['missing_due_validators']['truncated'])
+        self.assertEqual(gaps['missing_due_validators']['all_ids_sha256'],
+                         gate.digest(sorted(due)))
+        self.assertFalse(gaps['ready_for_native_proof_request'])
+        report['missing_due_validators'] = due+['NOT_IN_SOURCE']
+        with self.assertRaisesRegex(ValueError, 'SOURCE_REPORT_INVALID'):
+            gate.native_gaps(report, self.inventory)
+
+    def test_negative_answer_remains_fail_when_native_validator_missing(self):
+        rid = 'AAA-200-G-067'
+        with patch.object(gate.scope, 'inspect', return_value={
+                'due': [rid], 'missing_due_validators': [rid],
+                'due_without_reviewed_native_verifier': [rid],
+                'due_reviewed_but_not_enrolled': []}):
+            result = self.review([answer(self.ledger, rid+':CHECK', 'NO')])
+        self.assertEqual(result['answer_verdict'], 'FAIL')
+        self.assertEqual(result['next_required_action'], 'CORRECT_FAILED_QUESTIONS')
+        self.assertIn('DUE_NATIVE_SEMANTIC_VERIFIER_NOT_IMPLEMENTED',
+                      result['blocking_reasons'])
+        self.assertFalse(result['may_request_native_proof'])
 
     def test_evidence_reference_never_self_verifies(self):
         p = [answer(self.ledger, 'AAA-200-G-067:CHECK', 'YES',
