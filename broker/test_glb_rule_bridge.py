@@ -28,6 +28,9 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(v['artifact_sha256'],self.sha)
         self.assertEqual(v['indexed_winding_evidence']['orientation_conflict_meshes'],0)
         self.assertEqual(v['indexed_winding_evidence']['boundary_edges'],3)
+        self.assertEqual(v['render_side_source_evidence']['explicit_NORMAL_primitive_count'],0)
+        self.assertEqual(v['render_side_source_evidence']['single_sided_primitive_count'],1)
+        self.assertEqual(v['render_side_source_evidence']['native_blender_visual'],'UNKNOWN')
         self.assertIn('material_source_evidence',v)
         self.assertEqual(v['material_source_evidence']['visual_material_quality'],'UNKNOWN')
         self.assertEqual(v['material_source_evidence']['individual_mg0'],'UNKNOWN')
@@ -59,6 +62,29 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(report['indexed_winding_evidence']['boundary_edges'],3)
         self.assertEqual(report['indexed_winding_evidence']['orientation_conflict_meshes'],0)
         self.assertEqual(report['semantic_verdict'],'UNKNOWN')
+        self.assertFalse(report['acceptance_authorized'])
+
+    def test_missing_texture_uv_detected_on_exact_registered_bytes(self):
+        import json, struct
+        source=synthetic_glb()
+        n=struct.unpack_from('<I',source,12)[0]
+        d=json.loads(source[20:20+n])
+        d['materials']=[{'pbrMetallicRoughness':{
+           'baseColorTexture':{'index':0}}}]
+        d['meshes'][0]['primitives'][0]['material']=0
+        enc=json.dumps(d,separators=(',',':')).encode()
+        enc+=b' '*(-len(enc)%4)
+        rest=source[20+n:]
+        raw=struct.pack('<4sII',b'glTF',2,20+len(enc)+len(rest))
+        raw+=struct.pack('<I4s',len(enc),b'JSON')+enc+rest
+        self.path.write_bytes(raw)
+        digest=hashlib.sha256(raw).hexdigest()
+        report=verify_live(self.path,digest,CONTEXT)
+        self.assertEqual(report['semantic_verdict'],'FAIL')
+        self.assertEqual(report['render_side_source_evidence']
+                         ['missing_required_texcoord_attributes_count'],1)
+        self.assertIn('GLB_TEXTURE_REQUIRED_TEXCOORD_MISSING:1',
+                      report['fatal_machine_findings'])
         self.assertFalse(report['acceptance_authorized'])
 
     def test_source_changes_after_approval(self):
