@@ -227,6 +227,40 @@ class Tests(unittest.TestCase):
                                         'CONTROLLED_300_SCOPE_EVIDENCE_CHANGED'):
                 self.s.verify_question_context(self.plan)
 
+    def test_registered_glb_live_controller_probe_is_evidence_not_pass(self):
+        """Real Controller artifact and audit chain, synthetic GLB and rule scope."""
+        from test_glb_machine_qa import synthetic_glb
+        from glb_rule_bridge import GLBBridgeBlocked
+        path = self.root / 'fixture-registered.glb'
+        path.write_bytes(synthetic_glb())
+        opened = self.c.begin('TEST','Register read-only fixture','STATUS',[],[],
+                              'record test binary',[])
+        recorded = self.c.record_artifact('TEST',path,'UNIT_FIXTURE_ONLY')
+        self.c.close('TEST', opened['step'],opened['token'],'PASS','unit','unit',[],True)
+        sha = recorded['sha256']
+        with patch('c07_operation_scope.inspect',return_value={'due':['MACHINE_QA']}):
+            work = self.s.expected_work()
+            # The fixture's two rule IDs differ from the real canonical inventory:
+            # mock only applicability; do not mock Controller artifact or audit.
+            with patch.object(self.s,'prepare',return_value=(work,None,None)):
+                result = self.s.probe_registered_glb(sha,'MACHINE_QA')
+                self.assertEqual(result['registered_artifact_sha256'],sha)
+                self.assertEqual(result['machine_evidence']['semantic_verdict'],'UNKNOWN')
+                self.assertEqual(result['machine_evidence']['individual_mg0'],'UNKNOWN')
+                self.assertEqual(result['semantic_and_mg0_passes'],0)
+                self.assertFalse(result['advancement_authorized'])
+                self.assertEqual(result['source_record_hash'],
+                                 next(r['record_hash'] for r in self.s.records()
+                                      if r['event']=='ARTIFACT_RECORDED'))
+                with self.assertRaisesRegex(j.Blocked,'REGISTERED_ARTIFACT_REQUIRED'):
+                    self.s.probe_registered_glb('0'*64,'MACHINE_QA')
+                with self.assertRaisesRegex(j.Blocked,'RULE_NOT_DUE'):
+                    self.s.probe_registered_glb(sha,'VISUAL_QA')
+                # Even a perfect-looking report is no substitute for unchanged bytes.
+                path.write_bytes(path.read_bytes()+b'bad')
+                with self.assertRaisesRegex(j.Blocked,'REGISTERED_SOURCE_CHANGED'):
+                    self.s.probe_registered_glb(sha,'MACHINE_QA')
+
     def test_mutating_close_requires_controller_registered_real_binary(self):
         self.reenroll_mutation()
         offers,_=self.issue()
