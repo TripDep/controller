@@ -51,7 +51,8 @@ def load_case(api, ref, master_sha):
     logs=judgment.evidence.native(api,EMITTER,EMITTER_ISSUER,judgment.SEMANTIC_STEP)
     judgment.need(one_packet(logs,judgment.PREFIX)==packet,'ACCEPTANCE_SOURCE_RECOMPUTATION')
     spec={'requirement_sha256':policy['engine']['requirement_sha256'],
-          'validator_id':planning.VALIDATOR,'criteria':planning.CRITERIA,'issuer':EMITTER_ISSUER}
+          'validator_id':planning.VALIDATOR,'criteria':planning.CRITERIA,
+          'issuer':EMITTER_ISSUER, 'source_ref':ref}
     backend=judgment.NativeRuleBackend(api,{planning.ENGINE_RULE:spec})
     offers={planning.ENGINE_RULE:{'native_origin':EMITTER,'expected_packet_sha256':judgment.digest(packet)}}
     contexts={role:planning.context_value(fetch(path)) for role,path in judgment.context.PATHS.items()}

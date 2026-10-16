@@ -83,11 +83,24 @@ class NativeRuleBackend:
             packets=[p for p in self.cache[key] if p.get('binding',{}).get('rule_id')==rule]
             need(len(packets)==1,'JUDGMENT_NATIVE_RULE_UNIQUE');packet=packets[0]
             need(digest(packet)==offer['expected_packet_sha256'],'JUDGMENT_NATIVE_PACKET_DIGEST')
-            if spec['validator_id'] == 'GG_R173_DOCUMENTARY_P0_A008_B018_V1':
-                # Independent readback of content/criteria from the exact R173
-                # pinned sources. A native PASS tag or 64-char digest is not proof.
-                from r173_rule_semantics import native_rule_readback
-                native_rule_readback(self.api,packet,expected,spec)
+            need(packet.get('binding') == expected, 'JUDGMENT_EVIDENCE_REPLAY_OR_CONTEXT')
+            # Reviewed production validators must independently replay the
+            # immutable source evidence: neither signed logs nor hashes prove
+            # the documentary predicate on their own.
+            from approved_validators import REVIEWED as reviewed
+            reviewed_spec = reviewed.get(rule)
+            if reviewed_spec is not None:
+                need(spec['validator_id'] == reviewed_spec[0] and
+                     set(spec['criteria']) == set(reviewed_spec[1]),
+                     'JUDGMENT_REVIEWED_NATIVE_VALIDATOR_DRIFT')
+                if spec['validator_id'] == reviewed_spec[0]:
+                    if rule == 'AAA-200-B-012':
+                        from planning_semantics import native_rule_readback
+                    else:
+                        from r173_rule_semantics import native_rule_readback
+                    native_rule_readback(self.api, packet, expected, spec)
+            elif spec['validator_id'] in [v[0] for v in reviewed.values()]:
+                need(False, 'JUDGMENT_UNENROLLED_REVIEWED_VALIDATOR_FOR_RULE')
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):

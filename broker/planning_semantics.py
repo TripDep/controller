@@ -148,6 +148,89 @@ def documented_engine(inv, work, documents, policy):
     return packet, proof
 
 
+# Reviewed immutable documentary source, never an arbitrary producer-chosen path.
+# This historic case cannot attest the current MASTER automatically: if the
+# Controller work has advanced, binding mismatch keeps the result UNKNOWN.
+NATIVE_POLICY_PATH = 'governance/supervisor/reviews/r165/policy.json'
+
+
+def native_rule_readback(api, packet, expected, enrolled_spec):
+    """Consumer independently replays B-012 source bytes on private immutable Git.
+
+    A successful workflow log, friendly PASS string, or matching packet hash
+    does not make the source predicate true. The consumer obtains the exact
+    pinned policy, canonical inputs and audit; repeats the full documentary
+    check; and requires a byte-equivalent semantic packet, whose MG0 is UNKNOWN.
+    """
+    from broker_live_review import decode_file
+
+    ref = enrolled_spec.get('source_ref')
+    j.need(isinstance(ref, str) and re.fullmatch(r'[a-f0-9]{40}', ref),
+            'PLANNING_NATIVE_IMMUTABLE_SOURCE_REF')
+    j.need(expected.get('rule_id') == ENGINE_RULE and
+            expected.get('family') == 'AAA-200' and
+            enrolled_spec.get('validator_id') == VALIDATOR and
+            set(enrolled_spec.get('criteria', ())) == set(CRITERIA),
+            'PLANNING_NATIVE_SOURCE_RULE_OR_CRITERIA')
+
+    def fetch(path, commit):
+        j.need(isinstance(path, str) and path.startswith('governance/') and
+                not path.startswith('governance/../') and
+                '..' not in path.split('/') and
+                re.fullmatch(r'[a-f0-9]{40}', commit),
+                'PLANNING_NATIVE_PATH_OR_REF')
+        return decode_file(api.call('GET', '/contents/' + path + '?ref=' + commit),
+                           path)
+
+    policy_raw = fetch(NATIVE_POLICY_PATH, ref)
+    policy = j.evidence.strict_json(policy_raw, max_size=32000)
+    j.need(policy.get('schema') == 'gg-planning-semantic-review-v1' and
+            policy.get('scope') == 'RETROSPECTIVE_DOCUMENTARY_PROCESS_REVIEW_NOT_PRODUCTION_AUTHORIZATION',
+            'PLANNING_NATIVE_POLICY_SCOPE')
+    work = policy['work']
+    j.need(work['mode'] == 'DIAGNOSTIC_ONLY' and
+            work['master_sha256'] == expected['master_sha256'] and
+            work['attempt_id'] == expected['attempt_id'] and
+            work['operation_sha256'] == expected['operation_sha256'] and
+            work['work_item_sha256'] == expected['work_item_sha256'],
+            'PLANNING_NATIVE_WORK_OR_MASTER_CHANGED')
+    source_inputs = {}
+    for key, path in coverage.SOURCES.items():
+        source_inputs[key] = fetch(path, ref)
+    inv = coverage.build_inventory(source_inputs, work['master_sha256'])
+    row = inv['rules'][ENGINE_RULE]
+    j.need(j.binding(work, row, ENGINE_RULE) == expected and
+            policy['engine']['requirement_sha256'] == expected['requirement_sha256'],
+            'PLANNING_NATIVE_CANONICAL_BINDING')
+    inputs = policy['inputs']
+    j.need(set(inputs) == {'master', 'historical_master', 'work_state', 'audit', 'asset_checks'},
+            'PLANNING_NATIVE_REQUIRED_DOCUMENTS')
+    raw = {}
+    for key, value in inputs.items():
+        j.need(isinstance(value, dict) and
+                set(value) in ({'path', 'sha256'}, {'path', 'sha256', 'ref'}) and
+                isinstance(value['sha256'], str) and
+                re.fullmatch(r'[a-f0-9]{64}', value['sha256']),
+                'PLANNING_NATIVE_INPUT_SCHEMA:' + key)
+        source_ref = value.get('ref', ref)
+        j.need(isinstance(source_ref, str) and
+                re.fullmatch(r'[a-f0-9]{40}', source_ref),
+                'PLANNING_NATIVE_INPUT_MUTABLE_REF:' + key)
+        raw[key] = fetch(value['path'], source_ref)
+        j.need(sha(raw[key]) == value['sha256'],
+                'PLANNING_NATIVE_INPUT_DIGEST:' + key)
+    recomputed, _ = documented_engine(inv, work, raw, policy['engine'])
+    j.need(recomputed['binding'] == expected and
+            packet == recomputed and
+            recomputed['mg0']['result'] == 'UNKNOWN' and
+            recomputed['mg0']['triggered'] is None,
+            'PLANNING_NATIVE_LOG_CANNOT_OVERRIDE_RECOMPUTED_PROOF')
+    return {'rule_id': ENGINE_RULE,
+            'documentary_result': recomputed['rule']['result'],
+            'individual_rule_mg0': 'UNKNOWN',
+            'advancement_authorized': False}
+
+
 def main(argv=None):
     import argparse, os
     from broker_live_review import decode_file
@@ -180,7 +263,8 @@ def main(argv=None):
             origin = {'run_id':args.verify_run,'job_id':args.verify_job,'run_attempt':1,'head_sha':args.verify_head}
             issuer = {'workflow_blob':args.issuer_blob,'public_sha':args.issuer_public}
             spec = {'requirement_sha256':policy['engine']['requirement_sha256'],
-                    'validator_id':VALIDATOR,'criteria':CRITERIA,'issuer':issuer}
+                    'validator_id':VALIDATOR,'criteria':CRITERIA,'issuer':issuer,
+                    'source_ref':args.ref}
             backend = j.NativeRuleBackend(api,{ENGINE_RULE:spec})
             offers = {ENGINE_RULE:{'native_origin':origin,'expected_packet_sha256':j.digest(packet)}}
             value = backend.rule(ENGINE_RULE, packet['binding'], offers[ENGINE_RULE])
