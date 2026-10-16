@@ -261,6 +261,48 @@ class Tests(unittest.TestCase):
                 with self.assertRaisesRegex(j.Blocked,'REGISTERED_SOURCE_CHANGED'):
                     self.s.probe_registered_glb(sha,'MACHINE_QA')
 
+    def test_visual_deck_controller_probe_requires_audited_glb_and_due_visual_qa(self):
+        """Scope/audit transport fixture; all real PNG hash attacks tested separately."""
+        from test_glb_machine_qa import synthetic_glb
+        source=self.root/'visual_source.glb'
+        source.write_bytes(synthetic_glb())
+        opened=self.c.begin('TEST','Register signed visual source','STATUS',[],[],
+                            'register test GLB',[])
+        record=self.c.record_artifact('TEST',source,'SYNTHETIC_VISUAL_SOURCE')
+        self.c.close('TEST',opened['step'],opened['token'],'PASS','unit','unit',[],True)
+        digest=record['evidence_operation']['sha256']
+        manifest=self.root/'visual-deck.json'
+        manifest.write_text('{"schema":"fixture"}')
+        manifest_sha=hashlib.sha256(manifest.read_bytes()).hexdigest()
+        with patch('c07_operation_scope.inspect',return_value={
+                   'due':['VISUAL_QA'],'missing_due_validators':[]}):
+            work=self.s.expected_work()
+            with patch.object(self.s,'prepare',return_value=(work,None,None)):
+                verified={'semantic_verdict':'UNKNOWN','individual_mg0':'UNKNOWN',
+                          'work_advancement_authorized':False}
+                with patch('glb_visual_deck_readback.readback',
+                           return_value=verified) as reader:
+                    result=self.s.probe_registered_visual_deck(digest,'visual-deck.json',
+                                                                manifest_sha)
+                    reader.assert_called_once()
+                    self.assertFalse(result['advancement_authorized'])
+                    self.assertEqual(result['visual_evidence']['semantic_verdict'],'UNKNOWN')
+                    self.assertEqual(result['artifact_audit_record_hash'],
+                        next(r['record_hash'] for r in self.s.records()
+                             if r['event']=='ARTIFACT_RECORDED'))
+                    with self.assertRaisesRegex(j.Blocked,'REGISTERED_GLB_REQUIRED'):
+                        self.s.probe_registered_visual_deck('0'*64,'visual-deck.json',
+                                                            manifest_sha)
+                    with self.assertRaisesRegex(j.Blocked,'DEPENDENCY_PATH'):
+                        self.s.probe_registered_visual_deck(digest,'../visual-deck.json',
+                                                            manifest_sha)
+                with patch('glb_visual_deck_readback.readback',
+                           return_value={**verified,'semantic_verdict':'PASS'}):
+                    with self.assertRaisesRegex(j.Blocked,'VISUAL_CANNOT_CERTIFY'):
+                        self.s.probe_registered_visual_deck(digest,'visual-deck.json',
+                                                            manifest_sha)
+        self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
+
     def test_mutating_close_requires_controller_registered_real_binary(self):
         self.reenroll_mutation()
         offers,_=self.issue()
