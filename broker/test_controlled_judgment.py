@@ -293,6 +293,14 @@ class Tests(unittest.TestCase):
                 self.s.close(active['step'],active['token'],'PASS','forge','unit',[])
             self.assertEqual(self.c.asset_state('TEST')['active_step']['step'],
                              active['step'])
+            machine_events=[r for r in self.s.records() if r.get('event') ==
+                            'SUPERVISOR_GLB_OUTPUT_MACHINE_GATE']
+            self.assertEqual(len(machine_events),1)
+            self.assertEqual(machine_events[0]['result'],'STOP_MACHINE_EVIDENCE')
+            self.assertFalse(machine_events[0]['machine_gate']['may_continue_to_independent_native_post_review'])
+            self.assertEqual(machine_events[0]['machine_gate_sha256'],
+                             j.digest(machine_events[0]['machine_gate']))
+            self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
             self.assertFalse(any(r.get('event')=='SUPERVISOR_OPERATION_CLOSED'
                          and r.get('step')==active['step'] for r in self.s.records()))
 
@@ -314,6 +322,42 @@ class Tests(unittest.TestCase):
                 self.s.close(active['step'],active['token'],'PASS',
                              'claimed finished','unit',[])
             self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
+
+    def test_mutating_close_rejects_only_unreviewed_native_export(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            a=self.s.begin(self.api.origin,offers)
+            output=self.root/'signed_native_but_not_qa_verified.ydr'
+            output.write_bytes(b'Fake native binary not independently validated 1234567890')
+            self.c.record_artifact('TEST',output,'SYNTHETIC_UNVERIFIED_NATIVE')
+            with self.assertRaisesRegex(j.Blocked,
+                                       'CONTROLLED_GLB_MACHINE_OUTPUT_STOP:'):
+                self.s.close(a['step'],a['token'],'PASS','false native PASS','unit',[])
+            logged=[r for r in self.s.records() if r.get('event') ==
+                    'SUPERVISOR_GLB_OUTPUT_MACHINE_GATE']
+            self.assertEqual(logged[-1]['result'],'STOP_MACHINE_EVIDENCE')
+            reasons={b['reason'] for b in logged[-1]['machine_gate']['machine_blockers']}
+            self.assertIn('OUTPUT_FORMAT_NO_INDEPENDENT_MACHINE_VERIFIER',reasons)
+            self.assertIn('OUTPUT_GATE_NO_VERIFIED_GLB',reasons)
+            self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
+    def test_good_glb_still_needs_later_native_and_audit_gate(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            a=self.s.begin(self.api.origin,offers)
+            from test_glb_machine_qa import synthetic_glb
+            output=self.root/'signed_good_but_not_semantically_finished.glb'
+            output.write_bytes(synthetic_glb())
+            self.c.record_artifact('TEST',output,'SYNTHETIC_STRUCTURAL_QA')
+            with self.assertRaisesRegex(j.Blocked,'CONTROLLED_POST_NATIVE_PROOF_REQUIRED'):
+                self.s.close(a['step'],a['token'],'PASS','unsupported semantic claim','unit',[])
+            logged=[r for r in self.s.records() if r.get('event') ==
+                    'SUPERVISOR_GLB_OUTPUT_MACHINE_GATE']
+            self.assertEqual(logged[-1]['result'],'ELIGIBLE_FOR_SEPARATE_NATIVE_REVIEW_NO_PASS')
+            self.assertEqual(logged[-1]['machine_gate']['semantic_result'],'UNKNOWN')
+            self.assertEqual(logged[-1]['machine_gate']['individual_mg0'],'UNKNOWN')
+            self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
 
     def test_mutating_close_rejects_output_modified_after_controller_registration(self):
         self.reenroll_mutation()

@@ -3,6 +3,7 @@ import hashlib
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from glb_output_close_gate import inspect, OutputGateBlocked, canonical_hash
 from test_glb_machine_qa import synthetic_glb
 from test_glb_pbr_evidence import fixture,pack
@@ -84,8 +85,54 @@ class OutputCloseGateTests(unittest.TestCase):
         v=self.probe([item])
         self.assertEqual(v['glb_outputs_scanned'],0)
         self.assertIn('.ydr',v['other_formats_not_verified'])
+        self.assertFalse(v['may_continue_to_independent_native_post_review'])
+        self.assertIn('OUTPUT_FORMAT_NO_INDEPENDENT_MACHINE_VERIFIER',
+                      [b['reason'] for b in v['machine_blockers']])
+        self.assertIn('OUTPUT_GATE_NO_VERIFIED_GLB',
+                      [b['reason'] for b in v['machine_blockers']])
         self.assertEqual(v['semantic_result'],'UNKNOWN')
         self.assertFalse(v['advancement_authorized'])
+    def test_mixed_good_glb_and_unreviewed_ydr_still_stops(self):
+        other=self.root/'unreviewed.ydr'
+        other.write_bytes(b'synthetic-output-not-a-validated-model')
+        item={'step':'0001','path':str(other.resolve()),
+              'sha256':hashlib.sha256(other.read_bytes()).hexdigest(),
+              'size_bytes':other.stat().st_size}
+        v=self.probe([self.item(),item])
+        self.assertEqual(v['glb_outputs_scanned'],1)
+        self.assertFalse(v['may_continue_to_independent_native_post_review'])
+        self.assertIn('OUTPUT_FORMAT_NO_INDEPENDENT_MACHINE_VERIFIER',
+                      [x['reason'] for x in v['machine_blockers']])
+        self.assertEqual(v['individual_mg0'],'UNKNOWN')
+    def test_absent_model_cannot_be_called_complete(self):
+        v=self.probe(items=[])
+        self.assertFalse(v['may_continue_to_independent_native_post_review'])
+        self.assertIn('OUTPUT_GATE_NO_REGISTERED_ARTIFACTS',
+                      [x['reason'] for x in v['machine_blockers']])
+    def test_incomplete_triangle_scan_is_blocking_even_when_geometry_is_clean(self):
+        from glb_machine_qa import examine
+        measured=examine(self.p,hashlib.sha256(self.p.read_bytes()).hexdigest())
+        measured['triangle_surface_crossing_evidence'][
+            'all_requested_pairs_fully_scanned']=False
+        measured['triangle_surface_crossing_evidence']['unresolved_pairs']=[
+            {'reason':'CROSSING_PAIR_TEST_BUDGET_EXCEEDED'}]
+        self.assertEqual(measured['machine_evidence_status'],
+                         'NO_FATAL_STRUCTURAL_DEFECT_DETECTED')
+        with patch('glb_output_close_gate.examine',return_value=measured):
+            v=self.probe()
+        self.assertFalse(v['may_continue_to_independent_native_post_review'])
+        self.assertIn('GLB_TRIANGLE_INTERSECTION_SCAN_INCOMPLETE',
+                      [x['reason'] for x in v['machine_blockers']])
+    def test_producer_cannot_claim_material_coverage_if_scanner_reports_unknown(self):
+        from glb_machine_qa import examine
+        measured=examine(self.p,hashlib.sha256(self.p.read_bytes()).hexdigest())
+        measured['machine_evidence_status']='UNKNOWN_UNSUPPORTED_INPUT'
+        with patch('glb_output_close_gate.examine',return_value=measured):
+            v=self.probe()
+        self.assertFalse(v['may_continue_to_independent_native_post_review'])
+        self.assertIn('GLB_MACHINE_VERIFICATION_INCOMPLETE',
+                      [x['reason'] for x in v['machine_blockers']])
+
     def test_missing_attempt_binding_denied(self):
         with self.assertRaisesRegex(OutputGateBlocked,'OUTPUT_GATE_EXACT_ATTEMPT_REQUIRED'):
             self.probe(work={**WORK,'attempt_id':'not-a-sha'})
