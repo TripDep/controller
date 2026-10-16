@@ -238,7 +238,7 @@ class Tests(unittest.TestCase):
         recorded = self.c.record_artifact('TEST',path,'UNIT_FIXTURE_ONLY')
         self.c.close('TEST', opened['step'],opened['token'],'PASS','unit','unit',[],True)
         sha = recorded['evidence_operation']['sha256']
-        with patch('c07_operation_scope.inspect',return_value={'due':['MACHINE_QA']}):
+        with patch('c07_operation_scope.inspect',return_value={'due':['MACHINE_QA'], 'missing_due_validators':[]}):
             work = self.s.expected_work()
             # The fixture's two rule IDs differ from the real canonical inventory:
             # mock only applicability; do not mock Controller artifact or audit.
