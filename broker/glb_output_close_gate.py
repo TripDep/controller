@@ -46,6 +46,9 @@ def inspect(artifacts,work,asset,step):
         path=Path(raw_path)
         if path.suffix.lower()!='.glb':
             unsupported_formats.append(path.suffix.lower() or 'NO_EXTENSION')
+            blockers.append({'sha256':item.get('sha256','UNKNOWN'),
+                             'reason':'OUTPUT_FORMAT_NO_INDEPENDENT_MACHINE_VERIFIER',
+                             'detail':path.suffix.lower() or 'NO_EXTENSION'})
             continue
         require(path.is_absolute() and path.is_file() and not path.is_symlink()
                 and not any(parent.is_symlink() for parent in path.parents),
@@ -93,6 +96,17 @@ def inspect(artifacts,work,asset,step):
         elif status!='NO_FATAL_STRUCTURAL_DEFECT_DETECTED':
             blockers.append({'sha256':sha,'reason':'GLB_MACHINE_VERIFICATION_INCOMPLETE',
                              'detail':status})
+        if not result['crossings_fully_scanned']:
+            blockers.append({'sha256':sha,
+                             'reason':'GLB_TRIANGLE_INTERSECTION_SCAN_INCOMPLETE',
+                             'detail':str(measured['triangle_surface_crossing_evidence'][
+                                 'unresolved_pairs'][:3])[:200]})
+    if not artifacts:
+        blockers.append({'sha256':'UNKNOWN','reason':'OUTPUT_GATE_NO_REGISTERED_ARTIFACTS',
+                         'detail':'No output registered for controlled mutation'})
+    if not results:
+        blockers.append({'sha256':'UNKNOWN','reason':'OUTPUT_GATE_NO_VERIFIED_GLB',
+                         'detail':'Non-GLB output requires an independently reviewed machine validator'})
     data={'schema':SCHEMA,'asset':asset,'step':step,
           'attempt_id':work['attempt_id'],'operation_sha256':work['operation_sha256'],
           'master_sha256':work['master_sha256'],
