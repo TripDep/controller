@@ -6,8 +6,16 @@ import unittest
 from glb_pbr_evidence import inspect, MaterialEvidenceError
 from glb_machine_qa import audit_bytes
 
-PNG=(b'\x89PNG\r\n\x1a\n'+struct.pack('>I',13)+b'IHDR'+
-     struct.pack('>IIBBBBB',16,16,8,2,0,0,0)+b'\x00\x00\x00\x00')
+import zlib
+
+def png_chunk(kind, content):
+    return (struct.pack('>I',len(content)) + kind + content +
+            struct.pack('>I',zlib.crc32(kind+content)&0xffffffff))
+
+PNG=(b'\x89PNG\r\n\x1a\n' +
+     png_chunk(b'IHDR', struct.pack('>IIBBBBB',16,16,8,2,0,0,0)) +
+     png_chunk(b'IDAT', zlib.compress((b'\x00'+b'\x80'*(16*3))*16)) +
+     png_chunk(b'IEND',b''))
 POS=b''.join(struct.pack('<fff',*p) for p in ((0,0,0),(1,0,0),(0,1,0)))
 UV=b''.join(struct.pack('<ff',*p) for p in ((0,0),(1,0),(0,1)))
 
@@ -62,6 +70,15 @@ class PbrNativeTests(unittest.TestCase):
         g,b,w=fixture(png=b'not-png-anymore-data!!!!')
         a=inspect(g,b,w)
         self.assertTrue(any('PNG_HEADER_INVALID' in x for x in a['pbr_structural_errors']))
+    def test_png_interior_crc_corruption_fails(self):
+        broken=bytearray(PNG);broken[29]^=1
+        g,b,w=fixture(png=bytes(broken))
+        a=inspect(g,b,w)
+        self.assertTrue(any('PBR_EMBEDDED_PNG_CRC_INVALID' in x for x in a['pbr_structural_errors']))
+    def test_png_truncated_chunk_fails(self):
+        g,b,w=fixture(png=PNG[:-3])
+        a=inspect(g,b,w)
+        self.assertTrue(any('PBR_EMBEDDED_PNG' in x for x in a['pbr_structural_errors']))
     def test_texture_index_out_of_bounds_fails(self):
         g,b,w=fixture();g['materials'][0]['pbrMetallicRoughness']['baseColorTexture']['index']=7
         a=inspect(g,b,w)
