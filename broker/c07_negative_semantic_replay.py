@@ -62,7 +62,7 @@ def audit_readback(raw, asset):
     need(bool(rows),'R112_AUDIT_EMPTY')
     return rows,previous
 
-def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
+def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200, operation_sha256=None):
     """Compute DUE internally from pinned rule inventory; ignore producer waivers.
 
     Produces 763 slots in four deterministic chunks; detects rule-specific
@@ -71,6 +71,8 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
     """
     import c07_operation_scope as source_scope
     need(type(batch_size) is int and batch_size in (100,200),'R112_BATCH_SIZE')
+    need(operation_sha256 is None or (type(operation_sha256) is str
+         and HEX.fullmatch(operation_sha256)), 'R113_EXACT_OPERATION_BINDING')
     need(type(asset) is str and asset and asset==asset.upper() and
          type(attempt_id) is str and HEX.fullmatch(attempt_id),
          'R112_EXACT_ASSET_ATTEMPT')
@@ -111,6 +113,26 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
     reasons={rid:[] for rid in due}
     untrusted_owner_claims={rid:[] for rid in due}
     relevant_records=[]
+    # Canonical semantic source must be rebuilt at verification time. Nothing
+    # in the producer report may define a new rule, a new question or a fake
+    # composite clause. These are verified source predicates, not work PASS.
+    question_map = None
+    composite_map = None
+    def contracts():
+        nonlocal question_map, composite_map
+        if question_map is None:
+            import c07_answer_semantics as answers
+            import c07_compound_subchecks as composites
+            ledger = answers.build(inventory)
+            need(ledger['rule_count'] == 763 and set(ledger['entries']) == set(rules),
+                 'R113_CANONICAL_QUESTION_CONTRACT_DRIFT')
+            question_map = {q['id']: (rid, q, ledger['entries'][rid]['requirement_sha256'])
+                for rid in due for q in ledger['entries'][rid]['questions']}
+            report = composites.inspect(inventory, sorted(due))
+            composite_map = {s['subcheck_id']: (rid, s)
+                for rid, group in report['due_composites'].items()
+                for s in group['subchecks']}
+        return question_map, composite_map
     # Read each record ONCE. Only actual same-attempt events count.
     for ev in rows:
         if ev.get('attempt_id') != attempt_id:
@@ -127,10 +149,36 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
                  type(report.get('failed_subchecks')) is list and
                  report.get('advancement_authorized') is False,
                  'R112_ANSWER_GATE_BINDING')
+            if operation_sha256 is not None:
+                need(report.get('operation_sha256') == operation_sha256 and
+                     ev.get('report', {}).get('operation_sha256') == operation_sha256,
+                     'R113_ANSWER_OPERATION_REPLAY')
+            if 'due_rule_ids_sha256' in report:
+                need(report['due_rule_ids_sha256'] == sha(canonical(sorted(due))),
+                     'R113_ANSWER_DUE_SCOPE_HASH_DRIFT')
+            questions, subcontrols = contracts()
             for answer in report['failed']:
                 rid=answer.get('rule_id') if type(answer) is dict else None
                 need(rid in rules, 'R112_ANSWER_FAIL_UNKNOWN_RULE')
                 if rid in due:
+                    qid=answer.get('question_id')
+                    need(type(qid) is str and qid in questions and
+                         questions[qid][0] == rid,
+                         'R113_NONCANONICAL_QUESTION_ID')
+                    spec=questions[qid][1]
+                    require_hash=questions[qid][2]
+                    need(answer.get('requirement_sha256') in (None, require_hash),
+                         'R113_ANSWER_REQUIREMENT_SOURCE_DRIFT')
+                    answer_value=answer.get('answer')
+                    kind=spec['type']
+                    # A positive self-declaration is NEVER a FAIL. A reversed
+                    # yes/no polarity cannot fabricate an observed deficiency.
+                    is_negative=(kind in ('REQUIREMENT_SATISFIED','CONTROL_PERFORMED')
+                                 and answer_value=='NO') or (kind=='DEFECT_PRESENT'
+                                 and answer_value=='YES') or (kind=='OPEN_ANALYSIS'
+                                 and answer_value=='TEXT' and
+                                 answer.get('reason')=='NO_SUBSTANTIVE_ANSWER')
+                    need(is_negative, 'R113_FALSE_ADMITTED_FAILURE_POLARITY')
                     reasons[rid].append({'source':'ANSWER_ADMITTED_DEFECT',
                                          'record_hash':ev['record_hash'],
                                          'question_id':answer.get('question_id')})
@@ -138,6 +186,12 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
                 rid=sub.get('rule_id') if type(sub) is dict else None
                 need(rid in rules, 'R112_ADMITTED_SUBCHECK_UNKNOWN_RULE')
                 if rid in due:
+                    sid=sub.get('subcheck_id')
+                    need(type(sid) is str and sid in subcontrols and
+                         subcontrols[sid][0]==rid and
+                         sub.get('required_correction')==
+                         'COMPLETE_THIS_CANONICAL_SUBCONTROL',
+                         'R113_NONCANONICAL_COMPOSITE_SUBCHECK')
                     reasons[rid].append({'source':'COMPOSITE_SUBCHECK_ADMITTED_DEFECT',
                                          'record_hash':ev['record_hash'],
                                          'subcheck_id':sub.get('subcheck_id')})
@@ -145,6 +199,7 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
         elif kind=='SUPERVISOR_CANONICAL_NATIVE_NEGATIVE_GATE':
             reports=ev.get('native_reports')
             need(type(reports) is list and reports and
+                 (operation_sha256 is None or ev.get('operation_sha256') == operation_sha256) and
                  ev.get('master_sha256')==plan['master_sha256']
                  and ev.get('attempt_id')==attempt_id and
                  ev.get('native_reports_sha256')==supervisor_digest(reports) and
@@ -167,6 +222,12 @@ def inspect(inventory, plan, audit_raw, asset, attempt_id, *, batch_size=200):
                     need(predicate.get('individual_mg0')=='UNKNOWN' and
                          predicate.get('independent_native_rule_observation') in ('FAIL','UNKNOWN'),
                          'R112_NATIVE_PREDICATE_VERDICT')
+                    if 'evidence_sha256' in predicate:
+                        need(predicate['evidence_sha256'] == sha(canonical({
+                             k:v for k,v in predicate.items() if k!='evidence_sha256'})),
+                             'R113_NATIVE_RULE_EVIDENCE_DIGEST_MISMATCH')
+                    need(predicate.get('rule_id',rid)==rid,
+                         'R113_NATIVE_RULE_ID_DRIFT')
                     if predicate['independent_native_rule_observation']=='FAIL':
                         need(type(predicate.get('native_negative_findings')) is list and
                              bool(predicate['native_negative_findings']),
