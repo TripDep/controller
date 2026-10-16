@@ -133,6 +133,61 @@ class OutputCloseGateTests(unittest.TestCase):
         self.assertIn('GLB_MACHINE_VERIFICATION_INCOMPLETE',
                       [x['reason'] for x in v['machine_blockers']])
 
+    def test_blender5_native_structure_scanned_but_no_false_pass(self):
+        from test_native_format_evidence import modern
+        path=self.root/'real_header_blender5.blend'
+        path.write_bytes(modern())
+        item={'step':'0001','path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+              'size_bytes':path.stat().st_size}
+        result=self.probe([item])
+        self.assertFalse(result['may_continue_to_independent_native_post_review'])
+        self.assertEqual(result['native_machine_results'][0]['inspection']['header_variant'],
+                         'MODERN_17')
+        self.assertEqual(result['native_machine_results'][0]['inspection']['binary_structure'],
+                         'BLOCK_FRAMING_CHECKED')
+        self.assertEqual(result['semantic_result'],'UNKNOWN')
+        self.assertEqual(result['individual_mg0'],'UNKNOWN')
+    def test_native_ydr_rsc7_deflate_scanned_but_not_fivem_pass(self):
+        from test_native_format_evidence import rsc
+        path=self.root/'synthetic_container.ydr'
+        path.write_bytes(rsc())
+        item={'step':'0001','path':str(path),
+              'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+              'size_bytes':path.stat().st_size}
+        result=self.probe([item])
+        self.assertFalse(result['may_continue_to_independent_native_post_review'])
+        self.assertEqual(result['native_machine_results'][0]['inspection']['rsc_magic'],'RSC7')
+        self.assertEqual(result['native_machine_results'][0]['inspection']['drawable_geometry'],
+                         'NOT_PARSED')
+    def test_signed_native_blend_truncation_is_negative_machine_finding(self):
+        from test_native_format_evidence import modern
+        path=self.root/'truncated_blender.blend'
+        path.write_bytes(modern()[:-35])
+        item={'step':'0001','path':str(path),
+              'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+              'size_bytes':path.stat().st_size}
+        result=self.probe([item])
+        self.assertIn('NATIVE_MACHINE_STRUCTURAL_INVALID',
+                      [v['reason'] for v in result['machine_blockers']])
+        self.assertFalse(result['advancement_authorized'])
+    def test_native_y_d_r_disguised_glb_is_rejected_despite_valid_hash(self):
+        path=self.root/'fake.ydr'
+        path.write_bytes(self.p.read_bytes())
+        item={'step':'0001','path':str(path),
+              'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+              'size_bytes':path.stat().st_size}
+        result=self.probe([item])
+        self.assertIn('NATIVE_MACHINE_STRUCTURAL_INVALID',
+                      [v['reason'] for v in result['machine_blockers']])
+    def test_non_glb_paths_must_be_real_and_not_symlinks(self):
+        other=self.root/'valid-native.blend'
+        from test_native_format_evidence import modern
+        other.write_bytes(modern())
+        link=self.root/'symlink-native.blend';link.symlink_to(other)
+        item={'step':'0001','path':str(link),'sha256':'b'*64,'size_bytes':other.stat().st_size}
+        with self.assertRaisesRegex(OutputGateBlocked,'OUTPUT_GATE_NATIVE_PATH_INVALID'):
+            self.probe([item])
+
     def test_missing_attempt_binding_denied(self):
         with self.assertRaisesRegex(OutputGateBlocked,'OUTPUT_GATE_EXACT_ATTEMPT_REQUIRED'):
             self.probe(work={**WORK,'attempt_id':'not-a-sha'})

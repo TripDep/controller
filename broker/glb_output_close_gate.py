@@ -8,9 +8,11 @@ No glTF, DCC, FiveM, visual, artistic or MG0 PASS is issued here.
 """
 import hashlib
 import json
+import struct
 from pathlib import Path
 
 from glb_machine_qa import examine, GLBError
+from native_format_evidence import inspect as inspect_native, NativeScanBlocked
 
 SCHEMA='gg-c07-registered-output-preclose-machine-gate-v1'
 
@@ -36,7 +38,7 @@ def inspect(artifacts,work,asset,step):
             and type(work.get('master_sha256')) is str
             and len(work['master_sha256'])==64,
             'OUTPUT_GATE_EXACT_ATTEMPT_REQUIRED')
-    results=[];blockers=[];seen=set();unsupported_formats=[]
+    results=[];blockers=[];seen=set();unsupported_formats=[];native_results=[]
     for item in artifacts:
         require(type(item) is dict and item.get('step')==step,
                 'OUTPUT_GATE_STEP_OR_ARTIFACT_INVALID')
@@ -45,10 +47,38 @@ def inspect(artifacts,work,asset,step):
                 'OUTPUT_GATE_MODEL_PATH')
         path=Path(raw_path)
         if path.suffix.lower()!='.glb':
-            unsupported_formats.append(path.suffix.lower() or 'NO_EXTENSION')
-            blockers.append({'sha256':item.get('sha256','UNKNOWN'),
+            suffix=path.suffix.lower()
+            unsupported_formats.append(suffix or 'NO_EXTENSION')
+            sha=item.get('sha256')
+            # All native paths must be registered, regular, immutable and
+            # SHA-bound, not just .glb. This evidence cannot approve GTA/Blender.
+            require(path.is_absolute() and path.is_file() and not path.is_symlink()
+                    and not any(parent.is_symlink() for parent in path.parents),
+                    'OUTPUT_GATE_NATIVE_PATH_INVALID')
+            require(type(sha) is str and len(sha)==64
+                    and all(c in '0123456789abcdef' for c in sha)
+                    and type(item.get('size_bytes')) is int
+                    and item['size_bytes']>20
+                    and path.stat().st_size==item['size_bytes'],
+                    'OUTPUT_GATE_NATIVE_SOURCE_METADATA_INVALID')
+            require(sha not in seen,'OUTPUT_GATE_DUPLICATE_NATIVE_SOURCE')
+            seen.add(sha)
+            if suffix in ('.blend','.ydr'):
+                try:
+                    native=inspect_native(path,sha)
+                    native_results.append(native)
+                    if native['inspection']['binary_structure'] not in (
+                            'BLOCK_FRAMING_CHECKED','RESOURCE_CONTAINER_VERIFIED_ONLY'):
+                        blockers.append({'sha256':sha,
+                            'reason':'NATIVE_STRUCTURE_UNKNOWN_OR_COMPRESSED',
+                            'detail':native['inspection']['binary_structure']})
+                except (NativeScanBlocked,ValueError,OSError,struct.error) as exc:
+                    blockers.append({'sha256':sha,
+                        'reason':'NATIVE_MACHINE_STRUCTURAL_INVALID',
+                        'detail':str(exc)[:200]})
+            blockers.append({'sha256':sha,
                              'reason':'OUTPUT_FORMAT_NO_INDEPENDENT_MACHINE_VERIFIER',
-                             'detail':path.suffix.lower() or 'NO_EXTENSION'})
+                             'detail':suffix or 'NO_EXTENSION'})
             continue
         require(path.is_absolute() and path.is_file() and not path.is_symlink()
                 and not any(parent.is_symlink() for parent in path.parents),
@@ -116,7 +146,8 @@ def inspect(artifacts,work,asset,step):
           'attempt_id':work['attempt_id'],'operation_sha256':work['operation_sha256'],
           'master_sha256':work['master_sha256'],
           'glb_outputs_scanned':len(results),'other_formats_not_verified':sorted(set(unsupported_formats)),
-          'machine_results':results,'machine_blockers':blockers,
+          'machine_results':results,'native_machine_results':native_results,
+          'machine_blockers':blockers,
           'semantic_result':'UNKNOWN','individual_mg0':'UNKNOWN',
           'asset_acceptance':'NOT_AUTHORIZED','advancement_authorized':False,
           'may_continue_to_independent_native_post_review':not bool(blockers),
