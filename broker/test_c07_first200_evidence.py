@@ -62,7 +62,8 @@ class Tests(unittest.TestCase):
         self.assertFalse(x['advancement_authorized'])
 
     def test_drift_in_first_200_cannot_silently_skip(self):
-        self.inv['families']['GROUP'][10]='Q-999'
+        xs=self.inv['families']['GROUP']
+        xs[10],xs[11]=xs[11],xs[10]
         with self.assertRaisesRegex(mod.IncompleteNativeBatch,'EXACT_SOURCE_ORDER_CHANGED'):
             mod.inspect(self.inv,self.plan)
 
