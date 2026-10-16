@@ -139,4 +139,58 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(j.Blocked,'RETROSPECTIVE_REVIEW_ONLY'):self.run_review()
 
 
+    def test_native_consumer_replays_real_document_contents_and_rejects_forged_log(self):
+        # Synthetic source transport: unlike a mocked positive reader result,
+        # the real native consumer must actually re-run the canonical predicate.
+        inv,w,docs,engine=fixture()
+        original,_=p.documented_engine(inv,w,docs,engine)
+        paths={
+            'master':p.coverage.SOURCES['master'],
+            'historical_master':p.coverage.SOURCES['master'],
+            'work_state':'governance/supervisor/reviews/test/work_state.json',
+            'audit':'governance/supervisor/reviews/test/audit.jsonl',
+            'asset_checks':'governance/supervisor/reviews/test/asset_checks.json',
+        }
+        source={path:b'synthetic-source-fixture' for path in p.coverage.SOURCES.values()}
+        source[paths['master']]=docs['master']
+        for key,path in paths.items():source[path]=docs[key]
+        inputs={key:{'path':path,'sha256':p.sha(docs[key])}
+                for key,path in paths.items()}
+        policy={'schema':'gg-planning-semantic-review-v1',
+                'scope':'RETROSPECTIVE_DOCUMENTARY_PROCESS_REVIEW_NOT_PRODUCTION_AUTHORIZATION',
+                'work':w,'engine':engine,'inputs':inputs}
+        source[p.NATIVE_POLICY_PATH]=json.dumps(policy).encode()
+        class API:
+            def __init__(self): self.calls=[]
+            def call(self,method,path):
+                self.calls.append((method,path))
+                return {'path':path.split('/contents/',1)[1].split('?ref=',1)[0]}
+        a=API()
+        ref='c'*40
+        spec={'validator_id':p.VALIDATOR,'criteria':p.CRITERIA,'source_ref':ref}
+        def decoded(response,path):return source[path]
+        with patch('broker_live_review.decode_file',side_effect=decoded),patch.object(
+                p.coverage,'build_inventory',return_value=inv):
+            proof=p.native_rule_readback(a,original,original['binding'],spec)
+            self.assertEqual(proof['individual_rule_mg0'],'UNKNOWN')
+            self.assertFalse(proof['advancement_authorized'])
+            self.assertGreater(len(a.calls),5)
+            forged=copy.deepcopy(original)
+            forged['rule']['result']='FAIL'
+            with self.assertRaisesRegex(j.Blocked,
+                                        'PLANNING_NATIVE_LOG_CANNOT_OVERRIDE_RECOMPUTED_PROOF'):
+                p.native_rule_readback(a,forged,original['binding'],spec)
+            old=source[paths['asset_checks']]
+            source[paths['asset_checks']]=old+b'tampered'
+            with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_INPUT_DIGEST'):
+                p.native_rule_readback(a,original,original['binding'],spec)
+            source[paths['asset_checks']]=old
+            changed=copy.deepcopy(original['binding'])
+            changed['attempt_id']='0'*64
+            with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_CANONICAL_BINDING'):
+                p.native_rule_readback(a,original,changed,spec)
+            with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_IMMUTABLE_SOURCE_REF'):
+                p.native_rule_readback(a,original,original['binding'],dict(spec,source_ref='main'))
+
+
 if __name__ == '__main__': unittest.main()
