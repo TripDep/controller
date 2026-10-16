@@ -14,6 +14,7 @@ import struct
 from pathlib import Path
 
 from glb_triangle_crossings import inspect as inspect_crossings
+from glb_pbr_evidence import inspect as inspect_pbr
 
 MAX_TRIANGLES_FOR_CROSSING = 100000
 
@@ -189,6 +190,8 @@ def audit_bytes(raw):
                       'individual_mg0':'UNKNOWN','advancement_authorized':False}
     else:
         cross_report=inspect_crossings(crossing_groups,candidate_pairs)
+    pbr_report=inspect_pbr(g,blob,all_mesh)
+    errors.extend(pbr_report['pbr_structural_errors'])
     if num_bad_indices:errors.append('INDEX_OUT_OF_RANGE:'+str(num_bad_indices))
     if num_nonfinite:errors.append('NONFINITE_POSITIONS:'+str(num_nonfinite))
     if num_degenerate:errors.append('DEGENERATE_TRIANGLES:'+str(num_degenerate))
@@ -211,6 +214,7 @@ def audit_bytes(raw):
       'aabb_overlap_candidates_count':len(candidate_pairs),
       'aabb_overlap_candidates_first_15':candidate_pairs[:15],
       'triangle_surface_crossing_evidence':cross_report,
+      'material_source_evidence':pbr_report,
       'errors':sorted(set(errors)),'unsupported_requires_independent_check':sorted(set(unsupported)),
       'machine_evidence_status':'FAIL' if errors else 'UNKNOWN_UNSUPPORTED_INPUT' if unsupported else 'NO_FATAL_STRUCTURAL_DEFECT_DETECTED',
       'overlaps_confirmed':False,

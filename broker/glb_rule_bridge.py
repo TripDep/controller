@@ -72,6 +72,7 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
                   'degenerate_triangles','invalid_indices','nonfinite_positions',
                   'aabb_overlap_candidates_count')},
       'fatal_machine_findings': measured['errors'],
+      'material_source_evidence':measured['material_source_evidence'],
       'unverified_requirements': {
         'triangle_intersections':'UNKNOWN',
         'visual_qa':'UNKNOWN', 'materials_pbr':'UNKNOWN',
