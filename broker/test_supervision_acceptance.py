@@ -25,7 +25,15 @@ class Tests(unittest.TestCase):
         self.api=API();self.api.jobs['jobs'][0]['steps'][0]['name']=j.SEMANTIC_STEP
         self.api.job_logs=lambda _: '2020-10-13T18:00:00Z '+j.PREFIX+json.dumps(self.packet)
         self.spec={'validator_id':p.VALIDATOR,'criteria':p.CRITERIA,'issuer':self.api.issuer,
-                   'requirement_sha256':engine['requirement_sha256']}
+                   'requirement_sha256':engine['requirement_sha256'],'source_ref':'c'*40}
+        # This suite verifies C08/C09 transport and denial with synthetic
+        # fixtures. Real consumer source replay is adversarially tested in
+        # test_planning_semantics and test_c07_reviewed_native_readback.
+        native_fixture = patch('planning_semantics.native_rule_readback',
+                               return_value={'individual_rule_mg0':'UNKNOWN',
+                                             'advancement_authorized':False})
+        native_fixture.start()
+        self.addCleanup(native_fixture.stop)
         self.backend=j.NativeRuleBackend(self.api,{p.ENGINE_RULE:self.spec})
         self.offers={p.ENGINE_RULE:{'native_origin':self.api.origin,'expected_packet_sha256':j.digest(self.packet)}}
         self.contexts=contexts()
