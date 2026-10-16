@@ -21,6 +21,19 @@ def inspect_scope(inv,plan):
             else 'FUTURE_PHASE'} for rid,row in inv['rules'].items()}
     return {'rule_count':763,'by_rule':report}
 scopemod.inspect=inspect_scope
+qcontract=types.ModuleType('c07_answer_semantics')
+def source_questions(inv):
+    return {'rule_count':763,'entries':{rid:{
+        'requirement_sha256':row['requirement_sha256'],
+        'questions':[{'id':rid+':REQUIREMENT','type':'REQUIREMENT_SATISFIED'}]
+    } for rid,row in inv['rules'].items()}}
+qcontract.build=source_questions
+compositecontract=types.ModuleType('c07_compound_subchecks')
+def canonical_composites(inv,due):
+    return {'due_composites':{ANSWER:{'subchecks':[
+        {'subcheck_id':ANSWER+':SC001','clause_sha256':'d'*64}
+    ]}} if ANSWER in due else {}}
+compositecontract.inspect=canonical_composites
 
 MASTER='a'*64
 ATTEMPT='b'*64
@@ -34,6 +47,11 @@ class Tests(unittest.TestCase):
         source_scope_patch=patch.dict(sys.modules,{'c07_operation_scope':scopemod})
         source_scope_patch.start()
         self.addCleanup(source_scope_patch.stop)
+        semantic_patch=patch.dict(sys.modules,{
+            'c07_answer_semantics':qcontract,
+            'c07_compound_subchecks':compositecontract})
+        semantic_patch.start()
+        self.addCleanup(semantic_patch.stop)
         ids=['AAA-200-'+str(i).zfill(3) for i in range(1,201)] + [
             'Q-'+str(i).zfill(3) for i in range(1,564)]
         ids[64]=NATIVE
@@ -173,6 +191,58 @@ class Tests(unittest.TestCase):
             k:v for k,v in self.audit[-1].items() if k!='record_hash'}))
         with self.assertRaisesRegex(gate.ReplayBlocked,'R112_ANSWER_FAIL_UNKNOWN_RULE'):
             self.check()
+
+    def test_invalid_known_question_id_rejected_even_in_valid_audit(self):
+        self.add('SUPERVISOR_ASSISTANT_ANSWER_GATE',report={
+            'attempt_id':ATTEMPT,'master_sha256':MASTER,
+            'advancement_authorized':False,'failed_subchecks':[],
+            'failed':[{'rule_id':ANSWER,'question_id':ANSWER+':FAKE',
+                       'answer':'NO'}]})
+        with self.assertRaisesRegex(gate.ReplayBlocked,'NONCANONICAL_QUESTION_ID'):
+            self.check()
+
+    def test_reversed_answer_polarity_does_not_invent_fail(self):
+        self.add('SUPERVISOR_ASSISTANT_ANSWER_GATE',report={
+            'attempt_id':ATTEMPT,'master_sha256':MASTER,
+            'advancement_authorized':False,'failed_subchecks':[],
+            'failed':[{'rule_id':ANSWER,'question_id':ANSWER+':REQUIREMENT',
+                       'answer':'YES'}]})
+        with self.assertRaisesRegex(gate.ReplayBlocked,'FALSE_ADMITTED_FAILURE_POLARITY'):
+            self.check()
+
+    def test_false_composite_clause_is_rejected(self):
+        self.add('SUPERVISOR_ASSISTANT_ANSWER_GATE',report={
+            'attempt_id':ATTEMPT,'master_sha256':MASTER,
+            'advancement_authorized':False,'failed':[],
+            'failed_subchecks':[{'rule_id':ANSWER,
+                                 'subcheck_id':ANSWER+':SC999',
+                                 'required_correction':'COMPLETE_THIS_CANONICAL_SUBCONTROL'}]})
+        with self.assertRaisesRegex(gate.ReplayBlocked,'NONCANONICAL_COMPOSITE_SUBCHECK'):
+            self.check()
+
+    def test_cross_operation_replay_is_rejected_even_when_attempt_matches(self):
+        op='c'*64
+        self.add('SUPERVISOR_ASSISTANT_ANSWER_GATE',report={
+            'attempt_id':ATTEMPT,'master_sha256':MASTER,
+            'operation_sha256':'d'*64,
+            'advancement_authorized':False,'failed_subchecks':[],
+            'failed':[{'rule_id':ANSWER,'question_id':ANSWER+':REQUIREMENT',
+                       'answer':'NO'}]})
+        with self.assertRaisesRegex(gate.ReplayBlocked,'ANSWER_OPERATION_REPLAY'):
+            self.check(operation_sha256=op)
+
+    def test_well_bound_negative_admission_passes_strict_operation_replay(self):
+        op='c'*64
+        self.add('SUPERVISOR_ASSISTANT_ANSWER_GATE',report={
+            'attempt_id':ATTEMPT,'master_sha256':MASTER,
+            'operation_sha256':op,
+            'advancement_authorized':False,'failed_subchecks':[],
+            'failed':[{'rule_id':ANSWER,'question_id':ANSWER+':REQUIREMENT',
+                       'answer':'NO',
+                       'requirement_sha256':self.inv['rules'][ANSWER]['requirement_sha256']}]})
+        v=self.check(operation_sha256=op)
+        self.assertEqual(v['semantic_negative_fail_rule_ids'],[ANSWER])
+        self.assertFalse(v['advancement_authorized'])
 
     def test_100_batch_mode(self):
         self.assertEqual(self.check(batch_size=100)['batch_counts'],[100]*7+[63])
