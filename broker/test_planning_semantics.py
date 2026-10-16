@@ -188,7 +188,7 @@ class Tests(unittest.TestCase):
             source[paths['asset_checks']]=old
             changed=copy.deepcopy(original['binding'])
             changed['attempt_id']='0'*64
-            with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_CANONICAL_BINDING'):
+            with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_WORK_OR_MASTER_CHANGED'):
                 p.native_rule_readback(a,original,changed,spec)
             with self.assertRaisesRegex(j.Blocked,'PLANNING_NATIVE_IMMUTABLE_SOURCE_REF'):
                 p.native_rule_readback(a,original,original['binding'],dict(spec,source_ref='main'))
