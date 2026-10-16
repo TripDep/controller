@@ -616,6 +616,36 @@ class ControlledJudgment:
                          and r.get('event') == 'SUPERVISOR_PLAN_ENROLLED']
                 j.need(len(plans) == 1,
                        'CONTROLLED_R112_PINNED_ENROLLED_PLAN_REQUIRED')
+                # R114: verify one real canonical P0 process obligation
+                # against ORIGINAL Controller state, hash-chain and dependency
+                # file bytes. A per-operation documentary PASS is not a 3D,
+                # positive full-rule or MG0 pass.
+                from c07_operation_scope import inspect as inspected_scope
+                if 'AAA-200-R-178' in inspected_scope(
+                        self.inventory, plans[0]['plan'])['due']:
+                    from c07_process_r178 import inspect as inspect_process_r178
+                    provenance = inspect_process_r178(
+                        self.c, self.asset, step, reserved_work,
+                        plans[0]['plan'], self.inventory,
+                        lambda relative: self.local_file(relative).read_bytes())
+                    j.need(provenance['individual_mg0_passes'] == 0
+                           and provenance['positive_3d_rule_semantic_passes'] == 0
+                           and provenance['advancement_authorized'] is False,
+                           'CONTROLLED_R114_PROCESS_OBSERVATION_CANNOT_CERTIFY')
+                    self.append('SUPERVISOR_C07_R178_PROCESS_OBSERVATION',
+                                attempt_id=reserved_work['attempt_id'],
+                                operation_sha256=reserved_work['operation_sha256'],
+                                rule_id='AAA-200-R-178',
+                                result=provenance['current_operation_process_observation'],
+                                failed_criteria=provenance['failed_criteria'],
+                                provenance=provenance,
+                                positive_3d_rule_semantic_passes=0,
+                                individual_mg0_passes=0,
+                                advancement_authorized=False)
+                    j.need(provenance['current_operation_process_observation']
+                           == 'PASS',
+                           'CONTROLLED_R114_REAL_PROCESS_STATE_OR_DEPS_FAIL:'+
+                           ','.join(provenance['failed_criteria']))
                 replay = replay_negatives(
                     self.inventory, plans[0]['plan'],
                     self.c.audit_path(self.asset).read_bytes(),
