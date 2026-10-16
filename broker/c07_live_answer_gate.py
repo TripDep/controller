@@ -144,6 +144,10 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         composite_contract, subcheck_packets if subcheck_packets is not None else [],
         attempt_id=work['attempt_id'], operation_sha256=work['operation_sha256'])
         if composite_contract else None)
+    # A producer's admitted NO on a canonical composite subcontrol is a
+    # failure, even if every top-level question was answered positively.
+    # Preserve both failure channels for Controller audit and correction lineage.
+    compound_failures = composite_answers['failed'] if composite_answers else []
     reasons = []
     if failures:
         reasons.append('ADMITTED_DEFECT_OR_UNPERFORMED_CHECK')
@@ -188,6 +192,8 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         'context_exclusion_never_pass': True,
         'answered': assessed['answered'],
         'failed': failures,
+        'failed_subchecks': compound_failures,
+        'admitted_failure_total': len(failures) + len(compound_failures),
         'missing': missing,
         'compound_subchecks_unverified': compound,
         'compound_source_subchecks': compact_composites(composite_contract),
@@ -198,11 +204,12 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         'source_bindings_validated': True,
         'individual_mg0_verified': False,
         'independent_semantics_verified': False,
-        'answer_verdict': 'FAIL' if failures else 'UNKNOWN',
+        'answer_verdict': 'FAIL' if failures or compound_failures else 'UNKNOWN',
         'blocking_reasons': reasons,
         'may_request_native_proof': not reasons,
         'advancement_authorized': False,
         'next_required_action': ('CORRECT_FAILED_QUESTIONS' if failures else
+                                 'CORRECT_FAILED_SUBCHECKS' if compound_failures else
                                  'SUBMIT_MISSING_DUE_ANSWERS' if missing else
                                  'IMPLEMENT_AND_VERIFY_COMPOUND_SUBCHECKS' if compound else
                                  'REQUEST_INDEPENDENT_NATIVE_RULE_AND_MG0_PROOF'),
