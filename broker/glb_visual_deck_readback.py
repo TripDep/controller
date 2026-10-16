@@ -119,8 +119,16 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
              'VISUAL_BEFORE_AFTER_CAMERA_MISMATCH')
     need(len(set(tuple(pairs[v][0]['object_to_camera_direction'])
                  for v in VIEWS))==8,'VISUAL_CAMERAS_REPEATED')
-    sheet=root/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
+    # Contact sheet is asset-specific and must never be a hard-coded
+    # Youlanju-only filename or a caller-provided absolute/traversal path.
+    sheet_name=m.get('contact_sheet_filename')
+    need(type(sheet_name) is str and 1<=len(sheet_name)<=128
+         and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\\.png',sheet_name)
+         and '..' not in sheet_name,
+         'VISUAL_CONTACT_SHEET_FILENAME_INVALID')
+    sheet=root/sheet_name
     need(sheet.is_file() and not sheet.is_symlink()
+         and sheet.resolve().parent==root.resolve()
          and digest(sheet.read_bytes())==m.get('sheet_sha256'),
          'VISUAL_CONTACT_SHEET_TAMPERED')
     measured=inspect_visual_content(image_bytes)
