@@ -73,6 +73,7 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
                   'aabb_overlap_candidates_count')},
       'fatal_machine_findings': measured['errors'],
       'material_source_evidence':measured['material_source_evidence'],
+      'basecolor_pixel_evidence':measured['basecolor_pixel_evidence'],
       'unverified_requirements': {
         'triangle_intersections':'UNKNOWN',
         'visual_qa':'UNKNOWN', 'materials_pbr':'UNKNOWN',
