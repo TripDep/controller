@@ -9,6 +9,7 @@ import re
 
 from glb_machine_qa import examine
 from glb_winding_readback import scan_file as scan_winding_file
+from glb_material_culling_readback import scan as scan_material_culling
 
 SCHEMA = 'gg-c07-glb-rule-evidence-exact-attempt-v1'
 SCANNED_RULES = frozenset(('MACHINE_QA', 'HARD_FAILURE_CLASSES', 'VISUAL_QA',
@@ -73,13 +74,41 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
             winding['individual_mg0'] == 'UNKNOWN',
             'C07_GLB_WINDING_CANNOT_SELF_CERTIFY')
     observed_conflict = winding['orientation_conflict_meshes'] > 0
+    # Independently re-read the hash-pinned source's render-side metadata;
+    # never accept a producer claim that materials or normals are correct.
+    from pathlib import Path
+    material_culling = scan_material_culling(Path(path).read_bytes(),
+                                            expected_glb_sha256)
+    require(material_culling['source_sha256'] == expected_glb_sha256 and
+            material_culling['asset_acceptance'] == 'NOT_AUTHORIZED' and
+            material_culling['individual_mg0'] == 'UNKNOWN' and
+            material_culling['advancement_authorized'] is False,
+            'C07_GLB_MATERIAL_CULLING_CANNOT_SELF_CERTIFY')
+    missing_uv = material_culling['missing_required_texcoord_attributes_count']>0
     verdict = ('FAIL' if measured['machine_evidence_status'] == 'FAIL'
-               or observed_conflict else 'UNKNOWN')
+               or observed_conflict or missing_uv else 'UNKNOWN')
     evidence = {
       'schema': SCHEMA, 'binding': dict(context),
       'artifact_sha256': expected_glb_sha256,
       'machine_report_sha256': canonical_sha(measured),
       'machine_status': measured['machine_evidence_status'],
+      'render_side_source_evidence': {
+        'source_sha256':material_culling['source_sha256'],
+        'primitive_instances_examined':material_culling['primitive_instances_examined'],
+        'materials_catalog_count':material_culling['materials_catalog_count'],
+        'explicit_NORMAL_primitive_count':material_culling['explicit_NORMAL_primitive_count'],
+        'explicit_TANGENT_primitive_count':material_culling['explicit_TANGENT_primitive_count'],
+        'single_sided_primitive_count':material_culling['single_sided_primitive_count'],
+        'missing_required_texcoord_attributes_count':
+            material_culling['missing_required_texcoord_attributes_count'],
+        'negative_world_determinant_nodes_count':
+            material_culling['negative_world_determinant_nodes_count'],
+        'negative_world_determinant_nodes_sha256':
+            material_culling['negative_world_determinant_nodes_sha256'],
+        'actual_face_visibility': 'UNKNOWN_NO_RENDER',
+        'native_blender_visual': 'UNKNOWN',
+        'individual_mg0': 'UNKNOWN',
+      },
       'indexed_winding_evidence': {
         'source_sha256': winding['source_sha256'],
         'mesh_count': winding['mesh_count'],
@@ -98,7 +127,10 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
       'fatal_machine_findings': measured['errors'] +
           (['GLB_INDEX_WINDING_OR_NONMANIFOLD_OBSERVED:'+
             str(winding['orientation_conflict_meshes'])]
-           if observed_conflict else []),
+           if observed_conflict else []) +
+          (['GLB_TEXTURE_REQUIRED_TEXCOORD_MISSING:'+
+            str(material_culling['missing_required_texcoord_attributes_count'])]
+           if missing_uv else []),
       'material_source_evidence':measured['material_source_evidence'],
       'basecolor_pixel_evidence':measured['basecolor_pixel_evidence'],
       'unverified_requirements': {
