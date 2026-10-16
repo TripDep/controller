@@ -432,6 +432,61 @@ class Tests(unittest.TestCase):
                              'claimed finished','unit',[])
             self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
 
+    def test_mutating_close_replays_due_canonical_winding_failure_before_post_pass(self):
+        """The native rule negative scan is ENFORCED, not optional/diagnostic."""
+        from test_glb_machine_qa import synthetic_glb
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            active=self.s.begin(self.api.origin,offers)
+            path=self.root/'signed_bad_winding.glb'
+            path.write_bytes(synthetic_glb(
+                triangles=[(0.,0.,0.),(1.,0.,0.),
+                           (0.,1.,0.),(1.,1.,0.)],
+                indexes=[0,1,2,1,2,3]))
+            registered=self.c.record_artifact(
+                'TEST',path,'SYNTHETIC_CANONICAL_NEGATIVE_CASE')
+            due={'due':['AAA-200-G-065']}
+            with patch('c07_operation_scope.inspect',return_value=due):
+                with self.assertRaisesRegex(j.Blocked,
+                        'CONTROLLED_POST_CANONICAL_NATIVE_RULE_FAIL:AAA-200-G-065'):
+                    self.s.close(active['step'],active['token'],'PASS',
+                                 'producer says PASS','unit',[])
+            self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
+            rows=[r for r in self.s.records() if r.get('event')==
+                  'SUPERVISOR_CANONICAL_NATIVE_NEGATIVE_GATE']
+            self.assertEqual(len(rows),1)
+            self.assertEqual(rows[0]['result'],'FAIL_NATIVE_FINDINGS')
+            self.assertEqual(rows[0]['native_rule_ids'],['AAA-200-G-065'])
+            self.assertEqual(rows[0]['registered_glb_sha256'],
+                             [registered['evidence_operation']['sha256']])
+            self.assertFalse(rows[0]['advancement_authorized'])
+            self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
+
+    def test_mutating_close_clean_canonical_native_still_needs_post_mg0(self):
+        """A clean scan cannot grant PASS or bypass later semantic proof."""
+        from test_glb_machine_qa import synthetic_glb
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            active=self.s.begin(self.api.origin,offers)
+            path=self.root/'signed_unknown_source.glb'
+            path.write_bytes(synthetic_glb())
+            self.c.record_artifact('TEST',path,'SYNTHETIC_CANONICAL_UNKNOWN')
+            due={'due':['AAA-200-G-065']}
+            with patch('c07_operation_scope.inspect',return_value=due):
+                with self.assertRaisesRegex(j.Blocked,'CONTROLLED_POST_NATIVE_PROOF_REQUIRED'):
+                    self.s.close(active['step'],active['token'],'PASS',
+                                 'producer says PASS','unit',[])
+            rows=[r for r in self.s.records() if r.get('event')==
+                  'SUPERVISOR_CANONICAL_NATIVE_NEGATIVE_GATE']
+            self.assertEqual(len(rows),1)
+            self.assertEqual(rows[0]['result'],
+                             'UNKNOWN_AWAITING_SEMANTIC_AND_MG0')
+            self.assertEqual(rows[0]['work_rule_passes'],0)
+            self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
+            self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
+
     def test_mutating_close_rejects_only_unreviewed_native_export(self):
         self.reenroll_mutation()
         offers,_=self.issue()
