@@ -493,6 +493,19 @@ class ControlledJudgment:
                 # visual, artistic, runtime, MG0 or canonical rule semantics.
                 from glb_output_close_gate import inspect as inspect_glb_outputs
                 machine_gate=inspect_glb_outputs(artifacts,work,self.asset,step)
+                # Persist both STOPs and eligible machine assessments before
+                # evaluating the post-run native judgment. No PASS is awarded
+                # by this read-only machine evidence event.
+                self.append('SUPERVISOR_GLB_OUTPUT_MACHINE_GATE',
+                            step=step,
+                            operation_sha256=work['operation_sha256'],
+                            attempt_id=work['attempt_id'],
+                            source_artifact_sha256=sorted(observed),
+                            machine_gate=machine_gate,
+                            machine_gate_sha256=j.digest(machine_gate),
+                            result=('STOP_MACHINE_EVIDENCE' if not machine_gate[
+                                'may_continue_to_independent_native_post_review'] else
+                                'ELIGIBLE_FOR_SEPARATE_NATIVE_REVIEW_NO_PASS'))
                 j.need(machine_gate['may_continue_to_independent_native_post_review']
                        and machine_gate['semantic_result']=='UNKNOWN'
                        and machine_gate['individual_mg0']=='UNKNOWN'
