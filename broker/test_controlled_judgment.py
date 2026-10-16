@@ -198,6 +198,35 @@ class Tests(unittest.TestCase):
                                     'CONTROLLED_ANSWER_RETRY_CONTEXT_DRIFT'):
             self.s.expected_work()
 
+    def test_owner_scope_evidence_is_an_exact_source_bound_memo(self):
+        # A checksum alone is NOT proof the specific Q belongs outside scope.
+        rid='Q-109'
+        reason=('The owner explicitly excluded furniture use from this '
+                'individual model and reviewed the exact scope dependency.')
+        memo={'schema':'gg-c07-owner-scope-decision-v1','asset':'TEST',
+              'master_sha256':self.inv['canonical_master_sha256'],
+              'rule_id':rid,'requirement_sha256':'b'*64,
+              'reason':reason,
+              'owner_decision':'EXCLUDE_THIS_QUESTION_FOR_THIS_EXACT_ASSET_SCOPE'}
+        path=self.root/'owner-scope.json'
+        path.write_text(json.dumps(memo),encoding='utf-8')
+        result={'excluded':[rid], 'rows':{rid:{
+            'evidence_ref':'owner-scope.json',
+            'evidence_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+            'reason':reason,'requirement_sha256':'b'*64}}}
+        with patch('c07_contextual_questions.select',return_value=result):
+            self.assertEqual(self.s.verify_question_context(self.plan),result)
+            memo['asset']='OTHER'
+            path.write_text(json.dumps(memo),encoding='utf-8')
+            result['rows'][rid]['evidence_sha256']=hashlib.sha256(path.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(j.Blocked,
+                                        'CONTROLLED_300_SCOPE_EVIDENCE_NOT_SPECIFIC'):
+                self.s.verify_question_context(self.plan)
+            result['rows'][rid]['evidence_sha256']='e'*64
+            with self.assertRaisesRegex(j.Blocked,
+                                        'CONTROLLED_300_SCOPE_EVIDENCE_CHANGED'):
+                self.s.verify_question_context(self.plan)
+
     def test_mutating_close_requires_controller_registered_real_binary(self):
         self.reenroll_mutation()
         offers,_=self.issue()

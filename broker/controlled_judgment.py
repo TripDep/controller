@@ -21,6 +21,7 @@ PLAN_KEYS = {'phase', 'asset_type', 'profiles', 'master_sha256',
              'inventory_sha256', 'issuer', 'enrolled'}
 OP_KEYS = {'action', 'category', 'locks', 'sections', 'evidence_before',
            'resolves', 'aaa_phase'}
+OPTIONAL_QUESTION_CONTEXT = {'question_context'}
 
 
 class ControlledJudgment:
@@ -66,6 +67,35 @@ class ControlledJudgment:
                 os.close(fd)
         return record
 
+    def verify_question_context(self, plan):
+        """Recheck explicit owner-reviewed scope and local evidence under lock.
+
+        A hash pointer alone is not permission. STATUS/D authorization is
+        required at enrollment; exact evidence bytes must remain unchanged
+        on every subsequent plan access. Missing proof leaves question DUE.
+        """
+        from c07_contextual_questions import select as context_select
+        report = context_select(self.inventory, plan)
+        if report:
+            for rid in report['excluded']:
+                spec = report['rows'][rid]
+                proof = self.local_file(spec['evidence_ref']).read_bytes()
+                j.need(hashlib.sha256(proof).hexdigest() == spec['evidence_sha256'],
+                       'CONTROLLED_300_SCOPE_EVIDENCE_CHANGED:' + rid)
+                memo = j.evidence.strict_json(proof, max_size=32000)
+                j.need(type(memo) is dict and set(memo) == {
+                    'schema','asset','master_sha256','rule_id','requirement_sha256',
+                    'reason','owner_decision'} and
+                    memo['schema'] == 'gg-c07-owner-scope-decision-v1' and
+                    memo['asset'] == self.asset and
+                    memo['master_sha256'] == plan['master_sha256'] and
+                    memo['rule_id'] == rid and
+                    memo['requirement_sha256'] == spec['requirement_sha256'] and
+                    memo['reason'] == spec['reason'] and
+                    memo['owner_decision'] == 'EXCLUDE_THIS_QUESTION_FOR_THIS_EXACT_ASSET_SCOPE',
+                    'CONTROLLED_300_SCOPE_EVIDENCE_NOT_SPECIFIC:' + rid)
+        return report
+
     def enroll_plan(self, plan):
         """Trusted governance installation, inside an authorized STATUS step.
 
@@ -77,8 +107,9 @@ class ControlledJudgment:
             active = st.get('active_step')
             j.need(st.get('d_authorized') and active and active['category'] == 'STATUS',
                    'CONTROLLED_PLAN_REQUIRES_AUTHORIZED_STATUS')
-            j.need(set(plan) == PLAN_KEYS and set(plan['operation']) == OP_KEYS,
-                   'CONTROLLED_PLAN_SCHEMA')
+            j.need(set(plan) in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
+                   set(plan['operation']) == OP_KEYS, 'CONTROLLED_PLAN_SCHEMA')
+            self.verify_question_context(plan)
             j.need(plan['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
             j.need(plan['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
             j.need(plan['operation']['category'] != 'MASTER_UPDATE', 'CONTROLLED_MASTER_UPDATE_SEPARATE')
@@ -115,6 +146,7 @@ class ControlledJudgment:
         j.need(len(closed) == 1 and closed[0]['result'] == 'PASS', 'CONTROLLED_PLAN_NOT_APPROVED')
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
+        self.verify_question_context(row['plan'])
         from approved_validators import validate as validate_reviewed
         validate_reviewed(row['plan']['enrolled'],self.inventory)
         from c07_operation_scope import require_due_enrolled
@@ -195,6 +227,8 @@ class ControlledJudgment:
         work = {k: copy.deepcopy(plan[k]) for k in ('phase', 'asset_type', 'profiles',
                 'master_sha256', 'asset_specific_extensions_verified', 'guardian_required',
                 'mode', 'closure_requested')}
+        if 'question_context' in plan:
+            work['question_context'] = copy.deepcopy(plan['question_context'])
         work.update(work_item_sha256=j.digest(self.asset), operation_sha256=operation_sha,
                     work_dependencies={key: hashlib.sha256(self.local_file(path).read_bytes()).hexdigest()
                                        for key, path in plan['dependency_files'].items()},
