@@ -303,6 +303,38 @@ class Tests(unittest.TestCase):
                                                             manifest_sha)
         self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
 
+    def test_native_blender_probe_requires_real_audited_asset_and_cannot_pass(self):
+        """Read-only native probe binds a real Controller artifact, not self-report."""
+        source=self.root/'registered_native_test.blend'
+        source.write_bytes(b'BLENDER17-01v0502'+b'TEST_NO_REAL_BPY')
+        opened=self.c.begin('TEST','Register native source','STATUS',[],[],
+                            'register fixture .blend',[])
+        recorded=self.c.record_artifact('TEST',source,'SYNTHETIC_NATIVE_SOURCE')
+        self.c.close('TEST',opened['step'],opened['token'],'PASS','unit','unit',[],True)
+        digest=recorded['evidence_operation']['sha256']
+        binary=self.root/'synthetic_blender_exe'
+        with patch('c07_operation_scope.inspect',return_value={
+                   'due':['MACHINE_QA'],'missing_due_validators':[]}):
+            work=self.s.expected_work()
+            with patch.object(self.s,'prepare',return_value=(work,None,None)):
+                evidence={'advancement_authorized':False,'individual_mg0':'UNKNOWN',
+                          'production_acceptance':'NOT_AUTHORIZED',
+                          'binary_identity_independently_attested':False}
+                with patch('blender_roundtrip_driver.inspect',return_value=evidence) as runner:
+                    result=self.s.probe_registered_blender_roundtrip(digest,binary)
+                    runner.assert_called_once()
+                    self.assertEqual(result['registered_blend_sha256'],digest)
+                    self.assertEqual(result['attempt_id'],work['attempt_id'])
+                    self.assertEqual(result['semantic_and_mg0_passes'],0)
+                    self.assertFalse(result['advancement_authorized'])
+                    with self.assertRaisesRegex(j.Blocked,'EXACT_REGISTERED_BLEND_REQUIRED'):
+                        self.s.probe_registered_blender_roundtrip('0'*64,binary)
+                with patch('blender_roundtrip_driver.inspect',
+                           return_value={**evidence,'individual_mg0':'PASS'}):
+                    with self.assertRaisesRegex(j.Blocked,'PROBE_CANNOT_GRANT_PASS'):
+                        self.s.probe_registered_blender_roundtrip(digest,binary)
+        self.assertTrue(self.c.verify_audit_chain('TEST')['ok'])
+
     def test_mutating_close_requires_controller_registered_real_binary(self):
         self.reenroll_mutation()
         offers,_=self.issue()

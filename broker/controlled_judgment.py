@@ -374,6 +374,58 @@ class ControlledJudgment:
                     'approved_plan_record_hash':row['record_hash'],
                     'visual_evidence':evidence,'advancement_authorized':False}
 
+    def probe_registered_blender_roundtrip(self, artifact_sha256, blender_executable):
+        """Read-only native Blender inspection of a registered .blend source.
+
+        Requires exact current work identity, canonical MACHINE_QA DUE and
+        unique real ARTIFACT_RECORDED. Even successful Blender subprocess
+        never grants visual, FiveM, semantic, production or MG0 PASS.
+        """
+        from c07_operation_scope import inspect as inspect_scope
+        from blender_roundtrip_driver import inspect as run_blender_diagnostic
+        with self.locked():
+            row=self.plan()
+            work,_,_=self.prepare(row)
+            j.need('MACHINE_QA' in inspect_scope(self.inventory,row['plan'])['due'],
+                   'CONTROLLED_NATIVE_MACHINE_QA_NOT_DUE')
+            j.need(j.evidence.is_sha(artifact_sha256),
+                   'CONTROLLED_NATIVE_SHA_REQUIRED')
+            found=[v for v in self.c.asset_state(self.asset).get('artifacts',[])
+                   if type(v) is dict and v.get('sha256')==artifact_sha256
+                   and type(v.get('path')) is str
+                   and Path(v['path']).suffix.lower()=='.blend']
+            j.need(len(found)==1,'CONTROLLED_NATIVE_EXACT_REGISTERED_BLEND_REQUIRED')
+            item=found[0]
+            p=Path(item['path'])
+            j.need(p.is_absolute() and p.is_file() and not p.is_symlink()
+                   and not any(parent.is_symlink() for parent in p.parents)
+                   and type(item.get('size_bytes')) is int
+                   and p.stat().st_size==item['size_bytes'],
+                   'CONTROLLED_NATIVE_SOURCE_CHANGED')
+            events=[ev for ev in self.records()
+                    if ev.get('event')=='ARTIFACT_RECORDED'
+                    and ev.get('step')==item.get('step')
+                    and ev.get('evidence_operation')==item
+                    and ev.get('result')=='PASS']
+            j.need(len(events)==1,'CONTROLLED_NATIVE_AUDIT_MISSING_OR_DUPLICATE')
+            native=run_blender_diagnostic(p,artifact_sha256,
+                Path(blender_executable),timeout_seconds=900)
+            j.need(native['advancement_authorized'] is False
+                   and native['individual_mg0']=='UNKNOWN'
+                   and native['production_acceptance']=='NOT_AUTHORIZED'
+                   and native['binary_identity_independently_attested'] is False,
+                   'CONTROLLED_NATIVE_PROBE_CANNOT_GRANT_PASS')
+            return {'schema':'gg-c07-controlled-blender-roundtrip-v1',
+                    'asset':self.asset,'attempt_id':work['attempt_id'],
+                    'operation_sha256':work['operation_sha256'],
+                    'master_sha256':work['master_sha256'],
+                    'registered_blend_sha256':artifact_sha256,
+                    'source_record_hash':events[0]['record_hash'],
+                    'plan_record_hash':row['record_hash'],
+                    'native_runtime_diagnostic':native,
+                    'semantic_and_mg0_passes':0,
+                    'advancement_authorized':False}
+
     def begin(self, origin, offers, answer_packets=None, subcheck_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
@@ -640,7 +692,7 @@ def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI, PRIVATE_REPO_SHA
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual'))
+    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual', 'probe-blender'))
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--master', type=Path, required=True)
     parser.add_argument('--asset', required=True)
@@ -658,6 +710,7 @@ def main(argv=None):
     parser.add_argument('--glb-rule')
     parser.add_argument('--visual-manifest-path')
     parser.add_argument('--visual-manifest-sha256')
+    parser.add_argument('--blender-executable', type=Path)
     args = parser.parse_args(argv)
     try:
         j.need(j.re.fullmatch('[a-f0-9]{40}', args.source_ref), 'CONTROLLED_IMMUTABLE_SOURCE_REF')
@@ -672,7 +725,12 @@ def main(argv=None):
         def data(path):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
-        if args.command == 'probe-visual':
+        if args.command == 'probe-blender':
+            j.need(args.blender_executable is not None,
+                   'CONTROLLED_BLENDER_BINARY_REQUIRED')
+            result=bridge.probe_registered_blender_roundtrip(
+                args.glb_sha256,args.blender_executable)
+        elif args.command == 'probe-visual':
             result=bridge.probe_registered_visual_deck(args.glb_sha256,
                 args.visual_manifest_path,args.visual_manifest_sha256)
         elif args.command == 'probe-glb':
