@@ -26,6 +26,9 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(v['individual_mg0'],'UNKNOWN')
         self.assertFalse(v['acceptance_authorized'])
         self.assertEqual(v['artifact_sha256'],self.sha)
+        self.assertIn('material_source_evidence',v)
+        self.assertEqual(v['material_source_evidence']['visual_material_quality'],'UNKNOWN')
+        self.assertEqual(v['material_source_evidence']['individual_mg0'],'UNKNOWN')
         self.assertEqual(v['evidence_sha256'],canonical_sha({k:x for k,x in v.items() if k!='evidence_sha256'}))
     def test_degenerate_triangle_blocks_its_machine_obligation(self):
         self.path.write_bytes(synthetic_glb(triangles=[(0,0,0),(1,1,1),(2,2,2)]))
