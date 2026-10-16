@@ -46,7 +46,8 @@ def challenge(inventory, plan, work, checkpoint, *,
     """
     if not isinstance(checkpoint, dict) or type(checkpoint.get('next_step')) is not int:
         raise ValueError('C07_TRUSTED_CHECKPOINT_REQUIRED')
-    due = scope.inspect(inventory, plan)['due']
+    applicability = scope.inspect(inventory, plan)
+    due = applicability['due']
     ledger = answer_contract.build(inventory)
     compound_contract = composites.inspect(inventory, due) if inventory.get('rule_count') == 763 else None
     if detail_rule is not None:
@@ -89,6 +90,10 @@ def challenge(inventory, plan, work, checkpoint, *,
         'plan_record_hash': checkpoint['plan_record_hash'],
         'due_rules_sha256': digest(due),
         'question_count': len(questions),
+        'canonical_question_bank_size': applicability['base_questions_accounted_for'],
+        'context_excluded_question_ids': applicability['context_excluded'],
+        'context_exclusion_reasons': applicability['context_exclusions_with_reasons'],
+        'context_exclusion_never_pass': True,
         'compound_due': sorted({q['rule_id'] for q in questions
                                 if q['compound_subchecks_pending']}),
         'compound_source_subchecks': compact_composites(compound_contract),
@@ -177,6 +182,10 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         'plan_record_hash': checkpoint['plan_record_hash'],
         'answer_packets_sha256': digest(packets),
         'due_rule_ids_sha256': digest(due),
+        'canonical_question_bank_size': trusted['base_questions_accounted_for'],
+        'context_excluded_question_ids': trusted['context_excluded'],
+        'context_exclusion_reasons': trusted['context_exclusions_with_reasons'],
+        'context_exclusion_never_pass': True,
         'answered': assessed['answered'],
         'failed': failures,
         'missing': missing,
