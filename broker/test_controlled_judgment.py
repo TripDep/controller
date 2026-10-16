@@ -272,7 +272,7 @@ class Tests(unittest.TestCase):
         attached=self.c.record_artifact('TEST',path,'C07_UNIT_SOURCE')
         self.c.close('TEST',opened['step'],opened['token'],'PASS','unit','unit',[],True)
         sha=attached['evidence_operation']['sha256']
-        due=sorted(['AAA-200-G-065','AAA-200-L-113','Q-075'])
+        due=sorted(self.inv['rules'])  # fixture IDs, not a fake 763-rule inventory
         with patch('c07_operation_scope.inspect',return_value={'due':due,
                                                                'missing_due_validators':[]}):
             work=self.s.expected_work()
@@ -284,8 +284,8 @@ class Tests(unittest.TestCase):
                     report=self.s.probe_registered_glb_batch(sha,due)
                     self.assertEqual(checker.call_count,1)
                 results=report['native_negative_rule_observations']
-                self.assertEqual(results['rule_count'],3)
-                self.assertEqual(results['native_observation_counts']['UNKNOWN'],3)
+                self.assertEqual(results['rule_count'],2)
+                self.assertEqual(results['native_observation_counts']['UNKNOWN'],2)
                 self.assertEqual(report['source_record_hash'],
                       next(r['record_hash'] for r in self.s.records()
                            if r['event']=='ARTIFACT_RECORDED'))
