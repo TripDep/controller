@@ -26,6 +26,8 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(v['individual_mg0'],'UNKNOWN')
         self.assertFalse(v['acceptance_authorized'])
         self.assertEqual(v['artifact_sha256'],self.sha)
+        self.assertEqual(v['indexed_winding_evidence']['orientation_conflict_meshes'],0)
+        self.assertEqual(v['indexed_winding_evidence']['boundary_edges'],3)
         self.assertIn('material_source_evidence',v)
         self.assertEqual(v['material_source_evidence']['visual_material_quality'],'UNKNOWN')
         self.assertEqual(v['material_source_evidence']['individual_mg0'],'UNKNOWN')
@@ -37,6 +39,28 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(v['semantic_verdict'],'FAIL')
         self.assertEqual(v['geometry']['degenerate_triangles'],1)
         self.assertFalse(v['acceptance_authorized'])
+    def test_orientation_conflict_is_an_explicit_machine_fail_not_asset_pass(self):
+        vertices=[(0.,0.,0.),(1.,0.,0.),(0.,1.,0.),(1.,1.,0.)]
+        self.path.write_bytes(synthetic_glb(
+            triangles=vertices,indexes=[0,1,2,1,2,3]))
+        digest=hashlib.sha256(self.path.read_bytes()).hexdigest()
+        report=verify_live(self.path,digest,CONTEXT)
+        self.assertEqual(report['machine_status'],'NO_FATAL_STRUCTURAL_DEFECT_DETECTED')
+        self.assertEqual(report['semantic_verdict'],'FAIL')
+        self.assertEqual(report['indexed_winding_evidence']['orientation_conflict_meshes'],1)
+        self.assertEqual(report['indexed_winding_evidence']['same_direction_shared_edges'],1)
+        self.assertEqual(report['individual_mg0'],'UNKNOWN')
+        self.assertFalse(report['acceptance_authorized'])
+        self.assertTrue(any('GLB_INDEX_WINDING_OR_NONMANIFOLD_OBSERVED' in s
+                            for s in report['fatal_machine_findings']))
+
+    def test_open_geometry_not_misidentified_as_wrong_winding(self):
+        report=verify_live(self.path,self.sha,CONTEXT)
+        self.assertEqual(report['indexed_winding_evidence']['boundary_edges'],3)
+        self.assertEqual(report['indexed_winding_evidence']['orientation_conflict_meshes'],0)
+        self.assertEqual(report['semantic_verdict'],'UNKNOWN')
+        self.assertFalse(report['acceptance_authorized'])
+
     def test_source_changes_after_approval(self):
         self.path.write_bytes(self.path.read_bytes()+b'unapproved change')
         with self.assertRaisesRegex(GLBError,'SOURCE_GLB_SHA256_MISMATCH'):

@@ -8,6 +8,7 @@ import json
 import re
 
 from glb_machine_qa import examine
+from glb_winding_readback import scan_file as scan_winding_file
 
 SCHEMA = 'gg-c07-glb-rule-evidence-exact-attempt-v1'
 SCANNED_RULES = frozenset(('MACHINE_QA', 'HARD_FAILURE_CLASSES', 'VISUAL_QA',
@@ -62,16 +63,42 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
     if claimed_report is not None:
         require(type(claimed_report) is dict and claimed_report == measured,
                 'C07_GLB_PRODUCER_REPORT_DIFFERS_FROM_BYTES')
-    verdict = 'FAIL' if measured['machine_evidence_status'] == 'FAIL' else 'UNKNOWN'
+    # Independent re-read of the same immutable source: shared-edge winding
+    # conflicts and nonmanifold edge topology provide concrete negative QA.
+    # Open boundaries alone do NOT imply wrong geometry, and even no conflicts
+    # remain UNKNOWN until real visual/runtime/MG0 review.
+    winding = scan_winding_file(path, expected_glb_sha256)
+    require(winding['source_sha256'] == expected_glb_sha256 and
+            winding['asset_approved'] is False and
+            winding['individual_mg0'] == 'UNKNOWN',
+            'C07_GLB_WINDING_CANNOT_SELF_CERTIFY')
+    observed_conflict = winding['orientation_conflict_meshes'] > 0
+    verdict = ('FAIL' if measured['machine_evidence_status'] == 'FAIL'
+               or observed_conflict else 'UNKNOWN')
     evidence = {
       'schema': SCHEMA, 'binding': dict(context),
       'artifact_sha256': expected_glb_sha256,
       'machine_report_sha256': canonical_sha(measured),
       'machine_status': measured['machine_evidence_status'],
+      'indexed_winding_evidence': {
+        'source_sha256': winding['source_sha256'],
+        'mesh_count': winding['mesh_count'],
+        'consistent_meshes': winding['consistent_meshes'],
+        'orientation_conflict_meshes': winding['orientation_conflict_meshes'],
+        'same_direction_shared_edges': winding['same_direction_shared_edges'],
+        'boundary_edges': winding['boundary_edges'],
+        'nonmanifold_edges': winding['nonmanifold_edges'],
+        'flagged_meshes_sha256': winding['flagged_meshes_sha256'],
+        'topology_observation': winding['topology_observation'],
+        'index_only_not_welded': True,
+      },
       'geometry': {k:measured[k] for k in ('scene_mesh_nodes','triangles_examined',
                   'degenerate_triangles','invalid_indices','nonfinite_positions',
                   'aabb_overlap_candidates_count')},
-      'fatal_machine_findings': measured['errors'],
+      'fatal_machine_findings': measured['errors'] +
+          (['GLB_INDEX_WINDING_OR_NONMANIFOLD_OBSERVED:'+
+            str(winding['orientation_conflict_meshes'])]
+           if observed_conflict else []),
       'material_source_evidence':measured['material_source_evidence'],
       'basecolor_pixel_evidence':measured['basecolor_pixel_evidence'],
       'unverified_requirements': {
