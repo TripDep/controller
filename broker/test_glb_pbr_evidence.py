@@ -98,6 +98,26 @@ class PbrNativeTests(unittest.TestCase):
         for bad in (2.0,float('nan')):
             g,b,w=fixture();g['materials'][0]['pbrMetallicRoughness']['roughnessFactor']=bad
             self.assertTrue(any('FACTOR_INVALID' in x for x in inspect(g,b,w)['pbr_structural_errors']))
+    def test_normalized_uint16_uvs_are_valid_not_false_fail(self):
+        g,b,w=fixture()
+        packed=b''.join(struct.pack('<HH',*p) for p in ((0,0),(65535,0),(0,65535)))
+        b=POS+packed+PNG
+        g['bufferViews'][1]['byteLength']=len(packed)
+        g['bufferViews'][2]['byteOffset']=len(POS)+len(packed)
+        g['accessors'][1]['componentType']=5123
+        g['accessors'][1]['normalized']=True
+        a=inspect(g,b,w)
+        self.assertEqual(a['pbr_structural_errors'],[])
+        self.assertEqual(a['uv_coordinates_finite_checked'],3)
+    def test_unsigned_integer_uv_without_normalization_is_rejected(self):
+        g,b,w=fixture()
+        packed=b''.join(struct.pack('<HH',*p) for p in ((0,0),(65535,0),(0,65535)))
+        b=POS+packed+PNG
+        g['bufferViews'][1]['byteLength']=len(packed)
+        g['bufferViews'][2]['byteOffset']=len(POS)+len(packed)
+        g['accessors'][1]['componentType']=5123
+        a=inspect(g,b,w)
+        self.assertTrue(any('INTEGER_UV_REQUIRES_NORMALIZED' in x for x in a['pbr_structural_errors']))
     def test_double_normalization_suspected_not_false_fail(self):
         g,b,w=fixture(tint=[1/255]*4)
         a=inspect(g,b,w)
