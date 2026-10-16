@@ -45,7 +45,9 @@ def inspect(inventory, plan, *, qa_raw=None, catalog_raw=None,
     ids = [rid for family in inventory['families'].values() for rid in family]
     need(len(ids)==len(set(ids))==763 and set(ids)==set(inventory['rules']),
          'FIRST200_CANONICAL_MEMBERSHIP')
-    selected = ids[:200]
+    # R108 batch identities are in stable lexical canonical-ID order, not
+    # insertion order of family_coverage.build_inventory (family-based).
+    selected = sorted(ids)[:200]
     need(selected[:2] == ['110_ERROR_REGISTRY','A'] and
          selected[2:] == [f'AAA-200-{chr(ord("A")+(n-1)//10)}-{n:03d}'
                           for n in range(1,199)],
