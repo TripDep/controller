@@ -485,16 +485,23 @@ class ControlledJudgment:
             # before the native operation can be opened. UNKNOWN is not a PASS:
             # the Git per-rule semantic packet must still prove its own MG0.
             from c07_operation_scope import inspect as inspect_scope
-            from c07_mg0_individual import inspect as inspect_mg0
+            from c07_mg0_individual import inspect_batch as inspect_mg0_batch
             due = inspect_scope(self.inventory, plan)['due']
             master_raw = self.c.master.read_bytes()
             audit_raw = self.c.audit_path(self.asset).read_bytes()
-            for rule_id in due:
-                review = inspect_mg0(master_raw, audit_raw, self.asset,
-                                     work['master_sha256'], rule_id,
-                                     work['attempt_id'])
-                j.need(review['individual_rule_mg0'] != 'FAIL',
-                       'CONTROLLED_CURRENT_RULE_MG0_PROCESS_FAILURE:' + rule_id)
+            mg0_batch = inspect_mg0_batch(master_raw, audit_raw, self.asset,
+                                          work['master_sha256'], due,
+                                          work['attempt_id'])
+            # One verified chain readback; every DUE ID still receives its own
+            # exact-attempt result. Unknown never means a semantic MG0 PASS.
+            j.need(mg0_batch['rule_count'] == len(due) and
+                   mg0_batch['individual_mg0_passes'] == 0 and
+                   mg0_batch['advancement_authorized'] is False and
+                   set(mg0_batch['rules']) == set(due),
+                   'CONTROLLED_MG0_BATCH_SCOPE_INCOMPLETE')
+            if mg0_batch['failed_rule_ids']:
+                j.need(False, 'CONTROLLED_CURRENT_RULE_MG0_PROCESS_FAILURE:' +
+                       mg0_batch['failed_rule_ids'][0])
             current = self.contexts()
             decision = j.native_decision(self.api, origin, plan['issuer'])
             backend = j.NativeRuleBackend(self.api, plan['enrolled'])

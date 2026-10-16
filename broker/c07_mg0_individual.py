@@ -6,7 +6,9 @@ evidence of a trigger, not independent verification of the owner's identity.
 Missing independent observation NEVER means that a trigger is false or that MG0
 passed. This module cannot issue an operational PASS by itself.
 """
-from collections import Counter
+from collections import Counter, defaultdict
+import hashlib
+import json
 
 from real_work_intake import audit_check, require, sha
 
@@ -23,8 +25,9 @@ EVENTS = ('STEP_CLOSE','USER_REVIEW','VERIFIED_STATE_REVOKED',
           'MG0_AFFECTED_STATES_INVALIDATED','MG0_RULE_REAPPLIED')
 
 
-def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
-    """Rule/attempt scoped observation; source or audit drift blocks."""
+
+def _verify_master(master_raw, master_sha256):
+    """Validate all five immutable MG0 triggers exactly once per batch."""
     require(sha(master_raw) == master_sha256, 'C07_MG0_MASTER_DRIFT')
     text = master_raw.decode('utf-8')
     section = text.split('## MG0 — PROCESS FALSIFICATION', 1)
@@ -35,14 +38,18 @@ def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
     require('The response is not limited to fixing the asset.' in body and
             'invalidate affected states and reapply the corrected process' in body,
             'C07_MG0_CORRECTION_SOURCE_MISSING')
+
+def _inspect_checked(rows, tail, audit_sha256, asset, master_sha256,
+                     rule_id, attempt_id, scoped=None):
+    """One rule over a validated shared audit; NEVER independently callable as proof."""
     require(isinstance(rule_id,str) and rule_id.strip() and
             isinstance(attempt_id,str) and len(attempt_id)==64 and
             all(c in '0123456789abcdef' for c in attempt_id),
             'C07_MG0_CURRENT_RULE_ATTEMPT')
-    rows, tail = audit_check(audit_raw, asset)
     # Scope strictly to the exact rule and attempt; no historical ticket replay.
-    scope = [r for r in rows if r.get('rule_id') == rule_id and
-             r.get('attempt_id') == attempt_id]
+    scope = (scoped if scoped is not None else
+             [r for r in rows if r.get('rule_id') == rule_id and
+              r.get('attempt_id') == attempt_id])
     require(all(r.get('event') in EVENTS for r in scope),
             'C07_MG0_UNKNOWN_SCOPED_EVENT')
     completed = [r for r in scope if r.get('event') == 'STEP_CLOSE'
@@ -106,7 +113,7 @@ def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
     return {
         'schema':'gg-c07-individual-mg0-audit-evidence-v1',
         'asset':asset,'rule_id':rule_id,'attempt_id':attempt_id,
-        'master_sha256':master_sha256,'audit_sha256':sha(audit_raw),
+        'master_sha256':master_sha256,'audit_sha256':audit_sha256,
         'audit_tail_sha256':tail,'audit_events_checked':len(rows),
         'canonical_trigger_count':len(TRIGGERS),'triggers':observed,
         'observed_failure_record_hashes':found,'corrections':corrections,
@@ -117,4 +124,78 @@ def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
         'current_attempt_reapplication_verified':False,
         'advancement_authorized':False,
         'scope':'AUDIT_CORRELATION_NOT_OWNER_AUTHENTICATION_OR_OPERATIVE_MG0_PASS'
+    }
+
+
+def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
+    """Legacy single-rule API retains its exact observable result."""
+    _verify_master(master_raw, master_sha256)
+    rows, tail = audit_check(audit_raw, asset)
+    return _inspect_checked(rows, tail, sha(audit_raw), asset, master_sha256,
+                            rule_id, attempt_id)
+
+
+def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt_id):
+    """One real audit readback for ALL DUE IDs, retaining independent judgments.
+
+    A full batch is the MG0 *falsification* layer, not a proof of absence of
+    defects, authenticity of owner, semantic compliance or production readiness.
+    A result of UNKNOWN is a STOP for an eventual operational PASS.
+    """
+    require(type(rule_ids) in (list, tuple) and 0 < len(rule_ids) <= 763 and
+            all(type(r) is str and r.strip() for r in rule_ids) and
+            list(rule_ids) == sorted(set(rule_ids)),
+            'C07_MG0_BATCH_EXACT_SORTED_UNIQUE_RULE_SET')
+    require(type(attempt_id) is str and len(attempt_id) == 64 and
+            all(c in '0123456789abcdef' for c in attempt_id),
+            'C07_MG0_BATCH_EXACT_ATTEMPT')
+    _verify_master(master_raw, master_sha256)
+    rows, tail = audit_check(audit_raw, asset)
+    audit_hash = sha(audit_raw)
+    due = set(rule_ids)
+    # Group scoped events in ONE traversal, instead of scanning a potentially
+    # large audit once per rule. Non-scoped events remain available for baseline
+    # validation in the same pre-verified set of rows.
+    grouped = defaultdict(list)
+    for row in rows:
+        if row.get('attempt_id') == attempt_id and row.get('rule_id') in due:
+            grouped[row['rule_id']].append(row)
+    results = {}
+    failed = []
+    counts = {'FAIL': 0, 'UNKNOWN': 0, 'PASS': 0}
+    for rule_id in rule_ids:
+        observed = _inspect_checked(rows, tail, audit_hash, asset, master_sha256,
+                                    rule_id, attempt_id, grouped.get(rule_id, []))
+        verdict = observed['individual_rule_mg0']
+        require(verdict in ('FAIL', 'UNKNOWN') and
+                observed['advancement_authorized'] is False and
+                observed['owner_provenance_verified_by_git'] is False,
+                'C07_MG0_BATCH_UNTRUSTED_RULE_PASS')
+        counts[verdict] += 1
+        if verdict == 'FAIL':
+            failed.append(rule_id)
+        results[rule_id] = {
+            'verdict': verdict,
+            'observed_failure_count': len(observed['observed_failure_record_hashes']),
+            'uncorrected_failure_count': sum(
+                not x['complete'] for x in observed['corrections'].values()),
+            'observation_sha256': sha(json.dumps(observed, sort_keys=True,
+                ensure_ascii=False, separators=(',', ':')).encode('utf-8')),
+        }
+    require(sum(counts.values()) == len(rule_ids) and counts['PASS'] == 0,
+            'C07_MG0_BATCH_NOT_ALL_RULES_REVIEWED')
+    return {
+        'schema': 'gg-c07-mg0-canonical-batch-readback-v1',
+        'asset': asset, 'master_sha256': master_sha256,
+        'audit_sha256': audit_hash, 'audit_tail_sha256': tail,
+        'audit_events_verified_once': len(rows),
+        'attempt_id': attempt_id, 'rule_count': len(rule_ids),
+        'rule_ids_sha256': sha(json.dumps(list(rule_ids),
+            separators=(',', ':')).encode('utf-8')),
+        'counts': counts, 'failed_rule_ids': failed,
+        'rules': results,
+        'individual_mg0_passes': 0,
+        'readback_scope': 'REAL_HASH_CHAINED_AUDIT_ONE_PASS',
+        'missing_independent_evidence_never_passes': True,
+        'advancement_authorized': False,
     }
