@@ -9,6 +9,7 @@ import hashlib
 import math
 import re
 import struct
+import zlib
 
 SHA_THRESHOLD=1/255+1e-6
 MAX_UV_SAMPLES=2_000_000
@@ -23,6 +24,35 @@ def require(ok, reason):
 
 def finite_scalar(v):
     return type(v) in (int,float) and math.isfinite(v)
+
+def validate_png_chunks(raw):
+    """Validate embedded PNG chunk boundaries and CRC, not pixel appearance."""
+    require(raw[:8] == b'\x89PNG\r\n\x1a\n', 'PBR_EMBEDDED_PNG_HEADER_INVALID')
+    cursor=8;chunks=0;dimensions=None;idat=False;iend=False
+    while cursor<len(raw):
+        require(cursor+12<=len(raw),'PBR_EMBEDDED_PNG_TRUNCATED_CHUNK')
+        length=struct.unpack_from('>I',raw,cursor)[0]
+        typ=raw[cursor+4:cursor+8]
+        require(length<=len(raw)-cursor-12,'PBR_EMBEDDED_PNG_CHUNK_BOUNDS')
+        body=raw[cursor+8:cursor+8+length]
+        expected=struct.unpack_from('>I',raw,cursor+8+length)[0]
+        actual=zlib.crc32(typ+body)&0xffffffff
+        require(expected==actual,'PBR_EMBEDDED_PNG_CRC_INVALID')
+        if chunks==0:
+            require(typ==b'IHDR' and length==13,'PBR_EMBEDDED_PNG_IHDR_INVALID')
+            width,height=struct.unpack_from('>II',body,0)
+            require(0<width<=65536 and 0<height<=65536,'PBR_IMAGE_DIMENSIONS_INVALID')
+            dimensions=(width,height)
+        if typ==b'IDAT':idat=True
+        if typ==b'IEND':
+            require(length==0 and cursor+12==len(raw),'PBR_EMBEDDED_PNG_IEND_INVALID')
+            iend=True
+        chunks+=1
+        require(chunks<=100000,'PBR_EMBEDDED_PNG_CHUNKS_EXCESSIVE')
+        cursor+=12+length
+        if iend:break
+    require(dimensions is not None and idat and iend,'PBR_EMBEDDED_PNG_INCOMPLETE')
+    return dimensions
 
 def image_bounds(g,bin_blob,image_id):
     images=g.get('images',[])
@@ -43,11 +73,8 @@ def image_bounds(g,bin_blob,image_id):
             'PBR_IMAGE_VIEW_OUT_OF_BOUNDS')
     raw=bin_blob[start:start+length];kind=image.get('mimeType')
     if kind=='image/png':
-        require(raw[:8]==b'\x89PNG\r\n\x1a\n' and len(raw)>=24 and raw[12:16]==b'IHDR',
-                'PBR_EMBEDDED_PNG_HEADER_INVALID')
-        width,height=struct.unpack_from('>II',raw,16)
-        require(0<width<=65536 and 0<height<=65536,'PBR_IMAGE_DIMENSIONS_INVALID')
-        return (width,height),'PNG_HEADER_ONLY_NOT_DECODED'
+        width,height=validate_png_chunks(raw)
+        return (width,height),'PNG_CHUNKS_AND_CRC_VERIFIED_PIXELS_NOT_DECODED'
     if kind=='image/jpeg':
         require(raw[:2]==b'\xff\xd8' and raw[-2:]==b'\xff\xd9',
                 'PBR_EMBEDDED_JPEG_HEADER_INVALID')
@@ -196,7 +223,7 @@ def inspect(g,bin_blob,reachable_mesh_instances):
         try:
             dim,status=image_bounds(g,bin_blob,img_id)
             dims[str(img_id)]=list(dim) if dim else None
-            if status!='PNG_HEADER_ONLY_NOT_DECODED':
+            if status!='PNG_CHUNKS_AND_CRC_VERIFIED_PIXELS_NOT_DECODED':
                 unknown.append('PBR_IMAGE_CONTENT_NOT_FULLY_DECODED:'+str(img_id)+':'+status)
             else:
                 unknown.append('PBR_PNG_PIXELS_NOT_DECODED:'+str(img_id))
