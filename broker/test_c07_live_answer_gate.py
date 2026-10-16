@@ -127,6 +127,79 @@ class AnswerGateTests(unittest.TestCase):
             self.assertTrue(response['compound_answer_assessment']['missing_truncated'])
             self.assertFalse(response['advancement_authorized'])
 
+    def _review_one_real_shape_composite(self, subanswer, *, failed_question=False):
+        """Synthetic packet with the real 763-rule composite assessment path."""
+        rid = 'AAA-200-G-067'
+        self.inventory['rule_count'] = 763
+        self.ledger['entries'][rid]['compound_subchecks_pending'] = True
+        one = {'subcheck_id': rid+':SC001', 'clause_sha256': '1'*64,
+               'canonical_clause': 'Verify this individual canonical control'}
+        report = {
+            'schema': 'gg-c07-canonical-composites-v1',
+            'master_sha256': self.ledger['master_sha256'],
+            'canonical_composite_count': 72,
+            'due_composite_count': 1,
+            'due_composites': {
+                rid: {
+                    'family': 'AAA-200',
+                    'source_sha256': 'c'*64,
+                    'requirement_sha256':
+                        self.ledger['entries'][rid]['requirement_sha256'],
+                    'source_decomposition': 'SOURCE_LIST_CANDIDATES_REVIEW_PENDING',
+                    'source_subcheck_count': 1, 'subchecks': [one]
+                }
+            }
+        }
+        packets = [
+            answer(self.ledger, rid+':CHECK', 'NO' if failed_question else 'YES'),
+            answer(self.ledger, rid+':REMAIN', 'NO')
+        ]
+        subcheck_packets = [{
+            'rule_id': rid, 'subcheck_id': one['subcheck_id'],
+            'clause_sha256': one['clause_sha256'],
+            'master_sha256': report['master_sha256'],
+            'attempt_id': self.work['attempt_id'],
+            'operation_sha256': self.work['operation_sha256'],
+            'answer': subanswer, 'evidence_refs': []
+        }]
+        with patch.object(gate.composites, 'inspect', return_value=report):
+            return gate.inspect(self.inventory, self.plan, self.work,
+                                packets, self.checkpoint,
+                                subcheck_packets=subcheck_packets)
+
+    def test_composite_no_propagates_fail_and_precise_correction(self):
+        result = self._review_one_real_shape_composite('NO')
+        self.assertEqual(result['answer_verdict'], 'FAIL')
+        self.assertEqual(result['admitted_failure_total'], 1)
+        self.assertEqual(result['failed'], [])
+        self.assertEqual(result['failed_subchecks'][0]['subcheck_id'],
+                         'AAA-200-G-067:SC001')
+        self.assertEqual(result['next_required_action'], 'CORRECT_FAILED_SUBCHECKS')
+        self.assertIn('ADMITTED_COMPOUND_SUBCONTROL_FAILURE',
+                      result['blocking_reasons'])
+        self.assertFalse(result['may_request_native_proof'])
+        self.assertFalse(result['advancement_authorized'])
+
+    def test_positive_composite_admission_is_unknown_not_pass(self):
+        result = self._review_one_real_shape_composite('YES')
+        self.assertEqual(result['answer_verdict'], 'UNKNOWN')
+        self.assertEqual(result['admitted_failure_total'], 0)
+        self.assertEqual(result['failed_subchecks'], [])
+        self.assertEqual(result['next_required_action'],
+                         'IMPLEMENT_AND_VERIFY_COMPOUND_SUBCHECKS')
+        self.assertFalse(result['independent_semantics_verified'])
+        self.assertFalse(result['advancement_authorized'])
+
+    def test_question_and_composite_failures_are_both_retained(self):
+        result = self._review_one_real_shape_composite('NO', failed_question=True)
+        self.assertEqual(result['answer_verdict'], 'FAIL')
+        self.assertEqual(result['admitted_failure_total'], 2)
+        self.assertEqual(len(result['failed']), 1)
+        self.assertEqual(len(result['failed_subchecks']), 1)
+        self.assertEqual(result['next_required_action'], 'CORRECT_FAILED_QUESTIONS')
+        self.assertIn('ADMITTED_COMPOUND_SUBCONTROL_FAILURE',
+                      result['blocking_reasons'])
+
     def test_evidence_reference_never_self_verifies(self):
         p = [answer(self.ledger, 'AAA-200-G-067:CHECK', 'YES',
                     refs=[{'ref': 'untrusted', 'sha256': 'f'*64}]),
