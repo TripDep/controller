@@ -331,6 +331,70 @@ class ControlledJudgment:
                     'semantic_and_mg0_passes':0,
                     'advancement_authorized':False}
 
+    def probe_registered_glb_batch(self, artifact_sha256, rule_ids):
+        """One Controller-registered real GLB, many exact DUE canonical IDs.
+
+        This is independent negative evidence only: cannot enroll validators,
+        certify unseen artistic checks, authorize work or provide MG0 PASS.
+        """
+        from glb_rule_bridge import verify_live_batch
+        from c07_operation_scope import inspect as inspect_scope
+        with self.locked():
+            row = self.plan()
+            work, _, _ = self.prepare(row)
+            due = set(inspect_scope(self.inventory,row['plan'])['due'])
+            j.need(type(rule_ids) is list and 0 < len(rule_ids) <= 200
+                   and rule_ids == sorted(set(rule_ids))
+                   and set(rule_ids) <= due
+                   and set(rule_ids) <= set(self.inventory['rules']),
+                   'CONTROLLED_GLB_BATCH_CANONICAL_DUE_RULES_REQUIRED')
+            j.need(j.evidence.is_sha(artifact_sha256),
+                   'CONTROLLED_GLB_BATCH_SOURCE_SHA_REQUIRED')
+            st = self.c.asset_state(self.asset)
+            matches = [v for v in st.get('artifacts', [])
+                       if type(v) is dict and v.get('sha256') == artifact_sha256
+                       and isinstance(v.get('path'), str)
+                       and Path(v['path']).suffix.lower() == '.glb']
+            j.need(len(matches) == 1,
+                   'CONTROLLED_GLB_BATCH_REGISTERED_ARTIFACT_REQUIRED')
+            item = matches[0]
+            p = Path(item['path'])
+            j.need(p.is_absolute() and p.is_file() and not p.is_symlink()
+                   and not any(parent.is_symlink() for parent in p.parents)
+                   and type(item.get('size_bytes')) is int and item['size_bytes'] > 20
+                   and p.stat().st_size == item['size_bytes'],
+                   'CONTROLLED_GLB_BATCH_REGISTERED_SOURCE_CHANGED')
+            events = [r for r in self.records()
+                      if r.get('event') == 'ARTIFACT_RECORDED'
+                      and r.get('step') == item.get('step')
+                      and r.get('evidence_operation') == item
+                      and r.get('result') == 'PASS']
+            j.need(len(events) == 1,
+                   'CONTROLLED_GLB_BATCH_AUDIT_PROOF_MISSING_OR_AMBIGUOUS')
+            context = {'asset_id':self.asset, 'attempt_id':work['attempt_id'],
+                       'operation_sha256':work['operation_sha256'],
+                       'master_sha256':work['master_sha256'], 'phase':work['phase']}
+            observed = verify_live_batch(p,artifact_sha256,context,rule_ids)
+            j.need(observed['rule_count'] == len(rule_ids)
+                   and set(observed['rules']) == set(rule_ids)
+                   and observed['work_rule_passes'] == 0
+                   and observed['individual_mg0_passes'] == 0
+                   and observed['advancement_authorized'] is False
+                   and all(e['individual_mg0'] == 'UNKNOWN'
+                           and e['independent_native_rule_observation']
+                           in ('FAIL','UNKNOWN')
+                           for e in observed['rules'].values()),
+                   'CONTROLLED_GLB_BATCH_NO_NATIVE_OR_MG0_PASS')
+            return {'schema':'gg-c07-controller-registered-glb-batch-v1',
+                    'asset':self.asset,
+                    'registered_artifact_sha256':artifact_sha256,
+                    'source_record_hash':events[0]['record_hash'],
+                    'plan_record_hash':row['record_hash'],
+                    'native_negative_rule_observations':observed,
+                    'operational_semantic_passes':0,
+                    'individual_mg0_passes':0,
+                    'advancement_authorized':False}
+
     def probe_registered_visual_deck(self, artifact_sha256, manifest_path, manifest_sha256):
         """Read-only 8-angle integrity challenge on exact registered GLB.
 
