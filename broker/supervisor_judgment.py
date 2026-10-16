@@ -83,6 +83,7 @@ class NativeRuleBackend:
             packets=[p for p in self.cache[key] if p.get('binding',{}).get('rule_id')==rule]
             need(len(packets)==1,'JUDGMENT_NATIVE_RULE_UNIQUE');packet=packets[0]
             need(digest(packet)==offer['expected_packet_sha256'],'JUDGMENT_NATIVE_PACKET_DIGEST')
+            need(packet.get('binding') == expected, 'JUDGMENT_EVIDENCE_REPLAY_OR_CONTEXT')
             # Reviewed production validators must independently replay the
             # immutable source evidence: neither signed logs nor hashes prove
             # the documentary predicate on their own.
