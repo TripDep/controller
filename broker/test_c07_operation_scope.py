@@ -79,8 +79,8 @@ class Tests(unittest.TestCase):
     def test_future_and_not_applicable_never_count_as_due_native_gap(self):
         inv = inventory()
         p = plan(inv)
-        inv['rules']['EXEC-003']['catalog_phase'] = 'P8'
-        inv['rules']['PROFILE_FOLIAGE']['asset_type'] = 'terrain'
+        inv['rules']['EXEC-003'].update(catalog_phase='P8', asset_type='all')
+        inv['rules']['PROFILE_FOLIAGE'].update(catalog_phase='P0', asset_type='terrain')
         report = scope.inspect(inv, p)
         self.assertEqual(report['due'], [])
         self.assertEqual(report['due_without_reviewed_native_verifier'], [])
