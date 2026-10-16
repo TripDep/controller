@@ -75,7 +75,24 @@ def inspect(inventory, plan):
             if status == 'N_A_CONTEXT':
                 bases[rid]['context_exclusion'] = question_context['rows'][rid]
     missing = sorted(set(slots['DUE']) - set(enrolled))
-    # Documental, CI and MG0 PASS are separate; an enrolled issuer is not a PASS.
+    # Distinguish "a reviewer implemented this predicate" from "the
+    # Controller enrolled that exact reviewer".  Neither one is semantic
+    # evidence or a pass for the current asset/attempt.
+    from approved_validators import REVIEWED
+    due_set = set(slots['DUE'])
+    supported_due = due_set & set(REVIEWED)
+    no_implementation = sorted(due_set - set(REVIEWED))
+    reviewed_not_enrolled = sorted(supported_due - set(enrolled))
+    enrolled_without_implementation = sorted(due_set & set(enrolled) - set(REVIEWED))
+    family_gaps = {
+        family: {
+            'due': sum(r in due_set for r in ids),
+            'no_reviewed_native_validator': sum(r in no_implementation for r in ids),
+            'reviewed_but_not_enrolled': sum(r in reviewed_not_enrolled for r in ids),
+        }
+        for family, ids in groups.items()
+    }
+    # Documentary, CI and MG0 PASS are separate; an enrolled issuer is not a PASS.
     return {'schema': 'gg-c07-trusted-operation-applicability-v1',
             'master_sha256': plan['master_sha256'], 'phase': phase,
             'asset_type': kind, 'profiles': list(profiles),
@@ -89,6 +106,12 @@ def inspect(inventory, plan):
             'by_rule': bases,
             'missing_due_validators': missing,
             'due_validators_complete': not missing,
+            'due_without_reviewed_native_verifier': no_implementation,
+            'due_reviewed_but_not_enrolled': reviewed_not_enrolled,
+            'due_enrolled_without_reviewed_implementation': enrolled_without_implementation,
+            'reviewed_native_validator_count': len(supported_due),
+            'native_verifier_implementation_complete': not no_implementation,
+            'native_verifier_coverage_by_family': family_gaps,
             'individual_rule_mg0_verified': False,
             'work_advancement_authorized': False}
 
