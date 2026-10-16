@@ -50,12 +50,13 @@ class DeckTests(unittest.TestCase):
         self.manifest={'schema':SCHEMA,
             'source_sha256':self.source_sha,
             'source_size_bytes':self.glb.stat().st_size,
-            'source_asset':self.glb.name,
+            'source_asset':self.glb.name,'work_binding':dict(WORK),
             'renderer':'VTK glTF importer fixture',
             'camera_pairs':8,'actor_count':8,'no_semantic_pass':True,
             'asset_acceptance':'NOT_AUTHORIZED','individual_mg0':'UNKNOWN',
             'image_width':480,'image_height':360,
-            'images':rows,'sheet_sha256':sha(sheet.read_bytes())}
+            'images':rows,'sheet_sha256':sha(sheet.read_bytes()),
+            'contact_sheet_filename':sheet.name}
         self.path=self.d/'deck.json'
         self.write()
     def write(self):
@@ -70,9 +71,26 @@ class DeckTests(unittest.TestCase):
         self.assertEqual(v['paired_unique_angles'],8)
         self.assertEqual(v['model_render_content_authenticity'],
                          'NOT_PROVEN_BY_HASHES')
+        # A solid-color synthetic PNG has no visible geometry: fail closed
+        # rather than pretending all eight views were visually measurable.
+        self.assertEqual(v['pixel_content_analysis']['measured_views'],0)
+        self.assertEqual(len(v['pixel_content_analysis']['unverified_views']),8)
+        self.assertEqual(v['pixel_content_analysis']['semantic_verdict'],'UNKNOWN')
+        self.assertEqual(v['pixel_content_analysis']['individual_mg0'],'UNKNOWN')
+        self.assertTrue(v['visual_review_hold'])
         self.assertEqual(v['semantic_verdict'],'UNKNOWN')
         self.assertEqual(v['individual_mg0'],'UNKNOWN')
         self.assertFalse(v['work_advancement_authorized'])
+    def test_stale_deck_from_prior_attempt_cannot_be_replayed(self):
+        stale={**WORK,'attempt_id':'d'*64}
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_DECK_ATTEMPT_MISMATCH'):
+            self.check(work=stale)
+    def test_forged_work_context_inside_signed_deck_does_not_validate(self):
+        self.manifest['work_binding']['operation_sha256']='d'*64
+        self.write()
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_DECK_ATTEMPT_MISMATCH'):
+            self.check()
+
     def test_changed_glb_not_accepted_with_same_deck(self):
         self.glb.write_bytes(self.glb.read_bytes()+b'tamper')
         with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_SOURCE_GLB_TAMPERED'):
@@ -124,6 +142,20 @@ class DeckTests(unittest.TestCase):
         self.write()
         with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_IMAGE_FILENAME_MISMATCH'):
             self.check()
+    def test_contact_sheet_path_traversal_denied(self):
+        self.manifest['contact_sheet_filename']='../unexpected.png'
+        self.write()
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_CONTACT_SHEET_FILENAME_INVALID'):
+            self.check()
+    def test_other_assets_can_use_their_own_safe_contact_sheet_filename(self):
+        old=self.d/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
+        newer=self.d/'TEST_C07_CONTACT_SHEET.png'
+        old.rename(newer)
+        self.manifest['contact_sheet_filename']=newer.name
+        self.write()
+        v=self.check()
+        self.assertEqual(v['verified_pngs'],16)
+        self.assertFalse(v['work_advancement_authorized'])
     def test_contact_sheet_cannot_be_changed_silently(self):
         p=self.d/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
         p.write_bytes(p.read_bytes()+b'change')

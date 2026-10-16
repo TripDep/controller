@@ -10,6 +10,7 @@ import math
 import re
 from pathlib import Path
 from glb_pbr_evidence import validate_png_chunks, MaterialEvidenceError
+from visual_content_metrics import inspect_bytes as inspect_visual_content
 
 SCHEMA='gg-c07-vtk-eight-angle-source-bound-diagnostic-v1'
 VIEWS=('front','front_right','right','rear_right','rear','left','roof','entry_close')
@@ -56,6 +57,10 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
          and m.get('source_size_bytes')==source.stat().st_size
          and m.get('source_asset')==source.name,
          'VISUAL_DECK_WRONG_SOURCE')
+    # A recycled image deck for the same unchanged GLB is not proof of a
+    # new Controller attempt. Offline legacy decks lacking this binding
+    # remain review-only and cannot be presented as current work evidence.
+    need(m.get('work_binding')==work,'VISUAL_DECK_ATTEMPT_MISMATCH')
     need(type(m.get('renderer')) is str and
          m['renderer'].startswith('VTK glTF importer ') and
          m.get('camera_pairs')==8 and type(m.get('actor_count')) is int
@@ -71,7 +76,7 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
     rows=m.get('images')
     need(type(rows) is list and len(rows)==16,
          'VISUAL_REQUIRES_ALL_16_IMAGES')
-    used=set();digests=set();pairs={}
+    used=set();digests=set();pairs={};image_bytes={}
     root=manifest_path.parent
     for row in rows:
         need(type(row) is dict and row.get('view') in VIEWS
@@ -91,6 +96,7 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
         need(hashval==row.get('sha256'),'VISUAL_IMAGE_TAMPERED')
         need(hashval not in digests,'VISUAL_IDENTICAL_PNG_REPLAY')
         digests.add(hashval)
+        image_bytes[key]=image
         try:dims=validate_png_chunks(image)
         except (MaterialEvidenceError,TypeError,ValueError) as exc:
             raise VisualDeckBlocked('VISUAL_PNG_INVALID') from exc
@@ -113,10 +119,23 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
              'VISUAL_BEFORE_AFTER_CAMERA_MISMATCH')
     need(len(set(tuple(pairs[v][0]['object_to_camera_direction'])
                  for v in VIEWS))==8,'VISUAL_CAMERAS_REPEATED')
-    sheet=root/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
+    # Contact sheet is asset-specific and must never be a hard-coded
+    # Youlanju-only filename or a caller-provided absolute/traversal path.
+    sheet_name=m.get('contact_sheet_filename')
+    need(type(sheet_name) is str and 1<=len(sheet_name)<=128
+         and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.png',sheet_name)
+         and '..' not in sheet_name,
+         'VISUAL_CONTACT_SHEET_FILENAME_INVALID')
+    sheet=root/sheet_name
     need(sheet.is_file() and not sheet.is_symlink()
+         and sheet.resolve().parent==root.resolve()
          and digest(sheet.read_bytes())==m.get('sheet_sha256'),
          'VISUAL_CONTACT_SHEET_TAMPERED')
+    measured=inspect_visual_content(image_bytes)
+    need(measured['semantic_verdict']=='UNKNOWN'
+         and measured['individual_mg0']=='UNKNOWN'
+         and measured['work_advancement_authorized'] is False,
+         'VISUAL_CONTENT_CANNOT_CERTIFY_ASSET')
     result={'schema':'gg-c07-eight-angle-evidence-readback-v1',
        'asset':work['asset_id'],'attempt_id':work['attempt_id'],
        'operation_sha256':work['operation_sha256'],
@@ -125,6 +144,8 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
        'verified_pngs':16,'paired_unique_angles':8,
        'image_byte_integrity':'VERIFIED',
        'model_render_content_authenticity':'NOT_PROVEN_BY_HASHES',
+       'pixel_content_analysis':measured,
+       'visual_review_hold':measured['requires_independent_visual_review'],
        'visual_quality':'UNKNOWN_REQUIRES_INDEPENDENT_REVIEW',
        'fiveM_equivalence':'NOT_PROVEN',
        'semantic_verdict':'UNKNOWN','individual_mg0':'UNKNOWN',
