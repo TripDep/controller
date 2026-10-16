@@ -21,14 +21,16 @@ RULES={
  'AAA-200-A-008':(8,'Riconoscere la differenza tra un fatto verificato e una supposizione.'),
  'AAA-200-A-009':(9,'Non dichiarare mai completato ciò che non è stato verificato.'),
  'AAA-200-B-011':(11,'Identificare lo scopo esatto dell’asset o dell’ambiente.'),
+ 'AAA-200-B-013':(13,'Identificare formato, scala, unità di misura e coordinate richieste.'),
  'AAA-200-B-014':(14,'Verificare quali asset esistono già e possono essere riutilizzati.'),
  'AAA-200-B-015':(15,'Separare gli elementi approvati da quelli ancora modificabili.'),
  'AAA-200-B-016':(16,'Identificare le dipendenze tra modelli, terreno, vegetazione e architettura.'),
  'AAA-200-B-017':(17,'Definire cosa deve essere realmente consegnato, non soltanto studiato.'),
  'AAA-200-B-018':(18,'Individuare i rischi tecnici prima di iniziare la produzione.'),
+ 'AAA-200-B-019':(19,'Stimare tempi e complessità usando evidenze, senza inventare scadenze.'),
  'AAA-200-B-020':(20,'Definire criteri oggettivi per stabilire quando il lavoro sarà finito.'),
 }
-VALIDATOR='GG_R173_DOCUMENTARY_P0_9_RULES_V3'
+VALIDATOR='GG_R173_DOCUMENTARY_P0_11_RULES_V4'
 LABEL='C07_R173_SOURCE_BOUND_RULE_CRITERIA:'
 
 def require(cond,reason):
@@ -70,6 +72,14 @@ def inspect(packet_raw,catalog_raw):
        'real_path_extent_documented':type(source['total_length_m']) in (float,int) and source['total_length_m']>0,
        'path_review_not_final_asset':source['status']=='ARTISTIC_REVIEW_CANDIDATE_NOT_ACCEPTED_NOT_FIVEM',
        'bank_rework_purpose_explicit':bank['stage']=='DESIGN_REVIEW_NOT_PRODUCTION'},
+     # Actual R173 evidence proves that meters and a GLB preview are named,
+     # but NOT the source unit scale, absolute GTA coordinates or native export.
+     # The missing checks must remain FAIL, never become inferred completion.
+     'AAA-200-B-013':{
+       'glb_output_format_explicit':source['export_GLB_render']=='UNVERIFIED_PENDING_INDEPENDENT_REIMPORT',
+       'metric_extent_expressed':type(source['total_length_m']) in (float,int) and source['total_length_m']>0,
+       'native_unit_scale_independently_verified':proof['binary_asset_contents_read_by_git'] is True,
+       'absolute_world_coordinates_verified':source['R101_world_position']=='GTA_ABSOLUTE_WORLD_POSITION_VERIFIED'},
      'AAA-200-B-014':{
        'historic_r169_source_identified':re.fullmatch('[0-9a-f]{64}',source['source_R169_SHA256']) is not None,
        'terrain_r101_source_identified':re.fullmatch('[0-9a-f]{64}',source['source_R101_SHA256']) is not None,
@@ -113,7 +123,18 @@ def inspect(packet_raw,catalog_raw):
        'eight_landing_risks_documented':len(source['bridge_landings_pending'])==8 and all(x['reason'] for x in source['bridge_landings_pending']),
        'grade_risk_quantified':source['max_centerline_designed_grade']>0.13 and source['slope_over_5percent_total_m']>100,
        'water_collision_risks_unresolved':source['water_final_Z']=='UNKNOWN' and source['collision_walkability']=='UNKNOWN' and road['slope_collision_artistic']=='NOT_ACCEPTED',
-       'prior_approved_source_intact':bank['R98_source_changed'] is False}
+       'prior_approved_source_intact':bank['R98_source_changed'] is False},
+     # Eight unresolved contacts and measurable grades bound complexity, but
+     # no credible hours/schedule evidence exists in the canonical R173 packet.
+     'AAA-200-B-019':{
+       'complexity_from_route_and_contacts':type(source['new_route_count']) is int and
+               source['new_route_count']>0 and len(source['bridge_landings_pending'])==8,
+       'slope_risk_quantity_source_bound':type(source['slope_over_5percent_total_m']) in (int,float)
+               and source['slope_over_5percent_total_m']>0,
+       'effort_estimate_provenance_present':type(source.get('estimated_effort_evidence')) is dict and
+               bool(source['estimated_effort_evidence']),
+       'schedule_source_documented':type(source.get('documented_schedule_evidence')) is dict and
+               bool(source['documented_schedule_evidence'])}
     }
     results={}
     for rid,rule_checks in checks.items():
@@ -163,7 +184,7 @@ def packets_for_current_work(report,work,inventory):
                                                 'packet':PACKET_SHA})}}
         spec={'validator_id':VALIDATOR,'criteria':list(detail['documentary_checks'])}
         computed=j.semantic_packet(packet,bound,spec)
-        require(computed['result']=='UNKNOWN','R173_RULE_FALSE_OVERALL_PASS')
+        require(computed['result'] in ('UNKNOWN','FAIL'),'R173_RULE_FALSE_OVERALL_PASS')
         packets[rid]=packet
     return packets
 
