@@ -487,6 +487,19 @@ class ControlledJudgment:
                     j.need(len(match)==1,'CONTROLLED_MUTATING_OUTPUT_AUDIT_ABSENT')
                     observed.add(item['sha256'])
                 j.need(bool(observed),'CONTROLLED_MUTATING_OUTPUT_NO_HASH')
+                # Independently re-parse the exact Controller-registered GLB
+                # after checking the append-only artifact event and its SHA.
+                # This is a *negative* machine gate: it cannot itself PASS
+                # visual, artistic, runtime, MG0 or canonical rule semantics.
+                from glb_output_close_gate import inspect as inspect_glb_outputs
+                machine_gate=inspect_glb_outputs(artifacts,work,self.asset,step)
+                j.need(machine_gate['may_continue_to_independent_native_post_review']
+                       and machine_gate['semantic_result']=='UNKNOWN'
+                       and machine_gate['individual_mg0']=='UNKNOWN'
+                       and machine_gate['advancement_authorized'] is False,
+                       'CONTROLLED_GLB_MACHINE_OUTPUT_STOP:'+
+                       ','.join(v['reason'] for v in machine_gate['machine_blockers']))
+
             if result.upper() == 'PASS':
                 from datetime import datetime, timezone
                 j.need(isinstance(post_origin, dict) and isinstance(post_offers, dict),
