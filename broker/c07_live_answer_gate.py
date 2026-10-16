@@ -37,6 +37,35 @@ def compact_composites(contract):
     }
 
 
+def native_gaps(applicability, inventory):
+    """Summarize Controller-derived DUE coverage, never accept producer waivers.
+
+    The complete ID sets stay reproducible through digests and are paged in the
+    report; a covered/enrolled verifier is still NOT a semantic or MG0 PASS.
+    """
+    due = applicability['due']
+    keys = ('missing_due_validators', 'due_without_reviewed_native_verifier',
+            'due_reviewed_but_not_enrolled')
+    if inventory.get('rule_count') == 763 and any(k not in applicability for k in keys):
+        raise ValueError('C07_NATIVE_GAP_SOURCE_REPORT_INCOMPLETE')
+    result = {}
+    for key in keys:
+        values = applicability.get(key, [])
+        if (type(values) is not list or len(values) != len(set(values))
+                or not set(values) <= set(due)):
+            raise ValueError('C07_NATIVE_GAP_SOURCE_REPORT_INVALID:' + key)
+        sorted_ids = sorted(values)
+        result[key] = {
+            'count': len(sorted_ids), 'first_20': sorted_ids[:20],
+            'all_ids_sha256': digest(sorted_ids),
+            'truncated': len(sorted_ids) > 20,
+        }
+    result['ready_for_native_proof_request'] = not any(
+        result[key]['count'] for key in keys)
+    result['enrollment_is_not_semantic_pass'] = True
+    return result
+
+
 def challenge(inventory, plan, work, checkpoint, *,
               detail_rule=None, subcheck_offset=0, subcheck_limit=20):
     """Read-only questions due now from Controller authority, not assistant scope.
@@ -48,6 +77,7 @@ def challenge(inventory, plan, work, checkpoint, *,
         raise ValueError('C07_TRUSTED_CHECKPOINT_REQUIRED')
     applicability = scope.inspect(inventory, plan)
     due = applicability['due']
+    native_verifiers = native_gaps(applicability, inventory)
     ledger = answer_contract.build(inventory)
     compound_contract = composites.inspect(inventory, due) if inventory.get('rule_count') == 763 else None
     if detail_rule is not None:
@@ -89,6 +119,7 @@ def challenge(inventory, plan, work, checkpoint, *,
         'checkpoint': checkpoint,
         'plan_record_hash': checkpoint['plan_record_hash'],
         'due_rules_sha256': digest(due),
+        'native_semantic_verifier_gaps': native_verifiers,
         'question_count': len(questions),
         'canonical_question_bank_size': applicability.get('base_questions_accounted_for', 0),
         'context_excluded_question_ids': applicability.get('context_excluded', []),
@@ -122,6 +153,7 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
     trusted = scope.inspect(inventory, plan)
     ledger = answer_contract.build(inventory)
     due = trusted['due']
+    native_verifiers = native_gaps(trusted, inventory)
     assessed = answer_contract.assess(
         ledger, due, packets, attempt_id=work['attempt_id'],
         operation_sha256=work['operation_sha256'])
@@ -153,6 +185,10 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         reasons.append('ADMITTED_DEFECT_OR_UNPERFORMED_CHECK')
     if missing:
         reasons.append('DUE_QUESTIONS_NOT_ANSWERED')
+    if native_verifiers['missing_due_validators']['count']:
+        reasons.append('MISSING_CONTROLLER_ENROLLED_NATIVE_VERIFIERS')
+    if native_verifiers['due_without_reviewed_native_verifier']['count']:
+        reasons.append('DUE_NATIVE_SEMANTIC_VERIFIER_NOT_IMPLEMENTED')
     if compound:
         reasons.append('COMPOUND_RULES_REQUIRE_INDEPENDENT_SUBCHECKS')
     if composite_answers and composite_answers['failed']:
@@ -186,6 +222,7 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         'plan_record_hash': checkpoint['plan_record_hash'],
         'answer_packets_sha256': digest(packets),
         'due_rule_ids_sha256': digest(due),
+        'native_semantic_verifier_gaps': native_verifiers,
         'canonical_question_bank_size': trusted.get('base_questions_accounted_for', 0),
         'context_excluded_question_ids': trusted.get('context_excluded', []),
         'context_exclusion_reasons': trusted.get('context_exclusions_with_reasons', {}),
@@ -211,6 +248,8 @@ def inspect(inventory, plan, work, packets, checkpoint, subcheck_packets=None):
         'next_required_action': ('CORRECT_FAILED_QUESTIONS' if failures else
                                  'CORRECT_FAILED_SUBCHECKS' if compound_failures else
                                  'SUBMIT_MISSING_DUE_ANSWERS' if missing else
+                                 'IMPLEMENT_AND_REVIEW_MISSING_NATIVE_VERIFIERS'
+                                 if not native_verifiers['ready_for_native_proof_request'] else
                                  'IMPLEMENT_AND_VERIFY_COMPOUND_SUBCHECKS' if compound else
                                  'REQUEST_INDEPENDENT_NATIVE_RULE_AND_MG0_PROOF'),
     }
