@@ -47,7 +47,10 @@ def inspect(inventory, plan):
     enrolled = plan.get('enrolled')
     require(isinstance(enrolled, dict) and set(enrolled) <= set(rules),
             'C07_SCOPE_VALIDATOR_ID_NOT_CANONICAL')
-    slots = {'DUE': [], 'FUTURE_PHASE': [], 'N_A': []}
+    from c07_contextual_questions import select as context_select
+    question_context = context_select(inventory, plan)
+    context_excluded = set(question_context['excluded']) if question_context else set()
+    slots = {'DUE': [], 'FUTURE_PHASE': [], 'N_A': [], 'N_A_CONTEXT': []}
     bases = {}
     for family, ids in groups.items():
         for rid in ids:
@@ -62,12 +65,15 @@ def inspect(inventory, plan):
             require(disposition in ('PASS', 'FUTURE_PHASE',
                     'N_A_PROFILE_NOT_SELECTED', 'N_A_ASSET_TYPE'),
                     'C07_SCOPE_UNSUPPORTED_APPLICABILITY:' + rid)
-            status = ('DUE' if disposition == 'PASS' else
+            status = ('N_A_CONTEXT' if rid in context_excluded else
+                      'DUE' if disposition == 'PASS' else
                       'FUTURE_PHASE' if disposition == 'FUTURE_PHASE' else 'N_A')
             slots[status].append(rid)
             bases[rid] = {'disposition': status, 'canonical_reason': disposition,
                           'family': family, 'source_sha256': row['source_sha256'],
                           'requirement_sha256': row['requirement_sha256']}
+            if status == 'N_A_CONTEXT':
+                bases[rid]['context_exclusion'] = question_context['rows'][rid]
     missing = sorted(set(slots['DUE']) - set(enrolled))
     # Documental, CI and MG0 PASS are separate; an enrolled issuer is not a PASS.
     return {'schema': 'gg-c07-trusted-operation-applicability-v1',
@@ -75,7 +81,12 @@ def inspect(inventory, plan):
             'asset_type': kind, 'profiles': list(profiles),
             'rule_count': len(flat), 'family_count': len(groups),
             'due': sorted(slots['DUE']), 'future_phase': sorted(slots['FUTURE_PHASE']),
-            'not_applicable': sorted(slots['N_A']), 'by_rule': bases,
+            'not_applicable': sorted(slots['N_A']),
+            'context_excluded': sorted(slots['N_A_CONTEXT']),
+            'context_exclusions_with_reasons': {rid: bases[rid]['context_exclusion']
+                                                for rid in slots['N_A_CONTEXT']},
+            'base_questions_accounted_for': question_context['total_questions'] if question_context else 0,
+            'by_rule': bases,
             'missing_due_validators': missing,
             'due_validators_complete': not missing,
             'individual_rule_mg0_verified': False,
