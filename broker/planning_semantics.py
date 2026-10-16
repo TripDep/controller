@@ -263,7 +263,8 @@ def main(argv=None):
             origin = {'run_id':args.verify_run,'job_id':args.verify_job,'run_attempt':1,'head_sha':args.verify_head}
             issuer = {'workflow_blob':args.issuer_blob,'public_sha':args.issuer_public}
             spec = {'requirement_sha256':policy['engine']['requirement_sha256'],
-                    'validator_id':VALIDATOR,'criteria':CRITERIA,'issuer':issuer}
+                    'validator_id':VALIDATOR,'criteria':CRITERIA,'issuer':issuer,
+                    'source_ref':args.ref}
             backend = j.NativeRuleBackend(api,{ENGINE_RULE:spec})
             offers = {ENGINE_RULE:{'native_origin':origin,'expected_packet_sha256':j.digest(packet)}}
             value = backend.rule(ENGINE_RULE, packet['binding'], offers[ENGINE_RULE])
