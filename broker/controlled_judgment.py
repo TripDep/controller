@@ -679,6 +679,62 @@ class ControlledJudgment:
                        'CONTROLLED_GLB_MACHINE_OUTPUT_STOP:'+
                        ','.join(v['reason'] for v in machine_gate['machine_blockers']))
 
+                # C07: unlike an optional read-only probe, this real
+                # Controller close gate REPLAYS every supported DUE canonical
+                # native negative predicate on the actual output bytes.
+                # The caller cannot select/omit its rule list.
+                from c07_operation_scope import inspect as inspect_rule_scope
+                from glb_rule_bridge import (CANONICAL_GLB_RULES,
+                                             verify_live_batch)
+                native_due = sorted(set(inspect_rule_scope(
+                    self.inventory, plan)['due']) & set(CANONICAL_GLB_RULES))
+                if native_due:
+                    j.need(len(native_due) <= 200,
+                           'CONTROLLED_POST_NATIVE_200_RULE_BOUND')
+                    native_reports = []
+                    negative_ids = set()
+                    for item in artifacts:
+                        if Path(item['path']).suffix.lower() != '.glb':
+                            continue
+                        native_context = {
+                            'asset_id': self.asset,
+                            'attempt_id': work['attempt_id'],
+                            'operation_sha256': work['operation_sha256'],
+                            'master_sha256': work['master_sha256'],
+                            'phase': work['phase']}
+                        scan = verify_live_batch(
+                            Path(item['path']), item['sha256'],
+                            native_context, native_due)
+                        j.need(scan['rule_count'] == len(native_due)
+                               and set(scan['rules']) == set(native_due)
+                               and scan['individual_mg0_passes'] == 0
+                               and scan['work_rule_passes'] == 0
+                               and scan['advancement_authorized'] is False,
+                               'CONTROLLED_POST_NATIVE_RULE_SCAN_CANNOT_AUTHORIZE')
+                        negative_ids.update(rid for rid, check in scan['rules'].items()
+                            if check['independent_native_rule_observation'] == 'FAIL')
+                        native_reports.append(scan)
+                    j.need(native_reports,
+                           'CONTROLLED_POST_NATIVE_NO_VERIFIED_GLB')
+                    self.append('SUPERVISOR_CANONICAL_NATIVE_NEGATIVE_GATE',
+                                step=step, attempt_id=work['attempt_id'],
+                                operation_sha256=work['operation_sha256'],
+                                master_sha256=work['master_sha256'],
+                                native_rule_ids=native_due,
+                                registered_glb_sha256=sorted(a['sha256']
+                                    for a in artifacts
+                                    if Path(a['path']).suffix.lower() == '.glb'),
+                                native_reports_sha256=j.digest(native_reports),
+                                native_reports=native_reports,
+                                result=('FAIL_NATIVE_FINDINGS' if negative_ids
+                                        else 'UNKNOWN_AWAITING_SEMANTIC_AND_MG0'),
+                                work_rule_passes=0, advancement_authorized=False)
+                    j.need(not negative_ids,
+                           'CONTROLLED_POST_CANONICAL_NATIVE_RULE_FAIL:'+
+                           ','.join(sorted(negative_ids)))
+                    # Even zero findings does NOT permit this action to close:
+                    # the independent post-run semantic+MG0 gate still follows.
+
             if result.upper() == 'PASS':
                 from datetime import datetime, timezone
                 j.need(isinstance(post_origin, dict) and isinstance(post_offers, dict),
