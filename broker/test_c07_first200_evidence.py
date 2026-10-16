@@ -63,8 +63,8 @@ class Tests(unittest.TestCase):
 
     def test_drift_in_first_200_cannot_silently_skip(self):
         xs=self.inv['families']['GROUP']
-        xs[10],xs[11]=xs[11],xs[10]
-        with self.assertRaisesRegex(mod.IncompleteNativeBatch,'EXACT_SOURCE_ORDER_CHANGED'):
+        xs[10]=xs[11]
+        with self.assertRaisesRegex(mod.IncompleteNativeBatch,'CANONICAL_MEMBERSHIP'):
             mod.inspect(self.inv,self.plan)
 
     def test_source_bound_documentary_failures_not_upgraded_to_asset_passes(self):
