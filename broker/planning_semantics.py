@@ -165,16 +165,16 @@ def native_rule_readback(api, packet, expected, enrolled_spec):
     from broker_live_review import decode_file
 
     ref = enrolled_spec.get('source_ref')
-    require(isinstance(ref, str) and re.fullmatch(r'[a-f0-9]{40}', ref),
+    j.need(isinstance(ref, str) and re.fullmatch(r'[a-f0-9]{40}', ref),
             'PLANNING_NATIVE_IMMUTABLE_SOURCE_REF')
-    require(expected.get('rule_id') == ENGINE_RULE and
+    j.need(expected.get('rule_id') == ENGINE_RULE and
             expected.get('family') == 'AAA-200' and
             enrolled_spec.get('validator_id') == VALIDATOR and
             set(enrolled_spec.get('criteria', ())) == set(CRITERIA),
             'PLANNING_NATIVE_SOURCE_RULE_OR_CRITERIA')
 
     def fetch(path, commit):
-        require(isinstance(path, str) and path.startswith('governance/') and
+        j.need(isinstance(path, str) and path.startswith('governance/') and
                 not path.startswith('governance/../') and
                 '..' not in path.split('/') and
                 re.fullmatch(r'[a-f0-9]{40}', commit),
@@ -184,11 +184,11 @@ def native_rule_readback(api, packet, expected, enrolled_spec):
 
     policy_raw = fetch(NATIVE_POLICY_PATH, ref)
     policy = j.evidence.strict_json(policy_raw, max_size=32000)
-    require(policy.get('schema') == 'gg-planning-semantic-review-v1' and
+    j.need(policy.get('schema') == 'gg-planning-semantic-review-v1' and
             policy.get('scope') == 'RETROSPECTIVE_DOCUMENTARY_PROCESS_REVIEW_NOT_PRODUCTION_AUTHORIZATION',
             'PLANNING_NATIVE_POLICY_SCOPE')
     work = policy['work']
-    require(work['mode'] == 'DIAGNOSTIC_ONLY' and
+    j.need(work['mode'] == 'DIAGNOSTIC_ONLY' and
             work['master_sha256'] == expected['master_sha256'] and
             work['attempt_id'] == expected['attempt_id'] and
             work['operation_sha256'] == expected['operation_sha256'] and
@@ -199,28 +199,28 @@ def native_rule_readback(api, packet, expected, enrolled_spec):
         source_inputs[key] = fetch(path, ref)
     inv = coverage.build_inventory(source_inputs, work['master_sha256'])
     row = inv['rules'][ENGINE_RULE]
-    require(j.binding(work, row, ENGINE_RULE) == expected and
+    j.need(j.binding(work, row, ENGINE_RULE) == expected and
             policy['engine']['requirement_sha256'] == expected['requirement_sha256'],
             'PLANNING_NATIVE_CANONICAL_BINDING')
     inputs = policy['inputs']
-    require(set(inputs) == {'master', 'historical_master', 'work_state', 'audit', 'asset_checks'},
+    j.need(set(inputs) == {'master', 'historical_master', 'work_state', 'audit', 'asset_checks'},
             'PLANNING_NATIVE_REQUIRED_DOCUMENTS')
     raw = {}
     for key, value in inputs.items():
-        require(isinstance(value, dict) and
+        j.need(isinstance(value, dict) and
                 set(value) in ({'path', 'sha256'}, {'path', 'sha256', 'ref'}) and
                 isinstance(value['sha256'], str) and
                 re.fullmatch(r'[a-f0-9]{64}', value['sha256']),
                 'PLANNING_NATIVE_INPUT_SCHEMA:' + key)
         source_ref = value.get('ref', ref)
-        require(isinstance(source_ref, str) and
+        j.need(isinstance(source_ref, str) and
                 re.fullmatch(r'[a-f0-9]{40}', source_ref),
                 'PLANNING_NATIVE_INPUT_MUTABLE_REF:' + key)
         raw[key] = fetch(value['path'], source_ref)
-        require(sha(raw[key]) == value['sha256'],
+        j.need(sha(raw[key]) == value['sha256'],
                 'PLANNING_NATIVE_INPUT_DIGEST:' + key)
     recomputed, _ = documented_engine(inv, work, raw, policy['engine'])
-    require(recomputed['binding'] == expected and
+    j.need(recomputed['binding'] == expected and
             packet == recomputed and
             recomputed['mg0']['result'] == 'UNKNOWN' and
             recomputed['mg0']['triggered'] is None,
