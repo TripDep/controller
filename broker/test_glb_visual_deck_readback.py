@@ -50,7 +50,7 @@ class DeckTests(unittest.TestCase):
         self.manifest={'schema':SCHEMA,
             'source_sha256':self.source_sha,
             'source_size_bytes':self.glb.stat().st_size,
-            'source_asset':self.glb.name,
+            'source_asset':self.glb.name,'work_binding':dict(WORK),
             'renderer':'VTK glTF importer fixture',
             'camera_pairs':8,'actor_count':8,'no_semantic_pass':True,
             'asset_acceptance':'NOT_AUTHORIZED','individual_mg0':'UNKNOWN',
@@ -80,6 +80,16 @@ class DeckTests(unittest.TestCase):
         self.assertEqual(v['semantic_verdict'],'UNKNOWN')
         self.assertEqual(v['individual_mg0'],'UNKNOWN')
         self.assertFalse(v['work_advancement_authorized'])
+    def test_stale_deck_from_prior_attempt_cannot_be_replayed(self):
+        stale={**WORK,'attempt_id':'d'*64}
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_DECK_ATTEMPT_MISMATCH'):
+            self.check(work=stale)
+    def test_forged_work_context_inside_signed_deck_does_not_validate(self):
+        self.manifest['work_binding']['operation_sha256']='d'*64
+        self.write()
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_DECK_ATTEMPT_MISMATCH'):
+            self.check()
+
     def test_changed_glb_not_accepted_with_same_deck(self):
         self.glb.write_bytes(self.glb.read_bytes()+b'tamper')
         with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_SOURCE_GLB_TAMPERED'):
