@@ -619,7 +619,8 @@ class ControlledJudgment:
                 replay = replay_negatives(
                     self.inventory, plans[0]['plan'],
                     self.c.audit_path(self.asset).read_bytes(),
-                    self.asset, reserved_work['attempt_id'], batch_size=200)
+                    self.asset, reserved_work['attempt_id'], batch_size=200,
+                    operation_sha256=reserved_work['operation_sha256'])
                 j.need(replay['rule_count'] == 763
                        and replay['batch_counts'] == [200,200,200,163]
                        and replay['positive_semantic_passes'] == 0
