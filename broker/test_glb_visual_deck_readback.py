@@ -55,7 +55,8 @@ class DeckTests(unittest.TestCase):
             'camera_pairs':8,'actor_count':8,'no_semantic_pass':True,
             'asset_acceptance':'NOT_AUTHORIZED','individual_mg0':'UNKNOWN',
             'image_width':480,'image_height':360,
-            'images':rows,'sheet_sha256':sha(sheet.read_bytes())}
+            'images':rows,'sheet_sha256':sha(sheet.read_bytes()),
+            'contact_sheet_filename':sheet.name}
         self.path=self.d/'deck.json'
         self.write()
     def write(self):
@@ -141,6 +142,20 @@ class DeckTests(unittest.TestCase):
         self.write()
         with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_IMAGE_FILENAME_MISMATCH'):
             self.check()
+    def test_contact_sheet_path_traversal_denied(self):
+        self.manifest['contact_sheet_filename']='../unexpected.png'
+        self.write()
+        with self.assertRaisesRegex(VisualDeckBlocked,'VISUAL_CONTACT_SHEET_FILENAME_INVALID'):
+            self.check()
+    def test_other_assets_can_use_their_own_safe_contact_sheet_filename(self):
+        old=self.d/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
+        newer=self.d/'TEST_C07_CONTACT_SHEET.png'
+        old.rename(newer)
+        self.manifest['contact_sheet_filename']=newer.name
+        self.write()
+        v=self.check()
+        self.assertEqual(v['verified_pngs'],16)
+        self.assertFalse(v['work_advancement_authorized'])
     def test_contact_sheet_cannot_be_changed_silently(self):
         p=self.d/'YOULANJU_C07_8_ANGLE_SOURCE_VS_RGB_NEUTRAL_CONTACT_SHEET.png'
         p.write_bytes(p.read_bytes()+b'change')
