@@ -148,8 +148,9 @@ def inspect(g, blob, used_materials, max_images=40):
     # *actually decoded* textured source has perceptible nonblack content,
     # and no required source was dropped. Not a general dark-material FAIL.
     ready=len(rows)>=2 and len(rows)==len(used_materials) and not unverified
+    luminous_sources=sum(1 for r in rows if max(r['rgb_mean_linear_0_1'])>=0.01)
     systemic=bool(ready and all(r['near_black_multiplier'] for r in rows)
-                 and all(max(r['rgb_mean_linear_0_1'])>=0.02 for r in rows))
+                 and luminous_sources>=max(2,(len(rows)+1)//2))
     return {'schema':'gg-c07-basecolor-pixels-v1',
             'rows':rows,'decoded_textured_materials':len(rows),
             'unverified':sorted(set(unverified)),
