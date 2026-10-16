@@ -36,7 +36,7 @@ def segment_pierces_triangle(p,q,triangle,eps=EPSILON):
     u=dot(s,h)*inverse
     if not eps < u < 1.0-eps: return False
     v=dot(direction,cross(s,edge1))*inverse
-    if not eps < v and u+v < 1.0-eps: return False
+    if not (eps < v and u+v < 1.0-eps): return False
     t=dot(edge2,cross(s,edge1))*inverse
     return eps < t < 1.0-eps
 
@@ -53,8 +53,10 @@ def bbox(triangle):
             tuple(max(v[i] for v in triangle) for i in range(3)))
 
 def bbox_strict_overlap(a,b):
-    return all(max(a[0][i],b[0][i])+EPSILON <
-               min(a[1][i],b[1][i]) for i in range(3))
+    # Surfaces may have zero width along one axis; inclusive AABB
+    # is only a broad-phase filter, never itself geometric evidence.
+    return all(max(a[0][i],b[0][i]) <=
+               min(a[1][i],b[1][i])+EPSILON for i in range(3))
 
 def inspect(groups, candidate_pairs, max_tests=MAX_CANDIDATE_TESTS):
     """Each group: {'key':(node,primitive), 'triangles':[(v1,v2,v3),...]}.
