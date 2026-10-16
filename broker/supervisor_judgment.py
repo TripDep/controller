@@ -27,7 +27,12 @@ def binding(work,row,rule):
             'work_dependencies':work['work_dependencies']}
 def validate_work(work,inv):
     keys={'work_item_sha256','attempt_id','operation_sha256','attempt_number','previous_attempt_id','phase','asset_type','profiles','master_sha256','work_dependencies','asset_specific_extensions_verified','guardian_required','mode','closure_requested'}
-    need(isinstance(work,dict) and set(work)==keys,'JUDGMENT_WORK_SCHEMA')
+    need(isinstance(work,dict) and (set(work)==keys or
+         (inv.get('rule_count')==763 and set(work)==keys|{'question_context'})),
+         'JUDGMENT_WORK_SCHEMA')
+    if 'question_context' in work:
+        from c07_contextual_questions import select as context_select
+        context_select(inv,work)
     for k in ('work_item_sha256','attempt_id','operation_sha256','master_sha256'):need(evidence.is_sha(work[k]),'JUDGMENT_WORK_DIGEST')
     need(work['master_sha256']==inv['canonical_master_sha256'],'JUDGMENT_MASTER')
     need(type(work['attempt_number']) is int and work['attempt_number']>0,'JUDGMENT_ATTEMPT')
@@ -109,11 +114,18 @@ def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,prev
     if work['attempt_number']>1:
         if not previous_decision or previous_decision.get('work_item_sha256')!=work['work_item_sha256'] or previous_decision.get('attempt_id')!=work['previous_attempt_id'] or previous_decision.get('attempt_number')!=work['attempt_number']-1 or previous_decision.get('action') not in ('STOP_CORRECT_RESUBMIT','STOP_CONTEXT_RECHECK'):
             blockers.append('PREVIOUS_FAILED_ATTEMPT_NOT_VERIFIED')
+    from c07_contextual_questions import select as context_select
+    question_scope = context_select(inv, work)
+    excluded_questions = set(question_scope['excluded']) if question_scope else set()
     results={};counts={'PASS':0,'FAIL':0,'UNKNOWN':0,'FUTURE_PHASE':0,'N_A':0}
     for family,rules in inv['families'].items():
         family_results={}
         for rule in rules:
             row=inv['rules'][rule];wanted=coverage.expected_result(row,work['phase'],work['asset_type'],work['profiles'])
+            if rule in excluded_questions:
+                need(wanted == 'PASS' and row['family'] == 'QUESTIONS_300',
+                     'JUDGMENT_CONTEXT_INVALID_WAIVER')
+                wanted = 'N_A_CONTEXT_OWNER_REVIEWED'
             expected=binding(work,row,rule)
             # Applicability is derived from the immutable canonical source and
             # the Controller-enrolled work context, never an executor's waiver.
@@ -128,6 +140,9 @@ def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,prev
                 elif wanted == 'N_A_PROFILE_NOT_SELECTED':
                     need(row.get('profile') is not None and row['profile'] not in work['profiles'],
                          'JUDGMENT_NA_WITHOUT_CANONICAL_PROFILE')
+                elif wanted == 'N_A_CONTEXT_OWNER_REVIEWED':
+                    need(question_scope is not None and rule in question_scope['excluded'],
+                         'JUDGMENT_NA_WITHOUT_APPROVED_CONTEXT')
                 else:
                     raise Blocked('JUDGMENT_UNSUPPORTED_APPLICABILITY:'+str(wanted))
                 basis={'rule_id':rule, 'binding':expected, 'applicability':wanted,
@@ -135,12 +150,14 @@ def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,prev
                        'profiles':work['profiles'], 'canonical_phase':row.get('catalog_phase'),
                        'canonical_asset_type':row.get('asset_type'),
                        'canonical_profile':row.get('profile')}
+                if wanted == 'N_A_CONTEXT_OWNER_REVIEWED':
+                    basis['owner_scope_exclusion'] = question_scope['rows'][rule]
                 status='FUTURE_PHASE' if wanted=='FUTURE_PHASE' else 'N_A'
                 counts[status]+=1
                 family_results[rule]={'result':status,'expected_applicability':wanted,
                                       'mg0':'NOT_DUE_NO_CURRENT_RULE_PASS',
                                       'evidence_digest':digest(basis),
-                                      'reason':'SOURCE_AND_TRUSTED_WORK_CONTEXT_APPLICABILITY',
+                                      'reason':'OWNER_APPROVED_CONTEXT_EXCLUSION_NOT_PASS' if wanted=='N_A_CONTEXT_OWNER_REVIEWED' else 'SOURCE_AND_TRUSTED_WORK_CONTEXT_APPLICABILITY',
                                       'binding_sha256':digest(expected),
                                       'applicability_basis':basis}
                 continue
