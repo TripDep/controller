@@ -82,6 +82,18 @@ class ControlledJudgment:
                 proof = self.local_file(spec['evidence_ref']).read_bytes()
                 j.need(hashlib.sha256(proof).hexdigest() == spec['evidence_sha256'],
                        'CONTROLLED_300_SCOPE_EVIDENCE_CHANGED:' + rid)
+                memo = j.evidence.strict_json(proof, max_size=32000)
+                j.need(type(memo) is dict and set(memo) == {
+                    'schema','asset','master_sha256','rule_id','requirement_sha256',
+                    'reason','owner_decision'} and
+                    memo['schema'] == 'gg-c07-owner-scope-decision-v1' and
+                    memo['asset'] == self.asset and
+                    memo['master_sha256'] == plan['master_sha256'] and
+                    memo['rule_id'] == rid and
+                    memo['requirement_sha256'] == spec['requirement_sha256'] and
+                    memo['reason'] == spec['reason'] and
+                    memo['owner_decision'] == 'EXCLUDE_THIS_QUESTION_FOR_THIS_EXACT_ASSET_SCOPE',
+                    'CONTROLLED_300_SCOPE_EVIDENCE_NOT_SPECIFIC:' + rid)
         return report
 
     def enroll_plan(self, plan):
