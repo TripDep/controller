@@ -70,6 +70,10 @@ class DeckTests(unittest.TestCase):
         self.assertEqual(v['paired_unique_angles'],8)
         self.assertEqual(v['model_render_content_authenticity'],
                          'NOT_PROVEN_BY_HASHES')
+        self.assertEqual(v['pixel_content_analysis']['measured_views'],8)
+        self.assertEqual(v['pixel_content_analysis']['semantic_verdict'],'UNKNOWN')
+        self.assertEqual(v['pixel_content_analysis']['individual_mg0'],'UNKNOWN')
+        self.assertTrue(v['visual_review_hold'])
         self.assertEqual(v['semantic_verdict'],'UNKNOWN')
         self.assertEqual(v['individual_mg0'],'UNKNOWN')
         self.assertFalse(v['work_advancement_authorized'])
