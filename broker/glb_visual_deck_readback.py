@@ -57,6 +57,10 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
          and m.get('source_size_bytes')==source.stat().st_size
          and m.get('source_asset')==source.name,
          'VISUAL_DECK_WRONG_SOURCE')
+    # A recycled image deck for the same unchanged GLB is not proof of a
+    # new Controller attempt. Offline legacy decks lacking this binding
+    # remain review-only and cannot be presented as current work evidence.
+    need(m.get('work_binding')==work,'VISUAL_DECK_ATTEMPT_MISMATCH')
     need(type(m.get('renderer')) is str and
          m['renderer'].startswith('VTK glTF importer ') and
          m.get('camera_pairs')==8 and type(m.get('actor_count')) is int
