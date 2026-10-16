@@ -331,6 +331,49 @@ class ControlledJudgment:
                     'semantic_and_mg0_passes':0,
                     'advancement_authorized':False}
 
+    def probe_registered_visual_deck(self, artifact_sha256, manifest_path, manifest_sha256):
+        """Read-only 8-angle integrity challenge on exact registered GLB.
+
+        This checks source/manifest/image transport, not authenticity of
+        image contents or artistic quality. No Controller state transition.
+        """
+        from glb_visual_deck_readback import readback
+        from c07_operation_scope import inspect as inspect_scope
+        with self.locked():
+            row=self.plan()
+            work,_,_=self.prepare(row)
+            j.need('VISUAL_QA' in inspect_scope(self.inventory,row['plan'])['due'],
+                   'CONTROLLED_VISUAL_QA_NOT_DUE')
+            j.need(j.evidence.is_sha(artifact_sha256)
+                   and j.evidence.is_sha(manifest_sha256),
+                   'CONTROLLED_VISUAL_IMMUTABLE_PINS_REQUIRED')
+            found=[v for v in self.c.asset_state(self.asset).get('artifacts',[])
+                   if type(v) is dict and v.get('sha256')==artifact_sha256
+                   and type(v.get('path')) is str
+                   and Path(v['path']).suffix.lower()=='.glb']
+            j.need(len(found)==1,'CONTROLLED_VISUAL_REGISTERED_GLB_REQUIRED')
+            artifact=found[0]
+            events=[ev for ev in self.records() if ev.get('event')=='ARTIFACT_RECORDED'
+                    and ev.get('step')==artifact.get('step')
+                    and ev.get('evidence_operation')==artifact
+                    and ev.get('result')=='PASS']
+            j.need(len(events)==1,'CONTROLLED_VISUAL_GLTF_AUDIT_MISSING')
+            manifest=self.local_file(manifest_path)
+            context={'asset_id':self.asset,'attempt_id':work['attempt_id'],
+                     'operation_sha256':work['operation_sha256'],
+                     'master_sha256':work['master_sha256'],'phase':work['phase']}
+            evidence=readback(Path(artifact['path']),manifest,artifact_sha256,
+                              manifest_sha256,context)
+            j.need(evidence['semantic_verdict']=='UNKNOWN'
+                   and evidence['individual_mg0']=='UNKNOWN'
+                   and evidence['work_advancement_authorized'] is False,
+                   'CONTROLLED_VISUAL_CANNOT_CERTIFY')
+            return {'schema':'gg-c07-controller-visual-deck-probe-v1',
+                    'registered_source_sha256':artifact_sha256,
+                    'artifact_audit_record_hash':events[0]['record_hash'],
+                    'approved_plan_record_hash':row['record_hash'],
+                    'visual_evidence':evidence,'advancement_authorized':False}
+
     def begin(self, origin, offers, answer_packets=None, subcheck_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
@@ -597,7 +640,7 @@ def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI, PRIVATE_REPO_SHA
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb'))
+    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual'))
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--master', type=Path, required=True)
     parser.add_argument('--asset', required=True)
@@ -613,6 +656,8 @@ def main(argv=None):
     parser.add_argument('--close-record', type=Path)
     parser.add_argument('--glb-sha256')
     parser.add_argument('--glb-rule')
+    parser.add_argument('--visual-manifest-path')
+    parser.add_argument('--visual-manifest-sha256')
     args = parser.parse_args(argv)
     try:
         j.need(j.re.fullmatch('[a-f0-9]{40}', args.source_ref), 'CONTROLLED_IMMUTABLE_SOURCE_REF')
@@ -627,7 +672,10 @@ def main(argv=None):
         def data(path):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
-        if args.command == 'probe-glb':
+        if args.command == 'probe-visual':
+            result=bridge.probe_registered_visual_deck(args.glb_sha256,
+                args.visual_manifest_path,args.visual_manifest_sha256)
+        elif args.command == 'probe-glb':
             result = bridge.probe_registered_glb(args.glb_sha256, args.glb_rule)
         elif args.command == 'request':
             result = bridge.expected_question_batch(
