@@ -271,12 +271,49 @@ class Tests(unittest.TestCase):
             self.assertEqual(self.c.asset_state('TEST')['active_step']['step'],active['step'])
             # The binary stays in local temporary Controller workspace, never Git.
             output=self.root/'synthetic_model.glb'
-            output.write_bytes(b'glTF'+(2).to_bytes(4,'little')+(48).to_bytes(4,'little')+
-                               b' '+b'0'*35)
+            # Must be a *valid* GLB now: a digest-only mock binary cannot
+            # satisfy real Controller machine QA before close(PASS).
+            from test_glb_machine_qa import synthetic_glb
+            output.write_bytes(synthetic_glb())
             self.c.record_artifact('TEST',output,'SYNTHETIC_UNIT_LOCAL_MODEL')
             close=self.verified_close(active)
             self.assertEqual(close['result'],'PASS')
             self.assertEqual(self.s.records()[-1]['event'],'SUPERVISOR_OPERATION_CLOSED')
+
+    def test_mutating_close_blocks_malformed_registered_glb_without_fake_pass(self):
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            active=self.s.begin(self.api.origin,offers)
+            path=self.root/'invalid_but_signed.glb'
+            path.write_bytes(b'glTF'+b'0'*44)
+            self.c.record_artifact('TEST',path,'SYNTHETIC_NEGATIVE_GLTF')
+            with self.assertRaisesRegex(j.Blocked,
+                         'CONTROLLED_GLB_MACHINE_OUTPUT_STOP:GLB_UNREADABLE_OR_UNSUPPORTED'):
+                self.s.close(active['step'],active['token'],'PASS','forge','unit',[])
+            self.assertEqual(self.c.asset_state('TEST')['active_step']['step'],
+                             active['step'])
+            self.assertFalse(any(r.get('event')=='SUPERVISOR_OPERATION_CLOSED'
+                         and r.get('step')==active['step'] for r in self.s.records()))
+
+    def test_mutating_close_blocks_real_pbr_uv_fail_not_just_a_bad_hash(self):
+        from test_glb_pbr_evidence import fixture, pack
+        self.reenroll_mutation()
+        offers,_=self.issue()
+        with patch.object(self.c,'aaa_check',return_value={'status':'PASS','reasons':[]}):
+            active=self.s.begin(self.api.origin,offers)
+            g,blob,_=fixture(texcoord=False)
+            g['nodes']=[{'mesh':0}]
+            g['scenes']=[{'nodes':[0]}]
+            g['scene']=0
+            path=self.root/'pbr_uv_missing.glb'
+            path.write_bytes(pack(g,blob))
+            self.c.record_artifact('TEST',path,'SYNTHETIC_PBR_NEGATIVE')
+            with self.assertRaisesRegex(j.Blocked,
+                            'CONTROLLED_GLB_MACHINE_OUTPUT_STOP:GLB_FATAL_GEOMETRY_OR_PBR_FINDING'):
+                self.s.close(active['step'],active['token'],'PASS',
+                             'claimed finished','unit',[])
+            self.assertIsNotNone(self.c.asset_state('TEST')['active_step'])
 
     def test_mutating_close_rejects_output_modified_after_controller_registration(self):
         self.reenroll_mutation()
