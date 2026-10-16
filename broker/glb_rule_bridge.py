@@ -12,9 +12,26 @@ from glb_winding_readback import scan_file as scan_winding_file
 from glb_material_culling_readback import scan as scan_material_culling
 
 SCHEMA = 'gg-c07-glb-rule-evidence-exact-attempt-v1'
-SCANNED_RULES = frozenset(('MACHINE_QA', 'HARD_FAILURE_CLASSES', 'VISUAL_QA',
-                           'ROUND_QUALITY', 'EXPORT_REIMPORT', 'FIVEM_TARGET',
-                           'REGRESSION_QA'))
+# Rule IDs, not generic categories. Each maps only to observations the
+# exact hash-pinned GLB scanners can genuinely support. Unknown stays UNKNOWN.
+CANONICAL_GLB_RULES = {
+    'AAA-200-G-065': 'WINDING_AND_NORMAL_ORIENTATION',
+    'AAA-200-G-067': 'INTERSECTION_CANDIDATES_REQUIRE_ARTISTIC_CONTEXT',
+    'AAA-200-G-068': 'TRANSFORMS_NEED_SOURCE_REVIEW',
+    'AAA-200-L-111': 'TRIANGLE_TOPOLOGY',
+    'AAA-200-L-113': 'DEGENERATE_OR_NONFINITE_GEOMETRY',
+    'AAA-200-L-114': 'TRIANGULATION_WINDING_REVIEW',
+    'AAA-200-M-123': 'REQUIRED_TEXTURE_TEXCOORDS',
+    'AAA-200-O-142': 'TRIANGLE_COUNT_WITHOUT_BUDGET',
+    'AAA-200-S-183': 'INTERSECTION_CANDIDATES_REQUIRE_CONTEXT',
+    'AAA-200-S-184': 'NORMALS_TRIANGLES_AND_ARTIFACTS',
+    'AAA-200-S-189': 'TECHNICAL_CRITICAL_FINDINGS',
+    'AAA-200-T-193': 'FILE_OPENABILITY_NEEDS_TARGET_REIMPORT',
+}
+LEGACY_DIAGNOSTIC_RULES = frozenset((
+    'MACHINE_QA', 'HARD_FAILURE_CLASSES', 'VISUAL_QA',
+    'ROUND_QUALITY', 'EXPORT_REIMPORT', 'FIVEM_TARGET', 'REGRESSION_QA'))
+SCANNED_RULES = LEGACY_DIAGNOSTIC_RULES | frozenset(CANONICAL_GLB_RULES)
 EXPECTED_CONTEXT = frozenset(('asset_id', 'attempt_id', 'operation_sha256',
                               'master_sha256', 'phase', 'rule_id'))
 HEX64 = re.compile(r'[0-9a-f]{64}\Z')
@@ -142,5 +159,102 @@ def verify_live(path, expected_glb_sha256, context, claimed_report=None):
       'individual_mg0':'UNKNOWN',
       'acceptance_authorized':False,
     }
+    if context['rule_id'] in CANONICAL_GLB_RULES:
+        # Do not misattribute an unrelated GLB fatal finding to an individual
+        # artistic rule. The shared scanner still records ALL raw observations.
+        scoped = _canonical_rule_evidence(context['rule_id'], evidence)
+        evidence['semantic_verdict'] = scoped['independent_native_rule_observation']
+        evidence['canonical_rule_observation'] = scoped
     evidence['evidence_sha256'] = canonical_sha(evidence)
     return evidence
+
+def _canonical_rule_evidence(rule_id, native):
+    """Only exact negative observations, never a subjective/artistic PASS."""
+    g = native['geometry']
+    w = native['indexed_winding_evidence']
+    m = native['render_side_source_evidence']
+    conflicts = int(w['orientation_conflict_meshes']) > 0
+    bad_uv = int(m['missing_required_texcoord_attributes_count']) > 0
+    degenerate = int(g['degenerate_triangles']) > 0
+    nonfinite = int(g['nonfinite_positions']) > 0
+    invalid = int(g['invalid_indices']) > 0
+    fatal = native['machine_status'] == 'FAIL'
+    mappings = {
+        'AAA-200-G-065': [(conflicts,'INCONSISTENT_INDEXED_WINDING')],
+        'AAA-200-L-111': [(invalid,'INVALID_TRIANGLE_INDICES'),
+                          (degenerate,'DEGENERATE_TRIANGLES'),
+                          (nonfinite,'NONFINITE_POSITIONS')],
+        'AAA-200-L-113': [(degenerate,'DEGENERATE_TRIANGLES'),
+                          (nonfinite,'NONFINITE_POSITIONS')],
+        'AAA-200-L-114': [(conflicts,'INCONSISTENT_INDEXED_WINDING'),
+                          (invalid,'INVALID_TRIANGLE_INDICES')],
+        'AAA-200-M-123': [(bad_uv,'REQUIRED_TEXTURE_UV_MISSING')],
+        'AAA-200-S-184': [(conflicts,'INCONSISTENT_INDEXED_WINDING'),
+                          (degenerate,'DEGENERATE_TRIANGLES'),
+                          (nonfinite,'NONFINITE_POSITIONS')],
+        'AAA-200-S-189': [(fatal,'GLB_FATAL_STRUCTURE'),
+                          (conflicts,'INCONSISTENT_INDEXED_WINDING'),
+                          (bad_uv,'REQUIRED_TEXTURE_UV_MISSING')],
+    }
+    findings = [name for found,name in mappings.get(rule_id,()) if found]
+    # A triangle pair crossing or mirrored transform is NOT automatically an
+    # illegal compenetration or incorrect pivot: artistic context is necessary.
+    return {
+        'evidence_kind': CANONICAL_GLB_RULES.get(rule_id,
+                        'NO_GLTF_NATIVE_PREDICATE_FOR_THIS_RULE'),
+        'native_negative_findings': findings,
+        'independent_native_rule_observation': 'FAIL' if findings else 'UNKNOWN',
+        'visual_and_owner_approval': 'UNKNOWN',
+        'individual_mg0': 'UNKNOWN',
+        'semantic_rule_pass': False,
+        'advancement_authorized': False,
+    }
+
+
+def verify_live_batch(path, expected_glb_sha256, context, rule_ids):
+    """Evaluate many canonical IDs from ONE registered-GLB scan.
+
+    The Controller must derive all rule_ids from its trusted canonical
+    inventory and approved exact-operation scope, not producer assertions.
+    This standalone consumer never certifies a model or individual MG0.
+    """
+    require(type(context) is dict and set(context) ==
+            EXPECTED_CONTEXT - {'rule_id'}, 'C07_GLB_BATCH_CONTEXT_SCHEMA')
+    require(type(rule_ids) is list and 0 < len(rule_ids) <= 763 and
+            rule_ids == sorted(set(rule_ids)) and
+            all(type(v) is str and re.fullmatch(r'[A-Za-z0-9_-]{1,90}',v)
+                for v in rule_ids),
+            'C07_GLB_BATCH_RULE_IDS_INVALID')
+    common = verify_live(path, expected_glb_sha256,
+                         {**context,'rule_id':'MACHINE_QA'})
+    require(common['semantic_verdict'] in ('FAIL','UNKNOWN') and
+            common['individual_mg0']=='UNKNOWN' and
+            common['acceptance_authorized'] is False,
+            'C07_GLB_BATCH_SCANNER_CANNOT_AUTHORIZE')
+    shared_digest = common['evidence_sha256']
+    results={}
+    counts={'FAIL':0,'UNKNOWN':0}
+    for rid in rule_ids:
+        checked=_canonical_rule_evidence(rid,common)
+        verdict=checked['independent_native_rule_observation']
+        counts[verdict]+=1
+        checked.update({'rule_id':rid, 'source_sha256':expected_glb_sha256,
+                        'shared_native_scan_sha256':shared_digest,
+                        'attempt_id':context['attempt_id'],
+                        'operation_sha256':context['operation_sha256'],
+                        'requirement_digest_verified_by_controller':False})
+        checked['evidence_sha256']=canonical_sha(checked)
+        results[rid]=checked
+    require(len(results)==len(rule_ids) and counts['FAIL']+counts['UNKNOWN'] ==
+            len(rule_ids), 'C07_GLB_BATCH_RESULT_SET_INCOMPLETE')
+    return {
+        'schema':'gg-c07-real-glb-rule-observations-batch-v1',
+        'source_sha256': expected_glb_sha256,
+        'binding':dict(context),
+        'shared_native_scan_sha256':shared_digest,
+        'rule_count':len(rule_ids), 'rule_ids_sha256':canonical_sha(rule_ids),
+        'native_observation_counts':counts, 'rules':results,
+        'individual_mg0_passes':0, 'work_rule_passes':0,
+        'advancement_authorized':False,
+        'scope':'INDEPENDENT_NATIVE_NEGATIVE_ONLY_WITHOUT_VISUAL_OR_MG0_PASS',
+    }
