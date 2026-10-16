@@ -276,6 +276,61 @@ class ControlledJudgment:
                               subcheck_limit=subcheck_limit),
                     'advancement_authorized': False}
 
+    def probe_registered_glb(self, artifact_sha256, rule_id):
+        """Read-only evidence probe on a Controller-registered real GLB.
+
+        A work plan, exact attempt, artifact entry and matching append-only
+        ARTIFACT_RECORDED event are mandatory. A scanner result is never a
+        native semantic/MG0 PASS and this operation never writes the audit.
+        """
+        from glb_rule_bridge import verify_live, SCANNED_RULES
+        from c07_operation_scope import inspect as inspect_scope
+        with self.locked():
+            row = self.plan()
+            work, _, _ = self.prepare(row)
+            j.need(rule_id in SCANNED_RULES and
+                   rule_id in inspect_scope(self.inventory,row['plan'])['due'],
+                   'CONTROLLED_GLB_RULE_NOT_DUE')
+            j.need(j.evidence.is_sha(artifact_sha256),
+                   'CONTROLLED_GLB_ARTIFACT_DIGEST_REQUIRED')
+            st = self.c.asset_state(self.asset)
+            matched = [v for v in st.get('artifacts', [])
+                       if type(v) is dict and v.get('sha256') == artifact_sha256
+                       and isinstance(v.get('path'), str)
+                       and Path(v['path']).suffix.lower() == '.glb']
+            j.need(len(matched) == 1,
+                   'CONTROLLED_GLB_EXACT_REGISTERED_ARTIFACT_REQUIRED')
+            item = matched[0]
+            p = Path(item['path'])
+            j.need(p.is_absolute() and p.is_file() and not p.is_symlink()
+                   and not any(parent.is_symlink() for parent in p.parents)
+                   and type(item.get('size_bytes')) is int and item['size_bytes'] > 20
+                   and p.stat().st_size == item['size_bytes'],
+                   'CONTROLLED_GLB_REGISTERED_SOURCE_CHANGED')
+            events = [r for r in self.records()
+                      if r.get('event') == 'ARTIFACT_RECORDED'
+                      and r.get('step') == item.get('step')
+                      and r.get('evidence_operation') == item
+                      and r.get('result') == 'PASS']
+            j.need(len(events) == 1,
+                   'CONTROLLED_GLB_SOURCE_AUDIT_MISSING_OR_AMBIGUOUS')
+            context = {'asset_id':self.asset, 'attempt_id':work['attempt_id'],
+                       'operation_sha256':work['operation_sha256'],
+                       'master_sha256':work['master_sha256'],
+                       'phase':work['phase'], 'rule_id':rule_id}
+            checked = verify_live(p, artifact_sha256, context)
+            j.need(checked['acceptance_authorized'] is False
+                   and checked['individual_mg0'] == 'UNKNOWN'
+                   and checked['semantic_verdict'] in ('UNKNOWN','FAIL'),
+                   'CONTROLLED_GLB_EVIDENCE_CANNOT_CERTIFY')
+            return {'schema':'gg-c07-controller-glb-diagnostic-v1',
+                    'asset':self.asset, 'registered_artifact_sha256':artifact_sha256,
+                    'source_record_hash':events[0]['record_hash'],
+                    'plan_record_hash':row['record_hash'],
+                    'machine_evidence':checked,
+                    'semantic_and_mg0_passes':0,
+                    'advancement_authorized':False}
+
     def begin(self, origin, offers, answer_packets=None, subcheck_packets=None):
         """Verify Git, reserve durably, then open only the enrolled exact action.
 
@@ -516,7 +571,7 @@ def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI, PRIVATE_REPO_SHA
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll'))
+    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb'))
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--master', type=Path, required=True)
     parser.add_argument('--asset', required=True)
@@ -530,6 +585,8 @@ def main(argv=None):
     parser.add_argument('--subcheck-offset', type=int, default=0)
     parser.add_argument('--subcheck-limit', type=int, default=20)
     parser.add_argument('--close-record', type=Path)
+    parser.add_argument('--glb-sha256')
+    parser.add_argument('--glb-rule')
     args = parser.parse_args(argv)
     try:
         j.need(j.re.fullmatch('[a-f0-9]{40}', args.source_ref), 'CONTROLLED_IMMUTABLE_SOURCE_REF')
@@ -544,7 +601,9 @@ def main(argv=None):
         def data(path):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
-        if args.command == 'request':
+        if args.command == 'probe-glb':
+            result = bridge.probe_registered_glb(args.glb_sha256, args.glb_rule)
+        elif args.command == 'request':
             result = bridge.expected_question_batch(
                 compound_rule=args.compound_rule,
                 subcheck_offset=args.subcheck_offset,
