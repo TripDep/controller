@@ -123,7 +123,7 @@ def readback(source,manifest_path,source_sha,manifest_sha,work):
     # Youlanju-only filename or a caller-provided absolute/traversal path.
     sheet_name=m.get('contact_sheet_filename')
     need(type(sheet_name) is str and 1<=len(sheet_name)<=128
-         and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\\.png',sheet_name)
+         and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.png',sheet_name)
          and '..' not in sheet_name,
          'VISUAL_CONTACT_SHEET_FILENAME_INVALID')
     sheet=root/sheet_name
