@@ -114,4 +114,62 @@ class BridgeTests(unittest.TestCase):
             with self.assertRaisesRegex(GLBBridgeBlocked,'CANNOT_AUTHORIZE'):
                 verify_live(self.path,self.sha,CONTEXT)
 
+
+    def test_canonical_rule_id_is_accepted_only_as_native_negative_scope(self):
+        scope={**CONTEXT,'rule_id':'AAA-200-G-065'}
+        report=verify_live(self.path,self.sha,scope)
+        self.assertEqual(report['semantic_verdict'],'UNKNOWN')
+        self.assertEqual(report['canonical_rule_observation']
+                         ['evidence_kind'],'WINDING_AND_NORMAL_ORIENTATION')
+        self.assertEqual(report['individual_mg0'],'UNKNOWN')
+        self.assertFalse(report['acceptance_authorized'])
+
+    def test_batch_200_rule_ids_one_real_glb_scan_unknown_not_pass(self):
+        from glb_rule_bridge import verify_live_batch
+        ctx={k:v for k,v in CONTEXT.items() if k!='rule_id'}
+        # Real canonical ID names + unrelated Q bank IDs are all processed
+        # from one verified byte-bound readback, with no pass inflation.
+        rules=sorted(['AAA-200-G-065','AAA-200-L-113',
+                      'AAA-200-M-123']+['Q-%03d'%i for i in range(1,198)])
+        with patch('glb_rule_bridge.examine', wraps=__import__(
+                   'glb_rule_bridge').examine) as scan:
+            report=verify_live_batch(self.path,self.sha,ctx,rules)
+            self.assertEqual(scan.call_count,1)
+        self.assertEqual(report['rule_count'],200)
+        self.assertEqual(report['native_observation_counts']['UNKNOWN'],200)
+        self.assertEqual(report['work_rule_passes'],0)
+        self.assertFalse(report['advancement_authorized'])
+        self.assertEqual(report['rules']['AAA-200-L-113']
+                         ['independent_native_rule_observation'],'UNKNOWN')
+        self.assertNotEqual(report['rules']['AAA-200-L-113']['evidence_sha256'],
+                            report['rules']['AAA-200-M-123']['evidence_sha256'])
+
+    def test_batch_one_degenerate_fails_only_related_canonical_predicates(self):
+        from glb_rule_bridge import verify_live_batch
+        self.path.write_bytes(synthetic_glb(
+            triangles=[(0.,0.,0.),(1.,1.,1.),(2.,2.,2.)]))
+        correct=hashlib.sha256(self.path.read_bytes()).hexdigest()
+        ctx={k:v for k,v in CONTEXT.items() if k!='rule_id'}
+        rules=sorted(['AAA-200-L-111','AAA-200-L-113',
+                      'AAA-200-M-123','Q-075'])
+        report=verify_live_batch(self.path,correct,ctx,rules)
+        self.assertEqual(report['native_observation_counts'],{'FAIL':2,'UNKNOWN':2})
+        self.assertEqual(report['rules']['AAA-200-L-113']
+                         ['native_negative_findings'],['DEGENERATE_TRIANGLES'])
+        self.assertEqual(report['rules']['AAA-200-M-123']
+                         ['independent_native_rule_observation'],'UNKNOWN')
+        self.assertFalse(report['advancement_authorized'])
+
+    def test_batch_exact_digest_and_rule_membership_fail_closed(self):
+        from glb_rule_bridge import verify_live_batch
+        ctx={k:v for k,v in CONTEXT.items() if k!='rule_id'}
+        for keys in ([],['Q-075','Q-075'],['Q-999','Q-001']):
+            with self.assertRaisesRegex(GLBBridgeBlocked,'BATCH_RULE_IDS_INVALID'):
+                verify_live_batch(self.path,self.sha,ctx,keys)
+        with self.assertRaises(GLBError):
+            verify_live_batch(self.path,'0'*64,ctx,['AAA-200-G-065'])
+        with self.assertRaisesRegex(GLBBridgeBlocked,'BATCH_CONTEXT_SCHEMA'):
+            verify_live_batch(self.path,self.sha,
+                              {**ctx,'producer_pass':True},['AAA-200-G-065'])
+
 if __name__ == '__main__':unittest.main()
