@@ -43,6 +43,51 @@ class Tests(unittest.TestCase):
         self.assertFalse(result['individual_rule_mg0_verified'])
         self.assertFalse(result['work_advancement_authorized'])
 
+    def test_full_enrollment_cannot_disguise_unimplemented_native_code(self):
+        inv = inventory()
+        p = plan(inv)
+        p['enrolled'] = {rid: {'validator_id': 'fake'} for rid in inv['rules']}
+        report = scope.inspect(inv, p)
+        self.assertTrue(report['due_validators_complete'])
+        self.assertFalse(report['native_verifier_implementation_complete'])
+        self.assertEqual(report['reviewed_native_validator_count'], 0)
+        self.assertEqual(report['due_without_reviewed_native_verifier'],
+                         sorted(inv['rules']))
+        self.assertEqual(report['due_enrolled_without_reviewed_implementation'],
+                         sorted(inv['rules']))
+        self.assertFalse(report['work_advancement_authorized'])
+
+    def test_reviewed_registry_and_enrollment_are_separate_facts(self):
+        from unittest.mock import patch
+        inv = inventory()
+        p = plan(inv)
+        reviewed = {'EXEC-003': ('fixture-validator', ('source_check',))}
+        with patch.dict('approved_validators.REVIEWED', reviewed, clear=True):
+            report = scope.inspect(inv, p)
+            self.assertEqual(report['reviewed_native_validator_count'], 1)
+            self.assertIn('EXEC-003', report['due_reviewed_but_not_enrolled'])
+            self.assertIn('PROFILE_FOLIAGE',
+                          report['due_without_reviewed_native_verifier'])
+            self.assertEqual(report['native_verifier_coverage_by_family']
+                             ['EXECUTION']['reviewed_but_not_enrolled'], 1)
+            p['enrolled']['EXEC-003'] = {'validator_id': 'fixture-validator'}
+            report = scope.inspect(inv, p)
+            self.assertNotIn('EXEC-003', report['due_reviewed_but_not_enrolled'])
+            self.assertIn('PROFILE_FOLIAGE', report['missing_due_validators'])
+            self.assertFalse(report['native_verifier_implementation_complete'])
+
+    def test_future_and_not_applicable_never_count_as_due_native_gap(self):
+        inv = inventory()
+        p = plan(inv)
+        inv['rules']['EXEC-003'].update(catalog_phase='P8', asset_type='all')
+        inv['rules']['PROFILE_FOLIAGE'].update(catalog_phase='P0', asset_type='terrain')
+        report = scope.inspect(inv, p)
+        self.assertEqual(report['due'], [])
+        self.assertEqual(report['due_without_reviewed_native_verifier'], [])
+        self.assertEqual(report['due_reviewed_but_not_enrolled'], [])
+        self.assertTrue(report['native_verifier_implementation_complete'])
+        self.assertFalse(report['work_advancement_authorized'])
+
     def test_phase_future_and_canonical_na_not_erased(self):
         inv = inventory()
         inv['rules']['EXEC-003'].update(catalog_phase='P8', asset_type='all')
