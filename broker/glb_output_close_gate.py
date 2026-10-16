@@ -84,12 +84,17 @@ def inspect(artifacts,work,asset,step):
             'crossings_fully_scanned':measured['triangle_surface_crossing_evidence'][
                 'all_requested_pairs_fully_scanned'],
             'material_warnings':measured['material_source_evidence']['pbr_diagnostic_warnings'],
+            'real_basecolor_pixel_evidence':measured['basecolor_pixel_evidence'],
             'unverified_material_requirements':measured['material_source_evidence'][
                 'pbr_unverified_requirements'],
             'asset_quality_and_runtime':'UNKNOWN',
             'individual_mg0':'UNKNOWN'
         }
         results.append(result)
+        if measured['basecolor_pixel_evidence']['requires_visual_review']:
+            blockers.append({'sha256':sha,
+                'reason':'PBR_SYSTEMIC_DARK_TINT_REQUIRES_INDEPENDENT_VISUAL_REVIEW',
+                'detail':'Actual base-color PNG pixels multiplied by near-1/255 factors across all used textured materials'})
         if status=='FAIL':
             blockers.append({'sha256':sha,'reason':'GLB_FATAL_GEOMETRY_OR_PBR_FINDING',
                              'detail':','.join(measured['errors'][:12])})
