@@ -73,7 +73,7 @@ def inspect(controller, asset, step, work, plan, inventory, source_loader):
     checks={
        'canonical_master_actual_bytes':sha(master_bytes)==work['master_sha256'],
        'chain_state_at_current_tail':state.get('last_audit_hash')==tail,
-       'operation_opened_after_reservation':records.index(reserved)<records.index(opened),
+       'operation_opened_after_reservation':records.index(reserved)<records.index(opened[0]),
        'current_active_step_matches_operation':(state.get('active_step') or {}).get('step')==step,
        'reserved_work_is_current_work':reserved['work']==work,
        'immutable_dependency_bytes_match_registration':observed==work['work_dependencies'],
