@@ -100,6 +100,17 @@ def inspect(inventory, plan, *, master_raw=None,
     else:
         rows, tail = (), None
 
+    # Preserve the historical source-integrity error contract before
+    # context derivation; an adversary cannot use context to hide question drift.
+    for rid in expected:
+        row = rules[rid]
+        need(row.get('family') == FAMILY and row.get('source') == SOURCE and
+             row.get('source_path') == SOURCE_PATH and
+             row.get('source_sha256') == digests[SOURCE] and
+             isinstance(row.get('requirement'), str) and
+             row.get('requirement_sha256') == sha(row['requirement'].encode('utf-8')) and
+             row.get('required_mg0') is True,
+             'C07_300_SOURCE_QUESTION_DRIFT:' + rid)
     from c07_contextual_questions import select as context_select
     context = context_select(inventory,plan)
     excluded = set(context['excluded'])
