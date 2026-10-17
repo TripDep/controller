@@ -80,6 +80,7 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
     compound_report=composite.inspect(inventory,sorted(due.intersection(selected)))
     observed=None
     original_chain=None
+    question_evidence={}
     if any(x is not None for x in (audit_raw,asset,attempt_id,operation_sha256)):
         need(type(audit_raw) is bytes and type(asset) is str and
              type(attempt_id) is str and type(operation_sha256) is str,
@@ -87,6 +88,34 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
         records, tail=audit_readback(audit_raw,asset)
         need(len(records)>0 and isinstance(tail,str) and len(tail)==64,
              'C07_AUDIT_VALID_CHAIN_REQUIRED')
+        # Validate the Q-xxx recorded answer *identity*, independent of the
+        # producer's alleged YES/PASS. There is no positive semantic pass.
+        for event in records:
+            if event.get('event')!='SUPERVISOR_ASSISTANT_ANSWER_GATE':
+                continue
+            report=event.get('report')
+            if type(report) is not dict or report.get('attempt_id')!=attempt_id:
+                continue
+            need(report.get('master_sha256')==inventory['canonical_master_sha256'] and
+                 report.get('operation_sha256')==operation_sha256 and
+                 type(report.get('answered')) is dict and
+                 report.get('advancement_authorized') is False,
+                 'C07_QUESTION_AUDIT_EXACT_OPERATION_INVALID')
+            # Every answer ID and rule association is checked against the
+            # complete immutable reviewed-question ledger, not self-described.
+            valid={q['id']:rid for rid in due
+                   for q in ledger['entries'][rid]['questions']}
+            for question_id,answer in report['answered'].items():
+                need(question_id in valid and type(answer) is dict and
+                     answer.get('status') in ('FAIL','UNKNOWN'),
+                     'C07_QUESTION_AUDIT_UNREVIEWED_OR_FALSE_PASS')
+                if question_id in question_evidence:
+                    need(question_evidence[question_id]['answer']==answer,
+                         'C07_QUESTION_AUDIT_CONTRADICTORY_REPLAY')
+                else:
+                    question_evidence[question_id]={
+                        'answer':answer,'rule_id':valid[question_id],
+                        'source_record_hash':event['record_hash']}
         observed=replay_negatives(inventory,plan,audit_raw,asset,attempt_id,
                                   operation_sha256=operation_sha256)
         need(observed['rule_count']==763 and
@@ -130,13 +159,26 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
         if is_due and is_compound:counters['DUE_COMPOSITES_WITHOUT_INDEPENDENT_SUBCHECK_PASS']+=1
         counters['DUE' if is_due else 'NOT_DUE']+=1
         counters['FAIL' if verdict=='FAIL' else 'UNKNOWN' if is_due else 'FUTURE_OR_NA']+=1
-        if family=='QUESTIONS_300':counters['QUESTION_SOURCE_CONTRACTS_EXECUTED']+=1
+        if family=='QUESTIONS_300':
+            counters['QUESTION_SOURCE_CONTRACTS_EXECUTED']+=1
+            if is_due and original_chain is not None:
+                ids=[q['id'] for q in contract['questions']]
+                counters['QUESTION_SOURCE_RESPONSES_AUDITED']+=sum(
+                    q in question_evidence for q in ids)
+                counters['QUESTION_SOURCE_RESPONSES_STILL_MISSING']+=sum(
+                    q not in question_evidence for q in ids)
         if family=='BEHAVIOR_110':counters['BEHAVIOR_SOURCE_CONTRACTS_EXECUTED']+=1
         if family=='G0_CONTROLS':counters['G0_GATE_SOURCE_CONTRACTS_EXECUTED']+=1
         rows[rid]={
             'family':family,'requirement_sha256':source['requirement_sha256'],
             'source_sha256':source['source_sha256'],
             'question_source_contracts':contract['questions'],
+            'source_bound_answer_audit':[{
+                'question_id':q['id'],
+                'source_record_hash':question_evidence[q['id']]['source_record_hash'],
+                'independent_native_confirmation':False}
+                for q in contract['questions'] if q['id'] in question_evidence]
+                if family=='QUESTIONS_300' and is_due else [],
             'native_positive_verifier_implemented':relevant_native,
             'native_positive_current_attempt_proof':'NOT_VERIFIED',
             'evidence_channels':list(FAMILY_CHANNELS.get(family,FALLBACK_CHANNELS)),
