@@ -868,6 +868,37 @@ class ControlledJudgment:
                     full_work_rule_passes=0, individual_mg0_passes=0,
                     native_git_provenance_and_mg0_remaining='UNKNOWN',
                     advancement_authorized=False)
+                # R124: evaluate eight more source-literal P0 process rules
+                # from the actual Controller audit and registered artifact bytes.
+                # These are independent scoped observations, NOT semantic or
+                # individual MG0 certification, and never authorize a close.
+                from c07_r124_positive_process import inspect as inspect_r124
+                native_r124 = inspect_r124(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(native_r124['source_rules_evaluated'] == 8
+                       and len(native_r124['rules']) == 8
+                       and native_r124['full_native_semantic_certifications_new'] == 0
+                       and native_r124['full_current_attempt_rule_passes'] == 0
+                       and native_r124['individual_mg0_passes'] == 0
+                       and native_r124['advancement_authorized'] is False
+                       and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in native_r124['rules'].values()),
+                       'CONTROLLED_R124_FALSE_NATIVE_SEMANTIC_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R124_EIGHT_POSITIVE_PROCESS_SCOPES',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=native_r124['real_controller_audit_sha256'],
+                    source_rules_evaluated=8,
+                    scoped_machine_subpredicates_observed=native_r124['observed_scoped_predicates'],
+                    exact_rule_source_evidence=native_r124['rules'],
+                    full_native_semantic_certifications_new=0,
+                    individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
