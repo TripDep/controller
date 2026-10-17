@@ -1087,6 +1087,38 @@ class ControlledJudgment:
                     source_rules_examined=2,
                     full_work_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R140: 20 separate canonical P0 A/C source-native
+                # research and goal criteria. Actual pre-D plan binds original
+                # reference file bytes. A source-scope result never implies
+                # identity, license clearance, artistic QA or individual MG0.
+                from c07_a10_c10_original_evidence import inspect as inspect_r140
+                research20=inspect_r140(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(research20['source_rules_examined']==20
+                       and research20['native_conditions_evaluated']==60
+                       and set(research20['rules'])==
+                           {'AAA-200-A-'+str(n).zfill(3) for n in range(1,11)}
+                           | {'AAA-200-C-'+str(n).zfill(3) for n in range(21,31)}
+                       and research20['full_rule_passes']==0
+                       and research20['individual_mg0_passes']==0
+                       and research20['advancement_authorized'] is False
+                       and all(v['full_rule_pass'] is False
+                               and v['individual_mg0']=='UNKNOWN'
+                               and v['owner_approval']=='UNKNOWN'
+                               for v in research20['rules'].values()),
+                       'CONTROLLED_R140_FALSE_FULL_REFERENCE_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R140_A10_C10_ORIGINAL_DOMAIN_EVIDENCE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=research20['original_audit_sha256'],
+                    original_audit_tail=research20['original_audit_tail'],
+                    exact_original_source_rule_evidence=research20['rules'],
+                    native_conditions_evaluated=60,
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
@@ -1126,11 +1158,13 @@ class ControlledJudgment:
                     step, reserved_work, r120=positive,
                     r123=native_r123, r124=native_r124, r122=positive200,
                     r129=exec25, r130=original110, r136=process_exact,
-                    r138=exec25_domain, r139=real_output)
+                    r138=exec25_domain, r139=real_output,
+                    r140=research20)
                 j.need(checked200['source_rules_examined']==200
                        and checked200['original_exec25_individual_evidence_converged']==25
                        and checked200['original_exec25_domain_evidence_converged']==25
                        and checked200['original_binary_output_rules_examined']==2
+                       and checked200['original_pre_d_research_rules_examined']==20
                        and checked200['original_behavior110_individual_evidence_converged']==110
                        and checked200['original_literal_process_rule_evidence_converged']==2
                        and len(checked200['rules'])==200
