@@ -835,6 +835,39 @@ class ControlledJudgment:
                     results_sha256=positive['result_sha256'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R122: first 200 DUE rules lacking reviewed full-positive
+                # validators, distinct from R115's first 200 catalogue IDs.
+                # Read ORIGINAL Controller, original audit and the byte-pinned
+                # master. Never mint positive full-rule or MG0 from R120
+                # supporting criteria, green CI, or a self-reported YES.
+                from c07_positive200_evidence import inspect as inspect_positive200
+                positive200 = inspect_positive200(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(positive200['source_rule_count'] == 200
+                       and positive200['unknown_count'] == 200
+                       and len(positive200['rules']) == 200
+                       and positive200['full_native_positive_verified_new'] == 0
+                       and positive200['full_semantic_passes_on_current_attempt'] == 0
+                       and positive200['individual_mg0_passes'] == 0
+                       and positive200['advancement_authorized'] is False,
+                       'CONTROLLED_R122_POSITIVE200_CANNOT_FAKE_RULE_PASS')
+                self.append('SUPERVISOR_C07_R122_POSITIVE200_NATIVE_GAP_AUDIT',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_rule_count=positive200['source_rule_count'],
+                    source_rule_ids_sha256=positive200['source_rule_ids_sha256'],
+                    original_audit_input_sha256=positive200['original_controller_audit_sha256'],
+                    original_audit_tail=positive200['original_controller_audit_tail'],
+                    scoped_machine_observations=positive200['r120_scoped_machine_positive_in_target'],
+                    missing_evidence_by_rule=positive200['missing_evidence_by_rule'],
+                    rules_with_unknown_full_semantics=positive200['unknown_count'],
+                    new_full_positive_verifiers=0, individual_mg0_passes=0,
+                    report_sha256=positive200['report_sha256'],
+                    result='UNKNOWN_NEEDS_NATIVE_POSITIVE_AND_INDEPENDENT_MG0',
+                    advancement_authorized=False)
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']
