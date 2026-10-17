@@ -138,6 +138,9 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     MG0 are still obligatory and deliberately NOT inferred or simulated here.
     """
     selected, scope = select(inventory, plan)
+    real_canon = (set(selected) == set(R122_FROZEN_IDS) and
+        inventory.get('source_digests', {}).get('aaa_catalog') ==
+        'f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9')
     need(type(asset) is str and asset == asset.upper() and bool(asset) and
          type(step) is str and bool(step) and type(work) is dict and
          work.get('master_sha256') == inventory['canonical_master_sha256'] and
