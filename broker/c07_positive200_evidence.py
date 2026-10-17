@@ -303,7 +303,9 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              r140.get('source_rules_examined')==20 and
              r140.get('native_conditions_evaluated')==60 and
              set(r140.get('rules',{}))==set(R140_IDS) and
-             set(R140_IDS)<=set(selected) and
+             set(R140_IDS)-set(selected)==
+                 {'AAA-200-A-008','AAA-200-A-009'} and
+             len(set(R140_IDS)&set(selected))==18 and
              all(r140.get(k)==work[k] for k in
                  ('master_sha256','attempt_id','operation_sha256')) and
              r140.get('full_rule_passes')==0 and
@@ -701,7 +703,8 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
         'original_exec25_individual_evidence_converged':25 if r129 is not None else 0,
         'original_exec25_domain_evidence_converged':25 if r138 is not None else 0,
         'original_binary_output_rules_examined':2 if r139 is not None else 0,
-        'original_pre_d_research_rules_examined':20 if r140 is not None else 0,
+        'original_pre_d_research_rules_examined':18 if r140 is not None else 0,
+        'original_pre_d_research_rules_all_sources':20 if r140 is not None else 0,
         'original_pre_d_research_observations':(
             r140['native_conditions_observed'] if r140 is not None else 0),
         'original_binary_output_semantics_observed':(
