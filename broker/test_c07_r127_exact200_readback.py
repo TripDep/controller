@@ -80,12 +80,12 @@ class Tests(unittest.TestCase):
    'prev_hash':self.rows[-1]['record_hash'] if self.rows else 'GENESIS',**kw}
   row['record_hash']=sha(canonical(row));self.rows.append(row)
  def audit(self):return b''.join(canonical(r)+b'\n' for r in self.rows)
- def run(self):
+ def review(self):
   f=self.f
   return m.reconcile_current200(f.inv,f.plan,f.c,'GARDEN','STEP0100',
    self.w,r120=self.r120,r123=self.r123,r124=self.r124,r122=self.r122)
  def test_200_original_ids_each_scanned_not_pass(self):
-  r=self.run()
+  r=self.review()
   self.assertEqual(len(r['rules']),200)
   self.assertEqual(r['unknown_rule_count'],200)
   self.assertEqual(r['full_rule_passes'],0)
@@ -94,23 +94,23 @@ class Tests(unittest.TestCase):
  def test_real_current_mg0_fail_remains_fail(self):
   rid=self.f.ids[0];self.mg['rules'][rid]['verdict']='FAIL'
   self.mg['counts'].update(FAIL=1,UNKNOWN=199)
-  r=self.run();self.assertEqual(r['result'],'FAIL')
+  r=self.review();self.assertEqual(r['result'],'FAIL')
   self.assertIn(rid,r['mg0_failed_rule_ids'])
  def test_mg0_fake_pass_blocked(self):
   self.mg['counts']['PASS']=1
   with self.assertRaisesRegex(ValueError,'MG0_ORIGINAL_INDIVIDUAL'):
-   self.run()
+   self.review()
  def test_replayed_r123_attempt_blocked(self):
   self.r123['attempt_id']='e'*64
   with self.assertRaisesRegex(ValueError,'R123_EXACT_ATTEMPT'):
-   self.run()
+   self.review()
  def test_r124_receipt_changed_after_logging_blocked(self):
   self.r124['rules'][P124[0]]['positive_subpredicates']=['owner']
   with self.assertRaisesRegex(ValueError,'R124_RECEIPT_DIFFERENT'):
-   self.run()
+   self.review()
  def test_r120_false_pass_after_logging_blocked(self):
   self.r120['results'][P120[0]]['work_pass']=True
   with self.assertRaisesRegex(ValueError,'R120_RECEIPT_DIFFERENT'):
-   self.run()
+   self.review()
 
 if __name__=='__main__':unittest.main()
