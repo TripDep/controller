@@ -1058,6 +1058,35 @@ class ControlledJudgment:
                     full_native_semantic_certifications_new=0,
                     individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R139: re-open original exported GLB vertices and compare
+                # against exact outcome expectations enrolled PRIOR to this step.
+                # R176/R180 remain separate from artistic acceptance and MG0.
+                from c07_native_output_oracle import inspect as inspect_r139
+                real_output=inspect_r139(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(real_output['source_rules_examined']==2
+                       and set(real_output['rules'])==
+                          {'AAA-200-R-176','AAA-200-R-180'}
+                       and real_output['full_work_rule_passes']==0
+                       and real_output['individual_mg0_passes']==0
+                       and real_output['advancement_authorized'] is False
+                       and all(row['individual_mg0']=='UNKNOWN'
+                           and row['full_work_rule_pass'] is False
+                           and row['owner_acceptance']=='UNKNOWN'
+                           for row in real_output['rules'].values()),
+                       'CONTROLLED_R139_FALSE_NATIVE_OUTPUT_MG0_PASS')
+                self.append('SUPERVISOR_C07_R139_ORIGINAL_BINARY_OUTPUT_EXPECTATION',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=real_output['original_audit_sha256'],
+                    original_audit_tail=real_output['original_audit_tail'],
+                    source_specific_expected_output_evidence=real_output['rules'],
+                    source_rules_examined=2,
+                    full_work_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
@@ -1097,10 +1126,11 @@ class ControlledJudgment:
                     step, reserved_work, r120=positive,
                     r123=native_r123, r124=native_r124, r122=positive200,
                     r129=exec25, r130=original110, r136=process_exact,
-                    r138=exec25_domain)
+                    r138=exec25_domain, r139=real_output)
                 j.need(checked200['source_rules_examined']==200
                        and checked200['original_exec25_individual_evidence_converged']==25
                        and checked200['original_exec25_domain_evidence_converged']==25
+                       and checked200['original_binary_output_rules_examined']==2
                        and checked200['original_behavior110_individual_evidence_converged']==110
                        and checked200['original_literal_process_rule_evidence_converged']==2
                        and len(checked200['rules'])==200
