@@ -176,8 +176,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     docs=[role for role in DOC_ROLES if pdf(role)]
     source_index=references.get('indexed_sha256')
     covered=(type(source_index) is dict and
-             all(type(v) is str and v==bound[k][1]
-                 for k,v in source_index.items() if k in bound)
+             all(type(v) is str and k in bound and v==bound[k][1]
+                 for k,v in source_index.items())
              and len(source_index)>=3)
     # Per-source predicates, not signoff. Every rule includes an independent
     # native readback of some original evidence; no signed claims accepted.
@@ -192,7 +192,11 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       3: {'current_original_nonreport_bytes_recorded':any(
               role=='NATIVE_EXPORT' and raw and sha(raw)==digest
               for role,path,digest,raw in registered),
-          'actual_progress_delta_from_old_reference':_positive(qa.get('production_delta')),
+          'original_baseline_export_byte_delta_observed':(
+              'NATIVE_EXPORT' in {role for role,_,_,_ in registered} and
+              'BASELINE_SNAPSHOT' in {role for role,_,_,_ in registered} and
+              len({digest for role,_,digest,_ in registered
+                   if role in ('NATIVE_EXPORT','BASELINE_SNAPSHOT')})==2),
           'no_report_count_used_as_completion_metric':qa.get('completion_metric')=='DELIVERABLE_ORIGINAL_BYTES'},
       4: {'constraints_predeclared_in_original_note':_textlist(goal.get('constraints')),
           'exact_source_deps_present':bool(plan.get('dependency_files')),
@@ -207,7 +211,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'qa_names_testable_failure_modes':_textlist(qa.get('failure_classes'))},
       7: {'original_pre_delivery_defect_categories_present':_textlist(qa.get('failure_classes')),
           'defect_reproduction_evidence_original_bytes':_textlist(qa.get('independent_evidence_shas')) and
-               all(HEX64.fullmatch(v) for v in qa['independent_evidence_shas']),
+               all(HEX64.fullmatch(v) and
+                   v in {digest for _role,_path,digest,_raw in registered}
+                   for v in qa['independent_evidence_shas']),
           'self_review_not_called_independent':qa.get('reviewer')!='assistant' and
                _nonempty(qa.get('reviewer'))},
       8: {'factual_claims_are_pinned_original_digests':_textlist(goal.get('fact_source_hashes')) and
@@ -218,7 +224,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'known_open_test_failures_not_declared_pass':qa.get('status') in ('PENDING','FAIL','UNKNOWN'),
           'explicit_full_completion_test_not_forged':goal.get('claim_status')!='DONE'},
       10:{'pre_d_deliverables_have_specific_names':_textlist(goal.get('deliverables')),
-          'alternative_solutions_measured_in_source_note':type(goal.get('alternative_costs')) is dict and
+          'alternative_costs_predeclared_in_source_note':type(goal.get('alternative_costs')) is dict and
                len(goal['alternative_costs'])>=2 and
                all(_positive(v) for v in goal['alternative_costs'].values()),
           'selected_method_defined_before_execution':_nonempty(goal.get('selected_method'))},
@@ -262,7 +268,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'license_scope_and_author_identified':_nonempty(license_.get('license')) and
              _nonempty(license_.get('author')) and _nonempty(license_.get('license_url')),
           'specific_original_reference_sha_listed':_textlist(license_.get('covered_sha256')) and
-             all(HEX64.fullmatch(v) for v in license_['covered_sha256'])},
+             all(HEX64.fullmatch(v) and
+                 v in {digest for _role,_path,digest,_raw in registered}
+                 for v in license_['covered_sha256'])},
       30:{'single_original_reference_index_present':has('NOTE_REFERENCE_INDEX'),
           'source_index_sha_matches_original_artifact_bytes':bool(covered),
           'index_before_D_in_enrolled_operation':valid_contract and
