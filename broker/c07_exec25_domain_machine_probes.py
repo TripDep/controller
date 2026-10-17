@@ -43,9 +43,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     actual={r:(path,hash_,raw) for r,path,hash_,raw in artifacts}
     accepted=[r for r in before if r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS']
     issues=[r for r in records if r.get('event')=='QUALITY_FINDING']
-    present=lambda role:role in actual and
+    present=lambda role:(role in actual and
         isinstance(actual[role][2],bytes) and
-        sha(actual[role][2])==actual[role][1]
+        sha(actual[role][2])==actual[role][1])
     # Source-dependent observations are computed from original bytes; event
     # names alone never establish artistic correctness or full-rule compliance.
     native_export=present('NATIVE_EXPORT') and _glb_mesh(actual['NATIVE_EXPORT'][2])
@@ -56,8 +56,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                actual['BASELINE_SNAPSHOT'][0]!=actual['CURRENT_SOURCE_COPY'][0])
     exact_deps=base['dependency_bytes_verified']>0
     sections=plan.get('operation',{}).get('sections',[])
-    nonempty_sections=isinstance(sections,list) and bool(sections) and
-                      all(isinstance(v,str) and v.strip() for v in sections)
+    nonempty_sections=(isinstance(sections,list) and bool(sections) and
+                      all(isinstance(v,str) and v.strip() for v in sections))
     evidence_events=lambda name:[r for r in current if r.get('event')==name]
     independent_scan=bool(evidence_events('SUPERVISOR_CANONICAL_NATIVE_NEGATIVE_GATE'))
     timestamps=all(isinstance(x.get('timestamp_utc'),str)
