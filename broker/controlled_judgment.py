@@ -969,8 +969,10 @@ class ControlledJudgment:
                 checked200 = reconcile_current200(
                     self.inventory, plans[0]['plan'], self.c, self.asset,
                     step, reserved_work, r120=positive,
-                    r123=native_r123, r124=native_r124, r122=positive200)
+                    r123=native_r123, r124=native_r124, r122=positive200,
+                    r129=exec25)
                 j.need(checked200['source_rules_examined']==200
+                       and checked200['original_exec25_individual_evidence_converged']==25
                        and len(checked200['rules'])==200
                        and checked200['full_rule_passes']==0
                        and checked200['individual_mg0_passes']==0
