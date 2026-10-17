@@ -75,13 +75,18 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         canonical=inventory['rules'][rid]
         item=original['rules'][rid]
         checks=item['criteria']
-        need(canonical['requirement']==clause
-             and canonical['requirement_sha256']==sha(clause.encode('utf-8'))
-             and item['source_sha256']==canonical['source_sha256']
-             and item['requirement_sha256']==canonical['requirement_sha256']
-             and set(checks)==set(required)
-             and all(type(v) is bool for v in checks),
-             'R136_CANONICAL_FULL_RULE_DECOMPOSITION:'+rid)
+        need(canonical['requirement']==clause,
+             'R136_ORIGINAL_CLAUSE_DRIFT:'+rid)
+        need(canonical['requirement_sha256']==sha(clause.encode('utf-8')),
+             'R136_ORIGINAL_REQUIREMENT_SHA_DRIFT:'+rid)
+        need(item['source_sha256']==canonical['source_sha256'],
+             'R136_SOURCE_IDENTITY_DRIFT:'+rid)
+        need(item['requirement_sha256']==canonical['requirement_sha256'],
+             'R136_REQUIREMENT_IDENTITY_DRIFT:'+rid)
+        need(set(checks)==set(required),
+             'R136_CRITERIA_NOT_COMPLETE:'+rid)
+        need(all(type(v) is bool for v in checks),
+             'R136_CRITERIA_NOT_BOOLEAN:'+rid)
         extra=({
            'persisted_live_controller_state':persisted,
            'all_declared_dependency_bytes_rechecked':declared_bytes,
