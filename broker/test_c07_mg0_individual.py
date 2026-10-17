@@ -169,6 +169,23 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(IntakeBlocked,'INTAKE_AUDIT_RECORD'):
             mg.inspect_batch(MASTER,changed,ASSET,sha(MASTER),[RULE],ATTEMPT)
 
+    def test_batch_ignores_actual_r178_scoped_non_mg0_audit_event(self):
+        self.add('SUPERVISOR_C07_R178_PROCESS_OBSERVATION',True,
+                 result='PASS', positive_3d_rule_semantic_passes=0,
+                 individual_mg0_passes=0, advancement_authorized=False)
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
+        # A real source-bound observation is not a canonical MG0 claim.
+        report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT)
+        self.assertEqual(report['counts']['UNKNOWN'],1)
+        self.assertEqual(report['counts']['PASS'],0)
+        self.assertFalse(report['advancement_authorized'])
+
+    def test_batch_unknown_mg0_specific_claim_still_fails_closed(self):
+        self.add('MG0_FAKE_SUCCESS',True,result='PASS')
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
+        with self.assertRaisesRegex(IntakeBlocked,'MG0_UNKNOWN_SCOPED_EVENT'):
+            mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT)
+
     def test_batch_all_five_canonical_triggers_are_checked_only_once(self):
         damaged=MASTER.replace(mg.TRIGGERS[3].encode(),b'missing pattern')
         raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'

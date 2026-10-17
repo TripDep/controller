@@ -159,7 +159,14 @@ def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt
     grouped = defaultdict(list)
     for row in rows:
         if row.get('attempt_id') == attempt_id and row.get('rule_id') in due:
-            grouped[row['rule_id']].append(row)
+            event=row.get('event')
+            # R127: the real Controller may append a source-bound R178 rule
+            # observation with the same rule_id/attempt_id. That is not an
+            # MG0 claim. Ignore unrelated audit events, but never ignore an
+            # unknown MG0_* event, which could otherwise smuggle fake PASS.
+            if event in EVENTS or (type(event) is str and
+                                    event.startswith('MG0_')):
+                grouped[row['rule_id']].append(row)
     results = {}
     failed = []
     counts = {'FAIL': 0, 'UNKNOWN': 0, 'PASS': 0}

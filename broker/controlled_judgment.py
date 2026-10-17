@@ -932,6 +932,31 @@ class ControlledJudgment:
                     report_sha256=positive200['report_sha256'],
                     result='UNKNOWN_NEEDS_NATIVE_POSITIVE_AND_INDEPENDENT_MG0',
                     advancement_authorized=False)
+                from c07_positive200_evidence import reconcile_current200
+                checked200 = reconcile_current200(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work, r120=positive,
+                    r123=native_r123, r124=native_r124, r122=positive200)
+                j.need(checked200['source_rules_examined']==200
+                       and len(checked200['rules'])==200
+                       and checked200['full_rule_passes']==0
+                       and checked200['individual_mg0_passes']==0
+                       and checked200['advancement_authorized'] is False,
+                       'CONTROLLED_R127_FALSE_FULL_RULE_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R127_UNIFIED200_ORIGINAL_MG0',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    original_audit_sha256=checked200['original_audit_sha256'],
+                    original_audit_tail=checked200['original_audit_tail'],
+                    source_rule_ids_sha256=checked200['source_rule_ids_sha256'],
+                    rule_count=200, source_readback=checked200['rules'],
+                    per_rule_mg0_failures=checked200['mg0_failed_rule_ids'],
+                    result=checked200['result'],
+                    report_sha256=checked200['report_sha256'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(not checked200['mg0_failed_rule_ids'],
+                       'CONTROLLED_R127_MG0_FAILURE_STOP')
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']
