@@ -172,4 +172,33 @@ class BridgeTests(unittest.TestCase):
             verify_live_batch(self.path,self.sha,
                               {**ctx,'producer_pass':True},['AAA-200-G-065'])
 
+
+    def test_machine_positive_subpredicates_never_promote_full_rule_or_mg0(self):
+        from glb_rule_bridge import verify_live_batch, MACHINE_POSITIVE_SCOPES
+        ctx={k:v for k,v in CONTEXT.items() if k!='rule_id'}
+        ids=sorted(MACHINE_POSITIVE_SCOPES)
+        r=verify_live_batch(self.path,self.sha,ctx,ids)
+        observed=[rid for rid,row in r['rules'].items() if
+            row['scoped_positive_machine_observation']['result']=='OBSERVED_SCOPE_PASS']
+        self.assertGreaterEqual(len(observed),7)
+        self.assertEqual(r['native_observation_counts']['FAIL'],0)
+        self.assertEqual(r['work_rule_passes'],0)
+        self.assertEqual(r['individual_mg0_passes'],0)
+        self.assertFalse(r['advancement_authorized'])
+        self.assertTrue(all(not row['scoped_positive_machine_observation']
+            ['complete_semantic_rule_pass'] for row in r['rules'].values()))
+
+    def test_degenerate_geometry_not_qualified_as_positive_geometry_proof(self):
+        from glb_rule_bridge import verify_live_batch
+        self.path.write_bytes(synthetic_glb(triangles=[
+            (0.,0.,0.),(1.,1.,1.),(2.,2.,2.)]))
+        sha=hashlib.sha256(self.path.read_bytes()).hexdigest()
+        ctx={k:v for k,v in CONTEXT.items() if k!='rule_id'}
+        r=verify_live_batch(self.path,sha,ctx,sorted([
+            'AAA-200-L-111','AAA-200-L-113','AAA-200-S-184']))
+        self.assertEqual(r['native_observation_counts']['FAIL'],3)
+        self.assertTrue(all(row['scoped_positive_machine_observation']['result']
+            !='OBSERVED_SCOPE_PASS' for row in r['rules'].values()))
+        self.assertEqual(r['individual_mg0_passes'],0)
+
 if __name__ == '__main__':unittest.main()

@@ -805,6 +805,36 @@ class ControlledJudgment:
                 j.need(not bulk['failed_due_rule_ids'],
                        'CONTROLLED_R115_BATCH200_RECOGNIZED_SEMANTIC_FAILURE:'+
                        ','.join(bulk['failed_due_rule_ids']))
+                # R120: 13 actual machine-positive process *subpredicates*
+                # evaluated as one group within these exact first 200.
+                # They never upgrade full rules or individual MG0 to PASS.
+                from c07_process_positive_batch import inspect as process_positive
+                positive=process_positive(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(positive['rule_specific_machine_predicates']==13
+                       and len(positive['results'])==13
+                       and positive['complete_work_rule_passes']==0
+                       and positive['individual_mg0_passes']==0
+                       and positive['advancement_authorized'] is False
+                       and all(v['work_pass'] is False
+                               and v['complete_rule_semantics'] in ('UNKNOWN','NOT_DUE')
+                               for v in positive['results'].values()),
+                       'CONTROLLED_R120_PROCESS_PROOF_CANNOT_CERTIFY_RULE')
+                self.append('SUPERVISOR_C07_R120_POSITIVE_PROCESS_BATCH',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_first200_sha256=positive['selected_200_source_sha256'],
+                    positive_scope_observed=positive['rule_specific_scoped_observed'],
+                    machine_criteria_executed=positive['rule_specific_machine_predicates'],
+                    source_files_verified=positive['actual_artifact_bytes_verified'],
+                    source_dependency_bytes_verified=positive['actual_dependency_bytes_verified'],
+                    results=positive['results'],
+                    results_sha256=positive['result_sha256'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']

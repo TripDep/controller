@@ -211,6 +211,60 @@ def _canonical_rule_evidence(rule_id, native):
     }
 
 
+# R120: positive evidence is allowed only for a narrow, observed machine
+# subpredicate. It is NOT a positive semantic rule, artistic or MG0 PASS.
+MACHINE_POSITIVE_SCOPES = {
+    'AAA-200-G-065': 'INDEXED_WINDING_WITHOUT_DETECTED_CONFLICT',
+    'AAA-200-L-111': 'INDEXED_TOPOLOGY_WITHOUT_DETECTED_FATAL_ERRORS',
+    'AAA-200-L-113': 'NONDEGENERATE_FINITE_TRIANGLES_OBSERVED',
+    'AAA-200-L-114': 'VALID_INDEXED_TRIANGULATION_OBSERVED',
+    'AAA-200-M-123': 'REQUIRED_TEXTURE_COORDINATE_ATTRIBUTES_READ',
+    'AAA-200-O-142': 'EXACT_TRIANGLE_COUNT_MEASURED',
+    'AAA-200-S-184': 'FINITE_INDEXED_GEOMETRY_WITHOUT_WINDING_CONFLICT',
+    'AAA-200-S-189': 'NO_DETECTED_FATAL_GLTF_MACHINE_FINDING',
+    'AAA-200-T-193': 'GLB_SOURCE_BYTES_ARE_STRUCTURALLY_PARSEABLE',
+}
+
+def _positive_machine_scope(rid, verified):
+    """Return independently measured facts without certifying broad rules."""
+    if rid not in MACHINE_POSITIVE_SCOPES:
+        return {'scope':'NO_MACHINE_POSITIVE_SUBPREDICATE',
+                'result':'UNKNOWN','complete_semantic_rule_pass':False,
+                'individual_mg0_pass':False}
+    g=verified['geometry']
+    w=verified['indexed_winding_evidence']
+    m=verified['render_side_source_evidence']
+    supported=(verified['machine_status']=='NO_FATAL_STRUCTURAL_DEFECT_DETECTED'
+               and int(g['scene_mesh_nodes'])>0 and int(g['triangles_examined'])>0)
+    winding=(int(w['mesh_count'])>0 and int(w['orientation_conflict_meshes'])==0
+             and int(w['nonmanifold_edges'])==0)
+    sound=(int(g['invalid_indices'])==0 and int(g['nonfinite_positions'])==0
+           and int(g['degenerate_triangles'])==0)
+    predicates={
+        'AAA-200-G-065': winding,
+        'AAA-200-L-111': sound,
+        'AAA-200-L-113': int(g['degenerate_triangles'])==0 and
+                         int(g['nonfinite_positions'])==0,
+        'AAA-200-L-114': winding and int(g['invalid_indices'])==0,
+        'AAA-200-M-123': int(m['primitive_instances_examined'])>0 and
+                         int(m['missing_required_texcoord_attributes_count'])==0,
+        'AAA-200-O-142': int(g['triangles_examined'])>0,
+        'AAA-200-S-184': winding and sound,
+        'AAA-200-S-189': not verified['fatal_machine_findings'],
+        'AAA-200-T-193': True,
+    }
+    result=('OBSERVED_SCOPE_PASS' if supported and predicates[rid]
+            else 'UNKNOWN_OR_MACHINE_NEGATIVE')
+    return {'scope':MACHINE_POSITIVE_SCOPES[rid],'result':result,
+            'supported_source_geometry':supported,
+            'underlying_machine_observation':{
+                'triangles_examined':int(g['triangles_examined']),
+                'degenerate_triangles':int(g['degenerate_triangles']),
+                'orientation_conflict_meshes':int(w['orientation_conflict_meshes']),
+                'missing_required_texcoord_attributes_count':
+                    int(m['missing_required_texcoord_attributes_count'])},
+            'complete_semantic_rule_pass':False,'individual_mg0_pass':False}
+
 def verify_live_batch(path, expected_glb_sha256, context, rule_ids):
     """Evaluate many canonical IDs from ONE registered-GLB scan.
 
@@ -236,6 +290,7 @@ def verify_live_batch(path, expected_glb_sha256, context, rule_ids):
     counts={'FAIL':0,'UNKNOWN':0}
     for rid in rule_ids:
         checked=_canonical_rule_evidence(rid,common)
+        checked['scoped_positive_machine_observation'] = _positive_machine_scope(rid,common)
         verdict=checked['independent_native_rule_observation']
         counts[verdict]+=1
         checked.update({'rule_id':rid, 'source_sha256':expected_glb_sha256,

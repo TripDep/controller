@@ -148,6 +148,7 @@ def inspect(inventory,plan,*,audit_raw=None,asset=None,attempt_id=None,
     counts={'DUE':0,'NOT_DUE':0,'FAIL':0,'UNKNOWN':0,
             'REGISTERED_GLB_BATCH_SLOTS_SCANNED':0,
             'RULE_SPECIFIC_GLTF_NEGATIVE_PREDICATES':0,
+            'SOURCE_BOUND_MACHINE_POSITIVE_SUBPREDICATES_OBSERVED':0,
             'HISTORICAL_DOCUMENTARY_EVALUATED':0,
             'REVIEWED_NATIVE_POSITIVE_IMPLEMENTED':0,
             'NO_INDEPENDENT_POSITIVE_VERIFIER':0}
@@ -173,6 +174,8 @@ def inspect(inventory,plan,*,audit_raw=None,asset=None,attempt_id=None,
             counts['REGISTERED_GLB_BATCH_SLOTS_SCANNED']+=1
             if rid in CANONICAL_GLB_RULES:
                 counts['RULE_SPECIFIC_GLTF_NEGATIVE_PREDICATES']+=1
+            if machine.get('scoped_positive_machine_observation',{}).get('result') == 'OBSERVED_SCOPE_PASS':
+                counts['SOURCE_BOUND_MACHINE_POSITIVE_SUBPREDICATES_OBSERVED']+=1
             if machine['independent_native_rule_observation']=='FAIL':
                 flags.extend(machine['native_negative_findings'])
         documentary=documents.get(rid)
@@ -201,6 +204,10 @@ def inspect(inventory,plan,*,audit_raw=None,asset=None,attempt_id=None,
           'native_negative_test_executable':rid in CANONICAL_GLB_RULES,
           'negative_test_executed_on_original_glb':native is not None and rid in CANONICAL_GLB_RULES,
           'native_negative_findings':native['rules'][rid]['native_negative_findings'] if native and relevant else [],
+          'registered_glb_scoped_positive_machine_observation':(
+              native['rules'][rid].get('scoped_positive_machine_observation')
+              if native and relevant else None),
+          'registered_glb_machine_scope_does_not_grant_rule_pass': True,
           'documentary_source_result':documentary['documentary_result'] if documentary else 'NOT_EVALUATED',
           'current_process_R178_scope':process,
           'audit_negative':n['semantic_negative_verdict'] if n and relevant else 'NOT_CHECKED',
