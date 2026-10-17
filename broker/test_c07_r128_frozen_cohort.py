@@ -28,7 +28,7 @@ class FrozenCohortTests(unittest.TestCase):
         self.f.scoped['due']=ids
         self.f.scoped['by_rule']={}
         for rid in ids:
-            req=('\\n'.join(f'{i:03}. Errore: e{i} → c{i}' for i in range(1,111))
+            req=('\n'.join(f'{i:03}. Errore: e{i} → c{i}' for i in range(1,111))
                  if rid=='110_ERROR_REGISTRY' else 'source requirement '+rid)
             family=('AAA-200' if rid.startswith('AAA-200-') else
                     'BEHAVIOR_110' if rid.startswith('BEHAVIOR-') else
