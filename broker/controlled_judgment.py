@@ -936,6 +936,37 @@ class ControlledJudgment:
                     full_work_rule_passes=0, individual_mg0_passes=0,
                     native_git_provenance_and_mg0_remaining='UNKNOWN',
                     advancement_authorized=False)
+                # R136: two complete *literal process predicates*, each
+                # independently reread from original bytes + persisted state.
+                # Their native meaning may pass. The work and MG0 do NOT.
+                from c07_two_exact_process_semantics import inspect as inspect_r136
+                process_exact = inspect_r136(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(process_exact['source_rule_count']==2
+                       and set(process_exact['rules'])==
+                           {'AAA-200-R-172','AAA-200-R-178'}
+                       and process_exact['literal_process_semantics_passes'] in (0,1,2)
+                       and process_exact['individual_mg0_passes']==0
+                       and process_exact['full_work_rule_passes']==0
+                       and process_exact['advancement_authorized'] is False
+                       and all(v['literal_process_semantics'] in ('PASS','UNKNOWN')
+                               and v['individual_mg0']=='UNKNOWN'
+                               and v['full_work_rule_pass'] is False
+                               for v in process_exact['rules'].values()),
+                       'CONTROLLED_R136_FALSE_FULL_RULE_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R136_TWO_LITERAL_NATIVE_SEMANTICS',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=process_exact['original_audit_sha256'],
+                    original_audit_tail=process_exact['original_audit_tail'],
+                    exact_rule_proofs=process_exact['rules'],
+                    original_persisted_state_rechecked=process_exact['original_persisted_state_rechecked'],
+                    literal_semantic_passes=process_exact['literal_process_semantics_passes'],
+                    full_work_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R124: evaluate eight more source-literal P0 process rules
                 # from the actual Controller audit and registered artifact bytes.
                 # These are independent scoped observations, NOT semantic or
@@ -1005,10 +1036,11 @@ class ControlledJudgment:
                     self.inventory, plans[0]['plan'], self.c, self.asset,
                     step, reserved_work, r120=positive,
                     r123=native_r123, r124=native_r124, r122=positive200,
-                    r129=exec25, r130=original110)
+                    r129=exec25, r130=original110, r136=process_exact)
                 j.need(checked200['source_rules_examined']==200
                        and checked200['original_exec25_individual_evidence_converged']==25
                        and checked200['original_behavior110_individual_evidence_converged']==110
+                       and checked200['original_literal_process_rule_evidence_converged']==2
                        and len(checked200['rules'])==200
                        and checked200['full_rule_passes']==0
                        and checked200['individual_mg0_passes']==0
