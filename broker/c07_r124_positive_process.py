@@ -151,7 +151,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
          state.get('last_audit_hash')==tail and
          (state.get('active_step') or {}).get('step')==step,
          'R124_MASTER_STATE_OR_AUDIT_DRIFT')
-    artifacts=_registered_artifacts(records,state,step,source_loader)
+    artifacts=_registered_artifacts(records,state,step,source_loader,work)
     by_role={r: [x for x in artifacts if x[0]==r] for r in (
         'SOURCE_EDITABLE','NATIVE_EXPORT','DELIVERY_PACKAGE',
         'BASELINE_SNAPSHOT','CURRENT_SOURCE_COPY')}
