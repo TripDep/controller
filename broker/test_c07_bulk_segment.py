@@ -108,3 +108,44 @@ class Tests(unittest.TestCase):
             with self.assertRaisesRegex(sut.SourceBlocked,'UNREVIEWED_OR_FALSE_PASS'):
                 sut.inspect(self.inv,self.plan,segment=3,audit_raw=b'chain',
                     asset='TEST',attempt_id='a'*64,operation_sha256='b'*64)
+
+    def test_fourth_verifies_original_controller_state_tail_not_self_reported_pass(self):
+        audit=[{'event':'WORK_INIT','record_hash':'e'*64}]
+        def verified(*a,**kw):
+            return {'rule_count':763,'batch_counts':[200,200,200,163],
+                'individual_mg0_passes':0,'advancement_authorized':False,
+                'batches':[{'rules':{rid:{'semantic_negative_verdict':'UNKNOWN',
+                         'native_negative_evidence':[]} for rid in self.ids[i:i+200]}}
+                          for i in (0,200,400,600)]}
+        state={'assets':{'TEST':{'last_audit_hash':'e'*64,
+                'd_authorized':False,'d_authorization_evidence':None}}}
+        with patch.object(sut,'audit_readback',return_value=(audit,'e'*64)),\
+             patch.object(sut,'replay_negatives',side_effect=verified):
+            done=sut.inspect(self.inv,self.plan,segment=4,audit_raw=b'chain',
+                    asset='TEST',attempt_id='a'*64,operation_sha256='b'*64,
+                    controller_state=state)
+            self.assertEqual(done['source_rule_count'],163)
+            self.assertTrue(done['controller_state_observation']
+                            ['controller_state_tail_matches_original_audit'])
+            self.assertFalse(done['advancement_authorized'])
+            state['assets']['TEST']['last_audit_hash']='x'*64
+            with self.assertRaisesRegex(sut.SourceBlocked,'STATE_AUDIT_DISCONNECTED'):
+                sut.inspect(self.inv,self.plan,segment=4,audit_raw=b'chain',
+                    asset='TEST',attempt_id='a'*64,operation_sha256='b'*64,
+                    controller_state=state)
+    def test_fourth_prevents_mutating_operation_without_real_d0(self):
+        audit=[{'event':'WORK_INIT','record_hash':'e'*64}]
+        state={'assets':{'TEST':{'last_audit_hash':'e'*64,
+                 'd_authorized':False,'d_authorization_evidence':None}}}
+        plan={**self.plan,'operation':{'category':'MUTATION'}}
+        replay={'rule_count':763,'batch_counts':[200,200,200,163],
+                'individual_mg0_passes':0,'advancement_authorized':False,
+                'batches':[{'rules':{rid:{'semantic_negative_verdict':'UNKNOWN',
+                    'native_negative_evidence':[]} for rid in self.ids[i:i+200]}}
+                    for i in (0,200,400,600)]}
+        with patch.object(sut,'audit_readback',return_value=(audit,'e'*64)),\
+             patch.object(sut,'replay_negatives',return_value=replay):
+            with self.assertRaisesRegex(sut.SourceBlocked,'MUTATION_WITHOUT_ORIGINAL_D0_AUDIT'):
+                sut.inspect(self.inv,plan,segment=4,audit_raw=b'chain',
+                    asset='TEST',attempt_id='a'*64,operation_sha256='b'*64,
+                    controller_state=state)
