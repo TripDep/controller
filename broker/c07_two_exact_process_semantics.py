@@ -44,7 +44,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     # to demonstrate that the work and dependencies have been recorded.
     saved=getattr(controller,'state_path',None)
     persisted=False
-    if type(saved) is Path and saved.is_file():
+    if isinstance(saved, Path) and saved.is_file():
         doc=strict_json(saved.read_bytes())
         if type(doc) is dict and type(doc.get('assets')) is dict:
             persisted=(doc['assets'].get(asset)==state)
