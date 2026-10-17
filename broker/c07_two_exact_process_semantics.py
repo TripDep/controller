@@ -85,7 +85,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
              'R136_REQUIREMENT_IDENTITY_DRIFT:'+rid)
         need(set(checks)==set(required),
              'R136_CRITERIA_NOT_COMPLETE:'+rid)
-        need(all(type(v) is bool for v in checks),
+        need(all(type(v) is bool for v in checks.values()),
              'R136_CRITERIA_NOT_BOOLEAN:'+rid)
         extra=({
            'persisted_live_controller_state':persisted,
