@@ -805,6 +805,41 @@ class ControlledJudgment:
                 j.need(not bulk['failed_due_rule_ids'],
                        'CONTROLLED_R115_BATCH200_RECOGNIZED_SEMANTIC_FAILURE:'+
                        ','.join(bulk['failed_due_rule_ids']))
+                # R130: one original hash-chain readback of ALL 110 distinct
+                # source-bound behavioral regressions. A false/remediated
+                # claim is not independent prevention or five-MG0 PASS.
+                from c07_behavior110_remediation import inspect as inspect_behavior110
+                original110=inspect_behavior110(
+                    self.inventory, plans[0]['plan'], self.asset,
+                    step, reserved_work, self.c.master.read_bytes(),
+                    self.c.audit_path(self.asset).read_bytes(),
+                    self.c.asset_state(self.asset)['last_audit_hash'])
+                j.need(original110['source_rules_examined']==110
+                       and len(original110['rules'])==110
+                       and original110['rule_count_with_semantic_PASS']==0
+                       and original110['individual_mg0_PASS']==0
+                       and original110['advancement_authorized'] is False
+                       and all(v['new_full_rule_pass'] is False
+                               and v['semantic_result'] in ('FAIL','UNKNOWN')
+                               and v['individual_mg0'] in ('FAIL','UNKNOWN')
+                               for v in original110['rules'].values()),
+                       'CONTROLLED_R130_BEHAVIOR_110_CANNOT_FAKE_PASS')
+                self.append('SUPERVISOR_C07_R130_BEHAVIOR110_REMEDIATION',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=original110['original_audit_sha256'],
+                    original_audit_tail=original110['original_audit_tail'],
+                    canonical_registry_sha256=original110['registry_sha256'],
+                    original_source_clauses=110,
+                    per_rule_verdicts=original110['rules'],
+                    observed_regressions=original110['observed_failure_rule_ids'],
+                    failed_rule_ids=original110['failed_rule_ids'],
+                    real_current_prevention_PASS=0,individual_mg0_PASS=0,
+                    advancement_authorized=False)
+                j.need(not original110['failed_rule_ids'],
+                       'CONTROLLED_R130_UNCORRECTED_BEHAVIOR_ERROR:'+
+                       ','.join(original110['failed_rule_ids'][:20]))
                 # R129: 25 original EXEC-001..025 process observations,
                 # with original MASTER clauses, step-bound audit and registered
                 # dependency / binary bytes. This neither full-certifies a
