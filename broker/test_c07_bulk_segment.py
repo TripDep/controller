@@ -16,10 +16,11 @@ class Tests(unittest.TestCase):
         allids=json.loads(root.read_text())
         self.ids=allids
         self.master='a'*64
-        self.inv={'schema':'gg-effective-family-inventory-v1','rule_count':763,'family_count':1,
+        self.inv={'schema':'gg-effective-family-inventory-v1','rule_count':763,'family_count':2,
                   'canonical_master_sha256':self.master,
-                  'families':{'EVERY':allids},
-                  'rules':{r:{'family':'EVERY','requirement_sha256':hashlib.sha256(r.encode()).hexdigest(),
+                  'families':{'EVERY':[r for r in allids if not r.startswith('Q-')],
+                              'QUESTIONS_300':[r for r in allids if r.startswith('Q-')]},
+                  'rules':{r:{'family':'QUESTIONS_300' if r.startswith('Q-') else 'EVERY','requirement_sha256':hashlib.sha256(r.encode()).hexdigest(),
                           'source_sha256':'b'*64,'requirement':r} for r in allids}}
         self.plan={'master_sha256':self.master,'phase':'P0','enrolled':{}}
         self.due=set(allids[200:250])
@@ -69,3 +70,41 @@ class Tests(unittest.TestCase):
         self.assertEqual(got['failed_due_rule_ids'],[target]);self.assertEqual(got['counts']['FAIL'],1)
         self.assertEqual(got['rules'][target]['individual_mg0'],'UNKNOWN')
         self.assertEqual(got['counts']['PROCESS_INTEGRITY_PREDICATE_EXECUTED'],1)
+
+    def test_third_segment_audits_real_question_id_without_positive_verdict(self):
+        q='Q-001'
+        self.due.add(q)
+        scope={'by_rule':{rid:{'disposition':'DUE' if rid in self.due else 'FUTURE_PHASE'}
+                          for rid in self.ids},'due':sorted(self.due)}
+        fake=[{'event':'SUPERVISOR_ASSISTANT_ANSWER_GATE','record_hash':'e'*64,
+               'report':{'attempt_id':'a'*64,'operation_sha256':'b'*64,
+                         'master_sha256':self.master,'advancement_authorized':False,
+                         'answered':{q+':Q':{'status':'UNKNOWN','answer':'YES'}}}}]
+        def verified(*a,**kw):
+            return {'rule_count':763,'batch_counts':[200,200,200,163],
+                'individual_mg0_passes':0,'advancement_authorized':False,
+                'batches':[{'rules':{rid:{'semantic_negative_verdict':'UNKNOWN',
+                                     'native_negative_evidence':[]}
+                                      for rid in self.ids[i:i+200]}}
+                           for i in (0,200,400,600)]}
+        with patch.object(sut.scope,'inspect',return_value=scope),\
+             patch.object(sut,'audit_readback',return_value=(fake,'e'*64)),\
+             patch.object(sut,'replay_negatives',side_effect=verified):
+            got=sut.inspect(self.inv,self.plan,segment=3,audit_raw=b'chain',
+                asset='TEST',attempt_id='a'*64,operation_sha256='b'*64)
+        self.assertEqual(got['counts']['QUESTION_SOURCE_RESPONSES_AUDITED'],1)
+        self.assertEqual(got['rules'][q]['real_current_attempt_semantic_result'],'UNKNOWN')
+        self.assertFalse(got['advancement_authorized'])
+    def test_third_segment_rejects_forged_question_id(self):
+        q='Q-001';self.due.add(q)
+        scope={'by_rule':{rid:{'disposition':'DUE' if rid in self.due else 'FUTURE_PHASE'}
+                          for rid in self.ids},'due':sorted(self.due)}
+        bad=[{'event':'SUPERVISOR_ASSISTANT_ANSWER_GATE','record_hash':'f'*64,
+              'report':{'attempt_id':'a'*64,'operation_sha256':'b'*64,
+                        'master_sha256':self.master,'advancement_authorized':False,
+                        'answered':{'Q-999:Q':{'status':'PASS'}}}}]
+        with patch.object(sut.scope,'inspect',return_value=scope),\
+             patch.object(sut,'audit_readback',return_value=(bad,'f'*64)):
+            with self.assertRaisesRegex(sut.SourceBlocked,'UNREVIEWED_OR_FALSE_PASS'):
+                sut.inspect(self.inv,self.plan,segment=3,audit_raw=b'chain',
+                    asset='TEST',attempt_id='a'*64,operation_sha256='b'*64)
