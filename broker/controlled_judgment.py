@@ -712,6 +712,37 @@ class ControlledJudgment:
                 j.need(not second['failed_due_rule_ids'],
                        'CONTROLLED_R116_SECOND_200_NATIVE_FAILURES:'+
                        ','.join(second['failed_due_rule_ids']))
+                # R117 Q-001..Q-150 and full source-defined third 200:
+                # authenticate source question identities from the CURRENT
+                # Controller answer gate, without equating YES with true.
+                third = inspect_bulk_segment(
+                    self.inventory, plans[0]['plan'], segment=3,
+                    audit_raw=self.c.audit_path(self.asset).read_bytes(),
+                    asset=self.asset, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'])
+                j.need(third['source_rule_count']==200 and
+                       third['actual_controller_audit_scanned'] is True and
+                       third['independent_current_asset_pass_count']==0 and
+                       third['individual_mg0_pass_count']==0 and
+                       third['advancement_authorized'] is False,
+                       'CONTROLLED_R117_INCOMPLETE_THIRD_200_RULES')
+                self.append('SUPERVISOR_C07_THIRD200_QUESTION_AUDIT',
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_rule_ids_sha256=third['source_rule_ids_sha256'],
+                    rule_count=third['source_rule_count'],
+                    source_chain=third['source_chain'],
+                    batch_segments=third['chunks'],
+                    counts=third['counts'],
+                    failed_due_rule_ids=third['failed_due_rule_ids'],
+                    result=('FAIL' if third['failed_due_rule_ids']
+                            else 'UNKNOWN_NEEDS_NATIVE_Q_PROOF'),
+                    current_asset_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(not third['failed_due_rule_ids'],
+                    'CONTROLLED_R117_THIRD_200_SEMANTIC_FAILURE:'+
+                    ','.join(third['failed_due_rule_ids']))
                 from c07_bulk200_semantics import inspect as bulk_200
                 bulk = bulk_200(self.inventory, plans[0]['plan'],
                     audit_raw=self.c.audit_path(self.asset).read_bytes(),
