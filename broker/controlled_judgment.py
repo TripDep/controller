@@ -1148,6 +1148,37 @@ class ControlledJudgment:
                     source_rules_examined=37,
                     full_rule_semantic_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R143: out-of-cohort numbered original G0-07..30
+                # (24 independent source-specific machine-readback rules).
+                # These remain part of the canonical 763 family inventory but
+                # are deliberately NOT counted among immutable R122 first200.
+                from c07_g0_remaining24_native import inspect as inspect_r143
+                g0_remaining24=inspect_r143(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(g0_remaining24['source_rules_examined']==24
+                       and g0_remaining24['domain_conditions']==72
+                       and set(g0_remaining24['rules'])==
+                            {'G0-'+str(n).zfill(2) for n in range(7,31)}
+                       and g0_remaining24['full_semantics_passes']==0
+                       and g0_remaining24['individual_mg0_passes']==0
+                       and g0_remaining24['advancement_authorized'] is False
+                       and all(v['full_semantics']=='UNKNOWN'
+                               and v['individual_mg0']=='UNKNOWN'
+                               and v['owner_acceptance']=='UNKNOWN'
+                               for v in g0_remaining24['rules'].values()),
+                       'CONTROLLED_R143_FALSE_ORIGINAL_G0_SEMANTIC_OR_MG0')
+                self.append('SUPERVISOR_C07_R143_G0_24_ORIGINAL_DOMAIN_EVIDENCE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=g0_remaining24['original_audit_sha256'],
+                    original_audit_tail=g0_remaining24['original_audit_tail'],
+                    exact_G0_source_domain_evidence=g0_remaining24['rules'],
+                    canonical_source_rules_examined=24,
+                    full_semantics_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
