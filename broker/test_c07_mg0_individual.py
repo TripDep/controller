@@ -173,7 +173,7 @@ class Tests(unittest.TestCase):
         self.add('SUPERVISOR_C07_R178_PROCESS_OBSERVATION',True,
                  result='PASS', positive_3d_rule_semantic_passes=0,
                  individual_mg0_passes=0, advancement_authorized=False)
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         # A real source-bound observation is not a canonical MG0 claim.
         report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT)
         self.assertEqual(report['counts']['UNKNOWN'],1)
@@ -182,7 +182,7 @@ class Tests(unittest.TestCase):
 
     def test_batch_unknown_mg0_specific_claim_still_fails_closed(self):
         self.add('MG0_FAKE_SUCCESS',True,result='PASS')
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         with self.assertRaisesRegex(IntakeBlocked,'MG0_UNKNOWN_SCOPED_EVENT'):
             mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT)
 
