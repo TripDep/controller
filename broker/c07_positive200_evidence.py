@@ -239,7 +239,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     return report
 
 def reconcile_current200(inventory, plan, controller, asset, step, work,
-                         *, r120, r123, r124, r122, r129=None, r130=None, r136=None, r138=None, r139=None):
+                         *, r120, r123, r124, r122, r129=None, r130=None, r136=None, r138=None, r139=None, r140=None):
     """R127: original-audit convergence of 200 per-rule observations and MG0.
 
     The four inputs MUST be direct immutable in-memory results produced by the
@@ -296,6 +296,20 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              r139.get('individual_mg0_passes')==0 and
              r139.get('advancement_authorized') is False,
              'R139_INVALID_NATIVE_OUTPUT_OR_MG0_CLAIM')
+    if r140 is not None:
+        from c07_a10_c10_original_evidence import SCHEMA as R140_SCHEMA, IDS as R140_IDS
+        need(type(r140) is dict and
+             r140.get('schema')==R140_SCHEMA and
+             r140.get('source_rules_examined')==20 and
+             r140.get('native_conditions_evaluated')==60 and
+             set(r140.get('rules',{}))==set(R140_IDS) and
+             set(R140_IDS)<=set(selected) and
+             all(r140.get(k)==work[k] for k in
+                 ('master_sha256','attempt_id','operation_sha256')) and
+             r140.get('full_rule_passes')==0 and
+             r140.get('individual_mg0_passes')==0 and
+             r140.get('advancement_authorized') is False,
+             'R140_ORIGINAL_RESEARCH_SCOPE_OR_FAKE_MG0')
     if r130 is not None:
         from c07_behavior110_remediation import IDS as BEHAVIOR110_IDS
         need(type(r130) is dict
@@ -420,6 +434,12 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
             r139.get('original_audit_sha256'),
             'SUPERVISOR_C07_R139_ORIGINAL_BINARY_OUTPUT_EXPECTATION',
             'source_specific_expected_output_evidence',r139['rules']))
+    if r140 is not None:
+        pairs.insert(next(i for i,p in enumerate(pairs) if p[0]=='R139')+1,
+          ('R140',r140.get('original_audit_tail'),
+            r140.get('original_audit_sha256'),
+            'SUPERVISOR_C07_R140_A10_C10_ORIGINAL_DOMAIN_EVIDENCE',
+            'exact_original_source_rule_evidence',r140['rules']))
     if r130 is not None:
         pairs.insert(0,('R130',r130.get('original_audit_tail'),
             r130.get('original_audit_sha256'),
@@ -449,7 +469,7 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              rows[i+1].get(field) == expected,
              'R127_'+label+'_RECEIPT_DIFFERENT_FROM_REAL_AUDIT')
     need(positions == sorted(set(positions)) and
-         len(positions) == (4+int(r129 is not None)+int(r130 is not None)+int(r136 is not None)+int(r138 is not None)+int(r139 is not None)) and
+         len(positions) == (4+int(r129 is not None)+int(r130 is not None)+int(r136 is not None)+int(r138 is not None)+int(r139 is not None)+int(r140 is not None)) and
          positions[-1] == len(rows)-2 and
          rows[-1]['record_hash']==tail,
          'R127_AUDIT_SNAPSHOT_ORDER_OR_FINAL_RECEIPT')
@@ -624,6 +644,27 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
                  and item.get('advancement_authorized') is False,
                  'R139_SOURCE_SPECIFIC_OUTPUT_PROOF_CHANGED:'+rid)
             checks['R139_exact_geometry_outcome']=val
+        if r140 is not None and rid in r140['rules']:
+            obs=r140['rules'][rid]
+            cs=obs.get('native_original_file_criteria')
+            need(obs.get('rule_id')==rid and
+                 obs.get('source_sha256')==canonical['source_sha256'] and
+                 obs.get('requirement_sha256')==canonical['requirement_sha256'] and
+                 type(cs) is dict and len(cs)==3 and
+                 all(type(v) is bool for v in cs.values()) and
+                 obs.get('observed_native_conditions')==
+                     sorted(k for k,v in cs.items() if v) and
+                 obs.get('missing_native_conditions')==
+                     sorted(k for k,v in cs.items() if not v) and
+                 obs.get('source_semantics')==(
+                     'SOURCE_SCOPE_OBSERVED' if all(cs.values()) else 'UNKNOWN') and
+                 obs.get('independent_provenance_or_artistic_verification')=='UNKNOWN' and
+                 obs.get('full_rule_pass') is False and
+                 obs.get('individual_mg0')=='UNKNOWN' and
+                 obs.get('owner_approval')=='UNKNOWN' and
+                 obs.get('advancement_authorized') is False,
+                 'R140_INVALID_SOURCE_SPECIFIC_OR_UNAUTHORIZED_PASS:'+rid)
+            checks['R140_original_reference']=cs
         scoped_count += int(bool(checks))
         positive_subchecks += sum(sum(v is True for v in group.values())
                                   for group in checks.values())
@@ -660,6 +701,9 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
         'original_exec25_individual_evidence_converged':25 if r129 is not None else 0,
         'original_exec25_domain_evidence_converged':25 if r138 is not None else 0,
         'original_binary_output_rules_examined':2 if r139 is not None else 0,
+        'original_pre_d_research_rules_examined':20 if r140 is not None else 0,
+        'original_pre_d_research_observations':(
+            r140['native_conditions_observed'] if r140 is not None else 0),
         'original_binary_output_semantics_observed':(
             r139['new_output_semantics_observed'] if r139 is not None else 0),
         'original_behavior110_individual_evidence_converged':110 if r130 is not None else 0,
