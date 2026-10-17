@@ -64,7 +64,7 @@ class Tests(unittest.TestCase):
         a.jobs['jobs'][0]['steps'][0]['name']=j.SEMANTIC_STEP
         a.job_logs=lambda _: '2020-10-13T18:00:00Z '+j.PREFIX+json.dumps(p)
         spec={'validator_id':'unit','criteria':['clause'],'requirement_sha256':b['requirement_sha256'],'issuer':a.issuer}
-        r=j.NativeRuleBackend(a,{'EXEC-003':spec}).rule('EXEC-003',b,{'native_origin':a.origin,'expected_packet_sha256':j.digest(p)});self.assertEqual(r['result'],'PASS')
+        r=j.NativeRuleBackend(a,{'EXEC-003':spec}).rule('EXEC-003',b,{'native_origin':a.origin,'expected_packet_sha256':j.digest(p)});self.assertEqual(r['result'],'UNKNOWN');self.assertEqual(r['reason'],'NO_REVIEWED_SOURCE_SPECIFIC_NATIVE_IMPLEMENTATION')
         p['mg0']['binding']['rule_id']='other';r=j.NativeRuleBackend(a,{'EXEC-003':spec}).rule('EXEC-003',b,{'native_origin':a.origin,'expected_packet_sha256':j.digest(p)});self.assertEqual(r['result'],'UNKNOWN')
     def test_semantic_criteria_and_mg0(self):
         b=j.binding(work(),inventory()['rules']['EXEC-003'],'EXEC-003');p={'schema':'gg-semantic-rule-v1','scope':j.SEMANTIC_SCOPE,'validator_id':'unit','binding':b,'rule':{'result':'PASS','checks':{'clause':True},'proof_digest':'e'*64},'mg0':{'binding':copy.deepcopy(b),'triggered':False,'result':'PASS','checks':{'canonical_triggers_checked':True},'proof_digest':'f'*64}}

@@ -52,8 +52,40 @@ class GitFixture(API):
         return self.logs
 
 
+def synthetic_native_rule_fixture(backend, rule, expected, offer):
+    """ONLY IN THIS TEST FILE: model the old positive fixture independently.
+
+    The real NativeRuleBackend.rule still rejects unreviewed validators in
+    production. Here the origin is synthetic and only validates wiring.
+    """
+    spec=backend.enrolled.get(rule)
+    if spec is None or not isinstance(offer,dict):
+        return {'result':'UNKNOWN','reason':'UNIT_NO_NATIVE_OFFER'}
+    try:
+        logs=j.evidence.native(backend.api,offer['native_origin'],
+                               spec['issuer'],j.SEMANTIC_STEP)
+        values=[]
+        for line in logs.splitlines():
+            marker=j.PREFIX
+            if marker in line:
+                values.append(j.evidence.strict_json(
+                    line.split(marker,1)[1].encode(),max_size=65536))
+        packets=[p for p in values if p.get('binding',{}).get('rule_id')==rule]
+        if len(packets)!=1 or j.digest(packets[0])!=offer['expected_packet_sha256']:
+            return {'result':'UNKNOWN','reason':'UNIT_NATIVE_MISSING_OR_TAMPERED'}
+        return j.semantic_packet(packets[0],expected,spec)
+    except (ValueError,KeyError,TypeError,IndexError) as exc:
+        return {'result':'UNKNOWN','reason':str(exc)}
+
+
 class Tests(unittest.TestCase):
     def setUp(self):
+        # Restrict synthetic PASSs to this non-production fixture class.
+        # Verified by R126 adversarial tests: the real backend has no such path.
+        self.native_fixture=patch.object(j.NativeRuleBackend,'rule',
+                                        synthetic_native_rule_fixture)
+        self.native_fixture.start()
+        self.addCleanup(self.native_fixture.stop)
         # This test suite deliberately uses synthetic per-rule fixture verdicts.
         # Production enrollment has no stub: exact reviewed validators mandatory.
         self.validator_fixture = patch('approved_validators.validate',
