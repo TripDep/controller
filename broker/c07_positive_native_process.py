@@ -85,7 +85,38 @@ def _original_attempt(inventory, plan, controller, asset, step, work):
          'R123_PLAN_RESERVE_OPEN_ORDER')
     return records,tail,state,sha(raw)
 
-def _registered_artifacts(records, state, step, source_loader):
+def _registered_artifacts(records, state, step, source_loader, work):
+    # R125: an identical step label alone is NOT evidence of the current attempt.
+    opened=[(i,e) for i,e in enumerate(records)
+            if e.get('event')=='SUPERVISOR_OPERATION_OPENED'
+            and e.get('step')==step]
+    need(len(opened)==1,'R125_ARTIFACT_OPERATION_OPEN_UNIQUE')
+    open_index,opening=opened[0]
+    reservation=[r for r in records
+                 if r.get('event')=='SUPERVISOR_OPERATION_RESERVED'
+                 and r.get('record_hash')==opening.get('reservation_hash')]
+    need(len(reservation)==1
+         and reservation[0].get('work')==work
+         and reservation[0].get('operation_sha256')==work.get('operation_sha256')
+         and records.index(reservation[0])<open_index,
+         'R125_ARTIFACT_ATTEMPT_RESERVATION_MISMATCH')
+    closing=[i for i,e in enumerate(records)
+             if e.get('step')==step and
+             e.get('event') in ('STEP_CLOSE','SUPERVISOR_OPERATION_CLOSED')]
+    need(not any(i<open_index for i in closing),
+         'R125_ARTIFACT_HISTORIC_CLOSED_STEP_REUSED')
+    scoped=[(i,e) for i,e in enumerate(records)
+            if e.get('event')=='ARTIFACT_RECORDED' and e.get('step')==step]
+    need(all(i>open_index and
+             (not closing or i<min(closing)) and
+             e.get('result')=='PASS' for i,e in scoped),
+         'R125_ARTIFACT_OUTSIDE_CURRENT_OPERATION_WINDOW')
+    current=[x for x in state.get('artifacts',[])
+             if type(x) is dict and x.get('step')==step]
+    need(len(scoped)==len(current)
+         and all(current.count(e.get('evidence_operation'))==1
+                 for _,e in scoped),
+         'R125_STATE_ARTIFACT_AUDIT_SET_DIVERGED')
     entries=[ev for ev in records if ev.get('event')=='ARTIFACT_RECORDED'
              and ev.get('step')==step and ev.get('result')=='PASS']
     result=[]
@@ -174,7 +205,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     # The operation is authentic even when a predicate fails. Contradicted
     # master/audit/deps are hard stops and never convert to missing-evidence YES.
     need(master_ok and state_ok and step_ok, 'R123_ORIGINAL_MASTER_OR_AUDIT_STATE_DIVERGED')
-    artifact_rows=_registered_artifacts(records,state,step,source_loader)
+    artifact_rows=_registered_artifacts(records,state,step,source_loader,work)
     unique_by_role={role:[x for x in artifact_rows if x[0]==role]
                     for role in ROLE_TYPES}
     distinct=(all(len(rows)==1 for rows in unique_by_role.values()) and
