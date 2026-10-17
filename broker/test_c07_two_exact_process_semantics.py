@@ -30,7 +30,8 @@ class ProcessSemantics(unittest.TestCase):
     def test_both_original_literal_process_semantics_positive(self):
         doc=self.run_review()
         self.assertEqual(doc['source_rule_count'],2)
-        self.assertEqual(doc['literal_process_semantics_passes'],2)
+        self.assertEqual(doc['literal_process_semantics_passes'],2,
+                         repr(doc['rules']['AAA-200-R-178']['additional_full_literal_criteria']))
         self.assertTrue(doc['original_persisted_state_rechecked'])
         for rid in ('AAA-200-R-172','AAA-200-R-178'):
             self.assertEqual(doc['rules'][rid]['literal_process_semantics'],'PASS')
