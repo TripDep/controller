@@ -835,6 +835,39 @@ class ControlledJudgment:
                     results_sha256=positive['result_sha256'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R123: actual original-byte semantic evaluation of two
+                # literal process rules in one shared engine. This checks
+                # distinct editable/export/delivery bytes and manifest links,
+                # plus the real recorded activity/dependency state. Git CI
+                # alone and producer YES cannot manufacture native results.
+                from c07_positive_native_process import inspect as inspect_r123
+                native_r123 = inspect_r123(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(native_r123['rule_count'] == 2 and
+                       native_r123['source_specific_positive_engines_evaluated'] == 2 and
+                       set(native_r123['rules']) == {
+                           'AAA-200-R-172', 'AAA-200-R-178'} and
+                       native_r123['full_work_rule_passes'] == 0 and
+                       native_r123['individual_mg0_passes'] == 0 and
+                       native_r123['advancement_authorized'] is False and
+                       all(row['semantic_result'] in ('SEMANTIC_OBSERVED', 'UNKNOWN')
+                           and row['individual_mg0'] == 'UNKNOWN'
+                           for row in native_r123['rules'].values()),
+                       'CONTROLLED_R123_FALSE_COMPLETE_SEMANTICS_OR_MG0')
+                self.append('SUPERVISOR_C07_R123_NATIVE_POSITIVE_PROCESS',
+                    step=step,
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=native_r123['audit_sha256'],
+                    original_audit_tail=native_r123['audit_tail_sha256'],
+                    source_specific_semantic_observations=native_r123['rules'],
+                    machine_semantics_observed=native_r123['machine_semantic_observed_count'],
+                    full_work_rule_passes=0, individual_mg0_passes=0,
+                    native_git_provenance_and_mg0_remaining='UNKNOWN',
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
