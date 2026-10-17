@@ -1005,9 +1005,10 @@ class ControlledJudgment:
                     self.inventory, plans[0]['plan'], self.c, self.asset,
                     step, reserved_work, r120=positive,
                     r123=native_r123, r124=native_r124, r122=positive200,
-                    r129=exec25)
+                    r129=exec25, r130=original110)
                 j.need(checked200['source_rules_examined']==200
                        and checked200['original_exec25_individual_evidence_converged']==25
+                       and checked200['original_behavior110_individual_evidence_converged']==110
                        and len(checked200['rules'])==200
                        and checked200['full_rule_passes']==0
                        and checked200['individual_mg0_passes']==0
@@ -1025,8 +1026,9 @@ class ControlledJudgment:
                     report_sha256=checked200['report_sha256'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
-                j.need(not checked200['mg0_failed_rule_ids'],
-                       'CONTROLLED_R127_MG0_FAILURE_STOP')
+                j.need(not checked200['mg0_failed_rule_ids']
+                       and not checked200['behavior110_failed_rule_ids'],
+                       'CONTROLLED_R131_MG0_OR_BEHAVIOR_FAILURE_STOP')
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']
