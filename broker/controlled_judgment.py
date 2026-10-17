@@ -679,6 +679,39 @@ class ControlledJudgment:
                 # R115 ONE source-locked execution over all first 200 rules,
                 # not another 200-item wording checklist. The same immutable
                 # per-rule obligations flow into technical review below.
+                # R116: second 200 rules are BEHAVIOR-110, G0, governance and
+                # remaining AAA delivery, NOT a second copy of mesh predicates.
+                # Independent consumer reads actual source rule clauses and
+                # ORIGINAL append-only Controller audit before close(PASS).
+                from c07_bulk_segment import inspect as inspect_bulk_segment
+                second = inspect_bulk_segment(
+                    self.inventory, plans[0]['plan'], segment=2,
+                    audit_raw=self.c.audit_path(self.asset).read_bytes(),
+                    asset=self.asset, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'])
+                j.need(second['source_rule_count']==200 and
+                       second['actual_controller_audit_scanned'] is True and
+                       second['independent_current_asset_pass_count']==0 and
+                       second['individual_mg0_pass_count']==0 and
+                       second['advancement_authorized'] is False,
+                       'CONTROLLED_R116_INCOMPLETE_SECOND_200_RULES')
+                self.append('SUPERVISOR_C07_SECOND200_SEMANTIC_EVIDENCE',
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_rule_ids_sha256=second['source_rule_ids_sha256'],
+                    rule_count=second['source_rule_count'],
+                    source_chain=second['source_chain'],
+                    batch_segments=second['chunks'],
+                    native_counts=second['counts'],
+                    failed_due_rule_ids=second['failed_due_rule_ids'],
+                    result=('FAIL' if second['failed_due_rule_ids']
+                            else 'UNKNOWN_SEMANTIC_PROOF_REQUIRED'),
+                    current_asset_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(not second['failed_due_rule_ids'],
+                       'CONTROLLED_R116_SECOND_200_NATIVE_FAILURES:'+
+                       ','.join(second['failed_due_rule_ids']))
                 from c07_bulk200_semantics import inspect as bulk_200
                 bulk = bulk_200(self.inventory, plans[0]['plan'],
                     audit_raw=self.c.audit_path(self.asset).read_bytes(),
