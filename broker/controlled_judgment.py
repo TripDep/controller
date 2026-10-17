@@ -1164,7 +1164,8 @@ class ControlledJudgment:
                        and checked200['original_exec25_individual_evidence_converged']==25
                        and checked200['original_exec25_domain_evidence_converged']==25
                        and checked200['original_binary_output_rules_examined']==2
-                       and checked200['original_pre_d_research_rules_examined']==20
+                       and checked200['original_pre_d_research_rules_examined']==18
+                       and checked200['original_pre_d_research_rules_all_sources']==20
                        and checked200['original_behavior110_individual_evidence_converged']==110
                        and checked200['original_literal_process_rule_evidence_converged']==2
                        and len(checked200['rules'])==200
