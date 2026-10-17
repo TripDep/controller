@@ -78,7 +78,7 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         with patch.object(j.evidence,'native',return_value=log):
             result = j.NativeRuleBackend(API(),{rid:spec}).rule(rid,binding,offer)
         self.assertEqual(result['result'],'UNKNOWN')
-        self.assertIn('JUDGMENT_REVIEWED_NATIVE_VALIDATOR_DRIFT',result['reason'])
+        self.assertIn('REVIEWED_NATIVE_ENROLLMENT_REPLAY_REJECTED',result['reason'])
 
     def test_source_pin_required_at_plan_enrollment(self):
         rid = 'AAA-200-B-012'
