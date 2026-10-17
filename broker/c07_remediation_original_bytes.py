@@ -86,6 +86,9 @@ def inspect(original110,audit_raw,state_tail,asset,step,work,root):
             'R133_CURRENT_STEP_ALREADY_CLOSED')
     root=Path(root).resolve()
     require(root.is_dir(),'R133_ORIGINAL_CONTROLLER_ROOT_UNAVAILABLE')
+    # Consumer independently enumerates each actual recorded failure instead
+    # of trusting the producer's 110-row summary of observed findings.
+    from c07_behavior110_remediation import relevant_failure
     by_hash={r['record_hash']:(n,r) for n,r in enumerate(rows)}
     detail={};failed=[];fully_byte_bound=0;read_files=set();observed_count=0
     for rid in IDS:
@@ -97,8 +100,16 @@ def inspect(original110,audit_raw,state_tail,asset,step,work,root):
                 and item.get('advancement_authorized') is False,
                 'R133_INDIVIDUAL_SOURCE_OR_FALSE_PASS:'+rid)
         findings=item.get('observations')
+        actual_findings={r['record_hash'] for r in rows[openpos+1:]
+            if r.get('rule_id')==rid and
+               r.get('attempt_id')==work['attempt_id'] and
+               r.get('step') in (None,step) and relevant_failure(r)}
+        claimed_findings=([v.get('finding_record_hash') for v in findings]
+                          if type(findings) is list else [])
         require(type(findings) is list and
-                len(findings)==item.get('observed_failure_count'),
+                len(findings)==item.get('observed_failure_count') and
+                len(claimed_findings)==len(set(claimed_findings)) and
+                set(claimed_findings)==actual_findings,
                 'R133_110_SOURCE_FAILURE_OMITTED:'+rid)
         records=[]
         for finding in findings:
@@ -147,6 +158,10 @@ def inspect(original110,audit_raw,state_tail,asset,step,work,root):
                      'semantic_result':'FAIL' if rid in failed or item['semantic_result']=='FAIL' else 'UNKNOWN',
                      'full_rule_pass':False,'individual_mg0':'UNKNOWN',
                      'owner_authenticity':'UNKNOWN','advancement_authorized':False}
+    # A previous canonical MG0/behavior FAIL cannot be suppressed by four
+    # apparently valid artifact files; original bytes are NOT proof of repair.
+    failed=sorted(set(failed)|{rid for rid in IDS if
+        original110['rules'][rid]['semantic_result']=='FAIL'})
     require(len(detail)==110 and
             all(x['full_rule_pass'] is False for x in detail.values()),
             'R133_UNTRUSTED_FULL_RULE_PASS')
