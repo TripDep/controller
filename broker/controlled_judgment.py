@@ -743,6 +743,41 @@ class ControlledJudgment:
                 j.need(not third['failed_due_rule_ids'],
                     'CONTROLLED_R117_THIRD_200_SEMANTIC_FAILURE:'+
                     ','.join(third['failed_due_rule_ids']))
+                # R118: final 163 source rules (Q151..Q300 + governance).
+                # Re-read ORIGINAL Controller work-state under the current
+                # lock; an output cannot outvote absent D0 authorization.
+                final_chunk = inspect_bulk_segment(
+                    self.inventory, plans[0]['plan'], segment=4,
+                    audit_raw=self.c.audit_path(self.asset).read_bytes(),
+                    asset=self.asset, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    controller_state=self.c.state)
+                j.need(final_chunk['source_rule_count']==163 and
+                       final_chunk['actual_controller_audit_scanned'] is True
+                       and final_chunk['controller_state_observation'][
+                         'controller_state_tail_matches_original_audit'] is True
+                       and final_chunk['independent_current_asset_pass_count']==0
+                       and final_chunk['individual_mg0_pass_count']==0
+                       and final_chunk['advancement_authorized'] is False,
+                       'CONTROLLED_R118_INCOMPLETE_LAST_163_RULES')
+                self.append('SUPERVISOR_C07_FINAL163_SEMANTIC_EVIDENCE',
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_rule_ids_sha256=final_chunk['source_rule_ids_sha256'],
+                    rule_count=final_chunk['source_rule_count'],
+                    state_evidence=final_chunk['controller_state_observation'],
+                    source_chain=final_chunk['source_chain'],
+                    batch_segments=final_chunk['chunks'],
+                    counts=final_chunk['counts'],
+                    failed_due_rule_ids=final_chunk['failed_due_rule_ids'],
+                    result=('FAIL' if final_chunk['failed_due_rule_ids']
+                            else 'UNKNOWN_NEEDS_INDEPENDENT_SEMANTIC_MG0'),
+                    current_asset_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(not final_chunk['failed_due_rule_ids'],
+                    'CONTROLLED_R118_FINAL_163_SEMANTIC_FAILURE:'+
+                    ','.join(final_chunk['failed_due_rule_ids']))
                 from c07_bulk200_semantics import inspect as bulk_200
                 bulk = bulk_200(self.inventory, plans[0]['plan'],
                     audit_raw=self.c.audit_path(self.asset).read_bytes(),

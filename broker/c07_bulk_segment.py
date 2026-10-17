@@ -63,7 +63,7 @@ def _slice(inventory, segment):
     return selected
 
 def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
-            operation_sha256=None):
+            operation_sha256=None, controller_state=None):
     """Evaluate 200 (last: 163) separately source-bound semantic obligations.
 
     An actually supplied Controller audit is independently rehashed once and
@@ -81,11 +81,14 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
     observed=None
     original_chain=None
     question_evidence={}
+    source_state=None
+    original_records=None
     if any(x is not None for x in (audit_raw,asset,attempt_id,operation_sha256)):
         need(type(audit_raw) is bytes and type(asset) is str and
              type(attempt_id) is str and type(operation_sha256) is str,
              'C07_AUDIT_SOURCE_ALL_OR_NOTHING')
         records, tail=audit_readback(audit_raw,asset)
+        original_records=records
         need(len(records)>0 and isinstance(tail,str) and len(tail)==64,
              'C07_AUDIT_VALID_CHAIN_REQUIRED')
         # Validate the Q-xxx recorded answer *identity*, independent of the
@@ -126,6 +129,32 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
         original_chain={'original_audit_sha256':hashlib.sha256(audit_raw).hexdigest(),
                        'record_count':len(records),'last_record_hash':tail,
                        'observed_process_integrity':'ORIGINAL_AUDIT_CHAIN_VERIFIED'}
+    if controller_state is not None:
+        need(segment==4 and original_chain is not None and
+             type(controller_state) is dict and type(controller_state.get('assets')) is dict
+             and asset in controller_state['assets'],
+             'C07_LAST163_REAL_CONTROLLER_STATE_REQUIRED')
+        st=controller_state['assets'][asset]
+        need(type(st) is dict and
+             st.get('last_audit_hash')==original_chain['last_record_hash'],
+             'C07_LAST163_WORK_STATE_AUDIT_DISCONNECTED')
+        d_authorized=(st.get('d_authorized') is True and
+                      isinstance(st.get('d_authorization_evidence'),str) and
+                      bool(st['d_authorization_evidence']))
+        recorded=any(row.get('event')=='D_AUTHORIZED' and
+            row.get('result')=='PASS' and
+            row.get('evidence_operation')==st.get('d_authorization_evidence')
+            for row in original_records)
+        mutating=plan.get('operation',{}).get('category') in ('GENERATION','MUTATION','EXPORT')
+        # An audit entry is not independent identity/owner artistic approval.
+        # But a signed mutating operation must not bypass a known absent D0.
+        need(not mutating or (d_authorized and recorded),
+             'C07_LAST163_MUTATION_WITHOUT_ORIGINAL_D0_AUDIT')
+        source_state={
+            'controller_state_tail_matches_original_audit':True,
+            'd0_record_exists':d_authorized and recorded,
+            'owner_identity_independently_proven':False,
+            'source_state_sha256':checksum(controller_state)}
     negatives={rid:row for batch in observed['batches'] for rid,row in batch['rules'].items()} if observed else {}
     need(not observed or len(negatives)==763,'C07_ALL_NEGATIVE_RULES_REQUIRED')
     counters=Counter()
@@ -149,7 +178,14 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
         else:verdict='UNKNOWN' if is_due else 'NOT_DUE'
         # Explicit group-specific native observation: proving the original
         # hash-chained audit says nothing about whether each rule was obeyed.
-        if rid=='APPEND_ONLY_AUDIT' and original_chain is not None:
+        if segment==4 and source_state and rid=='WORK_STATE':
+            process='CURRENT_ORIGINAL_CONTROLLER_STATE_TAIL_VERIFIED_SCOPE_ONLY'
+            counters['PROCESS_INTEGRITY_PREDICATE_EXECUTED']+=1
+        elif segment==4 and source_state and rid=='USER_AUTHORIZATION_D0':
+            process=('D0_ORIGINAL_AUTHORIZATION_EVENT_RECORDED_SCOPE_ONLY' if
+                     source_state['d0_record_exists'] else 'D0_PROOF_NOT_IN_AUDIT')
+            counters['D0_AUDIT_RECORD_PREDICATE_EXECUTED']+=1
+        elif rid=='APPEND_ONLY_AUDIT' and original_chain is not None:
             process='ORIGINAL_CHAIN_INTEGRITY_OBSERVED_SCOPE_ONLY'
             counters['PROCESS_INTEGRITY_PREDICATE_EXECUTED']+=1
         else:process='UNOBSERVED'
@@ -206,7 +242,8 @@ def inspect(inventory,plan,*,segment,audit_raw=None,asset=None,attempt_id=None,
        'source_rule_count':len(selected), 'source_rule_ids_sha256':checksum(selected),
        'first_rule_id':selected[0],'last_rule_id':selected[-1],
        'actual_controller_audit_scanned':original_chain is not None,
-       'source_chain':original_chain,'counts':dict(counters),
+       'source_chain':original_chain,'controller_state_observation':source_state,
+       'counts':dict(counters),
        'chunks':chunks,'rules':rows,'failed_due_rule_ids':failures,
        'independent_current_asset_pass_count':0,
        'individual_mg0_pass_count':0,
