@@ -386,7 +386,8 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
             'SUPERVISOR_C07_R130_BEHAVIOR110_REMEDIATION',
             'per_rule_verdicts',r130['rules']))
     if r136 is not None:
-        pairs.insert(2,('R136',r136.get('original_audit_tail'),
+        pairs.insert(next(i for i,p in enumerate(pairs) if p[0]=='R123')+1,
+          ('R136',r136.get('original_audit_tail'),
             r136.get('original_audit_sha256'),
             'SUPERVISOR_C07_R136_TWO_LITERAL_NATIVE_SEMANTICS',
             'exact_rule_proofs',r136['rules']))
