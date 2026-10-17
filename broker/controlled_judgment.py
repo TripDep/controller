@@ -824,6 +824,24 @@ class ControlledJudgment:
                                and v['individual_mg0'] in ('FAIL','UNKNOWN')
                                for v in original110['rules'].values()),
                        'CONTROLLED_R130_BEHAVIOR_110_CANNOT_FAKE_PASS')
+                # R133: independently read ORIGINAL registered local file bytes
+                # of every reported remediation phase; producer strings and
+                # signed audit events cannot create a false remediation PASS.
+                from c07_remediation_original_bytes import inspect as inspect_r133
+                real_bytes110=inspect_r133(
+                    original110,
+                    self.c.audit_path(self.asset).read_bytes(),
+                    self.c.asset_state(self.asset)['last_audit_hash'],
+                    self.asset,step,reserved_work,self.c.root)
+                j.need(real_bytes110['source_rules_examined']==110
+                       and set(real_bytes110['rules'])==
+                           {'BEHAVIOR-'+str(n).zfill(3) for n in range(1,111)}
+                       and real_bytes110['full_semantic_PASS']==0
+                       and real_bytes110['individual_mg0_PASS']==0
+                       and real_bytes110['advancement_authorized'] is False
+                       and all(v['full_rule_pass'] is False
+                               for v in real_bytes110['rules'].values()),
+                       'CONTROLLED_R133_FALSE_NATIVE_BYTE_SEMANTICS_OR_MG0')
                 self.append('SUPERVISOR_C07_R130_BEHAVIOR110_REMEDIATION',
                     step=step, attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
@@ -837,6 +855,19 @@ class ControlledJudgment:
                     failed_rule_ids=original110['failed_rule_ids'],
                     real_current_prevention_PASS=0,individual_mg0_PASS=0,
                     advancement_authorized=False)
+                self.append('SUPERVISOR_C07_R133_ORIGINAL_BEHAVIOR_BYTES',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    original_audit_sha256=real_bytes110['original_audit_sha256'],
+                    original_audit_tail=real_bytes110['original_audit_tail'],
+                    original_file_witnesses=real_bytes110['rules'],
+                    original_file_phase_chains=real_bytes110['four_distinct_original_byte_witness_chains'],
+                    failed_rule_ids=real_bytes110['failed_rule_ids'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                j.need(not real_bytes110['failed_rule_ids'],
+                       'CONTROLLED_R133_MISSING_OR_TAMPERED_ORIGINAL_BEHAVIOR_BYTES:'+
+                       ','.join(real_bytes110['failed_rule_ids'][:20]))
                 j.need(not original110['failed_rule_ids'],
                        'CONTROLLED_R130_UNCORRECTED_BEHAVIOR_ERROR:'+
                        ','.join(original110['failed_rule_ids'][:20]))
