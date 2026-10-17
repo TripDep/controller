@@ -37,7 +37,7 @@ class NativeReviewEnforcementTests(unittest.TestCase):
             offer if offer is not None else self.fake_offer)
         self.assertEqual(got['result'],'UNKNOWN')
         if reason is not None:self.assertEqual(got['reason'],reason)
-        self.api.assert_not_called()
+        self.assertEqual(self.api.mock_calls, [])
         return got
 
     def test_forged_unreviewed_validator_cannot_be_pass(self):
@@ -89,7 +89,7 @@ class NativeReviewEnforcementTests(unittest.TestCase):
             self.rid,self.expected,{})
         self.assertEqual(got['result'],'UNKNOWN')
         self.assertEqual(got['reason'],'NATIVE_RULE_PROOF_MISSING')
-        self.api.assert_not_called()
+        self.assertEqual(self.api.mock_calls, [])
 
     def test_unreviewed_missing_offer_remains_unknown(self):
         got=judgment.NativeRuleBackend(self.api,{
@@ -98,7 +98,7 @@ class NativeReviewEnforcementTests(unittest.TestCase):
                         'requirement_sha256':self.expected['requirement_sha256']},
             None)
         self.assertEqual(got['result'],'UNKNOWN')
-        self.api.assert_not_called()
+        self.assertEqual(self.api.mock_calls, [])
 
 
 if __name__=='__main__':unittest.main()
