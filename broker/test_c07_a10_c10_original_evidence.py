@@ -165,6 +165,36 @@ class R140Test(unittest.TestCase):
         x=self.read()['rules']['AAA-200-A-009']
         self.assertFalse(x['native_original_file_criteria']['explicit_full_completion_test_not_forged'])
 
+    def test_license_reference_sha_must_match_actual_original_file(self):
+        d=json.loads(self.contents['NOTE_LICENSE'])
+        d['covered_sha256']=['e'*64]
+        self.contents['NOTE_LICENSE']=json.dumps(d).encode()
+        self.f.add_item('NOTE_LICENSE','note_license.json',self.contents['NOTE_LICENSE'])
+        self.contract()
+        row=self.read()['rules']['AAA-200-C-029']
+        self.assertFalse(row['native_original_file_criteria']['specific_original_reference_sha_listed'])
+        self.assertFalse(row['full_rule_pass'])
+
+    def test_reference_index_cannot_claim_unregistered_image(self):
+        d=json.loads(self.contents['NOTE_REFERENCE_INDEX'])
+        d['indexed_sha256']['GHOST_REFERENCE']='a'*64
+        self.contents['NOTE_REFERENCE_INDEX']=json.dumps(d).encode()
+        self.f.add_item('NOTE_REFERENCE_INDEX','note_reference_index.json',
+                        self.contents['NOTE_REFERENCE_INDEX'])
+        self.contract()
+        row=self.read()['rules']['AAA-200-C-030']
+        self.assertFalse(row['native_original_file_criteria']['source_index_sha_matches_original_artifact_bytes'])
+
+    def test_self_reported_production_delta_is_not_measured_output(self):
+        row=self.read()['rules']['AAA-200-A-003']
+        self.assertFalse(row['native_original_file_criteria'][
+            'original_baseline_export_byte_delta_observed'])
+
+    def test_qa_evidence_digest_not_present_in_original_files_is_not_independent(self):
+        row=self.read()['rules']['AAA-200-A-007']
+        self.assertFalse(row['native_original_file_criteria'][
+            'defect_reproduction_evidence_original_bytes'])
+
     def test_cross_attempt_controller_reservation_replay_fails(self):
         self.f.work=copy.deepcopy(self.f.work)
         self.f.work['attempt_id']='f'*64
