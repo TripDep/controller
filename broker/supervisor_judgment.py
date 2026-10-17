@@ -68,9 +68,29 @@ class NativeRuleBackend:
     def __init__(self,api,enrolled):self.api=api;self.enrolled=enrolled;self.cache={}
     def rule(self,rule,expected,offer):
         spec=self.enrolled.get(rule)
-        if spec is None:return {'result':'UNKNOWN','reason':'NO_ENROLLED_RULE_SEMANTIC_VALIDATOR'}
-        need(spec['requirement_sha256']==expected['requirement_sha256'] and spec['criteria'],'JUDGMENT_VALIDATOR_SOURCE_DRIFT')
-        if not isinstance(offer,dict) or set(offer)!=set(('native_origin','expected_packet_sha256')):return {'result':'UNKNOWN','reason':'NATIVE_RULE_PROOF_MISSING'}
+        if spec is None:
+            return {'result':'UNKNOWN','reason':'NO_ENROLLED_RULE_SEMANTIC_VALIDATOR'}
+        # Defense in depth: a valid-looking Git log is NOT an implementation.
+        # Even when the caller bypasses plan enrollment, only the precisely
+        # reviewed source-specific validator is eligible for native readback.
+        from approved_validators import (REVIEWED as reviewed,
+                                         validate as validate_reviewed,
+                                         InvalidEnrollment)
+        if rule not in reviewed:
+            return {'result':'UNKNOWN',
+                    'reason':'NO_REVIEWED_SOURCE_SPECIFIC_NATIVE_IMPLEMENTATION'}
+        if not isinstance(spec,dict) or not isinstance(expected,dict) or (
+                expected.get('rule_id')!=rule):
+            return {'result':'UNKNOWN','reason':'NATIVE_RULE_ENROLLMENT_OR_BINDING_INVALID'}
+        try:
+            validate_reviewed({rule:spec},
+                              {'rules':{rule:{
+                                  'requirement_sha256':expected['requirement_sha256']}}})
+        except (InvalidEnrollment,ValueError,KeyError,TypeError):
+            return {'result':'UNKNOWN',
+                    'reason':'REVIEWED_NATIVE_ENROLLMENT_REPLAY_REJECTED'}
+        if not isinstance(offer,dict) or set(offer)!=set(('native_origin','expected_packet_sha256')):
+            return {'result':'UNKNOWN','reason':'NATIVE_RULE_PROOF_MISSING'}
         key=(digest(offer['native_origin']),digest(spec['issuer']))
         try:
             if key not in self.cache:
@@ -87,20 +107,16 @@ class NativeRuleBackend:
             # Reviewed production validators must independently replay the
             # immutable source evidence: neither signed logs nor hashes prove
             # the documentary predicate on their own.
-            from approved_validators import REVIEWED as reviewed
-            reviewed_spec = reviewed.get(rule)
-            if reviewed_spec is not None:
-                need(spec['validator_id'] == reviewed_spec[0] and
-                     set(spec['criteria']) == set(reviewed_spec[1]),
-                     'JUDGMENT_REVIEWED_NATIVE_VALIDATOR_DRIFT')
-                if spec['validator_id'] == reviewed_spec[0]:
-                    if rule == 'AAA-200-B-012':
-                        from planning_semantics import native_rule_readback
-                    else:
-                        from r173_rule_semantics import native_rule_readback
-                    native_rule_readback(self.api, packet, expected, spec)
-            elif spec['validator_id'] in [v[0] for v in reviewed.values()]:
-                need(False, 'JUDGMENT_UNENROLLED_REVIEWED_VALIDATOR_FOR_RULE')
+            # No fall-through to a generic semantic_packet verifier. Every
+            # reviewed ID must replay the underlying immutable source through
+            # its own independent consuming-side implementation.
+            if rule == 'AAA-200-B-012':
+                from planning_semantics import native_rule_readback
+            elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
+                from r173_rule_semantics import native_rule_readback
+            else:
+                need(False, 'JUDGMENT_NO_NATIVE_SOURCE_REPLAYER_FOR_RULE')
+            native_rule_readback(self.api, packet, expected, spec)
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):
