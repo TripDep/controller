@@ -239,7 +239,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     return report
 
 def reconcile_current200(inventory, plan, controller, asset, step, work,
-                         *, r120, r123, r124, r122, r129=None, r130=None, r136=None, r138=None, r139=None, r140=None):
+                         *, r120, r123, r124, r122, r129=None, r130=None, r136=None, r138=None, r139=None, r140=None, r142=None):
     """R127: original-audit convergence of 200 per-rule observations and MG0.
 
     The four inputs MUST be direct immutable in-memory results produced by the
@@ -312,6 +312,20 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              r140.get('individual_mg0_passes')==0 and
              r140.get('advancement_authorized') is False,
              'R140_ORIGINAL_RESEARCH_SCOPE_OR_FAKE_MG0')
+    if r142 is not None:
+        from c07_frozen37_mother_native import SCHEMA as R142_SCHEMA, IDS as R142_IDS
+        need(type(r142) is dict and
+             r142.get('schema')==R142_SCHEMA and
+             r142.get('source_rules_examined')==37 and
+             r142.get('named_domain_predicates')==74 and
+             set(r142.get('rules',{}))==set(R142_IDS) and
+             set(R142_IDS)<=set(selected) and
+             all(r142.get(k)==work[k] for k in
+                 ('master_sha256','attempt_id','operation_sha256')) and
+             r142.get('full_rule_semantic_passes')==0 and
+             r142.get('individual_mg0_passes')==0 and
+             r142.get('advancement_authorized') is False,
+             'R142_FALSE_COHORT_MOTHER_RULE_OR_MG0')
     if r130 is not None:
         from c07_behavior110_remediation import IDS as BEHAVIOR110_IDS
         need(type(r130) is dict
@@ -442,6 +456,12 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
             r140.get('original_audit_sha256'),
             'SUPERVISOR_C07_R140_A10_C10_ORIGINAL_DOMAIN_EVIDENCE',
             'exact_original_source_rule_evidence',r140['rules']))
+    if r142 is not None:
+        pairs.insert(next(i for i,p in enumerate(pairs) if p[0]=='R140')+1,
+          ('R142',r142.get('original_audit_tail'),
+            r142.get('original_audit_sha256'),
+            'SUPERVISOR_C07_R142_FROZEN37_MOTHER_ORIGINAL_EVIDENCE',
+            'source_specific_domain_observations',r142['rules']))
     if r130 is not None:
         pairs.insert(0,('R130',r130.get('original_audit_tail'),
             r130.get('original_audit_sha256'),
@@ -471,7 +491,7 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              rows[i+1].get(field) == expected,
              'R127_'+label+'_RECEIPT_DIFFERENT_FROM_REAL_AUDIT')
     need(positions == sorted(set(positions)) and
-         len(positions) == (4+int(r129 is not None)+int(r130 is not None)+int(r136 is not None)+int(r138 is not None)+int(r139 is not None)+int(r140 is not None)) and
+         len(positions) == (4+int(r129 is not None)+int(r130 is not None)+int(r136 is not None)+int(r138 is not None)+int(r139 is not None)+int(r140 is not None)+int(r142 is not None)) and
          positions[-1] == len(rows)-2 and
          rows[-1]['record_hash']==tail,
          'R127_AUDIT_SNAPSHOT_ORDER_OR_FINAL_RECEIPT')
@@ -667,6 +687,24 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
                  obs.get('advancement_authorized') is False,
                  'R140_INVALID_SOURCE_SPECIFIC_OR_UNAUTHORIZED_PASS:'+rid)
             checks['R140_original_reference']=cs
+        if r142 is not None and rid in r142['rules']:
+            item=r142['rules'][rid]
+            original=item.get('original_machine_predicates')
+            need(item.get('rule_id')==rid and
+                 item.get('source_sha256')==canonical['source_sha256'] and
+                 item.get('requirement_sha256')==canonical['requirement_sha256'] and
+                 type(original) is dict and len(original)==2 and
+                 all(type(v) is bool for v in original.values()) and
+                 item.get('actual_scope_observed')==
+                    sorted(k for k,v in original.items() if v) and
+                 item.get('missing_semantic_predicates')==
+                    sorted(k for k,v in original.items() if not v) and
+                 item.get('full_rule_semantics')=='UNKNOWN' and
+                 item.get('individual_mg0')=='UNKNOWN' and
+                 item.get('owner_approval')=='UNKNOWN' and
+                 item.get('advancement_authorized') is False,
+                 'R142_UNTRUSTED_SOURCE_DOMAIN_RULE:'+rid)
+            checks['R142_original_mother']=original
         scoped_count += int(bool(checks))
         positive_subchecks += sum(sum(v is True for v in group.values())
                                   for group in checks.values())
@@ -704,6 +742,9 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
         'original_exec25_domain_evidence_converged':25 if r138 is not None else 0,
         'original_binary_output_rules_examined':2 if r139 is not None else 0,
         'original_pre_d_research_rules_examined':18 if r140 is not None else 0,
+        'original_mother_control_rules_examined':37 if r142 is not None else 0,
+        'original_mother_control_domain_observations':(
+            r142['machine_conditions_observed'] if r142 is not None else 0),
         'original_pre_d_research_rules_all_sources':20 if r140 is not None else 0,
         'original_pre_d_research_observations':(
             r140['native_conditions_observed'] if r140 is not None else 0),
