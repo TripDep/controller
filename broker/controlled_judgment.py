@@ -676,6 +676,36 @@ class ControlledJudgment:
                        'CONTROLLED_R112_SEMANTIC_FAILURE_STOP:'+
                        ','.join(replay['semantic_negative_fail_rule_ids']+
                                 replay['unverified_owner_review_rule_ids']))
+                # R115 ONE source-locked execution over all first 200 rules,
+                # not another 200-item wording checklist. The same immutable
+                # per-rule obligations flow into technical review below.
+                from c07_bulk200_semantics import inspect as bulk_200
+                bulk = bulk_200(self.inventory, plans[0]['plan'],
+                    audit_raw=self.c.audit_path(self.asset).read_bytes(),
+                    asset=self.asset,
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    current_process_observation=(
+                        provenance if 'AAA-200-R-178' in inspected_scope(
+                            self.inventory, plans[0]['plan'])['due'] else None))
+                j.need(bulk['source_rule_count']==200
+                       and len(bulk['rules'])==200
+                       and bulk['counts']['DUE']+bulk['counts']['NOT_DUE']==200
+                       and bulk['positive_semantic_and_mg0_rule_passes']==0
+                       and bulk['advancement_authorized'] is False,
+                       'CONTROLLED_R115_INCOMPLETE_200_RULE_EXECUTION')
+                self.append('SUPERVISOR_C07_R115_BATCH200_SEMANTIC_EXECUTION',
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_rule_ids_sha256=bulk['source_rule_ids_sha256'],
+                    batch_segments=bulk['batch_segments'],
+                    counts=bulk['counts'], current_asset_passes=0,
+                    mode='INDEPENDENT_PROOF_LANES_WITHOUT_GLOBAL_POSITIVE_PASS',
+                    advancement_authorized=False)
+                j.need(not bulk['failed_due_rule_ids'],
+                       'CONTROLLED_R115_BATCH200_RECOGNIZED_SEMANTIC_FAILURE:'+
+                       ','.join(bulk['failed_due_rule_ids']))
             if result.upper() == 'PASS':
                 reserved = next(r for r in self.records() if r['record_hash'] == rows[0]['reservation_hash'])
                 work = reserved['work']
@@ -811,6 +841,48 @@ class ControlledJudgment:
                            ','.join(sorted(negative_ids)))
                     # Even zero findings does NOT permit this action to close:
                     # the independent post-run semantic+MG0 gate still follows.
+
+                # R115 repeats its entire first-200 evidence set against each
+                # ORIGINAL Controller-registered GLB. 200 source-locked rule
+                # contracts, a real machine re-scan, and no auto PASS.
+                if self.inventory.get('rule_count')==763:
+                    from c07_bulk200_semantics import inspect as batch_semantics
+                    native_summaries=[]
+                    for glb in (x for x in artifacts
+                                if Path(x['path']).suffix.lower()=='.glb'):
+                        reviewed=batch_semantics(
+                            self.inventory, plan,
+                            audit_raw=self.c.audit_path(self.asset).read_bytes(),
+                            asset=self.asset, attempt_id=work['attempt_id'],
+                            operation_sha256=work['operation_sha256'],
+                            registered_glb_path=glb['path'],
+                            glb_sha256=glb['sha256'])
+                        j.need(reviewed['source_rule_count']==200 and
+                               reviewed['actual_native_single_scan'] is True and
+                               reviewed['positive_semantic_and_mg0_rule_passes']==0 and
+                               reviewed['advancement_authorized'] is False,
+                               'CONTROLLED_R115_GLB_BATCH_CANNOT_CERTIFY')
+                        native_summaries.append({
+                            'registered_glb_sha256':glb['sha256'],
+                            'source_rule_ids_sha256':reviewed['source_rule_ids_sha256'],
+                            'source_rules_examined':reviewed['source_rule_count'],
+                            'native_machine_observations':reviewed['counts'][
+                                'RULE_SPECIFIC_GLTF_NEGATIVE_PREDICATES'],
+                            'current_rule_negative_findings':reviewed['failed_due_rule_ids'],
+                            'batch_segment_digests':reviewed['batch_segments'],
+                            'work_or_mg0_passes':0})
+                    j.need(native_summaries,
+                           'CONTROLLED_R115_REGISTERED_GLB_FOR_200_REQUIRED')
+                    self.append('SUPERVISOR_C07_R115_REGISTERED_GLB_200_BATCH',
+                         step=step, attempt_id=work['attempt_id'],
+                         operation_sha256=work['operation_sha256'],
+                         source_glbs=native_summaries,
+                         current_semantic_passes=0,individual_mg0_passes=0,
+                         advancement_authorized=False)
+                    failures=sorted({rid for summary in native_summaries
+                                     for rid in summary['current_rule_negative_findings']})
+                    j.need(not failures,'CONTROLLED_R115_NATIVE_NEGATIVE_STOP:'+
+                           ','.join(failures))
 
             if result.upper() == 'PASS':
                 from datetime import datetime, timezone
