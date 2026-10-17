@@ -35,7 +35,7 @@ def read_mesh_geometry(raw):
          28+jsz<=len(raw),'R139_GLB_JSON_CHUNK')
     doc=json.loads(raw[20:20+jsz])
     bin_size,bin_type=struct.unpack_from('<I4s',raw,20+jsz)
-    need(bin_type==b'BIN\\x00'.replace(b'\\x00',b'\x00')
+    need(bin_type==bytes((66,73,78,0))
          and bin_size%4==0 and 28+jsz+bin_size==len(raw),
          'R139_GLB_BINARY_CHUNK')
     data=memoryview(raw)[28+jsz:]
@@ -130,7 +130,7 @@ def _contract(value):
     if (type(lo) is not list or type(hi) is not list or
         len(lo)!=3 or len(hi)!=3 or not all(
         type(x) in (int,float) and math.isfinite(x) for x in lo+hi)
-        or not all(lo[k]<hi[k] for k in range(3))):
+        or not (all(lo[k]<=hi[k] for k in range(3)) and any(lo[k]<hi[k] for k in range(3)))):
         return None
     if (type(value['bbox_tolerance_m']) not in (int,float) or
         not 0<=value['bbox_tolerance_m']<=0.25 or
