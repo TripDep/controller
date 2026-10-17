@@ -1119,6 +1119,35 @@ class ControlledJudgment:
                     native_conditions_evaluated=60,
                     full_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R142: 37 original mother / G0 rule-specific checks, each
+                # with two distinct real Controller source/audit predicates.
+                # Full source semantics / independent MG0 still UNKNOWN.
+                from c07_frozen37_mother_native import inspect as inspect_r142
+                source_mother37=inspect_r142(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(source_mother37['source_rules_examined']==37
+                       and source_mother37['named_domain_predicates']==74
+                       and len(source_mother37['rules'])==37
+                       and source_mother37['full_rule_semantic_passes']==0
+                       and source_mother37['individual_mg0_passes']==0
+                       and source_mother37['advancement_authorized'] is False
+                       and all(v['full_rule_semantics']=='UNKNOWN'
+                           and v['individual_mg0']=='UNKNOWN'
+                           and v['owner_approval']=='UNKNOWN'
+                           for v in source_mother37['rules'].values()),
+                       'CONTROLLED_R142_FAKE_FULL_RULE_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R142_FROZEN37_MOTHER_ORIGINAL_EVIDENCE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=source_mother37['original_audit_sha256'],
+                    original_audit_tail=source_mother37['original_audit_tail'],
+                    source_specific_domain_observations=source_mother37['rules'],
+                    source_rules_examined=37,
+                    full_rule_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
@@ -1159,12 +1188,13 @@ class ControlledJudgment:
                     r123=native_r123, r124=native_r124, r122=positive200,
                     r129=exec25, r130=original110, r136=process_exact,
                     r138=exec25_domain, r139=real_output,
-                    r140=research20)
+                    r140=research20, r142=source_mother37)
                 j.need(checked200['source_rules_examined']==200
                        and checked200['original_exec25_individual_evidence_converged']==25
                        and checked200['original_exec25_domain_evidence_converged']==25
                        and checked200['original_binary_output_rules_examined']==2
                        and checked200['original_pre_d_research_rules_examined']==18
+                       and checked200['original_mother_control_rules_examined']==37
                        and checked200['original_pre_d_research_rules_all_sources']==20
                        and checked200['original_behavior110_individual_evidence_converged']==110
                        and checked200['original_literal_process_rule_evidence_converged']==2
