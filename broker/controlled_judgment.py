@@ -805,6 +805,39 @@ class ControlledJudgment:
                 j.need(not bulk['failed_due_rule_ids'],
                        'CONTROLLED_R115_BATCH200_RECOGNIZED_SEMANTIC_FAILURE:'+
                        ','.join(bulk['failed_due_rule_ids']))
+                # R129: 25 original EXEC-001..025 process observations,
+                # with original MASTER clauses, step-bound audit and registered
+                # dependency / binary bytes. This neither full-certifies a
+                # rule nor grants MG0/owner/visual review from fixture tests.
+                from c07_exec25_native_observation import inspect as inspect_exec25
+                exec25=inspect_exec25(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(exec25['source_rule_count']==25 and
+                       len(exec25['rules'])==25 and
+                       set(exec25['rules'])==
+                         {'EXEC-'+str(n).zfill(3) for n in range(1,26)}
+                       and exec25['full_rule_passes']==0
+                       and exec25['individual_mg0_passes']==0
+                       and exec25['advancement_authorized'] is False
+                       and all(v['full_rule_pass'] is False
+                               and v['full_rule_semantics']=='UNKNOWN'
+                               and v['individual_mg0']=='UNKNOWN'
+                               and bool(v['missing_independent_semantics'])
+                               for v in exec25['rules'].values()),
+                       'CONTROLLED_R129_FALSE_COMPLETE_NATIVE_EXEC_OR_MG0')
+                self.append('SUPERVISOR_C07_R129_EXEC25_ORIGINAL_OBSERVATIONS',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=exec25['original_audit_sha256'],
+                    original_audit_tail=exec25['original_audit_tail'],
+                    source_rule_ids_sha256=exec25['rule_ids_sha256'],
+                    exact_rule_source_observations=exec25['rules'],
+                    machine_predicates_observed=exec25['machine_predicates_observed'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R120: 13 actual machine-positive process *subpredicates*
                 # evaluated as one group within these exact first 200.
                 # They never upgrade full rules or individual MG0 to PASS.
