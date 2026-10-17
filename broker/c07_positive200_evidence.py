@@ -21,6 +21,17 @@ from real_work_intake import audit_check
 SCHEMA = 'gg-c07-r122-positive200-source-bound-gaps-v1'
 SHA = re.compile(r'[a-f0-9]{64}\Z')
 
+
+# R128: the first real source-bound 200-rule batch is a FIXED cohort.
+# Recomputing "first 200 missing" after a rule graduates silently replaces
+# that graduated rule with an unrelated one. This makes a 200-rule batch
+# impossible to finish incrementally. Keep the R122 verified IDs intact.
+R122_FROZEN_SHA256='63f56366b9b4be5a491db3feccec99860110191474baf68aa6da7e86d226b355'
+_R122_NONRANGE="110_ERROR_REGISTRY|A|AAA-200-A-001|AAA-200-A-002|AAA-200-A-003|AAA-200-A-004|AAA-200-A-005|AAA-200-A-006|AAA-200-A-007|AAA-200-A-010|AAA-200-C-021|AAA-200-C-022|AAA-200-C-023|AAA-200-C-024|AAA-200-C-025|AAA-200-C-026|AAA-200-C-027|AAA-200-C-028|AAA-200-C-029|AAA-200-C-030|AAA-200-R-171|AAA-200-R-172|AAA-200-R-173|AAA-200-R-174|AAA-200-R-175|AAA-200-R-176|AAA-200-R-177|AAA-200-R-178|AAA-200-R-179|AAA-200-R-180|ADVERSARIAL_QA|APPEND_ONLY_AUDIT|ARCHITECTURAL_QUALITY_FLOOR|ARCHITECTURE_1TO1|ASSISTANT_BEHAVIOR_PROTOCOL|AUTONOMOUS_PRE_PASS_QUESTION|B|BLOCK_ON_UNKNOWN|C|CG1|CG2|CG3|CG4|CROSS_PIECE_COHERENCE|D|D-METODO|D-RISULTATO|D-TEMPO|D0|DEFINITION_OF_DONE|DELIVERY_FIREWALL|DEPENDENCY_RECHECK|DEVELOPER_RULES_CANONICAL|E|EXPORT_REIMPORT|F|FIVEM_TARGET|FRESH_EYES|G0|G0-01|G0-02|G0-03|G0-04|G0-05|G0-06"
+R122_FROZEN_IDS=tuple(sorted(set(_R122_NONRANGE.split('|')) |
+    {'BEHAVIOR-'+str(i).zfill(3) for i in range(1,111)} |
+    {'EXEC-'+str(i).zfill(3) for i in range(1,26)}))
+
 class PositiveBatchBlocked(ValueError):
     pass
 
@@ -51,9 +62,29 @@ def select(inventory, plan):
          len(set(inventory.get('rules', {}))) == 763 and
          scope['master_sha256'] == inventory['canonical_master_sha256'],
          'R122_TRUSTED_FULL_CANON_REQUIRED')
-    candidates = sorted(set(scope['due']) - set(REVIEWED))
-    need(len(candidates) >= 200, 'R122_LESS_THAN_200_MISSING_RULES')
-    selected = candidates[:200]
+    # Original R122 units use non-operational synthetic inventories.
+    # Real canonical inventory ALWAYS retains the immutable original cohort
+    # even as approved_validators.REVIEWED grows from 12 to 13, 14, ... .
+    real_canon = ('110_ERROR_REGISTRY' in inventory['rules'] and
+                  'BEHAVIOR-110' in inventory['rules'] and
+                  inventory.get('source_digests', {}).get('aaa_catalog') ==
+                  'f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9')
+    if real_canon:
+        selected = list(R122_FROZEN_IDS)
+        need(len(selected)==200 and digest(selected)==R122_FROZEN_SHA256,
+             'R128_FROZEN_COHORT_DIGEST_CHANGED')
+        need(set(selected)<=set(scope['due']),
+             'R128_COHORT_NOT_ALL_DUE_IN_CURRENT_OPERATION')
+    else:
+        # Legacy synthetic test fixture only; never a source-authorized
+        # production cohort. Such inventories cannot provide the pinned
+        # canonical catalog SHA or original 110-regression source.
+        need('source_digests' not in inventory or
+             inventory.get('source_digests', {}).get('aaa_catalog') is None,
+             'R128_UNRECOGNIZED_CANONICAL_INVENTORY')
+        candidates = sorted(set(scope['due']) - set(REVIEWED))
+        need(len(candidates) >= 200, 'R122_LESS_THAN_200_MISSING_RULES')
+        selected = candidates[:200]
     for rid in selected:
         row = inventory['rules'][rid]
         need(type(row.get('requirement')) is str and row['requirement'].strip() and
@@ -158,9 +189,10 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         machine = sub.get('scoped_positive_observation') if sub else None
         scope_positive = machine == 'OBSERVED_SCOPE_PASS'
         observed_count += int(scope_positive)
-        missing = ['RULE_SPECIFIC_FULL_NATIVE_REVIEWED_VERIFIER',
-                   'REAL_INDEPENDENT_CLAUSE_PROOFS_ON_SAME_ATTEMPT',
+        missing = ['REAL_INDEPENDENT_CLAUSE_PROOFS_ON_SAME_ATTEMPT',
                    'INDIVIDUAL_RULE_MG0_FIVE_CANONICAL_CONDITIONS']
+        if rid not in REVIEWED:
+            missing.insert(0, 'RULE_SPECIFIC_FULL_NATIVE_REVIEWED_VERIFIER')
         if rid in composites or rid == '110_ERROR_REGISTRY':
             missing.append('INDEPENDENT_REVIEW_OF_EXHAUSTIVE_COMPOSITE_DECOMPOSITION')
         lanes = _lanes({**source, 'rule_id': rid})
@@ -179,12 +211,16 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             'missing_evidence': missing, 'work_pass': False}
         all_missing[rid] = missing
     need(len(result) == 200 and len(set(result)) == 200 and
-         set(result).isdisjoint(REVIEWED), 'R122_DUPLICATE_OR_OLD_REVIEWED_RULE')
+         (not real_canon or set(result) == set(R122_FROZEN_IDS)),
+         'R128_COHORT_IDS_CHANGED_OR_INCOMPLETE')
     report = {'schema': SCHEMA, 'asset': asset, 'step': step,
               'attempt_id': work['attempt_id'],
               'operation_sha256': work['operation_sha256'],
               'master_sha256': work['master_sha256'],
               'source_rule_count': 200, 'source_rule_ids_sha256': digest(selected),
+              'frozen_first200_ids': bool(real_canon),
+              'cohort_reviewed_implementations': sum(r in REVIEWED for r in selected),
+              'cohort_missing_reviewed_implementations': sum(r not in REVIEWED for r in selected),
               'original_controller_audit_sha256': sha(audit_raw),
               'original_controller_audit_tail': tail,
               'original_master_sha256': sha(original_master),
