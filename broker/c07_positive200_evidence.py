@@ -239,7 +239,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     return report
 
 def reconcile_current200(inventory, plan, controller, asset, step, work,
-                         *, r120, r123, r124, r122, r129=None):
+                         *, r120, r123, r124, r122, r129=None, r130=None):
     """R127: original-audit convergence of 200 per-rule observations and MG0.
 
     The four inputs MUST be direct immutable in-memory results produced by the
@@ -268,6 +268,20 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
                      and v.get('full_rule_semantics') == 'UNKNOWN'
                      for v in r129['rules'].values()),
              'R129_FULL_RULE_OR_MG0_FALSE_CERTIFICATION')
+    if r130 is not None:
+        from c07_behavior110_remediation import IDS as BEHAVIOR110_IDS
+        need(type(r130) is dict
+             and r130.get('schema')=='gg-c07-r130-original-110-remediation-evidence-v1'
+             and r130.get('source_rules_examined')==110
+             and set(r130.get('rules',{}))==set(BEHAVIOR110_IDS)
+             and set(BEHAVIOR110_IDS)<=set(selected)
+             and all(r130.get(k)==work[k] for k in
+                 ('master_sha256','attempt_id','operation_sha256'))
+             and r130.get('rule_count_with_semantic_PASS')==0
+             and r130.get('individual_mg0_PASS')==0
+             and r130.get('advancement_authorized') is False
+             and r130.get('result') in ('FAIL','UNKNOWN'),
+             'R131_ORIGINAL_BEHAVIOR_110_FALSE_PASS_OR_ATTEMPT_REPLAY')
     need(len(selected) == 200 and len(set(selected)) == 200,
          'R127_MISSING_EXACT_SOURCE200')
     need(type(work) is dict and work.get('master_sha256') ==
@@ -351,6 +365,11 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
             r129.get('original_audit_sha256'),
             'SUPERVISOR_C07_R129_EXEC25_ORIGINAL_OBSERVATIONS',
             'exact_rule_source_observations',r129['rules']))
+    if r130 is not None:
+        pairs.insert(0,('R130',r130.get('original_audit_tail'),
+            r130.get('original_audit_sha256'),
+            'SUPERVISOR_C07_R130_BEHAVIOR110_REMEDIATION',
+            'per_rule_verdicts',r130['rules']))
     positions=[]
     for label,prior,exact_bytes_hash,event,field,expected in pairs:
         need(type(prior) is str and SHA.fullmatch(prior) is not None,
@@ -369,7 +388,7 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
              rows[i+1].get(field) == expected,
              'R127_'+label+'_RECEIPT_DIFFERENT_FROM_REAL_AUDIT')
     need(positions == sorted(set(positions)) and
-         len(positions) == (5 if r129 is not None else 4) and
+         len(positions) == (4+int(r129 is not None)+int(r130 is not None)) and
          positions[-1] == len(rows)-2 and
          rows[-1]['record_hash']==tail,
          'R127_AUDIT_SNAPSHOT_ORDER_OR_FINAL_RECEIPT')
@@ -384,7 +403,7 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
          mg0.get('individual_mg0_passes')==0 and
          mg0.get('advancement_authorized') is False,
          'R127_MG0_ORIGINAL_INDIVIDUAL_READBACK_FALSE_PASS')
-    details={};scoped_count=0;positive_subchecks=0;failures=[]
+    details={};scoped_count=0;positive_subchecks=0;failures=[];behavior_failures=[]
     for rid in selected:
         canonical=inventory['rules'][rid]
         anchor=r122['rules'][rid]
@@ -457,10 +476,31 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
                  item.get('advancement_authorized') is False,
                  'R129_SOURCE_CLAUSE_OR_FALSE_NATIVE_PASS:'+rid)
             checks['R129']=observed
+        witness=mg0['rules'][rid]
+        behavioral=None
+        if r130 is not None and rid in r130['rules']:
+            behavioral=r130['rules'][rid]
+            need(behavioral.get('rule_id')==rid and
+                 behavioral.get('source_sha256')==canonical['source_sha256'] and
+                 behavioral.get('requirement_sha256')==canonical['requirement_sha256'] and
+                 behavioral.get('observed_failure_count')==
+                    len(behavioral.get('observations',())) and
+                 behavioral.get('semantic_result') in ('FAIL','UNKNOWN') and
+                 behavioral.get('individual_mg0')==witness.get('verdict') and
+                 behavioral.get('independent_prevention_effectiveness')=='UNKNOWN' and
+                 behavioral.get('real_owner_identity')=='UNKNOWN' and
+                 behavioral.get('new_full_rule_pass') is False and
+                 behavioral.get('advancement_authorized') is False,
+                 'R131_BEHAVIOR_RULE_SOURCE_MG0_OR_FALSE_PASS:'+rid)
+            checks['R130']={
+                'canonical_error_prevention_source_bound':True,
+                'current_attempt_failure_linkage_inspected':True,
+                'independently_verified_prevention_and_owner':False,
+            }
+            if behavioral['semantic_result']=='FAIL':behavior_failures.append(rid)
         scoped_count += int(bool(checks))
         positive_subchecks += sum(sum(v is True for v in group.values())
                                   for group in checks.values())
-        witness=mg0['rules'][rid]
         need(witness.get('verdict') in ('UNKNOWN','FAIL'),
              'R127_FALSIFIED_INDIVIDUAL_MG0:'+rid)
         if witness['verdict']=='FAIL':failures.append(rid)
@@ -470,9 +510,12 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
           'source_clause_count':anchor['canonical_clause_count'],
           'source_clause_index_sha256':anchor['clause_index_sha256'],
           'machine_scoped_checks':checks,
+          'behavior110_failure_observation':behavioral,
           'mg0_failure_observation':witness,
           'full_semantics':'UNKNOWN','individual_mg0':witness['verdict'],
-          'combined_result':'FAIL' if witness['verdict']=='FAIL' else 'UNKNOWN',
+          'combined_result':'FAIL' if witness['verdict']=='FAIL' or
+                        (behavioral and behavioral['semantic_result']=='FAIL')
+                        else 'UNKNOWN',
           'full_rule_pass':False,'work_authorized':False,
         }
     need(len(details)==200 and
@@ -488,11 +531,13 @@ def reconcile_current200(inventory, plan, controller, asset, step, work,
         'source_rules_examined':200,'source_rule_ids_sha256':digest(selected),
         'machine_scope_rule_count':scoped_count,
         'original_exec25_individual_evidence_converged':25 if r129 is not None else 0,
+        'original_behavior110_individual_evidence_converged':110 if r130 is not None else 0,
         'observed_machine_subpredicates':positive_subchecks,
+        'behavior110_failed_rule_ids':sorted(set(behavior_failures)),
         'mg0_failed_rule_ids':failures,'mg0_unknown_count':mg0['counts']['UNKNOWN'],
         'full_rule_passes':0,'individual_mg0_passes':0,
-        'unknown_rule_count':200-len(failures),
-        'result':'FAIL' if failures else 'UNKNOWN',
+        'unknown_rule_count':200-len(set(failures)|set(behavior_failures)),
+        'result':'FAIL' if failures or behavior_failures else 'UNKNOWN',
         'rules':details,'advancement_authorized':False,
     }
     result['report_sha256']=digest(result)
