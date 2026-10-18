@@ -1294,6 +1294,45 @@ class ControlledJudgment:
                         future_phase_rules=native_p345['future_phase_rule_count'],
                         full_rule_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                # R147: 40 original P6 collision / P7 RAGE / P8 final QA
+                # source-bound machine facts. R-171..180 are already in the
+                # frozen P0 cohort and must never be counted twice.
+                from c07_p678_forty_native_domain import (
+                    PHASES as R147_PHASES, inspect as inspect_r147)
+                if plans[0]['plan'].get('phase') in R147_PHASES:
+                    source_p678=inspect_r147(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    due=(10 if plans[0]['plan']['phase']=='P6'
+                         else 20 if plans[0]['plan']['phase']=='P7'
+                         else 40)
+                    j.need(source_p678['source_rule_count']==40
+                           and source_p678['named_machine_criteria']==80
+                           and source_p678['due_rule_count']==due
+                           and source_p678['future_rule_count']==40-due
+                           and len(source_p678['rules'])==40
+                           and source_p678['full_semantic_passes']==0
+                           and source_p678['individual_mg0_passes']==0
+                           and source_p678['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] in ('UNKNOWN','NOT_DUE')
+                               and v['individual_mg0'] in ('UNKNOWN','NOT_DUE')
+                               and v['owner_acceptance']=='UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in source_p678['rules'].values()),
+                           'CONTROLLED_R147_FALSE_P678_FIVEM_OR_MG0_PASS')
+                    self.append('SUPERVISOR_C07_R147_P678_40_ORIGINAL_DOMAIN',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=source_p678['original_audit_sha256'],
+                        original_audit_tail=source_p678['original_audit_tail'],
+                        exact_source_rule_evidence=source_p678['rules'],
+                        source_rules_examined=40,
+                        due_rules=source_p678['due_rule_count'],
+                        future_phase_rules=source_p678['future_rule_count'],
+                        full_semantic_passes=0,individual_mg0_passes=0,
+                        advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
