@@ -1333,6 +1333,40 @@ class ControlledJudgment:
                         future_phase_rules=source_p678['future_rule_count'],
                         full_semantic_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                # R148: 200 original canonical QUESTIONS_300 source
+                # witnesses Q-001..Q-200, per-question original registered
+                # evidence and real machine fingerprint. Source observation
+                # never mints full semantic or individual MG0 PASS.
+                from c07_q200_original_witnesses import inspect as inspect_r148
+                q200_actual=inspect_r148(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(q200_actual['source_question_count']==200
+                       and q200_actual['independent_source_categories']==10
+                       and set(q200_actual['rules'])==
+                         {'Q-'+str(n).zfill(3) for n in range(1,201)}
+                       and q200_actual['verified_semantic_passes']==0
+                       and q200_actual['individual_mg0_passes']==0
+                       and q200_actual['advancement_authorized'] is False
+                       and all(v['semantic_verdict'] in ('UNKNOWN','FAIL')
+                           and v['individual_mg0']=='UNKNOWN'
+                           and v['owner_approval']=='UNKNOWN'
+                           and v['advancement_authorized'] is False
+                           for v in q200_actual['rules'].values()),
+                       'CONTROLLED_R148_FAKE_200_QUESTION_MG0_OR_FULL_PASS')
+                self.append('SUPERVISOR_C07_R148_FIRST200_QUESTION_WITNESSES',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=q200_actual['original_audit_sha256'],
+                    original_audit_tail=q200_actual['original_audit_tail'],
+                    source_specific_question_witnesses=q200_actual['rules'],
+                    source_questions_examined=200,
+                    original_witnesses_observed=q200_actual['authentic_witnesses'],
+                    source_current_attempt_failures=q200_actual['source_current_attempt_failures'],
+                    verified_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
