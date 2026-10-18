@@ -1215,6 +1215,46 @@ class ControlledJudgment:
                         native_domain_criteria=90,
                         full_semantic_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                # R145: 50 original asset-type-specific P2 source technical
+                # checks: architecture(20), organic(10), vegetation(10),
+                # terrain(10). Only corresponding asset type becomes DUE.
+                # No authentic artwork/MG0 or FiveM runtime PASS is inferred.
+                from c07_p2_fifty_asset_type_domain import (
+                    DUE as R145_PHASES, inspect as inspect_r145)
+                if plans[0]['plan'].get('phase') in R145_PHASES:
+                    native_p2=inspect_r145(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    expected_p2_count=(20 if reserved_work['asset_type']=='architecture'
+                          else 10)
+                    j.need(native_p2['canonical_source_rule_count']==50
+                           and native_p2['actual_due_rules']==expected_p2_count
+                           and native_p2['other_asset_type_rules']==50-expected_p2_count
+                           and native_p2['named_domain_probes']==100
+                           and len(native_p2['rules'])==50
+                           and native_p2['full_semantic_passes']==0
+                           and native_p2['individual_mg0_passes']==0
+                           and native_p2['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] in
+                               ('UNKNOWN','NOT_DUE')
+                               and v['individual_mg0'] in ('UNKNOWN','NOT_DUE')
+                               and v['owner_approval']=='UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in native_p2['rules'].values()),
+                           'CONTROLLED_R145_FALSE_CROSS_TYPE_OR_MG0_PASS')
+                    self.append('SUPERVISOR_C07_R145_P2_50_ORIGINAL_DOMAIN',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=native_p2['original_audit_sha256'],
+                        original_audit_tail=native_p2['original_audit_tail'],
+                        canonical_type_scoped_rules=native_p2['rules'],
+                        source_rules_examined=50,
+                        due_rules=native_p2['actual_due_rules'],
+                        other_asset_type_rules=native_p2['other_asset_type_rules'],
+                        full_semantic_passes=0,individual_mg0_passes=0,
+                        advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
