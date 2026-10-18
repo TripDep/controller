@@ -98,8 +98,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       'OWNER':digest(decisions),
       'DISCOVERY':digest(discovery)}
     envelopes=plan.get('question_100_original_witnesses')
-    slots=envelopes.get('rules') if type(envelopes) is dict and
-        envelopes.get('schema')==CONTRACT else {}
+    slots=(envelopes.get('rules') if type(envelopes) is dict and
+           envelopes.get('schema')==CONTRACT else {})
     if type(slots) is not dict:slots={}
     need(not set(slots)-set(IDS),'R149_EXTRA_UNREGISTERED_QUESTION')
     negatives={row.get('rule_id') for row in journal
