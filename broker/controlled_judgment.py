@@ -1643,6 +1643,43 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Original P-155..160 geometry, terrain, walkability, vehicle;
+                # untrusted runtime logs never attest FiveM or MG0.
+                if plans[0]['plan'].get('phase') in (
+                        'P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p6_walkability_semantics import (
+                        IDS as P6_WALK_IDS, inspect as inspect_p6_walk)
+                    p6_walk = inspect_p6_walk(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p6_walk['source_rule_count'] == 6
+                           and set(p6_walk['rules']) == set(P6_WALK_IDS)
+                           and p6_walk['full_rule_semantic_passes'] == 0
+                           and p6_walk['individual_mg0_passes'] == 0
+                           and p6_walk['advancement_authorized'] is False
+                           and p6_walk['rules']['AAA-200-P-160'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT'
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p6_walk['rules'].values()),
+                           'CONTROLLED_P6_WALKABILITY_FALSE_GAME_MG0_PASS')
+                    if p6_walk['metrics']['collision_triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P6_ORIGINAL_WALKABILITY_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p6_walk['original_audit_sha256'],
+                            original_audit_tail=p6_walk['original_audit_tail'],
+                            source_rule_ids=list(P6_WALK_IDS),
+                            original_geometry_metrics=p6_walk['metrics'],
+                            original_rule_machine_checks=p6_walk['rules'],
+                            machine_positive_obligations=p6_walk[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Four literal P8 delivery requirements: original source,
                 # exported GLB, complete ZIP members and exact version/SHA.
                 # CRC and parseable bytes never certify in-game usability.
@@ -1729,6 +1766,41 @@ class ControlledJudgment:
                             machine_positive_obligations=p8_closure[
                                 'machine_positive_obligations'],
                             full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Original S-181..190 six-view PNG, GLB and final QA facts.
+                # Producer reports cannot authorize MG0, runtime or owner PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_final_qa_semantics import (
+                        IDS as P8_FINAL_IDS, inspect as inspect_p8_final)
+                    p8_final = inspect_p8_final(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_final['source_rule_count'] == 10
+                           and set(p8_final['rules']) == set(P8_FINAL_IDS)
+                           and p8_final['full_rule_semantic_passes'] == 0
+                           and p8_final['individual_mg0_passes'] == 0
+                           and p8_final['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p8_final['rules'].values()),
+                           'CONTROLLED_P8_FINAL_QA_FALSE_MG0_PASS')
+                    if p8_final['metrics']['decoded_views'] > 0:
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_FINAL_QA_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_final['original_audit_sha256'],
+                            original_audit_tail=p8_final['original_audit_tail'],
+                            source_rule_ids=list(P8_FINAL_IDS),
+                            original_qa_metrics=p8_final['metrics'],
+                            original_rule_machine_checks=p8_final['rules'],
+                            machine_positive_obligations=p8_final[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
                             advancement_authorized=False)
                 # Ten literal P7 RAGE preflight predicates on original
                 # CodeWalker XML, pinned GLB vertex attributes, resource
