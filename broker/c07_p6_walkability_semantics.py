@@ -185,17 +185,41 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     def center(triangle):
         return tuple(sum(p[i] for p in triangle)/3 for i in range(3))
     def actual_solid_contact():
+        # A matching triangle centroid does not establish that the collision
+        # surface covers the original solid mesh: tiny triangles with the same
+        # centroid could let a player fall through. Compare each original
+        # visual triangle vertex to the actual collision triangle surfaces.
         if not (solid_proxy and native_tris and coll_tris):
             return False
         tolerance=policy.get("max_visual_collision_gap_m",0.05)
         if not finite(tolerance) or not 0<=tolerance<=0.2:
             return False
-        return all(
-            any(_centroid_in(v,_box(zone)) for v in native_tris) and
-            all(any(math.dist(center(v),center(c))<=tolerance
-                    for c in coll_tris if _centroid_in(c,_box(zone)))
-                for v in native_tris if _centroid_in(v,_box(zone)))
-            for zone in solid)
+        from c07_p6_invisible_collision_full_review import (
+            surface_distance, unit_normal, dot)
+        for zone in solid:
+            box=_box(zone)
+            visual=[t for t in native_tris if _centroid_in(t,box)]
+            collision=[t for t in coll_tris if _centroid_in(t,box)]
+            if not visual or not collision:
+                return False
+            # Refuse to claim a complete static proof on an unbounded
+            # Cartesian scan; keep UNKNOWN rather than sampling a few faces.
+            if len(visual)*len(collision)>2_000_000:
+                return False
+            collision_normals=[unit_normal(t) for t in collision]
+            if any(n is None for n in collision_normals):
+                return False
+            for tri in visual:
+                normal=unit_normal(tri)
+                if normal is None:
+                    return False
+                for vertex in tri:
+                    if not any(
+                        abs(dot(normal,cn))>=0.9 and
+                        surface_distance(vertex,ct)<=tolerance
+                        for ct,cn in zip(collision,collision_normals)):
+                        return False
+        return True
     deep={
       155:("original_solid_visual_triangles_supported_by_collision_geometry",
            bool(actual_solid_contact())),
