@@ -44,6 +44,10 @@ CASES = (
     (P1Thirty, 'AAA-200-F-052', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (GeometryFixture, 'AAA-200-L-111',
      'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (GeometryFixture, 'AAA-200-L-113',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (GeometryFixture, 'AAA-200-L-114',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
     (GeometryFixture, 'AAA-200-L-112',
      'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
     (BudgetFixture, 'AAA-200-O-141',
@@ -76,6 +80,16 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.setUp()
         self.addCleanup(test.doCleanups)
         f = test.f
+        if isinstance(test, GeometryFixture):
+            # The original pre-D comparison target is an independently
+            # registered immutable GLB, never a producer verdict.
+            original = (f.root / 'scene.glb').read_bytes()
+            f.add_item('P3_APPROVED_REFERENCE', 'approved_reference.glb',
+                       original)
+            f.plan['p345_evidence_contract'] = {
+                'original_artifact_sha256': {
+                    role: f.items[role]['sha256']
+                    for role in ('NATIVE_EXPORT', 'P3_APPROVED_REFERENCE')}}
         master = ('## MG0 — PROCESS FALSIFICATION\n' +
             ''.join('- ' + trigger + '\n' for trigger in mg0.TRIGGERS) +
             'The response is not limited to fixing the asset.\n' +
@@ -116,8 +130,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
     def test_twenty_six_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 26)
-        self.assertEqual(len(set(x[1] for x in CASES)), 26)
+        self.assertEqual(len(CASES), 28)
+        self.assertEqual(len(set(x[1] for x in CASES)), 28)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -190,6 +204,42 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 p.write_bytes(p.read_bytes() + b'forged')
                 with self.assertRaises(ValueError):
                     build_packet(ctx, rid, expected=expected)
+
+    def test_original_topology_full_literals_reject_measured_defects(self):
+        from test_c07_p3_geometry_semantics import TRI, UP, glb
+        for rid, native, expected in (
+            ('AAA-200-L-111', glb(TRI, [(0,1,2),(2,1,0)], UP), 'FAIL'),
+            ('AAA-200-L-113', glb([(0,0,0),(1,0,0),(2,0,0)],
+                                   [(0,1,2)], UP), 'FAIL'),
+            ('AAA-200-L-114', glb(TRI, [(0,1,2)], [(0,0,-1)]*3),
+                                   'FAIL'),
+        ):
+            with self.subTest(rule=rid):
+                test, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                test.put(native)
+                ctx['plan']['p345_evidence_contract'][
+                    'original_artifact_sha256']['NATIVE_EXPORT'] = (
+                        ctx['controller']._state['artifacts'][-1]['sha256']
+                        if False else test.f.items['NATIVE_EXPORT']['sha256'])
+                test.f.rebuild()
+                ctx['controller'] = test.f.controller
+                packet = build_packet(ctx, rid)
+                self.assertEqual(packet['rule']['result'], expected)
+                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
+
+    def test_original_topology_missing_reference_pin_is_unknown(self):
+        test, ctx = self.context(GeometryFixture,
+            'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+        ctx['plan']['p345_evidence_contract'][
+            'original_artifact_sha256'].pop('P3_APPROVED_REFERENCE')
+        test.f.rebuild()
+        ctx['controller'] = test.f.controller
+        for rid in ('AAA-200-L-113', 'AAA-200-L-114'):
+            with self.subTest(rule=rid):
+                packet = build_packet(ctx, rid)
+                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
+                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
 
     def test_native_rule_negative_originals_not_reinterpreted_as_pass(self):
         test, ctx = self.context(GeometryFixture,
