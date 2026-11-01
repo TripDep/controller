@@ -125,6 +125,28 @@ class Tests(unittest.TestCase):
         self.assertEqual(r["individual_mg0_passes"],0)
         self.assertFalse(r["advancement_authorized"])
 
+    def test_ten_extra_original_semantic_checks_are_distinct_and_scoped(self):
+        report=self.examine()
+        self.assertEqual(set(report["rules"]),set(IDS))
+        names=set()
+        for n,rid in zip(range(181,191),IDS):
+            with self.subTest(rule=rid):
+                deep=report["rules"][rid]["original_cross_source_semantic"]
+                self.assertEqual(len(deep),1)
+                self.assertFalse(names.intersection(deep))
+                names.update(deep)
+                self.assertIsInstance(next(iter(deep.values())),bool)
+                self.assertEqual(report["rules"][rid]["full_rule_semantics"],
+                                 "UNKNOWN")
+                self.assertFalse(report["rules"][rid]["advancement_authorized"])
+        self.assertEqual(len(names),10)
+        self.assertGreaterEqual(
+            report["original_cross_source_positive_obligations"],5)
+        # Historical/producer critical and QA are not independent attestation.
+        for n in (189,190):
+            self.assertFalse(next(iter(report["rules"][
+                "AAA-200-S-%03d"%n]["original_cross_source_semantic"].values())))
+
     def test_each_original_rule_has_independent_adversarial_negative(self):
         changes={
           181:("views","REAR",self.views["FRONT"]),
@@ -158,6 +180,8 @@ class Tests(unittest.TestCase):
                                  "UNKNOWN_OR_DEFECT")
                 self.assertEqual(r["rules"]["AAA-200-S-%03d"%n]["individual_mg0"],
                                  "UNKNOWN")
+                self.assertFalse(next(iter(r["rules"][
+                    "AAA-200-S-%03d"%n]["original_cross_source_semantic"].values())))
                 if kind=="views":self.views[key]=old
                 elif kind=="doc":self.docs[key][field]=old
                 elif kind=="state":
