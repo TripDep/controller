@@ -1,4 +1,4 @@
-"""Eight source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Thirteen source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -12,6 +12,22 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-044': ('p1', (
+        'pre_D_path_line_strings_decoded',
+        'main_and_secondary_path_ids_named',
+        'original_path_geojson_sha_pinned')),
+    'AAA-200-L-117': ('uv', (
+        'all_original_uv_triangle_pairs_compared',
+        'no_positive_area_overlap_under_original_policy')),
+    'AAA-200-M-128': ('texture', (
+        'original_embedded_png_bytes_and_dimensions_within_budget',
+        'all_original_embedded_images_independently_decoded')),
+    'AAA-200-S-189': ('final_qa', (
+        'original_critical_finding_present',
+        'critical_finding_keeps_controller_delivery_blocked')),
+    'AAA-200-T-196': ('closure', (
+        'original_test_matrix_explicitly_separates_run_and_not_run',
+        'every_reported_run_references_registered_original_evidence')),
     'AAA-200-E-042': ('p1', (
         'original_xyz_coordinate_origin_declared',
         'original_coordinate_basis_named',
@@ -86,6 +102,14 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_budget_semantics import inspect
     elif domain == 'delivery':
         from c07_p8_delivery_semantics import inspect
+    elif domain == 'uv':
+        from c07_p3_uv_semantics import inspect
+    elif domain == 'texture':
+        from c07_p4_texture_semantics import inspect
+    elif domain == 'final_qa':
+        from c07_p8_final_qa_semantics import inspect
+    elif domain == 'closure':
+        from c07_p8_closure_semantics import inspect
     else:
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
