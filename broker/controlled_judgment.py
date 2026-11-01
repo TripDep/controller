@@ -1122,6 +1122,15 @@ class ControlledJudgment:
                                for v in p0_planning['rules'].values()),
                            'CONTROLLED_P0_ORIGINAL_PLANNING_FALSE_PASS')
                     if p0_planning['original_registered_planning_documents']:
+                        # A registered ORIGINAL project brief with a different
+                        # asset is a concrete cross-asset source contradiction.
+                        # Absence of a brief remains UNKNOWN, not invented FAIL.
+                        if 'P0_PROJECT_BRIEF' in p0_planning[
+                                'original_registered_planning_documents']:
+                            j.need(p0_planning['rules']['AAA-200-B-011'][
+                                'original_machine_checks'][
+                                'original_asset_purpose_matches_work'] is True,
+                                'CONTROLLED_P0_ORIGINAL_PROJECT_BRIEF_WRONG_ASSET')
                         self.append('SUPERVISOR_C07_P0_NINE_ORIGINAL_PLANNING_ORACLES',
                             step=step,attempt_id=reserved_work['attempt_id'],
                             operation_sha256=reserved_work['operation_sha256'],
