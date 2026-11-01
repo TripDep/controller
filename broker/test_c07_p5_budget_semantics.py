@@ -19,8 +19,8 @@ def png():
         return struct.pack(">I", len(data))+tag+data+struct.pack(
             ">I", zlib.crc32(tag+data)&0xffffffff)
     ihdr=struct.pack(">IIBBBBB", 2,2,8,6,0,0,0)
-    scan=b"".join(b"\\x00"+b"\\xff\\x00\\x00\\xff"*2 for _ in range(2))
-    return b"\\x89PNG\\r\\n\\x1a\\n"+chunk(b"IHDR",ihdr)+chunk(
+    scan=b"".join(b"\x00"+b"\xff\x00\x00\xff"*2 for _ in range(2))
+    return b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR",ihdr)+chunk(
         b"IDAT",zlib.compress(scan))+chunk(b"IEND",b"")
 
 def with_embedded_texture(raw, image=None):
@@ -30,7 +30,7 @@ def with_embedded_texture(raw, image=None):
     img=png() if image is None else image
     off=len(data)
     data.extend(img)
-    data.extend(b"\\x00"*(-len(data)%4))
+    data.extend(b"\x00"*(-len(data)%4))
     doc["bufferViews"].append({"buffer":0,"byteOffset":off,"byteLength":len(img)})
     doc["images"]=[{"bufferView":len(doc["bufferViews"])-1,
                     "mimeType":"image/png"}]
@@ -43,7 +43,7 @@ def with_embedded_texture(raw, image=None):
     js+=b" "*(-len(js)%4)
     return (struct.pack("<4sII",b"glTF",2,28+len(js)+len(data))+
             struct.pack("<I4s",len(js),b"JSON")+js+
-            struct.pack("<I4s",len(data),b"BIN\\x00")+bytes(data))
+            struct.pack("<I4s",len(data),b"BIN\x00")+bytes(data))
 
 BUDGET={
     "platform":"GTA_V_FIVEM","scene_class":"outdoor-small",
