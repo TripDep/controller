@@ -47,6 +47,10 @@ NATIVE_RULES = {
     'AAA-200-P-153': ('collision', (
         'original_collision_triangle_budget_explicit',
         'actual_collision_complexity_within_original_limits')),
+    'AAA-200-P-156': ('p6_invisible_full', (
+        'pre_d_invisible_collision_tolerance_and_original_exports_sha_pinned',
+        'every_original_collision_triangle_normal_matches_a_visual_surface',
+        'every_original_collision_triangle_vertex_and_centroid_on_visible_original_geometry')),
     'AAA-200-P-157': ('walkability', (
         'original_walkable_region_boxes_valid',
         'each_walkable_region_has_original_collision_surface',
@@ -143,7 +147,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
-    'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
+    'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153', 'AAA-200-P-156',
     'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159',
     'AAA-200-O-148', 'AAA-200-S-188', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
     'AAA-200-T-196', 'AAA-200-T-197',
@@ -214,6 +218,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     elif domain == 'p1_paths_full':
         from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
+    elif domain == 'p6_invisible_full':
+        from c07_p6_invisible_collision_full_review import inspect as inspect_invisible
     else:
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
@@ -222,8 +228,11 @@ def build_packet(source_context, rule_id, *, expected=None):
                          if domain == 'p1_spatial' else None)
     p1_paths_review = (inspect_p1_paths(source_context, rule_id)
                        if domain == 'p1_paths_full' else None)
+    p6_invisible_review = (inspect_invisible(source_context, rule_id)
+                           if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
-                        (p5_review, p1_spatial_review, p1_paths_review)
+                        (p5_review, p1_spatial_review, p1_paths_review,
+                         p6_invisible_review)
                         if review is not None), None)
     if full_review is not None:
         from c07_positive_native_process import _original_attempt
@@ -310,6 +319,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_spatial_review'] = p1_spatial_review
     if p1_paths_review is not None:
         proof['original_p1_paths_access_review'] = p1_paths_review
+    if p6_invisible_review is not None:
+        proof['original_p6_invisible_collision_review'] = p6_invisible_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
