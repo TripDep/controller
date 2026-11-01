@@ -1,4 +1,4 @@
-"""Five source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Eight source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -10,12 +10,25 @@ import json
 
 import supervisor_judgment as judgment
 import c07_p3_geometry_semantics as topology
+import c07_p1_thirty_native_domain as p1
 import c07_p5_budget_semantics as budget
 import c07_p8_delivery_semantics as delivery
 import c07_mg0_individual as mg0
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-042': ('p1', (
+        'original_xyz_coordinate_origin_declared',
+        'original_coordinate_basis_named',
+        'native_local_GLTF_positions_available')),
+    'AAA-200-E-047': ('p1', (
+        'expected_original_structural_envelope_declared',
+        'native_original_bounds_recomputed',
+        'actual_original_native_bbox_matches_envelope')),
+    'AAA-200-F-052': ('p1', (
+        'actual_original_local_extents_independently_decoded',
+        'original_target_local_bounds_declared',
+        'original_local_bounds_match_pre_D_expected_extent')),
     'AAA-200-L-111': ('topology', (
         'all_original_mesh_primitives_scanned', 'nonmanifold_edge_count_zero')),
     'AAA-200-L-112': ('topology', (
@@ -32,7 +45,7 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-INSPECTORS = {'topology': topology.inspect, 'budget': budget.inspect,
+INSPECTORS = {'p1': p1.inspect, 'topology': topology.inspect, 'budget': budget.inspect,
               'delivery': delivery.inspect}
 
 class NativeRuleEvidenceBlocked(ValueError):
@@ -73,7 +86,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     report = INSPECTORS[domain](inv, plan, controller, asset, step, work,
                                 source_loader=loader)
     source = report['rules'][rule_id]
-    checks = source['original_machine_checks']
+    checks = (source['original_native_measured_criteria'] if domain == 'p1'
+              else source['original_machine_checks'])
     need(type(checks) is dict and set(checks) == set(criteria) and
          all(type(v) is bool for v in checks.values()) and
          source['requirement_sha256'] == row['requirement_sha256'] and
