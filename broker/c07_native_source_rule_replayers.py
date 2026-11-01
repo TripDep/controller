@@ -1,4 +1,4 @@
-"""Nineteen source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Twenty source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -71,13 +71,16 @@ NATIVE_RULES = {
     'AAA-200-O-148': ('budget', (
         'all_embedded_original_png_dimensions_decoded',
         'actual_rgba_memory_bound_by_original_budget')),
+    'AAA-200-T-192': ('delivery', (
+        'original_required_delivery_member_set_explicit',
+        'all_original_required_members_present')),
     'AAA-200-T-194': ('delivery', (
         'registered_source_export_bytes_equal_archive_members',
         'original_manifest_asset_version_and_hashes_match')),
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These fifteen literals have independently decidable original-byte acceptance
+# These sixteen literals have independently decidable original-byte acceptance
 # conditions. The other four source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
@@ -85,7 +88,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
-    'AAA-200-O-148', 'AAA-200-S-189', 'AAA-200-T-194',
+    'AAA-200-O-148', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
     'AAA-200-T-197',
 ))
 REVIEWED_RULES = {rid: NATIVE_RULES[rid] for rid in FULL_LITERAL_REVIEWED}
