@@ -12,6 +12,58 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-L-118': ('p345_remaining_scoped', (
+        'pre_d_original_atlas_and_baseline_contract_sha_bound',
+        'actual_native_and_baseline_material_texture_bindings_recomputed',
+        'measured_original_atlas_binding_reduction_and_texture_quality_retained')),
+    'AAA-200-L-119': ('p345_remaining_scoped', (
+        'pre_d_original_bake_necessity_and_source_normal_map_sha_bound',
+        'actual_exported_normal_texture_and_baked_png_pixels_redecoded',
+        'actual_baked_map_channels_and_exported_normal_image_match')),
+    'AAA-200-L-120': ('p345_remaining_scoped', (
+        'pre_d_original_approved_mesh_and_current_export_sha_bound',
+        'actual_approved_and_current_native_triangle_geometry_compared',
+        'trusted_original_visual_approval_and_renderer_equivalence_confirmed')),
+    'AAA-200-N-133': ('p345_remaining_scoped', (
+        'pre_d_original_lighting_defect_policy_and_capture_sha_bound',
+        'actual_original_native_triangles_and_defect_report_recomputed',
+        'trusted_lighting_renderer_and_geometry_defect_provenance_confirmed')),
+    'AAA-200-N-134': ('p345_remaining_scoped', (
+        'pre_d_original_direct_light_policy_and_view_sha_bound',
+        'actual_direct_light_pixels_and_original_pbr_materials_recomputed',
+        'trusted_direct_light_renderer_and_physical_material_response_confirmed')),
+    'AAA-200-N-135': ('p345_remaining_scoped', (
+        'pre_d_original_shadow_policy_and_view_sha_bound',
+        'actual_shadow_and_neutral_pixels_and_materials_recomputed',
+        'trusted_shadow_renderer_and_physical_material_response_confirmed')),
+    'AAA-200-N-136': ('p345_remaining_scoped', (
+        'pre_d_original_reflective_material_policy_and_view_sha_bound',
+        'actual_original_metal_glass_pbr_and_reflection_pixels_recomputed',
+        'trusted_reflection_renderer_and_real_material_behavior_confirmed')),
+    'AAA-200-N-139': ('p345_remaining_scoped', (
+        'pre_d_original_underside_qa_scope_and_view_sha_bound',
+        'actual_underside_pixels_and_unresolved_qa_findings_recomputed',
+        'trusted_renderer_provenance_and_complete_defect_coverage_confirmed')),
+    'AAA-200-N-140': ('p345_remaining_scoped', (
+        'pre_d_original_separate_presentation_and_technical_qa_sha_bound',
+        'actual_distinct_original_visual_capture_and_machine_report_recomputed',
+        'trusted_independent_artistic_vs_technical_review_confirmed')),
+    'AAA-200-O-143': ('p345_remaining_scoped', (
+        'pre_d_original_hidden_face_policy_and_baseline_sha_bound',
+        'actual_before_after_native_triangle_counts_and_bounds_recomputed',
+        'original_hidden_face_intent_and_nonessential_geometry_proven')),
+    'AAA-200-O-145': ('p345_remaining_scoped', (
+        'pre_d_original_lod_transition_policy_and_views_sha_bound',
+        'actual_original_near_far_lod_geometry_and_pixels_recomputed',
+        'trusted_renderer_continuity_and_no_visible_lod_popping_confirmed')),
+    'AAA-200-O-147': ('p345_remaining_scoped', (
+        'pre_d_original_texture_reuse_and_quality_policy_sha_bound',
+        'actual_shared_original_glb_image_bindings_and_pixels_recomputed',
+        'independent_scene_quality_not_degraded_by_reuse_confirmed')),
+    'AAA-200-O-150': ('p345_remaining_scoped', (
+        'pre_d_original_platform_scene_benchmark_contract_sha_bound',
+        'actual_registered_frame_samples_and_source_scene_bytes_recomputed',
+        'trusted_real_fivem_runtime_capture_provenance_confirmed')),
     'AAA-200-M-121': ('p4_material_macro_full', (
         'pre_d_original_physical_material_classification_sha_pinned',
         'every_actual_exported_primitive_material_has_canonical_class',
@@ -371,6 +423,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
     elif domain == 'p4_material_macro_full':
         from c07_p4_material_macro_full_review import inspect as inspect_p4_material
+    elif domain == 'p345_remaining_scoped':
+        from c07_p345_remaining_original_review import inspect as inspect_remaining
     elif domain == 'p8_intersection_full':
         from c07_p8_intersection_full_review import inspect as inspect_intersections
     elif domain == 'p8_final_process_full':
@@ -407,6 +461,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                      if domain == 'p4_pbr_maps_full' else None)
     p4_material_review = (inspect_p4_material(source_context, rule_id)
                           if domain == 'p4_material_macro_full' else None)
+    p345_remaining_review = (inspect_remaining(source_context, rule_id)
+                             if domain == 'p345_remaining_scoped' else None)
     p8_intersection_review = (inspect_intersections(source_context, rule_id)
                               if domain == 'p8_intersection_full' else None)
     p8_final_process_review = (inspect_final_process(source_context, rule_id)
@@ -420,7 +476,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
-                         p8_intersection_review,
+                         p345_remaining_review, p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -530,6 +586,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_pbr_review'] = p4_pbr_review
     if p4_material_review is not None:
         proof['original_p4_material_macro_review'] = p4_material_review
+    if p345_remaining_review is not None:
+        proof['original_p345_remaining_scoped_review'] = p345_remaining_review
     if p8_intersection_review is not None:
         proof['original_p8_intersection_review'] = p8_intersection_review
     if p8_final_process_review is not None:
