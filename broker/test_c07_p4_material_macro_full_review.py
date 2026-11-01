@@ -11,6 +11,7 @@ from test_c07_native_source_rule_replayers import NativeOriginalReplayerTests
 from test_c07_p345_forty_native_evidence import P345Forty, encoded
 from test_c07_p3_geometry_semantics import glb
 from test_c07_p5_budget_semantics import with_embedded_texture, QUAD, NORMALS
+from test_c07_p3_uv_semantics import uv_glb
 from test_c07_p5_optimization_semantics import rewrite_glb
 from test_c07_p4_texture_semantics import (
     png, gradient, solid, material)
@@ -24,7 +25,7 @@ from supervisor_judgment import binding, semantic_packet
 
 def normalize_base():
     return rewrite_glb(with_embedded_texture(
-        glb(QUAD,[(0,1,2),(0,2,3)],NORMALS),
+        uv_glb(with_texture=False),
         png(gradient())), material)
 
 def five_materials(doc):
@@ -110,9 +111,10 @@ class P4MaterialMacroTests(unittest.TestCase):
         self.assertEqual(set(NATIVE_RULES)&all_ten, all_ten)
         enrolled=set(FULL_LITERAL_REVIEWED)&all_ten
         self.assertEqual(enrolled,
-                         {'AAA-200-M-123','AAA-200-M-124',
-                          'AAA-200-M-126','AAA-200-M-128'})
-        self.assertEqual(len(enrolled),4)
+                         {'AAA-200-M-121','AAA-200-M-123','AAA-200-M-124',
+                          'AAA-200-M-125','AAA-200-M-126','AAA-200-M-127',
+                          'AAA-200-M-128'})
+        self.assertEqual(len(enrolled),7)
         self.assertEqual(set(NATIVE_RULES)&set(RULES),set(RULES))
 
     def test_all_seven_literal_rules_are_distinct_and_source_bound(self):
@@ -131,11 +133,15 @@ class P4MaterialMacroTests(unittest.TestCase):
                     'canonical_triggers_checked',True))
                 self.assertEqual(
                     packet['rule']['result'],
-                    'PASS' if rid in DECIDABLE else 'UNKNOWN')
-                self.assertEqual(rid in FULL_LITERAL_REVIEWED,rid in DECIDABLE)
+                    'PASS' if rid in (DECIDABLE|frozenset({
+                        'AAA-200-M-121','AAA-200-M-125','AAA-200-M-127'}))
+                    else 'UNKNOWN')
+                self.assertEqual(rid in FULL_LITERAL_REVIEWED,
+                    rid in (DECIDABLE|frozenset({
+                        'AAA-200-M-121','AAA-200-M-125','AAA-200-M-127'})))
                 self.assertEqual(semantic_packet(packet,expected,spec)['result'],
                                  'UNKNOWN')
-                if rid in DECIDABLE:
+                if rid in FULL_LITERAL_REVIEWED:
                     readback=replay(None,packet,expected,spec,
                                     source_context=lambda _:ctx)
                     self.assertEqual(readback['documentary_result'],'PASS')
