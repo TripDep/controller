@@ -10,6 +10,7 @@ from c07_positive_native_process import _original_attempt,_registered_artifacts
 from c07_p1_thirty_native_domain import inspect as inspect_p1,jbytes
 from c07_p6_collision_semantics import _triangles
 from visual_content_metrics import decode_grid, VisualContentBlocked
+from c07_camera_views_full_review import inspect as inspect_capture
 
 RULE='AAA-200-F-056'
 VIEWS=('FRONT','REAR','LEFT','RIGHT','TOP')
@@ -75,8 +76,9 @@ def inspect(ctx,rid):
     mesh=original('NATIVE_EXPORT','.glb')
     policy_bytes=original('P1_FIVE_VIEW_INSPECTION_POLICY','.json')
     images={v:original('VISUAL_VIEW_'+v,'.png') for v in VIEWS}
+    trace_bytes=original('P1_CAMERA_CAPTURE_TRACE','.json')
     checks={c:False for c in CRITERIA}
-    evidence=bool(mesh and policy_bytes and all(images.values()))
+    evidence=bool(mesh and policy_bytes and trace_bytes and all(images.values()))
     if not evidence:
         return {'rule_id':RULE,'checks':checks,'evidence_complete':False,
             'original_audit_sha256':audit_sha,
@@ -92,7 +94,27 @@ def inspect(ctx,rid):
            set(cameras[v])=={'position_xyz','target_xyz'} and
            vec(cameras[v]['position_xyz']) and
            vec(cameras[v]['target_xyz']) for v in VIEWS))
-    checks[CRITERIA[0]]=valid
+    # Four independently registered current-operation render capture events
+    # must agree with the original five-view camera policy. The fifth rear
+    # perspective is additionally computed from original triangles.
+    capture=inspect_capture(ctx,RULE)
+    frames=jbytes(trace_bytes).get('frames')
+    agree=False
+    if valid and type(frames) is list and len(frames)==4:
+        frame_by_role={frame.get('role'):frame for frame in frames
+                       if type(frame) is dict}
+        agree=bool(len(frame_by_role)==4 and all(
+            ('VISUAL_VIEW_'+v) in frame_by_role and
+            all(abs(frame_by_role['VISUAL_VIEW_'+v]['position_xyz'][i]-
+                    cameras[v]['position_xyz'][i])<1e-6 for i in range(3)) and
+            (lambda direction, actual: direction is not None and
+                all(abs(direction[i]-actual[i])<1e-6 for i in range(3)))(
+                unit(sub(cameras[v]['target_xyz'],
+                         cameras[v]['position_xyz'])),
+                frame_by_role['VISUAL_VIEW_'+v]['forward_xyz'])
+            for v in ('FRONT','LEFT','RIGHT','TOP')))
+    checks[CRITERIA[0]]=bool(valid and agree and
+        capture['evidence_complete'] and all(capture['checks'].values()))
     report={}
     if valid:
         triangles=_triangles(mesh)
@@ -141,7 +163,8 @@ def inspect(ctx,rid):
                     decoded.append(None)
             checks[CRITERIA[2]]=bool(all(decoded) and
                  len({tuple(x[2]) for x in decoded})==5)
-    return {'rule_id':RULE,'checks':checks,'evidence_complete':True,
+    return {'rule_id':RULE,'checks':checks,
+            'evidence_complete':bool(capture['evidence_complete']),
             'native_camera_projection_report':report,
             'original_audit_sha256':audit_sha,
             'original_source_sha256':{
