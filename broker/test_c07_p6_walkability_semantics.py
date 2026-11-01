@@ -141,6 +141,17 @@ class Tests(unittest.TestCase):
                 self.policy[key]=old
                 self.put()
 
+    def test_no_visual_triangle_in_declared_solid_is_not_vacuous_pass(self):
+        self.visual=glb([(8,8,0),(9,8,0),(8,9,0)],
+                        [(0,1,2)],NORMALS)
+        self.put()
+        row=self.examine()["rules"]["AAA-200-P-155"]
+        self.assertTrue(row["original_machine_checks"][
+            "original_solid_surface_collision_proxy_recomputed"])
+        self.assertFalse(next(iter(
+            row["original_cross_source_semantic"].values())))
+        self.assertEqual(row["full_rule_semantics"],"UNKNOWN")
+
     def test_missing_pre_d_pin_is_not_a_positive(self):
         self.f.plan["p678_evidence_contract"]["original_artifact_sha256"].pop(
             "P6_COLLISION_POLICY")
