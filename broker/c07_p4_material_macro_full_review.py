@@ -16,10 +16,9 @@ from c07_p4_texture_semantics import rgba, _embedded
 SECTION = 'M'
 NEW = (121, 122, 125, 126, 127, 129, 130)
 RULES = frozenset('AAA-200-M-%03d' % n for n in NEW)
-# Only the five byte-decidable source-scoped materials predicates can be
+# Only the fully byte-decidable physical five-material predicate can be
 # positively enrolled. Shader acceptance and rendered-light provenance cannot.
-DECIDABLE = frozenset('AAA-200-M-%03d' % n
-                      for n in (121, 122, 125, 126, 127))
+DECIDABLE = frozenset(('AAA-200-M-126',))
 CRITERIA = {
 121: ('pre_d_original_physical_material_classification_sha_pinned',
       'every_actual_exported_primitive_material_has_canonical_class',
