@@ -16,7 +16,7 @@ from test_c07_p5_optimization_semantics import rewrite_glb
 from test_c07_p3_geometry_semantics import glb
 from test_c07_p5_budget_semantics import QUAD, NORMALS
 from test_c07_p4_texture_semantics import png, solid, gradient
-from c07_p345_remaining_original_review import RULES, CRITERIA, inspect
+from c07_p345_remaining_original_review import RULES, CRITERIA, inspect, baked_normal_channels_valid
 from c07_p345_forty_native_evidence import IDS as P345_IDS
 from c07_native_source_rule_replayers import (
     NATIVE_RULES, FULL_LITERAL_REVIEWED, build_packet)
@@ -38,6 +38,10 @@ PIN={
 147:'P5_PERF_BUDGET',
 150:'P5_RUNTIME_CAPTURE',
 }
+def tangent_normals():
+    return [[(110+8*x,115+8*y,252,255) for x in range(4)]
+            for y in range(4)]
+
 def decorated(doc):
     doc['materials'][0]['normalTexture']={'index':0}
     doc['materials'][0]['pbrMetallicRoughness']['metallicFactor']=0.85
@@ -49,7 +53,7 @@ class RemainingP345Tests(unittest.TestCase):
         test.f.plan['phase']='P5'
         test.f.work['phase']='P5'
         source=with_embedded_texture(uv_glb(with_texture=False),
-                                     png(gradient()))
+                                     png(tangent_normals()))
         source=rewrite_glb(source,material)
         native=rewrite_glb(source,decorated)
         # Two real primitives share the same embedded base-color image;
@@ -66,7 +70,7 @@ class RemainingP345Tests(unittest.TestCase):
             'min_atlas_color_variance':5}))
         test.add('P3_BAKE_POLICY','bake_policy.json',
                  encoded({'normal_bake_required':True}))
-        test.add('P3_BAKED_NORMAL','baked_normal.png',png(gradient()))
+        test.add('P3_BAKED_NORMAL','baked_normal.png',png(tangent_normals()))
         test.add('P3_APPROVED_EXPORT','approved_export.glb',native)
         test.add('P4_GEOMETRY_DEFECT_REPORT','defects.json',
                  encoded({'degenerate_triangle_count':0}))
@@ -184,6 +188,30 @@ class RemainingP345Tests(unittest.TestCase):
                 self.assertNotEqual(before,after)
                 self.assertFalse(after[CRITERIA[n][1]] if n!=118 else
                                  after[CRITERIA[n][2]])
+
+    def test_baked_normal_original_channels_reject_grayscale_photo(self):
+        test,ctx=self.context()
+        rid='AAA-200-L-119'
+        positive=build_packet(ctx,rid)['rule']['checks']
+        self.assertTrue(all(positive.values()))
+        invalid=png(gradient())
+        self.assertFalse(baked_normal_channels_valid(invalid))
+        self.assertTrue(baked_normal_channels_valid(png(tangent_normals())))
+        raw=with_embedded_texture(uv_glb(with_texture=False),invalid)
+        raw=rewrite_glb(raw,decorated)
+        def second(doc):
+            doc['meshes'][0]['primitives'].append(
+                copy.deepcopy(doc['meshes'][0]['primitives'][0]))
+        raw=rewrite_glb(raw,second)
+        test.add('NATIVE_EXPORT','scene.glb',raw)
+        test.add('P3_BAKED_NORMAL','baked_normal.png',invalid)
+        test.sync()
+        ctx['controller']=test.f.controller
+        negative=build_packet(ctx,rid)['rule']['checks']
+        # PNG SHA, GLTF normalTexture and UV are still correct; its actual
+        # decoded vectors are not physically usable tangent-space normals.
+        self.assertTrue(negative[CRITERIA[119][1]])
+        self.assertFalse(negative[CRITERIA[119][2]])
 
     def test_atlas_requires_same_actual_triangle_surfaces_not_only_bbox(self):
         test,ctx=self.context()
