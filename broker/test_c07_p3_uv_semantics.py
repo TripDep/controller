@@ -18,6 +18,7 @@ POLICY={
     "meters_per_unit":1,"max_uv_edge_anisotropy":1.05,
     "texel_px_per_m":2,"texel_density_tolerance_pct":5,
     "uv_overlap_policy":"NO_UNINTENDED_OVERLAPS",
+    "related_asset_id":"PEER_A",
 }
 
 def uv_glb(points=QUAD,faces=None,uv=UV,with_texture=True):
@@ -62,17 +63,20 @@ class Tests(unittest.TestCase):
                 "requirement_sha256":fixture.sha(source.encode()),
                 "source_sha256":"c"*64}
         self.native=uv_glb()
+        self.related=uv_glb(points=[(x+3,y,z) for x,y,z in QUAD])
         self.put()
 
-    def put(self,native=None,policy=None):
+    def put(self,native=None,policy=None,related=None):
         self.f.add_item("NATIVE_EXPORT","scene.glb",
                         self.native if native is None else native)
+        self.f.add_item("P3_RELATED_EXPORT","peer.glb",
+                        self.related if related is None else related)
         self.f.add_item("P3_UV_POLICY","uv_policy.json",
                         json.dumps(POLICY if policy is None else policy).encode())
         self.f.plan["p345_evidence_contract"]={
             "original_artifact_sha256":{
                 role:self.f.items[role]["sha256"]
-                for role in ("NATIVE_EXPORT","P3_UV_POLICY")}}
+                for role in ("NATIVE_EXPORT","P3_UV_POLICY","P3_RELATED_EXPORT")}}
         self.f.rebuild()
 
     def examine(self):
@@ -98,6 +102,14 @@ class Tests(unittest.TestCase):
                          "UNKNOWN_OR_DEFECT")
         self.assertEqual(r["rules"][IDS[1]]["machine_scope"],
                          "UNKNOWN_OR_DEFECT")
+
+    def test_related_asset_texel_density_mismatch_fails_original_l116(self):
+        bad=uv_glb(points=[(x+3,y,z) for x,y,z in QUAD],
+                   uv=[(0,0),(2,0),(2,2),(0,2)])
+        self.put(related=bad)
+        r=self.examine()
+        self.assertFalse(r["rules"][IDS[1]]["original_machine_checks"][
+            "distinct_original_related_asset_density_matches_pre_d_tolerance"])
 
     def test_overlapping_original_uv_triangles_detected(self):
         self.put(native=uv_glb(faces=[(0,1,2),(0,1,2)]))
