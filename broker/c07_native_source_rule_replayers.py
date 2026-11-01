@@ -43,6 +43,9 @@ NATIVE_RULES = {
         'original_vehicle_corridor_widths_measured',
         'actual_collision_faces_clear_of_vehicle_corridors',
         'every_vehicle_corridor_has_source_pinned_vertical_clearance')),
+    'AAA-200-L-115': ('uv', (
+        'all_original_uv_triangles_independently_measured',
+        'uv_edge_anisotropy_within_pre_d_bound')),
     'AAA-200-L-116': ('uv', (
         'actual_embedded_png_and_uv_texel_density_measured',
         'real_texel_density_within_original_target',
@@ -106,7 +109,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
-    'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
+    'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
     'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159',
