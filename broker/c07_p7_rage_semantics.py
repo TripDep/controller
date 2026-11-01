@@ -109,6 +109,54 @@ def _texture_names(root):
             out.append(name.casefold())
     return out if len(out) == len(set(out)) else []
 
+def native_collision_envelope(glb, binary, children):
+    """Measure original GLB vertices against original CodeWalker YBN box bounds.
+
+    A declared collision child alone is not proof of usable coverage. Require
+    the union of actual original YBN Box bounds to enclose the native GLB local
+    bounds. This remains static geometry preflight, not FiveM physics.
+    """
+    if not (type(glb) is dict and type(binary) is bytes and children):
+        return False
+    vertices = []
+    try:
+        for mesh in glb.get("meshes", []):
+            for prim in mesh.get("primitives", []):
+                positions = _read_accessor(
+                    glb, binary, prim["attributes"]["POSITION"])
+                if not positions or len(vertices)+len(positions) > 1_000_000:
+                    return False
+                vertices.extend(positions)
+    except (KeyError, ValueError, TypeError, IndexError):
+        return False
+    if not vertices or any(len(v) != 3 or not all(finite(x) for x in v)
+                           for v in vertices):
+        return False
+    lower = [min(v[k] for v in vertices) for k in range(3)]
+    upper = [max(v[k] for v in vertices) for k in range(3)]
+    boxes = []
+    for child in children:
+        if child.attrib.get("type") != "Box":
+            continue
+        mins = nodes(child, "Min")
+        maxs = nodes(child, "Max")
+        if len(mins) != 1 or len(maxs) != 1:
+            return False
+        low, high = _vec(mins[0]), _vec(maxs[0])
+        if low is None or high is None or any(a >= b for a,b in zip(low,high)):
+            return False
+        boxes.append((low,high))
+    if not boxes:
+        return False
+    # Every extreme point must lie within a real original collision bound.
+    # Union-AABB alone would allow two disconnected boxes to claim coverage.
+    for v in vertices:
+        if not any(all(lo[k]-0.001 <= v[k] <= hi[k]+0.001 for k in range(3))
+                   for lo,hi in boxes):
+            return False
+    return True
+
+
 def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     need(type(inventory) is dict and inventory.get("rule_count") == 763
          and inventory.get("schema") == "gg-effective-family-inventory-v1"
@@ -366,12 +414,14 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         165: ("all_original_map_positions_match_current_codewalker_source",
               bool(manifest_ok and report_matches and entities and
                    all(all(finite(c) for c in xyz) for _, xyz in entities))),
-        166: ("original_collision_children_have_supported_bound_types",
+        166: ("original_collision_children_have_supported_bound_types_and_native_coverage",
               bool(manifest_ok and collision_declared and all(
                   x.attrib.get("type") in (
                       "Box", "Sphere", "Capsule", "Geometry",
                       "GeometryBVH", "Composite")
-                  for x in collision_children))),
+                  for x in collision_children)
+                  and native_collision_envelope(glb, glb_binary,
+                                                collision_children))),
         167: ("independent_sollumz_execution_provenance", False),
         168: ("actual_native_vertex_normals_normalized_and_uv_finite",
               bool(attrs_valid and shaders_declared and normalized_normals())),
