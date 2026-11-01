@@ -1484,6 +1484,44 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Four literal P6 collision rules: independent visual and
+                # collision GLB triangles, source-locked surface regions,
+                # measured complexity and conservative passage clearances.
+                # No gameplay collision, walkability or MG0 PASS is inferred.
+                if plans[0]['plan'].get('phase') in (
+                        'P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p6_collision_semantics import (
+                        IDS as P6_COLLISION_IDS, inspect as inspect_p6_collision)
+                    p6_collision = inspect_p6_collision(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p6_collision['source_rule_count'] == 4
+                           and set(p6_collision['rules']) == set(P6_COLLISION_IDS)
+                           and p6_collision['full_rule_semantic_passes'] == 0
+                           and p6_collision['individual_mg0_passes'] == 0
+                           and p6_collision['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p6_collision['rules'].values()),
+                           'CONTROLLED_P6_ORIGINAL_COLLISION_FALSE_MG0_PASS')
+                    if p6_collision['original_collision_metrics'][
+                            'collision_triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P6_ORIGINAL_COLLISION_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p6_collision['original_audit_sha256'],
+                            original_audit_tail=p6_collision['original_audit_tail'],
+                            source_rule_ids=list(P6_COLLISION_IDS),
+                            original_collision_metrics=p6_collision[
+                                'original_collision_metrics'],
+                            original_rule_machine_checks=p6_collision['rules'],
+                            machine_positive_obligations=p6_collision[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
