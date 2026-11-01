@@ -91,7 +91,7 @@ def run(source_context):
             try:
                 packet=build_packet(source_context,rid,expected=expected)
             except (ValueError, KeyError, TypeError, IndexError,
-                    AssertionError) as error:
+                    AssertionError, OSError) as error:
                 row['machine_result']='BLOCKED'
                 row['mg0']='UNKNOWN'
                 row['blocked_reason']=(
@@ -144,6 +144,55 @@ def run(source_context):
                                     for rid in P345_FORTY),
         'individual_mg0_independently_approved':False,
         'fivem_runtime_approved':False,
+        'owner_approved':False,
+        'advancement_authorized':False,
+    }
+
+def require_source_execution(report):
+    """Certify only execution completeness, NEVER rule correctness or MG0.
+
+    A rule merely visited with BLOCKED must not be presented as a successful
+    macro. UNKNOWN is allowed only when its original source predicates were
+    independently recomputed; no claim of literal PASS is made.
+    """
+    need(type(report) is dict and
+         report.get('schema')=='c07-p345-forty-original-source-macro-v1' and
+         report.get('canonical_rule_count')==40 and
+         report.get('due_count')==40 and
+         report.get('visited_due_count')==40 and
+         set(report.get('rows',{}))==set(P345_FORTY),
+         'C07_P345_CERTIFICATE_FULL_40_SOURCE_EXECUTION_REQUIRED')
+    for rid in P345_FORTY:
+        row=report['rows'][rid]
+        need(type(row) is dict and row.get('machine_result') in
+             ('PASS','FAIL','UNKNOWN') and row.get('blocked_reason') is None,
+             'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED:'+rid)
+        need(type(row.get('source_checks')) is dict and
+             set(row['source_checks'])==set(NATIVE_RULES[rid][1]) and
+             all(type(v) is bool for v in row['source_checks'].values()),
+             'C07_P345_CERTIFICATE_ORIGINAL_CHECKS_MISSING:'+rid)
+        need(not (row['machine_result']=='PASS' and
+                  (rid not in FULL_LITERAL_REVIEWED or
+                   not all(row['source_checks'].values()))),
+             'C07_P345_CERTIFICATE_FALSE_RULE_PASS:'+rid)
+    counts=report.get('result_counts',{})
+    need(type(counts) is dict and
+         counts.get('BLOCKED')==0 and counts.get('NOT_DUE')==0 and
+         sum(counts.get(k,0) for k in
+             ('PASS','FAIL','UNKNOWN','BLOCKED','NOT_DUE'))==40 and
+         report.get('advancement_authorized') is False and
+         report.get('individual_mg0_independently_approved') is False and
+         report.get('fivem_runtime_approved') is False and
+         report.get('owner_approved') is False,
+         'C07_P345_CERTIFICATE_COUNTS_OR_AUTHORIZATION_UNTRUSTED')
+    return {
+        'schema':'c07-p345-execution-only-certificate-v1',
+        'source_replays_executed':40,
+        'source_replays_blocked':0,
+        'source_execution_verified':True,
+        'full_semantics_verified':False,
+        'independent_mg0_verified':False,
+        'fivem_verified':False,
         'owner_approved':False,
         'advancement_authorized':False,
     }
