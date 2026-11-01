@@ -23,6 +23,32 @@ CASES = (
      'test_ten_distinct_original_scoped_observations_not_full_review'),
 )
 
+class WalkWithUntrustedLog(WalkFixture):
+    def setUp(self):
+        super().setUp()
+        self.f.add_item('FIVEM_COLLISION_RUNTIME_LOG',
+                        'fivem_collision.log',
+                        b'producer labelled FiveM test - untrusted')
+        self.f.plan['p678_evidence_contract'][
+            'original_artifact_sha256'][
+            'FIVEM_COLLISION_RUNTIME_LOG'] = (
+            self.f.items['FIVEM_COLLISION_RUNTIME_LOG']['sha256'])
+        self.f.rebuild()
+
+class WalkBadOriginalSolid(WalkFixture):
+    def setUp(self):
+        super().setUp()
+        self.collision = glb(
+            [(0.1,0.1,0),(0.9,0.1,0),(0.0,0.8)],
+            [(0,1,2)], NORMALS)
+        self.put()
+
+class FinalForgedOwnerClaim(FinalFixture):
+    def setUp(self):
+        super().setUp()
+        self.docs['P8_INTERNAL_QA']['owner_approved'] = True
+        self.put()
+
 class P678ResidualSourceReplayTests(unittest.TestCase):
     def context(self, fixture, method):
         return NativeOriginalReplayerTests.context(self, fixture, method)
@@ -44,16 +70,9 @@ class P678ResidualSourceReplayTests(unittest.TestCase):
     def test_each_new_original_rule_has_source_checks_and_unknown_result(self):
         for rid, fixture, method in CASES:
             with self.subTest(rule=rid):
-                test, ctx = self.context(fixture, method)
-                if rid.endswith('160'):
-                    test.f.add_item('FIVEM_COLLISION_RUNTIME_LOG',
-                                    'fivem_collision.log',
-                                    b'producer labelled FiveM test - untrusted')
-                    test.f.plan['p678_evidence_contract'][
-                        'original_artifact_sha256'][
-                        'FIVEM_COLLISION_RUNTIME_LOG'] = (
-                        test.f.items['FIVEM_COLLISION_RUNTIME_LOG']['sha256'])
-                    test.f.rebuild()
+                positive_fixture = (WalkWithUntrustedLog
+                                    if rid.endswith('160') else fixture)
+                _, ctx = self.context(positive_fixture, method)
                 packet = build_packet(ctx, rid)
                 self.assertEqual(set(packet['rule']['checks']),
                                  set(NATIVE_RULES[rid][1]))
@@ -68,33 +87,22 @@ class P678ResidualSourceReplayTests(unittest.TestCase):
     def test_rule_specific_negative_sources_and_no_dispatch(self):
         for rid, fixture, method in CASES:
             with self.subTest(rule=rid):
-                test, ctx = self.context(fixture, method)
+                _, ctx = self.context(fixture, method)
                 before = build_packet(ctx, rid)
-                if rid.endswith('155'):
-                    # Same centroid, but original solid vertices are NOT
-                    # covered by the original collision surface.
-                    test.collision = glb(
-                        [(0.1,0.1,0),(0.9,0.1,0),(0.0,0.8,0)],
-                        [(0,1,2)], NORMALS)
-                    test.put()
-                elif rid.endswith('160'):
-                    # Producer-labelled log does not become runtime proof.
-                    test.f.add_item('FIVEM_COLLISION_RUNTIME_LOG',
-                                    'fivem_collision.log', b'PASS FiveM')
-                    test.f.plan['p678_evidence_contract'][
-                        'original_artifact_sha256'][
-                        'FIVEM_COLLISION_RUNTIME_LOG'] = (
-                        test.f.items['FIVEM_COLLISION_RUNTIME_LOG']['sha256'])
-                    test.f.rebuild()
-                else:
-                    test.docs['P8_INTERNAL_QA']['owner_approved'] = True
-                    test.put()
-                after = build_packet(ctx, rid)
+                # Rebuild the changed ORIGINAL in a fresh fixture before the
+                # trusted MG0 master and current operation are bound. Editing
+                # an already-open audited operation would correctly fail SHA.
+                changed_fixture = (
+                    WalkBadOriginalSolid if rid.endswith('155') else
+                    WalkWithUntrustedLog if rid.endswith('160') else
+                    FinalForgedOwnerClaim)
+                _, changed_ctx = self.context(changed_fixture, method)
+                after = build_packet(changed_ctx, rid)
                 self.assertEqual(after['rule']['result'], 'UNKNOWN')
                 self.assertNotEqual(before['rule']['checks'],
                                     after['rule']['checks'])
-                row = ctx['inventory']['rules'][rid]
-                expected = binding(ctx['work'], row, rid)
+                row = changed_ctx['inventory']['rules'][rid]
+                expected = binding(changed_ctx['work'], row, rid)
                 spec = {'validator_id': after['validator_id'],
                         'criteria': list(NATIVE_RULES[rid][1]),
                         'requirement_sha256': expected['requirement_sha256'],
@@ -103,4 +111,4 @@ class P678ResidualSourceReplayTests(unittest.TestCase):
                         NativeRuleEvidenceBlocked,
                         'C07_REPLAYER_UNREVIEWED_OR_WRONG_LITERAL'):
                     native_rule_readback(None, after, expected, spec,
-                                         source_context=lambda _: ctx)
+                                         source_context=lambda _: changed_ctx)
