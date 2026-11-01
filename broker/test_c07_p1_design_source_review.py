@@ -143,6 +143,63 @@ class P1DesignSourceTests(unittest.TestCase):
                 self.assertEqual(row['full_rule_semantics'],'UNKNOWN')
                 obj[key]=old
                 self.install()
+    def test_thirteen_independent_original_source_measures_and_adversaries(self):
+        # Exercise the complete residual P1 family, not a 1-3-rule sample.
+        # Every positive is synthetic fixture evidence, never owner/MG0 PASS.
+        original_scene=copy.deepcopy(self.scene)
+        original_palette=copy.deepcopy(self.palette)
+        original_views=copy.deepcopy(self.views)
+        original_qa=copy.deepcopy(self.qa)
+        attacks={
+            31:lambda: self.views.__setitem__('REFERENCE_IMAGE',[40]*4),
+            32:lambda: self.views.__setitem__('SCENE_PEER_REFERENCE',[50]*4),
+            33:lambda: self.palette.__setitem__('colors',
+                                                 ['#202020','#202020']),
+            34:lambda: self.scene.__setitem__('void_zones',
+                         [[[2,2],[3,2],[3,3],[2,3]]]),
+            35:lambda: self.views.__setitem__('REFERENCE_IMAGE',[20]*4),
+            36:lambda: self.scene['named_anchors'].__setitem__(
+                                                 'gate',[9,9,9]),
+            37:lambda: self.views.__setitem__(
+                             'VISUAL_VIEW_LEFT',self.views['VISUAL_VIEW_FRONT'][:]),
+            38:lambda: self.views.__setitem__('IMAGE_MATERIAL',[50]*4),
+            39:lambda: self.scene['player_camera'].__setitem__(
+                                                 'eye_xyz',[0.5,0.5,0.5]),
+            40:lambda: self.scene.update({
+                'component_roles':['primary','duplicate'],
+                'component_role_mesh_map':{'primary':'primary_mesh',
+                                           'duplicate':'primary_mesh'}}),
+            46:lambda: self.scene.__setitem__('exits',['north']),
+            56:lambda: self.scene['cameras']['left'].__setitem__(
+                                                 'eye_xyz',[2,0.5,1.5]),
+            57:lambda: self.scene.__setitem__('expected_bbox_local',
+                            {'min':[0,0,0],'max':[1,1,1]}),
+        }
+        self.assertEqual(set(attacks),{31,32,33,34,35,36,37,38,39,40,46,56,57})
+        positive=self.examine()
+        for n in attacks:
+            rid='AAA-200-'+('D' if n<=40 else 'E' if n==46 else 'F')+'-%03d'%n
+            with self.subTest(rule=rid):
+                measured=positive['rules'][rid]['original_pixel_geometry_checks']
+                self.assertEqual(len(measured),3)
+                self.assertTrue(list(measured.values())[-1])
+                self.scene=copy.deepcopy(original_scene)
+                self.palette=copy.deepcopy(original_palette)
+                self.views=copy.deepcopy(original_views)
+                self.qa=copy.deepcopy(original_qa)
+                attacks[n]()
+                self.install()
+                result=self.examine()['rules'][rid]
+                self.assertFalse(list(result['original_pixel_geometry_checks'].values())[-1],
+                                 rid)
+                self.assertEqual(result['full_rule_semantics'],'UNKNOWN')
+                self.assertEqual(result['individual_mg0'],'UNKNOWN')
+        self.scene=original_scene
+        self.palette=original_palette
+        self.views=original_views
+        self.qa=original_qa
+        self.install()
+
     def test_each_original_canonical_literal_tamper_is_blocked(self):
         for rid in IDS:
             with self.subTest(rule=rid):
