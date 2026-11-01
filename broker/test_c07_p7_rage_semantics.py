@@ -54,7 +54,9 @@ XML = {
     "P7_YMAP_XML": b'<CMapData><entities><Item type="CEntityDef"><archetypeName>scene_arch</archetypeName><position x="1" y="2" z="3"/></Item></entities></CMapData>',
     "P7_YBN_XML": b'<BoundsFile><Bounds type="Composite"><Children><Item type="Box"/></Children></Bounds></BoundsFile>',
 }
-MANIFEST = b"fx_version 'cerulean'\ngame 'gta5'\nthis_is_a_map 'yes'\nfiles {'stream/scene.ytyp'}\n"
+MANIFEST = (b"fx_version 'cerulean'\\ngame 'gta5'\\n"
+            b"this_is_a_map 'yes'\\nfiles {'stream/scene.ytyp'}\\n"
+            b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\\n")
 
 class Tests(unittest.TestCase):
     def setUp(self):
@@ -230,6 +232,54 @@ class Tests(unittest.TestCase):
                 self.assertEqual(row["individual_mg0"], "UNKNOWN")
                 self.files[role] = old
                 self.put()
+
+    def test_manifest_original_source_semantics_rejects_six_spoofs(self):
+        from c07_p7_manifest_source_semantics import parse
+        self.assertTrue(parse(MANIFEST)["valid"])
+        spoofs = {
+            "comment_only_data_file":
+                MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST'",
+                                 b"-- data_file 'DLC_ITYP_REQUEST'"),
+            "wrong_ityp_resource":
+                MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST'",
+                                 b"data_file 'DLC_WRONG_REQUEST'"),
+            "mismatched_registered_resource":
+                MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'",
+                                 b"data_file 'DLC_ITYP_REQUEST' 'stream/other.ytyp'"),
+            "comment_only_file":
+                MANIFEST.replace(b"files {'stream/scene.ytyp'}",
+                                 b"-- files {'stream/scene.ytyp'}"),
+            "duplicate_active_file":
+                MANIFEST + b"files {'stream/scene.ytyp'}\\n",
+            "block_comment_spoof":
+                MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'",
+                                 b"--[[data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp']]"),
+            "string_spoof":
+                MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'",
+                                 b"print(\\\"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\\\")"),
+        }
+        for name, raw in spoofs.items():
+            with self.subTest(spoof=name):
+                self.assertFalse(parse(raw)["valid"])
+                self.files["P7_FXMANIFEST"] = raw
+                self.put()
+                result = self.examine()
+                for n in (161, 162, 163, 164, 165, 166, 169):
+                    row = result["rules"]["AAA-200-Q-%03d" % n]
+                    self.assertFalse(next(iter(
+                        row["original_cross_source_semantic"].values())))
+                    self.assertEqual(row["full_rule_semantics"], "UNKNOWN")
+                self.files["P7_FXMANIFEST"] = MANIFEST
+                self.put()
+
+    def test_manifest_quoted_comment_markers_are_not_comments(self):
+        from c07_p7_manifest_source_semantics import parse
+        self.assertTrue(parse(MANIFEST)["valid"])
+        raw = MANIFEST + b"author 'literal -- is inside string'\\n"
+        self.assertTrue(parse(raw)["valid"])
+        self.assertFalse(parse(MANIFEST + b"--[[unclosed")["valid"])
+        self.assertFalse(parse(MANIFEST.replace(
+            b"stream/scene.ytyp", b"stream/../escape.ytyp"))["valid"])
 
     def test_manifest_ytyp_path_traversal_cannot_pass(self):
         self.files["P7_FXMANIFEST"] = MANIFEST.replace(
