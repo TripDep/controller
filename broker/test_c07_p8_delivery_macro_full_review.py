@@ -76,9 +76,19 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
              'corrective_action':'reapply transformed export',
              'before_sha256':sha(self.before),'after_sha256':sha(self.export)},
         ]}
+        # Original method bytes are deterministic, source-only translations;
+        # the consumer will interpret their AST but never execute user code.
+        self.before_script=(b'def correct_origin(vertices):\\n'
+            b'    return [[p[0],p[1],p[2]] for p in vertices]\\n')
+        self.after_script=(b'def correct_origin(vertices):\\n'
+            b'    return [[p[0]-0.5,p[1],p[2]] for p in vertices]\\n')
+        self.f.add_item('P8_METHOD_BEFORE','method_before.py',
+                        self.before_script)
+        self.f.add_item('P8_METHOD_AFTER','method_after.py',
+                        self.after_script)
         self.fixture.docs['P8_METHOD_CHANGE']={
-            'before_sha256':self.f.items['P8_METHOD_BEFORE']['sha256'],
-            'after_sha256':self.f.items['P8_METHOD_AFTER']['sha256'],
+            'before_sha256':sha(self.before_script),
+            'after_sha256':sha(self.after_script),
             'root_cause':'ORIGIN_DEVIATION',
             'verification_method':'independent_bbox_origin_measurement'}
         self.root_policy={
@@ -107,6 +117,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.f.add_item('SOURCE_EDITABLE','scene.blend',self.source)
         self.f.add_item('NATIVE_EXPORT','scene.glb',self.export)
         self.f.add_item('BASELINE_SNAPSHOT','before.glb',self.before)
+        self.f.add_item('P8_METHOD_BEFORE','method_before.py',self.before_script)
+        self.f.add_item('P8_METHOD_AFTER','method_after.py',self.after_script)
         self.f.add_item('P8_DELIVERY_PLAN','p8_delivery.json',
                         json.dumps(self.delivery_plan,sort_keys=True).encode())
         manifest={key:self.delivery_plan[key] for key in
@@ -183,6 +195,42 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
 
     def test_method_labels_without_measured_fix_refuse_T199(self):
         self.fixture.docs['P8_METHOD_CHANGE']['verification_method']='unverified screenshot'
+        self.refresh()
+        self.assertFalse(self.row('AAA-200-T-199')['checks'][
+            'changed_method_and_corrected_original_geometry_bound_to_same_current_operation'])
+
+    def test_cosmetic_ast_change_is_not_a_causal_method_fix(self):
+        self.after_script=b'def run(): return 1\\n'
+        self.fixture.docs['P8_METHOD_CHANGE']['after_sha256']=sha(self.after_script)
+        self.refresh()
+        self.assertFalse(self.row('AAA-200-T-199')['checks'][
+            'original_before_and_after_method_code_sha_and_valid_python_ast_reopened'])
+
+    def test_wrong_offset_against_real_triangles_fails(self):
+        self.after_script=(b'def correct_origin(vertices):\\n'
+            b'    return [[p[0]-0.4,p[1],p[2]] for p in vertices]\\n')
+        self.fixture.docs['P8_METHOD_CHANGE']['after_sha256']=sha(self.after_script)
+        self.refresh()
+        self.assertFalse(self.row('AAA-200-T-199')['checks'][
+            'changed_method_and_corrected_original_geometry_bound_to_same_current_operation'])
+
+    def test_arbitrary_or_malicious_python_not_executed(self):
+        from c07_p8_delivery_macro_full_review import _safe_origin_formula
+        bad=(b'import os\\ndef correct_origin(vertices): return vertices\\n',
+             b'def correct_origin(vertices): return __import__("os").system("id")\\n',
+             b'def correct_origin(vertices):\\n'
+             b'  return [[evil(p[0]),p[1],p[2]] for p in vertices]\\n')
+        for script in bad:
+            with self.subTest(script=script):
+                self.assertIsNone(_safe_origin_formula(script))
+
+    def test_changed_vertex_topology_not_proof_of_method_effect(self):
+        self.export=glb([(0,0,0),(1,0,0),(0,1,0),(0,0,1)],
+                        [(0,1,3)])
+        self.delivery_plan['export_sha256']=sha(self.export)
+        self.fixture.docs['P8_MAINTENANCE_GUIDE']['export_sha256']=sha(self.export)
+        for issue in self.fixture.docs['P8_DEFECT_HISTORY']['issues']:
+            issue['after_sha256']=sha(self.export)
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-199')['checks'][
             'changed_method_and_corrected_original_geometry_bound_to_same_current_operation'])
