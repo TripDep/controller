@@ -165,7 +165,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     no_self_approval=internal.get("owner_approved") is not True
     checks={
       181:{"six_original_png_views_decoded":bool(six),
-           "six_original_views_are_byte_distinct":bool(unique)},
+           "six_original_views_have_distinct_reconstructed_pixels":bool(unique)},
       182:{"original_glb_bounds_match_measured_report":bool(measured),
            "source_declared_origin_within_measured_tolerance":bool(origin_ok)},
       183:{"no_original_duplicate_or_degenerate_faces":bool(top_ok),
