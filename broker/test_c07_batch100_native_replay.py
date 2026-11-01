@@ -117,8 +117,9 @@ class Tests(unittest.TestCase):
             # This is a fixture proving the gate, NOT a real source replay.
             'rows':{rid:{
                 'machine_result':'UNKNOWN','blocked_reason':None,
-                'source_checks':{name:False
-                                  for name in NATIVE_RULES[rid][1]}}
+                'source_checks':{name:(index==0)
+                                  for index,name in
+                                  enumerate(NATIVE_RULES[rid][1])}}
                     for rid in batch.p345.IDS},
         }
         self.mg0={
