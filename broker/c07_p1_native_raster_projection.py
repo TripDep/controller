@@ -45,9 +45,9 @@ def mask_from_triangles(tris,role,w,h):
         den=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1])
         if abs(den)<1e-8:continue
         for y in range(max(0,int(min(a[1],b[1],c[1]))),
-                       min(h-1,int(max(a[1],b[1],c[1]))+1):
+                       min(h-1,int(max(a[1],b[1],c[1]))+1)):
             for x in range(max(0,int(min(a[0],b[0],c[0]))),
-                           min(w-1,int(max(a[0],b[0],c[0]))+1):
+                           min(w-1,int(max(a[0],b[0],c[0]))+1)):
                 u=((b[1]-c[1])*(x+.5-c[0])+(c[0]-b[0])*(y+.5-c[1]))/den
                 v=((c[1]-a[1])*(x+.5-c[0])+(a[0]-c[0])*(y+.5-c[1]))/den
                 if u>=-1e-7 and v>=-1e-7 and u+v<=1+1e-7:
