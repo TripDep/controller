@@ -95,6 +95,16 @@ class Tests(unittest.TestCase):
         self.assertTrue(all(row["full_rule_semantics"] == "UNKNOWN"
                             for row in result["rules"].values()))
 
+    def test_three_triangles_sharing_edge_are_nonmanifold(self):
+        pts = TRI + [(0,-1,0), (0,0,1)]
+        normals = [(0,0,1)] * len(pts)
+        self.put(glb(pts, [(0,1,2), (1,0,3), (0,1,4)], normals))
+        r = self.examine()
+        self.assertEqual(r["totals"]["nonmanifold_edges"], 1)
+        self.assertEqual(r["rules"][IDS[0]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
+        self.assertEqual(r["individual_mg0_passes"], 0)
+
     def test_duplicate_geometric_face_detected_even_when_winding_reversed(self):
         self.put(glb(TRI, [(0,1,2), (2,1,0)], UP))
         r = self.examine()
