@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-F-057': ('p1_composition_full', (
+        'pre_d_composition_target_policy_and_original_qa_source_sha_bound',
+        'reported_composition_defect_independently_recomputed_from_original_glb',
+        'original_composition_qa_audited_before_first_detail_operation')),
     'AAA-200-E-046': ('p1_circulation_full', (
         'original_pre_d_entrance_exit_view_policy_and_native_source_sha_pinned',
         'both_real_path_endpoints_connected_and_inside_original_accessible_zone',
@@ -332,7 +336,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-041', 'AAA-200-E-042',
     'AAA-200-E-043', 'AAA-200-E-044', 'AAA-200-E-045', 'AAA-200-E-046', 'AAA-200-E-047',
     'AAA-200-F-052', 'AAA-200-F-054', 'AAA-200-F-058',
-    'AAA-200-F-051', 'AAA-200-F-060',
+    'AAA-200-F-051', 'AAA-200-F-057', 'AAA-200-F-060',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
@@ -415,6 +419,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
     elif domain == 'p1_circulation_full':
         from c07_p1_circulation_full_review import inspect as inspect_circulation
+    elif domain == 'p1_composition_full':
+        from c07_p1_composition_full_review import inspect as inspect_composition
     elif domain == 'p1_site_full':
         from c07_p1_site_contract_full_review import inspect as inspect_site
     elif domain == 'p1_environment_full':
@@ -455,6 +461,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                        if domain == 'p1_paths_full' else None)
     p1_circulation_review = (inspect_circulation(source_context, rule_id)
                              if domain == 'p1_circulation_full' else None)
+    p1_composition_review = (inspect_composition(source_context, rule_id)
+                             if domain == 'p1_composition_full' else None)
     p1_site_review = (inspect_site(source_context, rule_id)
                       if domain == 'p1_site_full' else None)
     p1_environment_review = (inspect_environment(source_context, rule_id)
@@ -481,7 +489,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
                         (alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
-                         p1_circulation_review, p1_site_review, p1_environment_review, p1_terrain_review,
+                         p1_circulation_review, p1_composition_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
                          p345_remaining_review, p8_intersection_review,
@@ -582,6 +590,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_paths_access_review'] = p1_paths_review
     if p1_circulation_review is not None:
         proof['original_p1_circulation_review'] = p1_circulation_review
+    if p1_composition_review is not None:
+        proof['original_p1_composition_review'] = p1_composition_review
     if p1_site_review is not None:
         proof['original_p1_site_contract_review'] = p1_site_review
     if p1_environment_review is not None:
