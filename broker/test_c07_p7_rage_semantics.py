@@ -172,6 +172,20 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.examine()["rules"][IDS[7]]["machine_scope"],
                          "UNKNOWN_OR_DEFECT")
 
+    def test_nonfinite_original_glb_uv_float_cannot_pass_shader_preflight(self):
+        raw = bytearray(uv_glb())
+        jsz = struct.unpack_from("<I", raw, 12)[0]
+        doc = json.loads(raw[20:20+jsz])
+        accessor = doc["accessors"][
+            doc["meshes"][0]["primitives"][0]["attributes"]["TEXCOORD_0"]]
+        view = doc["bufferViews"][accessor["bufferView"]]
+        struct.pack_into("<f", raw, 28+jsz+view["byteOffset"], float("nan"))
+        self.files["NATIVE_EXPORT"] = bytes(raw)
+        self.files["P7_EXPORT_TRACE"]["export_sha256"] = fixture.sha(bytes(raw))
+        self.put()
+        self.assertEqual(self.examine()["rules"][IDS[7]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
+
     def test_original_fivem_and_sollumz_self_report_never_attested(self):
         result = self.examine()
         self.assertTrue(result["rules"][IDS[6]]["original_machine_checks"][
