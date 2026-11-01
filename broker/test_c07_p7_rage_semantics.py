@@ -52,7 +52,10 @@ XML = {
     "P7_YTD_XML": b'<TextureDictionary><Textures><Item><Name>leaf_diffuse</Name></Item></Textures></TextureDictionary>',
     "P7_YTYP_XML": b'<CMapTypes><archetypes><Item type="CBaseArchetypeDef"><name>scene_arch</name><assetName>scene_drawable</assetName></Item></archetypes></CMapTypes>',
     "P7_YMAP_XML": b'<CMapData><entities><Item type="CEntityDef"><archetypeName>scene_arch</archetypeName><position x="1" y="2" z="3"/></Item></entities></CMapData>',
-    "P7_YBN_XML": b'<BoundsFile><Bounds type="Composite"><Children><Item type="Box"/></Children></Bounds></BoundsFile>',
+    "P7_YBN_XML": (b'<BoundsFile><Bounds type="Composite"><Children>'
+                   b'<Item type="Box"><Min x="-0.1" y="-0.1" z="-0.1"/>'
+                   b'<Max x="1.1" y="1.1" z="0.1"/></Item>'
+                   b'</Children></Bounds></BoundsFile>'),
 }
 MANIFEST = (b"fx_version 'cerulean'\ngame 'gta5'\n"
             b"this_is_a_map 'yes'\nfiles {'stream/scene.ytyp'}\n"
@@ -280,6 +283,36 @@ class Tests(unittest.TestCase):
         self.assertFalse(parse(MANIFEST + b"--[[unclosed")["valid"])
         self.assertFalse(parse(MANIFEST.replace(
             b"stream/scene.ytyp", b"stream/../escape.ytyp"))["valid"])
+
+    def test_q166_native_collision_envelope_rejects_false_source_box(self):
+        # A real GLB spans [0,1] in X/Y. A syntactically valid YBN Box that
+        # covers only one corner or is displaced cannot establish collision.
+        for name, bounds in (
+            ("tiny", (0,0,0,0.2,0.2,0.2)),
+            ("displaced", (4,4,-1,5,5,1)),
+        ):
+            with self.subTest(case=name):
+                lo=bounds[:3]
+                hi=bounds[3:]
+                self.files["P7_YBN_XML"] = (
+                    '<BoundsFile><Bounds type="Composite"><Children>'
+                    '<Item type="Box"><Min x="%s" y="%s" z="%s"/>'
+                    '<Max x="%s" y="%s" z="%s"/></Item>'
+                    '</Children></Bounds></BoundsFile>' % (*lo,*hi)
+                ).encode()
+                self.put()
+                row=self.examine()["rules"]["AAA-200-Q-166"]
+                self.assertTrue(row["original_machine_checks"][
+                    "original_ybn_bound_children_structurally_parsed"])
+                self.assertFalse(next(iter(
+                    row["original_cross_source_semantic"].values())))
+                self.assertEqual(row["full_rule_semantics"], "UNKNOWN")
+        self.files["P7_YBN_XML"] = XML["P7_YBN_XML"]
+        self.put()
+        good=self.examine()["rules"]["AAA-200-Q-166"]
+        self.assertTrue(next(iter(
+            good["original_cross_source_semantic"].values())))
+        self.assertEqual(good["individual_mg0"], "UNKNOWN")
 
     def test_manifest_ytyp_path_traversal_cannot_pass(self):
         self.files["P7_FXMANIFEST"] = MANIFEST.replace(
