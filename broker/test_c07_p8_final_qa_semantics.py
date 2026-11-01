@@ -5,6 +5,8 @@ independent MG0, owner approval or actual FiveM verification.
 """
 import copy
 import json
+import struct
+import zlib
 import unittest
 from pathlib import Path
 
@@ -15,6 +17,22 @@ from test_c07_p4_texture_semantics import png,solid
 from c07_p678_forty_native_domain import TEXT
 from c07_p8_final_qa_semantics import IDS,inspect,OriginalFinalQABlocked
 from c07_positive_native_process import NativeEvidenceBlocked
+
+def same_pixels_different_png_encoding(raw):
+    """Recompress an unchanged RGBA scanline stream; byte SHA must change."""
+    chunks=[];off=8
+    while off<len(raw):
+        n=struct.unpack_from(">I",raw,off)[0]
+        typ=raw[off+4:off+8]
+        data=raw[off+8:off+8+n]
+        chunks.append((typ,data))
+        off+=n+12
+    def pack(typ,data):
+        return (struct.pack(">I",len(data))+typ+data+
+                struct.pack(">I",zlib.crc32(typ+data)&0xffffffff))
+    return (raw[:8]+b"".join(pack(typ,zlib.compress(
+        zlib.decompress(data),0) if typ==b"IDAT" else data)
+        for typ,data in chunks))
 
 class Tests(unittest.TestCase):
     def setUp(self):
@@ -140,6 +158,18 @@ class Tests(unittest.TestCase):
                 if kind!="state":
                     self.put()
                     self.add_critical()
+
+    def test_identical_pixels_with_different_png_encoding_not_six_views(self):
+        original=self.views["FRONT"]
+        repacked=same_pixels_different_png_encoding(original)
+        self.assertNotEqual(fixture.sha(original),fixture.sha(repacked))
+        self.views["REAR"]=repacked
+        self.put();self.add_critical()
+        r=self.examine()
+        self.assertEqual(r["rules"][IDS[0]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
+        self.assertEqual(r["rules"][IDS[7]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
 
     def test_no_critical_event_is_not_automatic_rule_189_pass(self):
         self.put()
