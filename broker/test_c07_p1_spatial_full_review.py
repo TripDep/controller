@@ -62,6 +62,7 @@ class P1SpatialNativeTests(unittest.TestCase):
         scene['building_world_placements']['secondary']['scale_xyz'] = [2,2,2]
         test.put('P1_SCENE_CONTRACT', 'p1_scene.json', encode(scene))
         test.rebuild()
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, RID)['rule']['result'], 'FAIL')
 
     def test_missing_pre_d_secondary_sha_is_unknown(self):
