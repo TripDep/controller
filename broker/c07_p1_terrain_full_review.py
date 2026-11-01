@@ -91,12 +91,24 @@ def inspect(source_context, rule_id):
     scene_raw = original('P1_SCENE_CONTRACT', '.json')
     terrain_raw = original('P1_TERRAIN_EXPORT', '.glb')
     native_raw = original('NATIVE_EXPORT', '.glb')
+    placement_raw = original('P1_WORLD_PLACEMENTS', '.json')
     scene = jbytes(scene_raw) if scene_raw is not None else {}
+    placement_doc = jbytes(placement_raw) if placement_raw is not None else {}
+    current_placements = placement_doc.get('placements')
+    expected_placements = scene.get('expected_world_placements')
+    identity = {'translation_xyz': [0, 0, 0], 'yaw_deg': 0,
+                'scale_xyz': [1, 1, 1]}
+    shared_reference = bool(type(current_placements) is dict and
+        current_placements == expected_placements and
+        current_placements.get('NATIVE_EXPORT') == identity and
+        current_placements.get('P1_TERRAIN_EXPORT') == identity)
     tolerance = scene.get('terrain_support_contact_tolerance_m')
     minimum = scene.get('terrain_min_support_vertices')
     height = scene.get('terrain_reference_z_m')
     policy = bool(scene.get('terrain_scope') ==
                   'single_planar_support_triangle' and
+                  scene.get('terrain_reference_frame') == 'shared_local' and
+                  shared_reference and placement_raw is not None and
                   finite(height) and finite(tolerance) and
                   0 < tolerance <= 0.05 and
                   type(minimum) is int and 3 <= minimum <= 10000)
@@ -119,17 +131,15 @@ def inspect(source_context, rule_id):
     if rule_id == TERRAIN:
         checks = dict(zip(CRITERIA[rule_id], (
             bool(policy and scene_raw is not None and terrain_raw is not None
-                 and native_raw is not None),
+                 and native_raw is not None and placement_raw is not None),
             covered, stable)))
         complete = bool(policy and terrain_raw is not None and
                         native_raw is not None and planar)
     else:
         paths_raw = original('P1_PATHS_GEOJSON', '.json')
-        placement_raw = original('P1_WORLD_PLACEMENTS', '.json')
         paths = jbytes(paths_raw) if paths_raw is not None else {}
-        placement_doc = jbytes(placement_raw) if placement_raw is not None else {}
-        placements = placement_doc.get('placements')
-        expected = scene.get('expected_world_placements')
+        placements = current_placements
+        expected = expected_placements
         roles = scene.get('existing_asset_roles')
         wanted = scene.get('walkable_path_ids')
         width = scene.get('player_width_m')
@@ -142,7 +152,7 @@ def inspect(source_context, rule_id):
             len(set(roles)) == len(roles) and
             all(type(role) is str for role in roles) and
             type(expected) is dict and
-            set(expected) == set(roles) | {'NATIVE_EXPORT'} and
+            set(expected) == set(roles) | {'NATIVE_EXPORT', 'P1_TERRAIN_EXPORT'} and
             all(pose(p) for p in expected.values()) and
             type(placements) is dict and placements == expected and
             type(wanted) is list and 1 <= len(wanted) <= 128 and

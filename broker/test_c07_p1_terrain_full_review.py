@@ -24,7 +24,8 @@ class TerrainFullReviewTests(unittest.TestCase):
         test.put('NATIVE_EXPORT', 'scene.glb', bytes(flat))
         test.put('P1_TERRAIN_EXPORT', 'terrain.glb', bytes(flat))
         placement = {'placements':{'NATIVE_EXPORT':POSE,
-                                    'SECONDARY_EXPORT':OTHER}}
+                                    'SECONDARY_EXPORT':OTHER,
+                                    'P1_TERRAIN_EXPORT':POSE}}
         test.put('P1_WORLD_PLACEMENTS', 'p1_placements.json', encode(placement))
         paths = {'features':[{'id':'path-1','class':'walkable',
             'geometry':{'type':'LineString',
@@ -33,6 +34,7 @@ class TerrainFullReviewTests(unittest.TestCase):
         scene = json.loads(test.contents['P1_SCENE_CONTRACT'][1])
         scene.update(
             terrain_scope='single_planar_support_triangle',
+            terrain_reference_frame='shared_local',
             terrain_reference_z_m=0,
             terrain_support_contact_tolerance_m=0.01,
             terrain_min_support_vertices=3,
@@ -111,6 +113,24 @@ class TerrainFullReviewTests(unittest.TestCase):
         ctx['controller'] = test.f.controller
         packet, _, _ = self.packet(ctx, 'AAA-200-F-055')
         self.assertNotEqual(packet['rule']['result'], 'PASS')
+
+    def test_world_placement_drift_cannot_fake_terrain_or_walkability(self):
+        test, ctx = self.context()
+        moved = {'translation_xyz':[0,0,2], 'yaw_deg':0,
+                 'scale_xyz':[1,1,1]}
+        placement = {'placements':{'NATIVE_EXPORT':moved,
+            'P1_TERRAIN_EXPORT':POSE, 'SECONDARY_EXPORT':OTHER}}
+        test.put('P1_WORLD_PLACEMENTS', 'p1_placements.json',
+                 encode(placement))
+        scene = json.loads(test.contents['P1_SCENE_CONTRACT'][1])
+        scene['expected_world_placements'] = placement['placements']
+        test.put('P1_SCENE_CONTRACT', 'p1_scene.json', encode(scene))
+        test.rebuild()
+        ctx['controller'] = test.f.controller
+        for rid in RULES:
+            with self.subTest(rule=rid):
+                packet, _, _ = self.packet(ctx, rid)
+                self.assertNotEqual(packet['rule']['result'], 'PASS')
 
     def test_original_tamper_and_packet_forgery_fail_closed(self):
         test, ctx = self.context()
