@@ -17,6 +17,7 @@ from test_c07_p3_geometry_semantics import glb
 from test_c07_p5_budget_semantics import QUAD, NORMALS
 from test_c07_p4_texture_semantics import png, solid, gradient
 from c07_p345_remaining_original_review import RULES, CRITERIA, inspect
+from c07_p345_forty_native_evidence import IDS as P345_IDS
 from c07_native_source_rule_replayers import (
     NATIVE_RULES, FULL_LITERAL_REVIEWED, build_packet)
 from c07_native_replayer_dispatch import replay
@@ -92,6 +93,8 @@ class RemainingP345Tests(unittest.TestCase):
 
     def test_all_thirteen_have_distinct_real_source_predicates_no_full(self):
         self.assertEqual(len(RULES),13)
+        self.assertEqual(len(P345_IDS),40)
+        self.assertEqual(set(P345_IDS)&set(NATIVE_RULES),set(P345_IDS))
         self.assertEqual(len(set(x for row in CRITERIA.values()
                                  for x in row)),39)
         _,ctx=self.context()
