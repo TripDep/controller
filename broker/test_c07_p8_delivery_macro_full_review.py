@@ -20,11 +20,21 @@ from test_c07_p678_forty_native_domain import TEXT
 from test_c07_positive_native_process import sha
 
 def blender_envelope():
+    """Well-formed miniature BHead/DNA1 fixture; not a real artist's .blend."""
     header=b'BLENDER-v300'
+    def pack16(n):return n.to_bytes(2,'little')
+    def pack32(n):return n.to_bytes(4,'little')
+    def pad(raw):return raw+bytes((-len(raw))%4)
+    dna=(b'SDNA'+b'NAME'+pack32(1)+pad(b'field'+bytes((0,)))+
+         b'TYPE'+pack32(1)+pad(b'Thing'+bytes((0,)))+
+         b'TLEN'+pack16(4)+bytes(2)+b'STRC'+pack32(1)+
+         pack16(0)+pack16(1)+pack16(0)+pack16(0))
     def block(tag,payload=b''):
-        return (tag+len(payload).to_bytes(4,'little')+
-            b'\x00'*8+b'\x00'*4+b'\x01\x00\x00\x00'+payload)
-    return header+block(b'DATA',b'abcd')+block(b'ENDB')
+        return (tag+pack32(len(payload))+bytes(8)+
+                pack32(0)+pack32(1)+payload)
+    return (header+block(b'OB'+bytes(2),b'abcd')+
+            block(b'DNA1',dna)+block(b'ENDB'))
+
 
 def archive(members):
     out=io.BytesIO()
@@ -196,6 +206,22 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-193')['checks'][
             'editable_source_has_blender_block_structure_not_just_magic_header'])
+
+    def test_blender_dna1_structure_rejects_spoofed_metadata_and_bad_blocks(self):
+        original=blender_envelope()
+        self.assertTrue(blender_blocks(original))
+        for forged in (
+            original.replace(b'DNA1',b'DZZ1',1),
+            original.replace(b'SDNA',b'FAKE',1),
+            original.replace(b'STRC',b'FAIL',1),
+            original.replace(b'TLEN',b'FAKE',1),
+            original.replace(b'NAME',b'FAIL',1),
+            original.replace(b'OB'+bytes(2),b'!!'+bytes(2),1),
+            original.replace(b'Thing',b'Thing'+bytes((0,)),1),
+            original+b'extraneous',
+        ):
+            with self.subTest(sample=forged[:25]):
+                self.assertFalse(blender_blocks(forged))
 
     def test_wrong_manifest_hash_refuses_T191(self):
         self.delivery_plan['export_sha256']='f'*64
