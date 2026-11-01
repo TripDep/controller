@@ -153,7 +153,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                                  source_context=lambda _:ctx)
         wrong = dict(expected, operation_sha256='f'*64)
         with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                    'ATTEMPT_OPERATION_SOURCE_MISMATCH'):
+                                    'UNREVIEWED_OR_WRONG_LITERAL'):
             native_rule_readback(None, packet, wrong, spec,
                                  source_context=lambda _:ctx)
 
