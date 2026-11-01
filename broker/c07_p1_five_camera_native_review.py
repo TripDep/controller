@@ -40,7 +40,7 @@ def hit(a,b,t):
     inv=1/det;s=sub(a,t[0]);u=dot(s,h)*inv
     if not -1e-8<=u<=1+1e-8:return False
     q=cross(s,e1);v=dot(d,q)*inv
-    if not -1e-8<=v and u+v<=1+1e-8:return False
+    if v < -1e-8 or u+v > 1+1e-8:return False
     distance=dot(e2,q)*inv
     return 1e-5<distance<1-1e-5
 
