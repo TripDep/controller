@@ -7,6 +7,7 @@ import supervisor_judgment as judgment
 from c07_native_source_rule_replayers import (
     NATIVE_RULES, VALIDATORS, build_packet, native_rule_readback)
 from c07_native_replayer_dispatch import replay
+from c07_p1_paths_access_full_review import inspect as inspect_paths
 from test_c07_native_source_rule_replayers import NativeOriginalReplayerTests
 from test_c07_p1_thirty_native_domain import P1Thirty, encode
 
@@ -38,12 +39,15 @@ class PathAccessFullReviewTests(unittest.TestCase):
         test.put('P1_PATHS_GEOJSON','paths.json',encode(doc))
         test.rebuild()
         ctx['controller'] = test.f.controller
+        ctx['plan'] = test.f.plan
         return test,ctx,doc
 
     def rewrite(self,test,ctx,doc):
         test.put('P1_PATHS_GEOJSON','paths.json',encode(doc))
         test.rebuild()
         ctx['controller'] = test.f.controller
+        ctx['plan'] = test.f.plan
+        self.assertEqual(json.loads((test.f.root/'paths.json').read_bytes()),doc)
 
     def spec(self,ctx,rid):
         expected = judgment.binding(ctx['work'],ctx['inventory']['rules'][rid],rid)
@@ -76,6 +80,8 @@ class PathAccessFullReviewTests(unittest.TestCase):
         test,ctx,doc=self.context()
         doc['features'][1]['geometry']['coordinates']=[[0.6,0.6],[0.9,0.9]]
         self.rewrite(test,ctx,doc)
+        self.assertFalse(inspect_paths(ctx,PATH)['checks'][
+            'measured_main_path_network_connected_and_every_secondary_joins_main'])
         self.assertEqual(build_packet(ctx,PATH)['rule']['result'],'FAIL')
         doc['features'][1]['properties']['class']='main'
         self.rewrite(test,ctx,doc)
@@ -85,6 +91,8 @@ class PathAccessFullReviewTests(unittest.TestCase):
         test,ctx,doc=self.context()
         doc['features'][1]['properties']['id']='main-east'
         self.rewrite(test,ctx,doc)
+        self.assertFalse(inspect_paths(ctx,PATH)['checks'][
+            'all_original_path_features_have_unique_ids_valid_nonzero_geometry_and_explicit_class'])
         self.assertEqual(build_packet(ctx,PATH)['rule']['result'],'FAIL')
         doc['features'][1]['properties']['id']='secondary-north'
         doc['features'][1]['geometry']['coordinates']=[[0.5,0],[0.5,0]]
@@ -121,6 +129,8 @@ class PathAccessFullReviewTests(unittest.TestCase):
             'P1_PATHS_GEOJSON')
         test.f.rebuild()
         ctx['controller']=test.f.controller
+        ctx['plan']=test.f.plan
+        self.assertFalse(inspect_paths(ctx,PATH)['evidence_complete'])
         for rid in (PATH,ZONE):
             self.assertEqual(build_packet(ctx,rid)['rule']['result'],'UNKNOWN')
 
