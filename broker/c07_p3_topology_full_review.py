@@ -57,6 +57,31 @@ def _faces(raw, *, oriented=False):
                           if norm > 1e-10 else None)
     return Counter(signature(tri) for tri in triangles)
 
+def _geometric_topology(raw):
+    """Reconstruct welded geometric edges, including split-index UV seams."""
+    triangles = _triangles(raw)
+    edges = Counter()
+    faces = Counter()
+    degenerate = 0
+    for tri in triangles:
+        vertices = [tuple(v) for v in tri]
+        faces[tuple(sorted(vertices))] += 1
+        p, q, r = vertices
+        u = [q[k]-p[k] for k in range(3)]
+        v = [r[k]-p[k] for k in range(3)]
+        cross = (u[1]*v[2]-u[2]*v[1],
+                 u[2]*v[0]-u[0]*v[2],
+                 u[0]*v[1]-u[1]*v[0])
+        if len(set(vertices)) != 3 or sum(x*x for x in cross) <= 1e-20:
+            degenerate += 1
+        for a, b in ((p, q), (q, r), (r, p)):
+            edges[tuple(sorted((a, b)))] += 1
+    return {'triangles': len(triangles),
+            'nonmanifold_edges': sum(v > 2 for v in edges.values()),
+            'duplicate_faces': sum(v-1 for v in faces.values() if v > 1),
+            'degenerate_faces': degenerate}
+
+
 def _normal_consistency(raw):
     doc, binary = _glb_parts(raw)
     complete = True
@@ -146,6 +171,7 @@ def inspect(source_context, rule_id):
     metrics = geometry(native) if native is not None else []
     total = lambda field: sum(row[field] for row in metrics)
     original_reference = geometry(reference) if reference is not None else []
+    welded = _geometric_topology(native) if native is not None else None
     # Compare complete original face multisets. Geometry with different
     # winding is intentionally distinct for the surface-orientation rule.
     reference_matches = bool(native and reference and
@@ -158,16 +184,17 @@ def inspect(source_context, rule_id):
         'AAA-200-L-111': {
             'all_original_mesh_primitives_topologically_inspected': bool(metrics),
             'original_mesh_edges_no_nonmanifold_or_degenerate': bool(metrics)
-                and total('nonmanifold_edges') == 0
-                and total('degenerate_triangles') == 0,
+                and welded['nonmanifold_edges'] == 0
+                and welded['degenerate_faces'] == 0
+                and total('nonmanifold_edges') == 0,
             'original_mesh_faces_unique': bool(metrics)
-                and total('duplicate_geometric_faces') == 0,
+                and welded['duplicate_faces'] == 0,
         },
         'AAA-200-L-113': {
             'all_original_triangle_areas_independently_recomputed': bool(metrics),
             'no_original_degenerate_or_duplicate_faces': bool(metrics)
-                and total('degenerate_triangles') == 0
-                and total('duplicate_geometric_faces') == 0,
+                and welded['degenerate_faces'] == 0
+                and welded['duplicate_faces'] == 0,
             'original_geometry_matches_source_pinned_reference': reference_matches,
         },
         'AAA-200-L-114': {
@@ -183,6 +210,7 @@ def inspect(source_context, rule_id):
     return {'checks': checks, 'evidence_complete': bool(complete),
             'native_sha256': sha(native) if native is not None else None,
             'reference_sha256': sha(reference) if reference is not None else None,
+            'geometric_topology': welded,
             'original_audit_sha256': audit_sha, 'original_audit_tail': tail,
             'attempt_id': work['attempt_id'],
             'operation_sha256': work['operation_sha256'],
