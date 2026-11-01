@@ -343,6 +343,56 @@ NATIVE_RULES = {
     'AAA-200-T-194': ('delivery', (
         'registered_source_export_bytes_equal_archive_members',
         'original_manifest_asset_version_and_hashes_match')),
+    'AAA-200-Q-161': ('p7_ten_structural_full', (
+        'actual_resource_manifest_declares_gta5_map',
+        'source_manifest_references_archetype_dictionary',
+        'manifest_ytyp_entries_unique_and_confined_to_stream',
+    )),
+    'AAA-200-Q-162': ('p7_ten_structural_full', (
+        'original_codewalker_drawable_name_parsed',
+        'drawable_is_cross_referenced_by_original_archetype',
+        'drawable_bound_to_exactly_one_original_archetype',
+    )),
+    'AAA-200-Q-163': ('p7_ten_structural_full', (
+        'original_texture_dictionary_has_distinct_named_entries',
+        'drawable_referenced_texture_names_resolve_in_dictionary',
+        'every_original_drawable_texture_resolves_once',
+    )),
+    'AAA-200-Q-164': ('p7_ten_structural_full', (
+        'original_archetype_names_and_asset_names_parsed',
+        'archetype_asset_matches_actual_drawable_source',
+        'all_placed_original_archetypes_have_drawable_binding',
+    )),
+    'AAA-200-Q-165': ('p7_ten_structural_full', (
+        'original_ymap_entity_positions_parsed',
+        'all_placed_archetypes_resolve_in_original_ytyp',
+        'all_original_map_positions_match_current_codewalker_source',
+    )),
+    'AAA-200-Q-166': ('p7_ten_structural_full', (
+        'original_ybn_bound_children_structurally_parsed',
+        'original_ytyp_and_ybn_source_both_present',
+        'original_collision_children_have_supported_bound_types_and_native_coverage',
+    )),
+    'AAA-200-Q-167': ('p7_ten_structural_full', (
+        'registered_blend_and_glb_bytes_match_original_sollumz_trace',
+        'independent_sollumz_execution_provenance_confirmed',
+        'independent_sollumz_execution_provenance',
+    )),
+    'AAA-200-Q-168': ('p7_ten_structural_full', (
+        'original_export_vertex_attributes_have_position_normal_uv',
+        'original_drawable_shader_names_match_pre_d_allowlist',
+        'actual_native_vertex_normals_normalized_and_uv_finite',
+    )),
+    'AAA-200-Q-169': ('p7_ten_structural_full', (
+        'codewalker_report_entity_positions_match_original_ymap',
+        'source_lod_distances_and_three_original_views_recorded',
+        'three_original_views_have_distinct_decoded_pixels',
+    )),
+    'AAA-200-Q-170': ('p7_ten_structural_full', (
+        'source_fivem_log_contains_numeric_samples',
+        'independent_in_game_execution_and_owner_provenance',
+        'independent_fivem_engine_execution_provenance',
+    )),
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
@@ -354,6 +404,10 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    # P7 structural knowledge is independently testable through exact
+    # native resource cross-file relationships; external tool runs are not.
+    'AAA-200-Q-161', 'AAA-200-Q-162', 'AAA-200-Q-163',
+    'AAA-200-Q-164', 'AAA-200-Q-165', 'AAA-200-Q-166',
     'AAA-200-L-119', 'AAA-200-O-147',
     'AAA-200-S-184', 'AAA-200-S-185', 'AAA-200-S-186',
     'AAA-200-L-120', 'AAA-200-N-138', 'AAA-200-S-181',
@@ -496,6 +550,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p8_final_process_full_review import inspect as inspect_final_process
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
+    elif domain == 'p7_ten_structural_full':
+        from c07_p7_ten_structural_full_review import inspect as inspect_p7_ten
     elif domain == 'p6_invisible_full':
         from c07_p6_invisible_collision_full_review import inspect as inspect_invisible
     else:
@@ -550,6 +606,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                                if domain == 'p8_final_process_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
+    p7_ten_review = (inspect_p7_ten(source_context, rule_id)
+                     if domain == 'p7_ten_structural_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
@@ -559,7 +617,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p4_pbr_review, p4_material_review,
                          p345_remaining_review, p345_five_macro_review, p345_bake_reuse_review, p8_delivery_review, p8_three_quality_review, p8_intersection_review,
                          p8_final_process_review,
-                         p6_invisible_review,
+                         p7_ten_review, p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
@@ -689,6 +747,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p8_intersection_review'] = p8_intersection_review
     if p8_final_process_review is not None:
         proof['original_p8_final_process_review'] = p8_final_process_review
+    if p7_ten_review is not None:
+        proof['original_p7_ten_source_review'] = p7_ten_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
