@@ -144,7 +144,15 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             }
     need(len(all_rows) == 100 and set(all_rows) == set(COHORT),
          'C07_BATCH100_INCOMPLETE_SOURCE_COVERAGE')
+    # The observation report must expose the separately recomputed native
+    # code-enrollment count; 100 examined rules are NOT 100 reviewed rules.
+    from c07_cohort_completion_gate import snapshot as code_registry_snapshot
+    code_registry = code_registry_snapshot()
+    need(code_registry['cohort_count'] == 100 and
+         code_registry['registry_inconsistent_ids'] == [],
+         'C07_BATCH100_REVIEWED_NATIVE_DISPATCH_INCONSISTENT')
     return {
+        'native_semantic_code_review': code_registry,
         'schema': 'gg-c07-exact100-original-native-replay-v1',
         'rule_count': 100, 'rule_ids': sorted(COHORT),
         'master_sha256': work['master_sha256'],
