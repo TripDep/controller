@@ -51,8 +51,8 @@ def mask_overlap(a,b):
     union=sum(x or y for x,y in zip(ia,ib))
     return sum(x and y for x,y in zip(ia,ib))/union if union else None
 
-def inspect(source_context,rule_id):
-    need(rule_id in IDS and type(source_context) is dict and
+def inspect_family(source_context):
+    need(type(source_context) is dict and
          set(source_context)=={'inventory','plan','controller','asset','step','work','source_loader'},
          'C07_P1_RESIDUAL_TRUSTED_RULE_CONTEXT')
     inv,plan,controller,asset,step,work,loader=(source_context[k] for k in
@@ -174,8 +174,7 @@ def inspect(source_context,rule_id):
     qa_order=bool(blockout and (not details or max(blockout)<min(details)))
     source_ok=bool(policy_raw and scene_raw and native and
                    policy.get('schema')=='c07-p1-visual-metrics-pre-d-v1')
-    n=int(rule_id[-3:])
-    checks={
+    checks_by_number={
        31:(source_ok and reference is not None,means_close(front,reference,'max_style_rgb_distance')),
        32:(source_ok and peer is not None,means_close(front,peer,'max_peer_rgb_distance')),
        33:(source_ok and material is not None and palette_error is not None,
@@ -207,17 +206,36 @@ def inspect(source_context,rule_id):
                 len(scene['cameras'])>=4)),
        57:(source_ok and qa_raw is not None and type(qa_findings) is list
            and bool(qa_findings),qa_order),
-    }[n]
+    }
+    need(set(checks_by_number)==set(NUMBERS) and
+         all(len(v)==2 and all(type(x) is bool for x in v)
+             for v in checks_by_number.values()),
+         'C07_P1_RESIDUAL_EXACT_FAMILY_CHECKS')
     names=('pre_d_policy_and_current_original_bytes_reopened',
            'rule_specific_original_measurement_within_pre_d_contract')
-    return {'schema':SCHEMA,'rule_id':rule_id,'checks':dict(zip(names,map(bool,checks))),
-        'metrics':{'void_triangle_fraction':void_ratio if n==34 else None,
-                   'palette_max_rgb_error':palette_error if n==33 else None,
-                   'silhouette_iou':mask_overlap(front,reference) if n==35 else None,
-                   'focal_luma_contrast':focal_contrast if n==36 else None,
-                   'repeated_row_fraction':repeats if n==37 else None},
-        'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
-        'owner_acceptance':'UNKNOWN','fivem_runtime':'UNKNOWN',
-        'attempt_id':work['attempt_id'],'operation_sha256':work['operation_sha256'],
+    results={}
+    for n,checks in checks_by_number.items():
+        rid='AAA-200-'+('D' if n<=40 else 'E' if n==46 else 'F')+'-%03d'%n
+        results[rid]={'schema':SCHEMA,'rule_id':rid,
+            'checks':dict(zip(names,checks)),
+            'metrics':{'void_triangle_fraction':void_ratio if n==34 else None,
+                       'palette_max_rgb_error':palette_error if n==33 else None,
+                       'silhouette_iou':mask_overlap(front,reference) if n==35 else None,
+                       'focal_luma_contrast':focal_contrast if n==36 else None,
+                       'repeated_row_fraction':repeats if n==37 else None},
+            'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
+            'owner_acceptance':'UNKNOWN','fivem_runtime':'UNKNOWN',
+            'attempt_id':work['attempt_id'],
+            'operation_sha256':work['operation_sha256'],
+            'original_audit_sha256':audit_sha,'original_audit_tail':tail,
+            'advancement_authorized':False}
+    return {'schema':SCHEMA,'family_rule_count':30,'rule_count':13,
+        'rules':results,'attempt_id':work['attempt_id'],
+        'operation_sha256':work['operation_sha256'],
         'original_audit_sha256':audit_sha,'original_audit_tail':tail,
+        'full_semantic_passes':0,'individual_mg0_passes':0,
         'advancement_authorized':False}
+
+def inspect(source_context,rule_id):
+    need(rule_id in IDS,'C07_P1_RESIDUAL_UNKNOWN_RULE')
+    return inspect_family(source_context)['rules'][rule_id]
