@@ -13,6 +13,7 @@ from pathlib import Path
 import test_c07_positive_native_process as fixture
 from test_c07_p3_geometry_semantics import glb
 from test_c07_p5_budget_semantics import QUAD, NORMALS
+from test_c07_p5_optimization_semantics import rewrite_glb
 from c07_p678_forty_native_domain import TEXT
 from c07_p7_rage_semantics import IDS, inspect, OriginalRageBlocked
 from c07_positive_native_process import NativeEvidenceBlocked
@@ -153,6 +154,23 @@ class Tests(unittest.TestCase):
                 self.assertEqual(row["individual_mg0"], "UNKNOWN")
                 self.files[role] = old
                 self.put()
+
+    def test_manifest_ytyp_path_traversal_cannot_pass(self):
+        self.files["P7_FXMANIFEST"] = MANIFEST.replace(
+            b"stream/scene.ytyp", b"../escape.ytyp")
+        self.put()
+        self.assertEqual(self.examine()["rules"][IDS[0]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
+
+    def test_invalid_original_glb_uv_accessor_cannot_pass_shader_preflight(self):
+        def corrupt(doc):
+            doc["meshes"][0]["primitives"][0]["attributes"]["TEXCOORD_0"] = 999
+        self.files["NATIVE_EXPORT"] = rewrite_glb(uv_glb(), corrupt)
+        self.files["P7_EXPORT_TRACE"]["export_sha256"] = fixture.sha(
+            self.files["NATIVE_EXPORT"])
+        self.put()
+        self.assertEqual(self.examine()["rules"][IDS[7]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
 
     def test_original_fivem_and_sollumz_self_report_never_attested(self):
         result = self.examine()
