@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for five NEW native per-rule replayers.
+"""Adversarial source-byte tests for eight NEW native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -14,10 +14,14 @@ from c07_native_source_rule_replayers import (
     NativeRuleEvidenceBlocked)
 from c07_native_replayer_dispatch import replay
 from test_c07_p3_geometry_semantics import Tests as GeometryFixture, glb, TRI, UP
+from test_c07_p1_thirty_native_domain import P1Thirty
 from test_c07_p5_budget_semantics import Tests as BudgetFixture, BUDGET
 from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
 
 CASES = (
+    (P1Thirty, 'AAA-200-E-042', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (P1Thirty, 'AAA-200-E-047', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (P1Thirty, 'AAA-200-F-052', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (GeometryFixture, 'AAA-200-L-111',
      'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
     (GeometryFixture, 'AAA-200-L-112',
@@ -63,9 +67,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_five_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 5)
-        self.assertEqual(len(set(x[1] for x in CASES)), 5)
+    def test_eight_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 8)
+        self.assertEqual(len(set(x[1] for x in CASES)), 8)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -108,7 +112,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                     native_rule_readback(None, packet, expected, spec)
                 # Tampering the registered original bytes without an audit
                 # update must fail even when the producer packet is unchanged.
-                if rid.startswith('AAA-200-L'):
+                if rid.startswith('AAA-200-E') or rid.startswith('AAA-200-F'):
+                    p = ctx['controller'].root / 'p1_scene.json'
+                elif rid.startswith('AAA-200-L'):
                     p = ctx['controller'].root / 'scene.glb'
                 elif rid.startswith('AAA-200-O'):
                     p = ctx['controller'].root / 'budget.json'
