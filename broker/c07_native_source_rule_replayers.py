@@ -105,6 +105,14 @@ NATIVE_RULES = {
         'expected_original_structural_envelope_declared',
         'native_original_bounds_recomputed',
         'actual_original_native_bbox_matches_envelope')),
+    'AAA-200-F-051': ('p1_blockout_full', (
+        'original_pre_d_blockout_source_budget_and_shape_contract_sha_pinned',
+        'actual_original_major_form_mesh_faces_and_triangle_budget_measured',
+        'first_blockout_export_precedes_all_original_detail_operations')),
+    'AAA-200-F-060': ('p1_blockout_full', (
+        'original_pre_d_blockout_acceptance_and_qa_sha_pinned',
+        'all_original_blockout_acceptance_checks_recomputed_from_geometry',
+        'no_detail_phase_or_open_qa_finding_before_verified_blockout')),
     'AAA-200-F-054': ('p1_spatial', (
         'pre_d_complete_module_alignment_pair_contract_sha_pinned',
         'every_alignment_anchor_recomputed_from_actual_original_mesh_vertices',
@@ -152,6 +160,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-043', 'AAA-200-E-044', 'AAA-200-E-045', 'AAA-200-E-047',
     'AAA-200-F-052', 'AAA-200-F-054', 'AAA-200-F-058',
+    'AAA-200-F-051', 'AAA-200-F-060',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
@@ -222,6 +231,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p8_closure_semantics import inspect
     elif domain == 'p5_full':
         from c07_p5_full_review import inspect as inspect_p5_full
+    elif domain == 'p1_blockout_full':
+        from c07_p1_blockout_full_review import inspect as inspect_blockout
     elif domain == 'p1_spatial':
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     elif domain == 'p1_paths_full':
@@ -234,6 +245,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
+    p1_blockout_review = (inspect_blockout(source_context, rule_id)
+                          if domain == 'p1_blockout_full' else None)
     p1_spatial_review = (inspect_p1_spatial(source_context, rule_id)
                          if domain == 'p1_spatial' else None)
     p1_paths_review = (inspect_p1_paths(source_context, rule_id)
@@ -244,7 +257,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
-                         p6_invisible_review, p6_access_review)
+                         p6_invisible_review, p6_access_review,
+                         p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
         from c07_positive_native_process import _original_attempt
@@ -329,6 +343,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p5_full_review'] = p5_review
     if p1_spatial_review is not None:
         proof['original_p1_spatial_review'] = p1_spatial_review
+    if p1_blockout_review is not None:
+        proof['original_p1_blockout_review'] = p1_blockout_review
     if p1_paths_review is not None:
         proof['original_p1_paths_access_review'] = p1_paths_review
     if p6_invisible_review is not None:
