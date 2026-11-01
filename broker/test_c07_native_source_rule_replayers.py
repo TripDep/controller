@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for twenty-two original-source native per-rule replayers.
+"""Adversarial source-byte tests for twenty-five original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -22,6 +22,7 @@ from test_c07_p8_final_qa_semantics import Tests as FinalFixture
 from test_c07_p8_closure_semantics import Tests as ClosureFixture
 from test_c07_p5_budget_semantics import Tests as BudgetFixture, BUDGET
 from test_c07_p6_collision_semantics import Tests as CollisionFixture, POLICY, VISUAL
+from test_c07_p6_walkability_semantics import Tests as WalkFixture
 from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
 
 CASES = (
@@ -51,6 +52,12 @@ CASES = (
      'test_four_real_collision_oracles_not_fivem_or_mg0'),
     (CollisionFixture, 'AAA-200-P-153',
      'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (WalkFixture, 'AAA-200-P-157',
+     'test_five_source_geometry_observations_runtime_unattested'),
+    (WalkFixture, 'AAA-200-P-158',
+     'test_five_source_geometry_observations_runtime_unattested'),
+    (WalkFixture, 'AAA-200-P-159',
+     'test_five_source_geometry_observations_runtime_unattested'),
     (BudgetFixture, 'AAA-200-O-142',
      'test_five_original_quantitative_oracles_no_mg0'),
     (BudgetFixture, 'AAA-200-O-148',
@@ -106,9 +113,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_twenty_two_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 22)
-        self.assertEqual(len(set(x[1] for x in CASES)), 22)
+    def test_twenty_five_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 25)
+        self.assertEqual(len(set(x[1] for x in CASES)), 25)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -188,6 +195,19 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.put(glb(TRI, [(0,1,2), (2,1,0)], UP))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-L-112')['rule']['result'], 'FAIL')
+
+        for rid, key, bad in (
+            ('AAA-200-P-157', 'min_player_width_m', 2.0),
+            ('AAA-200-P-158', 'terrain_contact_regions', [
+                {'name':'remote','min_xyz':[8,8,8],'max_xyz':[9,9,9]}]),
+            ('AAA-200-P-159', 'min_vehicle_height_m', 4.0),
+        ):
+            test, ctx = self.context(WalkFixture,
+                'test_five_source_geometry_observations_runtime_unattested')
+            test.policy[key] = bad
+            test.put()
+            ctx['controller'] = test.f.controller
+            self.assertEqual(build_packet(ctx, rid)['rule']['result'], 'FAIL')
 
         test, ctx = self.context(UVFixture,
             'test_three_actual_uv_oracles_are_not_full_rule_or_mg0')
