@@ -96,9 +96,10 @@ class MacroFortyOriginalTests(unittest.TestCase):
     def test_forged_report_without_trusted_context_is_rejected(self):
         _,ctx=self.context('P5')
         result=run(ctx)
+        # The actual unpinned original fails closed even with the context.
         with self.assertRaisesRegex(
                 MacroExecutionBlocked,
-                'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
+                'C07_P345_CERTIFICATE_PRE_D_PIN_NOT_VERIFIED'):
             require_source_execution(result,source_context=ctx)
         # The certificate cannot be minted by merely supplying a report:
         # explicitly require a consuming-side source context.
