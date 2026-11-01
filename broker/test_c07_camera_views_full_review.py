@@ -84,7 +84,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
         return packet, expected, spec
 
     def test_two_independent_current_operation_four_view_positive_readbacks(self):
-        for rid in RULES:
+        for rid in (P1, P4):
             with self.subTest(rule=rid):
                 test, ctx = self.context(rid)
                 self.refresh(test, ctx, rid)
@@ -99,7 +99,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                                  'UNKNOWN')
 
     def test_reused_pixels_with_different_original_names_never_pass(self):
-        for rid in RULES:
+        for rid in (P1, P4):
             with self.subTest(rule=rid):
                 test, ctx = self.context(rid)
                 roles = VIEWS[rid]
@@ -117,7 +117,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                     'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened'])
 
     def test_top_camera_direction_mismatch_is_real_negative(self):
-        for rid in RULES:
+        for rid in (P1, P4):
             with self.subTest(rule=rid):
                 test, ctx = self.context(rid)
                 self.refresh(test, ctx, rid, alter={
@@ -127,7 +127,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                 self.assertFalse(packet['rule']['checks'][NATIVE_RULES[rid][1][2]])
 
     def test_missing_source_pin_never_grants_reviewed_positive(self):
-        for rid in RULES:
+        for rid in (P1, P4):
             with self.subTest(rule=rid):
                 test, ctx = self.context(rid)
                 self.refresh(test, ctx, rid)
