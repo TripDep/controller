@@ -52,7 +52,7 @@ NATIVE_RULES = {
         'pre_d_original_bake_necessity_and_source_normal_map_sha_bound',
         'actual_exported_normal_texture_and_baked_png_pixels_redecoded',
         'actual_baked_map_channels_and_exported_normal_image_match')),
-    'AAA-200-L-120': ('p345_remaining_scoped', (
+    'AAA-200-L-120': ('visual_qa_three_macro_full', (
         'pre_d_original_approved_mesh_and_current_export_sha_bound',
         'actual_approved_and_current_native_triangle_geometry_compared',
         'trusted_original_visual_approval_and_renderer_equivalence_confirmed')),
@@ -144,7 +144,7 @@ NATIVE_RULES = {
         'pre_d_complete_component_roles_placement_and_intersection_policy_sha_pinned',
         'every_current_original_component_world_triangle_independently_recomputed',
         'all_original_component_pairs_decisively_nonintersecting_or_exact_duplicate_detected')),
-    'AAA-200-S-181': ('camera_views_full', (
+    'AAA-200-S-181': ('visual_qa_three_macro_full', (
         'pre_d_six_original_view_roles_current_render_events_and_view_qa_sha_pinned',
         'six_original_view_pixel_arrays_and_native_geometry_independently_distinct',
         'six_original_camera_axes_and_individual_view_qa_checks_replayed')),
@@ -164,7 +164,7 @@ NATIVE_RULES = {
         'pre_d_player_eye_height_camera_and_original_capture_event_sha_bound',
         'actual_player_view_png_and_native_geometry_independently_reopened',
         'measured_original_camera_at_player_height_and_facing_actual_asset')),
-    'AAA-200-N-138': ('camera_views_full', (
+    'AAA-200-N-138': ('visual_qa_three_macro_full', (
         'pre_d_front_side_rear_top_capture_roles_and_current_operation_events_sha_pinned',
         'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
         'front_side_rear_top_original_camera_positions_and_axes_verified')),
@@ -342,6 +342,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-L-120', 'AAA-200-N-138', 'AAA-200-S-181',
     'AAA-200-L-118', 'AAA-200-M-121', 'AAA-200-M-125',
     'AAA-200-M-127', 'AAA-200-O-143',
     # T198/T199 root-cause and corrective method are independently
@@ -455,6 +456,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_environment_full_review import inspect as inspect_environment
     elif domain == 'p1_terrain_full':
         from c07_p1_terrain_full_review import inspect as inspect_terrain
+    elif domain == 'visual_qa_three_macro_full':
+        from c07_visual_qa_three_macro_full_review import inspect as inspect_visual_qa_three
     elif domain == 'camera_views_full':
         from c07_camera_views_full_review import inspect as inspect_camera_views
     elif domain == 'p4_lighting_player_full':
@@ -503,6 +506,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                              if domain == 'p1_environment_full' else None)
     p1_terrain_review = (inspect_terrain(source_context, rule_id)
                          if domain == 'p1_terrain_full' else None)
+    visual_qa_three_review = (inspect_visual_qa_three(source_context, rule_id)
+                              if domain == 'visual_qa_three_macro_full' else None)
     camera_views_review = (inspect_camera_views(source_context, rule_id)
                            if domain == 'camera_views_full' else None)
     p4_lighting_review = (inspect_p4_lighting(source_context, rule_id)
@@ -528,7 +533,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     full_review = next((review for review in
                         (alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
-                         camera_views_review, p4_lighting_review,
+                         camera_views_review, visual_qa_three_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
                          p345_remaining_review, p345_five_macro_review, p8_delivery_review, p8_intersection_review,
                          p8_final_process_review,
@@ -638,6 +643,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_environment_review'] = p1_environment_review
     if p1_terrain_review is not None:
         proof['original_p1_terrain_review'] = p1_terrain_review
+    if visual_qa_three_review is not None:
+        proof['original_visual_qa_three_source_review'] = visual_qa_three_review
     if camera_views_review is not None:
         proof['original_camera_views_review'] = camera_views_review
     if p4_lighting_review is not None:
