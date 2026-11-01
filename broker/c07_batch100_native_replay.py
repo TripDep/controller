@@ -198,6 +198,36 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
              row.get('advancement_authorized') is False
              for row in p1_quantitative['rules'].values()),
          'C07_BATCH100_P1_QUANTITATIVE_SOURCE_REPLAY_UNTRUSTED')
+    # A further independent native triangle-to-PNG raster replay covers
+    # all eleven still-unreviewed P1 D031-D040/F056 source predicates.
+    # The pixel projection is machine-measured, never renderer authentication,
+    # independent MG0 or artistic approval.
+    from c07_p1_native_raster_projection import (
+        inspect_family as inspect_p1_raster, IDS as P1_RASTER_IDS)
+    p1_raster=inspect_p1_raster({
+        'inventory':inventory,'plan':plan,'controller':controller,
+        'asset':asset,'step':step,'work':work,
+        'source_loader':source_loader})
+    need(p1_raster.get('family_rule_count')==30 and
+         p1_raster.get('rule_count')==11 and
+         set(p1_raster.get('rules',{}))==set(P1_RASTER_IDS) and
+         p1_raster.get('attempt_id')==work['attempt_id'] and
+         p1_raster.get('operation_sha256')==work['operation_sha256'] and
+         p1_raster.get('original_audit_sha256')==audit['audit_sha256'] and
+         p1_raster.get('original_audit_tail')==audit['audit_tail_sha256'] and
+         p1_raster.get('full_semantic_passes')==0 and
+         p1_raster.get('individual_mg0_passes')==0 and
+         p1_raster.get('advancement_authorized') is False and
+         all(type(row.get('checks')) is dict and len(row['checks'])==3 and
+             all(type(v) is bool for v in row['checks'].values()) and
+             row.get('source_sha256')==inventory['rules'][rid]['source_sha256'] and
+             row.get('requirement_sha256')==
+                 inventory['rules'][rid]['requirement_sha256'] and
+             row.get('full_rule_semantics')=='UNKNOWN' and
+             row.get('individual_mg0')=='UNKNOWN' and
+             row.get('advancement_authorized') is False
+             for rid,row in p1_raster['rules'].items()),
+         'C07_BATCH100_P1_RASTER_ELEVEN_ORIGINAL_RULES_UNTRUSTED')
     # The full forty-rule P3/P4/P5 macro is mandatory in the 100-rule
     # consuming-side operation. It explicitly visits each source-specific
     # replayer; this does not promote a source-only candidate to FULL or MG0.
@@ -297,6 +327,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         'p678_thirty_rule_specific_original': family_reports,
         'p1_thirteen_original_design': p1_design,
         'p1_thirteen_original_quantitative': p1_quantitative,
+        'p1_eleven_original_native_raster': p1_raster,
         'p345_forty_source_macro': p345_macro,
         'p345_execution_only_certificate': p345_execution_certificate,
         'native_semantic_code_review': code_registry,
