@@ -230,9 +230,19 @@ def npos(x):return type(x) in (int,float) and math.isfinite(x) and x>0
 def dict_nonempty(x):return type(x) is dict and bool(x)
 def aabb(g):return type(g) is dict and all(k in g for k in ('bbox_min','bbox_max','triangles'))
 def binary_json(raw):
+    # Duplicate JSON keys and NaN/Infinity are not authenticated numeric
+    # source evidence; avoid Python's permissive last-key-wins behavior.
     if type(raw) is not bytes or len(raw)>2_000_000:return {}
+    def strict_pairs(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise ValueError('C07_P2_DUPLICATE_SOURCE_JSON_KEY')
+            out[key]=value
+        return out
     try:
-        x=json.loads(raw)
+        x=json.loads(raw,object_pairs_hook=strict_pairs,
+                     parse_constant=lambda token: (_ for _ in ()).throw(
+                         ValueError('C07_P2_NONFINITE_SOURCE_JSON')))
         return x if type(x) is dict else {}
     except (UnicodeError,ValueError,TypeError):return {}
 
