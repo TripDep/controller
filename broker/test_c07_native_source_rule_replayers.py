@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for eight NEW native per-rule replayers.
+"""Adversarial source-byte tests for fifteen original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -6,6 +6,7 @@ cannot turn UNKNOWN individual MG0 into a production PASS.
 import copy
 import unittest
 from pathlib import Path
+import test_c07_positive_native_process as original_fixture
 
 import supervisor_judgment as j
 import c07_mg0_individual as mg0
@@ -90,7 +91,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_thirteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+    def test_fifteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
         self.assertEqual(len(CASES), 15)
         self.assertEqual(len(set(x[1] for x in CASES)), 15)
         for fixture_class, rid, method in CASES:
