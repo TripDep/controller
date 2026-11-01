@@ -15,10 +15,16 @@ OPTIONAL_EVIDENCE_CONTEXT = frozenset((
     "pre_d_control", "reference_evidence_contract", "output_expectation",
     "p1_evidence_contract", "p2_evidence_contract",
     "p345_evidence_contract", "p678_evidence_contract",
-    "question_200_original_witnesses", "question_100_original_witnesses",
-    "last_67_source_evidence_contract", "acceptance_criteria",
+    "question_200_original_witnesses", "acceptance_criteria",
     "mandatory_issue_ids", "timebox_seconds", "visual_hierarchy_contract",
 ))
+# Late source evidence is accepted without changing the legacy 12-field
+# contract enumeration. It remains original-byte observation, not approval.
+LATE_EVIDENCE_CONTEXT = frozenset((
+    "question_100_original_witnesses",
+    "last_67_source_evidence_contract",
+))
+ALL_EVIDENCE_CONTEXT = OPTIONAL_EVIDENCE_CONTEXT | LATE_EVIDENCE_CONTEXT
 PINNED_CONTRACTS = frozenset((
     "p1_evidence_contract", "p2_evidence_contract",
     "p345_evidence_contract", "p678_evidence_contract",
@@ -57,7 +63,7 @@ def validate(plan, inventory):
     need(type(plan) is dict and type(inventory) is dict and
          type(inventory.get("rules")) is dict,
          "C07_PRE_D_PLAN_OR_INVENTORY_MISSING")
-    extras = set(plan) & OPTIONAL_EVIDENCE_CONTEXT
+    extras = set(plan) & ALL_EVIDENCE_CONTEXT
     for key in sorted(extras & PINNED_CONTRACTS):
         value = plan[key]
         need(type(value) is dict and set(value) == {"original_artifact_sha256"},
