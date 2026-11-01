@@ -85,7 +85,7 @@ class P1SpatialNativeTests(unittest.TestCase):
 
 
     def alignment_context(self):
-        test, ctx, scene = self.context()
+        test, ctx, scene = P1SpatialNativeTests.context(self)
         scene['building_world_placements']['secondary']['translation_xyz'] = [1,0,0]
         scene['module_alignment_pairs'] = [{
             'primary_vertex_xyz':[1,0,0],
