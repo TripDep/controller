@@ -144,6 +144,33 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             }
     need(len(all_rows) == 100 and set(all_rows) == set(COHORT),
          'C07_BATCH100_INCOMPLETE_SOURCE_COVERAGE')
+    # P1 is a 30-rule family: the thirteen still-unreviewed visual, access
+    # and composition literals must also receive their distinct original-byte
+    # quantitative replay. No machine source observation is a FULL artistic PASS.
+    from c07_p1_design_source_review import inspect as inspect_p1_design, IDS as P1_DESIGN_IDS
+    p1_design=inspect_p1_design(inventory,plan,controller,asset,step,work,
+                                source_loader=source_loader)
+    need(p1_design.get('family_rule_count')==30 and
+         p1_design.get('rule_count')==13 and
+         p1_design.get('attempt_id')==work['attempt_id'] and
+         p1_design.get('operation_sha256')==work['operation_sha256'] and
+         p1_design.get('original_audit_sha256')==audit['audit_sha256'] and
+         p1_design.get('original_audit_tail')==audit['audit_tail_sha256'] and
+         p1_design.get('advancement_authorized') is False and
+         p1_design.get('full_semantic_passes')==0 and
+         p1_design.get('individual_mg0_passes')==0 and
+         set(p1_design.get('rules',{}))==set(P1_DESIGN_IDS) and
+         all(type(v.get('original_pixel_geometry_checks')) is dict and
+             len(v['original_pixel_geometry_checks'])==2 and
+             all(type(c) is bool for c in v['original_pixel_geometry_checks'].values())
+             and v.get('requirement_sha256')==
+                 inventory['rules'][rid]['requirement_sha256']
+             and v.get('source_sha256')==inventory['rules'][rid]['source_sha256']
+             and v.get('full_rule_semantics')=='UNKNOWN' and
+             v.get('individual_mg0')=='UNKNOWN' and
+             v.get('advancement_authorized') is False
+             for rid,v in p1_design['rules'].items()),
+         'C07_BATCH100_P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED')
     # The full forty-rule P3/P4/P5 macro is mandatory in the 100-rule
     # consuming-side operation. It explicitly visits each source-specific
     # replayer; this does not promote a source-only candidate to FULL or MG0.
@@ -171,6 +198,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          code_registry['registry_inconsistent_ids'] == [],
          'C07_BATCH100_REVIEWED_NATIVE_DISPATCH_INCONSISTENT')
     return {
+        'p1_thirteen_original_design': p1_design,
         'p345_forty_source_macro': p345_macro,
         'native_semantic_code_review': code_registry,
         'schema': 'gg-c07-exact100-original-native-replay-v1',
