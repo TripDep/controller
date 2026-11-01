@@ -321,6 +321,76 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         170: {"source_fivem_log_contains_numeric_samples": game_structural,
               "independent_in_game_execution_and_owner_provenance": False},
     }
+    # Independent *additional* semantic obligations, not a third name for
+    # either existing presence check. Each reads cross-file original data;
+    # no source-labelled Sollumz/FiveM log can attest external execution.
+    # Original bytes and pre-D hashes have already been re-opened above.
+    from visual_content_metrics import decode_grid, VisualContentBlocked
+    def pixel_digest(raw):
+        if raw is None:
+            return None
+        try:
+            width, height, pixels = decode_grid(raw, step=1)
+            if width < 2 or height < 2 or not pixels:
+                return None
+            return sha(bytes(c for pixel in pixels for c in pixel))
+        except (ValueError, TypeError, VisualContentBlocked):
+            return None
+    pixel_digests = [pixel_digest(raw) for raw in pngs]
+    def normalized_normals():
+        if not glb_attrs:
+            return False
+        try:
+            for attrs in glb_attrs:
+                if not uv_valid(attrs):
+                    return False
+                normal = _read_accessor(glb, glb_binary, attrs["NORMAL"])
+                if not normal or any(
+                    len(v) != 3 or not all(finite(x) for x in v) or
+                    not (0.99 <= math.sqrt(sum(x*x for x in v)) <= 1.01)
+                    for v in normal
+                ):
+                    return False
+            return True
+        except (KeyError, IndexError, TypeError, ValueError):
+            return False
+    semantic = {
+        161: ("manifest_ytyp_entries_unique_and_confined_to_stream",
+              bool(manifest_ok and manifest_ytyp and
+                   len(ytyp_paths) == len(set(ytyp_paths)) and
+                   all(path.startswith("stream/") for path in ytyp_paths))),
+        162: ("drawable_bound_to_exactly_one_original_archetype",
+              bool(drawable_name and sum(
+                  v == drawable_name for v in archetypes.values()) == 1)),
+        163: ("every_original_drawable_texture_resolves_once",
+              bool(referenced_textures and texture_names and
+                   len(referenced_textures) == len(set(referenced_textures)) and
+                   set(referenced_textures) <= set(texture_names))),
+        164: ("all_placed_original_archetypes_have_drawable_binding",
+              bool(mapped and all(archetypes.get(name) == drawable_name
+                                  for name, _ in entities))),
+        165: ("all_original_map_positions_match_current_codewalker_source",
+              bool(report_matches and entities and
+                   all(all(finite(c) for c in xyz) for _, xyz in entities))),
+        166: ("original_collision_children_have_supported_bound_types",
+              bool(collision_declared and all(
+                  x.attrib.get("type") in (
+                      "Box", "Sphere", "Capsule", "Geometry",
+                      "GeometryBVH", "Composite")
+                  for x in collision_children))),
+        167: ("independent_sollumz_execution_provenance", False),
+        168: ("actual_native_vertex_normals_normalized_and_uv_finite",
+              bool(attrs_valid and shaders_declared and normalized_normals())),
+        169: ("three_original_views_have_distinct_decoded_pixels",
+              bool(report_matches and lod_report and
+                   all(pixel_digests) and
+                   len(set(pixel_digests)) == len(pixel_digests))),
+        170: ("independent_fivem_engine_execution_provenance", False),
+    }
+    need(set(semantic) == set(NUMBERS) and
+         len({k for k, _ in semantic.values()}) == 10 and
+         all(type(v) is bool for _, v in semantic.values()),
+         "C07_P7_TEN_DISTINCT_CROSS_SOURCE_SEMANTICS")
     rules = {}
     for n, rid in zip(NUMBERS, IDS):
         measured = {k: bool(v) for k,v in checks[n].items()}
@@ -330,6 +400,8 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             "exact_attempt_id": work["attempt_id"],
             "operation_sha256": work["operation_sha256"],
             "original_machine_checks": measured,
+            "original_cross_source_semantic": {
+                semantic[n][0]: semantic[n][1]},
             "machine_scope": "OBSERVED_SCOPE_PASS" if all(measured.values())
                              else "UNKNOWN_OR_DEFECT",
             "full_rule_semantics": "UNKNOWN", "individual_mg0": "UNKNOWN",
@@ -349,6 +421,8 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                     "unattested_fivem_log": bool(game_raw)},
         "machine_positive_obligations": sum(
             v["machine_scope"] == "OBSERVED_SCOPE_PASS" for v in rules.values()),
+        "original_cross_source_positive_obligations": sum(
+            value for _, value in semantic.values()),
         "full_rule_semantic_passes": 0, "individual_mg0_passes": 0,
         "advancement_authorized": False,
     }
