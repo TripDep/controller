@@ -302,7 +302,12 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     above=im('VISUAL_VIEW_TOP')
     below=im('VISUAL_VIEW_UNDERSIDE')
     leaf=im('P2_LEAF_CARD_PNG')
-    current=[r for r in rows if r.get('step')==step]
+    # A hash-valid Controller audit can contain several attempts of the
+    # same step. Never reuse a previous attempt's QA receipt as current work.
+    current=[r for r in rows if r.get('step')==step and
+             r.get('attempt_id')==work['attempt_id'] and
+             r.get('operation_sha256')==work['operation_sha256'] and
+             r.get('master_sha256')==work['master_sha256']]
     event=lambda name:any(r.get('event')==name for r in current)
     nonzero=aabb(geom) and geom['triangles']>0
     zspan=(geom['bbox_max'][2]-geom['bbox_min'][2]) if nonzero else None
