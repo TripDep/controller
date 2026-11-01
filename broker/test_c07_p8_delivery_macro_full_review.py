@@ -191,8 +191,12 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
                 self.assertEqual(result['fivem_runtime'],'UNVERIFIED')
                 packet=build_packet(self.context(),rid)
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
-                self.assertEqual(packet['rule']['result'],'UNKNOWN')
-                self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+                if rid in ('AAA-200-T-198','AAA-200-T-199'):
+                    self.assertIn(rid,FULL_LITERAL_REVIEWED)
+                    self.assertEqual(packet['rule']['result'],'PASS')
+                else:
+                    self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                    self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
 
     def test_original_blender_envelope_not_just_magic(self):
         self.assertTrue(blender_blocks(blender_envelope()))
@@ -224,6 +228,18 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         ):
             with self.subTest(sample=forged[:25]):
                 self.assertFalse(blender_blocks(forged))
+
+    def test_t198_producer_claim_does_not_override_missing_method_fix(self):
+        self.after_script=b'def correct_origin(vertices):\\n    return vertices\\n'
+        self.fixture.docs['P8_METHOD_CHANGE']['after_sha256']=sha(self.after_script)
+        self.refresh()
+        row=self.row('AAA-200-T-198')
+        self.assertFalse(row['checks'][
+            'original_after_geometry_corrects_same_recurring_cause_within_source_limit'])
+        self.assertEqual(build_packet(self.context(),'AAA-200-T-198')[
+            'rule']['result'],'FAIL')
+        self.assertFalse(build_packet(self.context(),'AAA-200-T-198')[
+            'mg0']['result']=='PASS')
 
     def test_wrong_manifest_hash_refuses_T191(self):
         self.delivery_plan['export_sha256']='f'*64
