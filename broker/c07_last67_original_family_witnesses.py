@@ -133,6 +133,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
               original.get('profile') in plan.get('profiles',[])) or
              (family=='HISTORICAL_ASSET_GATES' and
               plan.get('asset_build_context_verified') is True))
+        # Missing/uncertain applicability is UNKNOWN, never a fabricated N/A.
+        # A certified NOT_DUE requires separate authoritative exclusion proof.
         # Any quality gate may report an original negative finding. A lack
         # of such a finding is NOT evidence that the rule passed.
         negatives=[r['record_hash'] for r in records if
@@ -148,9 +150,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'original_global_governance_rule':global_gate,
           'current_asset_applicability':'DUE' if due else 'CONTEXT_UNKNOWN',
           'original_current_attempt_negative_hashes':negatives,
-          'semantic_verdict':'FAIL' if negatives else
-                      'UNKNOWN' if due else 'NOT_DUE',
-          'individual_mg0':'UNKNOWN' if due else 'NOT_DUE',
+          'semantic_verdict':'FAIL' if negatives else 'UNKNOWN',
+          'individual_mg0':'UNKNOWN',
           'owner_approval':'UNKNOWN',
           'delivery_remains_protected':current_blocked,
           'advancement_authorized':False
