@@ -19,6 +19,9 @@ NATIVE_RULES = {
     'AAA-200-L-117': ('uv', (
         'all_original_uv_triangle_pairs_compared',
         'no_positive_area_overlap_under_original_policy')),
+    'AAA-200-M-124': ('texture', (
+        'actual_embedded_original_pixels_have_distinct_colors',
+        'original_pixel_luminance_variance_not_flat')),
     'AAA-200-M-128': ('texture', (
         'original_embedded_png_bytes_and_dimensions_within_budget',
         'all_original_embedded_images_independently_decoded')),
@@ -59,12 +62,13 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These ten literals have independently decidable original-byte acceptance
+# These eleven literals have independently decidable original-byte acceptance
 # conditions. The other four source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
-    'AAA-200-L-117', 'AAA-200-M-128', 'AAA-200-O-142',
+    'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
+    'AAA-200-O-142',
     'AAA-200-O-148', 'AAA-200-S-189', 'AAA-200-T-194',
     'AAA-200-T-197',
 ))
