@@ -427,26 +427,30 @@ def inspect(context, rule_id):
              after_error<=threshold and after_error<prior_error and
              all(after_error<error for _,error in independently_bad) and
              before is not None and sha(before)!=sha(export))
+        # Both rules require genuine corrective METHOD evidence. Merely
+        # changing original GLB vertices cannot prove that a recurring root
+        # cause was fixed rather than patching symptoms.
+        changed=bool(before_script and after_script and
+            before_script!=after_script and method.get('before_sha256')==
+            sha(before_script) and method.get('after_sha256')==
+            sha(after_script))
+        parsed=bool(changed and _safe_origin_formula(before_script)==
+                    (0.0,0.0,0.0) and
+                    _safe_origin_formula(after_script) not in
+                    (None,(0.0,0.0,0.0)))
+        genuine_effect=bool(parsed and before is not None and
+                export is not None and _method_reproduces_actual_geometry(
+                    before_script,after_script,before,export))
+        causal_fix=bool(fixed and genuine_effect and
+                    method.get('root_cause')=='ORIGIN_DEVIATION' and
+                    method.get('verification_method')==
+                    'independent_bbox_origin_measurement')
         if rule_id=='AAA-200-T-198':
-            vals=(actual_findings,was_bad,fixed)
+            vals=(actual_findings,was_bad,causal_fix)
         else:
-            changed=bool(before_script and after_script and
-                before_script!=after_script and method.get('before_sha256')==
-                sha(before_script) and method.get('after_sha256')==
-                sha(after_script))
-            parsed=bool(changed and _safe_origin_formula(before_script)==
-                        (0.0,0.0,0.0) and
-                        _safe_origin_formula(after_script) not in
-                        (None,(0.0,0.0,0.0)))
-            genuine_effect=bool(parsed and before is not None and
-                    export is not None and _method_reproduces_actual_geometry(
-                        before_script,after_script,before,export))
             vals=(changed and parsed,
-                  bool(fixed and genuine_effect and
-                       method.get('root_cause')=='ORIGIN_DEVIATION'),
-                  bool(fixed and genuine_effect and
-                       method.get('verification_method')==
-                       'independent_bbox_origin_measurement'))
+                  bool(causal_fix),
+                  bool(causal_fix))
     checks=dict(zip(RULES[rule_id],map(bool,vals)))
     return {
         'rule_id':rule_id,'checks':checks,
@@ -456,7 +460,8 @@ def inspect(context, rule_id):
              (guide_raw,source,export,plan_raw) if rule_id==
                 'AAA-200-T-195' else
              (history_raw,target_raw,before,export,method_raw,
-              before_script,after_script) if rule_id=='AAA-200-T-199'
+              before_script,after_script) if rule_id in
+                 ('AAA-200-T-198','AAA-200-T-199')
              else (history_raw,target_raw,before,export)))),
         'original_audit_sha256':audit_sha,
         'original_audit_tail':tail,
