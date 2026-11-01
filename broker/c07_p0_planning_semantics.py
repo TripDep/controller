@@ -68,26 +68,28 @@ def original_json(raw):
     return value
 
 def _no_cycle(nodes, edges):
+    """Bounded iterative DAG check: no recursion-limit bypass or stack crash."""
+    if type(nodes) is not list or len(set(nodes)) != len(nodes):
+        return False
+    indegree = {n: 0 for n in nodes}
     forward = {n: [] for n in nodes}
     for edge in edges:
-        if type(edge) is not list or len(edge) != 2 or (
+        if (type(edge) is not list or len(edge) != 2 or
+                type(edge[0]) is not str or type(edge[1]) is not str or
                 edge[0] not in forward or edge[1] not in forward):
             return False
         forward[edge[0]].append(edge[1])
-    visiting, done = set(), set()
-    def visit(n):
-        if n in visiting:
-            return False
-        if n in done:
-            return True
-        visiting.add(n)
-        for other in forward[n]:
-            if not visit(other):
-                return False
-        visiting.remove(n)
-        done.add(n)
-        return True
-    return all(visit(n) for n in nodes)
+        indegree[edge[1]] += 1
+    ready = [n for n in nodes if indegree[n] == 0]
+    visited = 0
+    while ready:
+        node = ready.pop()
+        visited += 1
+        for target in forward[node]:
+            indegree[target] -= 1
+            if indegree[target] == 0:
+                ready.append(target)
+    return visited == len(nodes)
 
 def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     need(type(inventory) is dict and inventory.get("rule_count") == 763 and
@@ -296,7 +298,9 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                 len({x.get("id") for x in criteria or []
                      if type(x) is dict}) == len(criteria or []) and
                 all(type(x) is dict and
-                    text(x.get("measurement_source"))
+                    text(x.get("measurement_source")) and
+                    type(x.get("measurement_source_sha256")) is str and
+                    x["measurement_source_sha256"] in verified_deps.values()
                     for x in criteria or []),
         },
     }
