@@ -38,6 +38,83 @@ def digest(value):
         value, sort_keys=True, ensure_ascii=False, separators=(',', ':'),
         allow_nan=False).encode('utf-8')).hexdigest()
 
+def _verify_p1_residual_source_macros(design, quantitative, raster,
+                                       inventory, work, audit):
+    """Consume ALL eleven residual P1 literals from three original readers.
+
+    A synthetic positive in one reader never substitutes for an independent
+    pixel/geometry predicate from another. Each result must be tied to the
+    same original audit, attempt, operation, canonical source and literal.
+    This checks source evidence only; no aesthetic, MG0 or owner PASS.
+    """
+    from c07_p1_design_source_review import IDS as DESIGN_IDS
+    from c07_p1_remaining_visual_review import IDS as QUANT_IDS
+    from c07_p1_native_raster_projection import IDS as RASTER_IDS
+    need(len(DESIGN_IDS)==len(QUANT_IDS)==13 and
+         len(RASTER_IDS)==11 and set(DESIGN_IDS)==set(QUANT_IDS) and
+         set(RASTER_IDS)<set(DESIGN_IDS) and
+         len(set(RASTER_IDS))==11,
+         'C07_BATCH100_P1_RESIDUAL_FROZEN_LITERAL_SET_DRIFT')
+    expected={
+        'attempt_id':work['attempt_id'],
+        'operation_sha256':work['operation_sha256'],
+        'original_audit_sha256':audit['audit_sha256'],
+        'original_audit_tail':audit['audit_tail_sha256'],
+    }
+    for label,report,ids in (
+        ('DESIGN',design,DESIGN_IDS),
+        ('QUANTITATIVE',quantitative,QUANT_IDS),
+        ('RASTER',raster,RASTER_IDS),
+    ):
+        need(type(report) is dict and
+             report.get('family_rule_count')==30 and
+             report.get('rule_count')==len(ids) and
+             set(report.get('rules',{}))==set(ids) and
+             all(report.get(k)==v for k,v in expected.items()) and
+             report.get('advancement_authorized') is False and
+             report.get('full_semantic_passes')==0 and
+             report.get('individual_mg0_passes')==0,
+             'C07_BATCH100_P1_RESIDUAL_ORIGINAL_FAMILY_CONTEXT:'+label)
+        observed=0
+        for rid in ids:
+            row=report['rules'][rid]
+            checks=(row.get('original_pixel_geometry_checks') if label=='DESIGN'
+                    else row.get('checks'))
+            required=3 if label!='QUANTITATIVE' else 2
+            need(type(row) is dict and type(checks) is dict and
+                 len(checks)==required and
+                 all(type(name) is str and bool(name) and type(value) is bool
+                     for name,value in checks.items()) and
+                 row.get('source_sha256')==
+                     inventory['rules'][rid]['source_sha256'] and
+                 row.get('requirement_sha256')==
+                     inventory['rules'][rid]['requirement_sha256'] and
+                 row.get('full_rule_semantics')=='UNKNOWN' and
+                 row.get('individual_mg0')=='UNKNOWN' and
+                 row.get('advancement_authorized') is False and
+                 row.get('source_observed') is all(checks.values()),
+                 'C07_BATCH100_P1_RESIDUAL_PER_LITERAL_ORIGINAL_PROOF:'+
+                 label+':'+rid)
+            observed+=row['source_observed']
+        if label=='DESIGN':
+            need(report.get('source_observed_count')==observed,
+                 'C07_BATCH100_P1_RESIDUAL_DESIGN_POSITIVE_COUNT_FORGED')
+    for rid in RASTER_IDS:
+        checks=(
+            design['rules'][rid]['original_pixel_geometry_checks'],
+            quantitative['rules'][rid]['checks'],
+            raster['rules'][rid]['checks'],
+        )
+        names=[name for group in checks for name in group]
+        need(len(names)==8 and len(set(names))==8 and
+             all(type(value) is bool
+                 for group in checks for value in group.values()),
+             'C07_BATCH100_P1_RESIDUAL_EIGHT_INDEPENDENT_CHECKS:'+rid)
+    return {'residual_rules_replayed':11,'original_measured_checks':88,
+            'full_semantics_verified':False,'individual_mg0_verified':False,
+            'advancement_authorized':False}
+
+
 def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     """Replay 100 exact original-source predicates on one P8+ operation.
 
@@ -161,7 +238,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          p1_design.get('individual_mg0_passes')==0 and
          set(p1_design.get('rules',{}))==set(P1_DESIGN_IDS) and
          all(type(v.get('original_pixel_geometry_checks')) is dict and
-             len(v['original_pixel_geometry_checks'])==2 and
+             len(v['original_pixel_geometry_checks'])==3 and
              all(type(c) is bool for c in v['original_pixel_geometry_checks'].values())
              and v.get('requirement_sha256')==
                  inventory['rules'][rid]['requirement_sha256']
@@ -228,6 +305,10 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
              row.get('advancement_authorized') is False
              for rid,row in p1_raster['rules'].items()),
          'C07_BATCH100_P1_RASTER_ELEVEN_ORIGINAL_RULES_UNTRUSTED')
+    # Consume the entire residual P1 visual family as one source-bound
+    # macro; a green per-rule observation is never a FULL semantic verdict.
+    _verify_p1_residual_source_macros(
+        p1_design,p1_quantitative,p1_raster,inventory,work,audit)
     # The full forty-rule P3/P4/P5 macro is mandatory in the 100-rule
     # consuming-side operation. It explicitly visits each source-specific
     # replayer; this does not promote a source-only candidate to FULL or MG0.
