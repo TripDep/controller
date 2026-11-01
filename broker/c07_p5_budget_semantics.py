@@ -55,9 +55,9 @@ def _glb_parts(raw):
          and jsz % 4 == 0 and 0 < jsz <= 8_000_000
          and 28 + jsz <= len(raw), "C07_P5_GLB_HEADER")
     size, kind = struct.unpack_from("<I4s", raw, 20 + jsz)
-    need(kind == b"BIN\\x00" and size % 4 == 0
+    need(kind == b"BIN\x00" and size % 4 == 0
          and 28 + jsz + size == len(raw), "C07_P5_GLB_BINARY")
-    doc = _json(raw[20:20+jsz].rstrip(b" \\x00"))
+    doc = _json(raw[20:20+jsz].rstrip(b" \x00"))
     need(doc.get("asset", {}).get("version") == "2.0"
          and type(doc.get("materials", [])) is list
          and type(doc.get("images", [])) is list
