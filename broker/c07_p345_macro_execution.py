@@ -148,7 +148,7 @@ def run(source_context):
         'advancement_authorized':False,
     }
 
-def require_source_execution(report):
+def require_source_execution(report, *, source_context):
     """Certify only execution completeness, NEVER rule correctness or MG0.
 
     A rule merely visited with BLOCKED must not be presented as a successful
@@ -191,6 +191,16 @@ def require_source_execution(report):
          report.get('fivem_runtime_approved') is False and
          report.get('owner_approved') is False,
          'C07_P345_CERTIFICATE_COUNTS_OR_AUTHORIZATION_UNTRUSTED')
+    # Never trust a caller-supplied 40-row report, even when every first
+    # criterion asserts a source pin. Independently re-open the Controller's
+    # registered original bytes for the SAME attempt and require exact replay
+    # equality; producer-supplied booleans or fabricated first-criteria cannot
+    # make the execution certificate.
+    need(type(source_context) is dict,
+         'C07_P345_CERTIFICATE_TRUSTED_SOURCE_CONTEXT_REQUIRED')
+    refreshed=run(source_context)
+    need(refreshed==report,
+         'C07_P345_CERTIFICATE_ORIGINAL_REPLAY_MISMATCH')
     return {
         'schema':'c07-p345-execution-only-certificate-v1',
         'source_replays_executed':40,
