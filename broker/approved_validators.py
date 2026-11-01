@@ -9,7 +9,7 @@ import re
 
 from planning_semantics import ENGINE_RULE, VALIDATOR as PLANNING_VALIDATOR, CRITERIA as PLANNING_CRITERIA
 from r173_rule_semantics import VALIDATOR as R173_VALIDATOR
-from c07_native_source_rule_replayers import NATIVE_RULES, VALIDATORS as NATIVE_VALIDATORS
+from c07_native_source_rule_replayers import REVIEWED_RULES as NATIVE_RULES, REVIEWED_VALIDATORS as NATIVE_VALIDATORS
 
 R173_CRITERIA={
  'AAA-200-A-008':('uncertain_walkability_explicit','unknown_world_water_z_explicit',
