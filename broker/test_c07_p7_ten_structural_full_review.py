@@ -21,6 +21,12 @@ class P7TenFullStructuralTests(unittest.TestCase):
         self.q=P7Fixture('test_eight_scoped_observations_never_claim_game_or_sollumz_pass')
         self.q.setUp()
         self.addCleanup(self.q.doCleanups)
+        # The source-only P7 fixture intentionally lacks the canonical
+        # consuming-side binding fields. Supply them BEFORE rebuilding its
+        # immutable operation audit; do not fake any MG0 event or PASS.
+        self.q.f.work.update(work_item_sha256='e'*64,
+                             attempt_number=1,previous_attempt_id=None)
+        self.q.f.rebuild()
 
     def ctx(self):
         f=self.q.f
