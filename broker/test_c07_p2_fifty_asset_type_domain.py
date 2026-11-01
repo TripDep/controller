@@ -226,6 +226,27 @@ class FiftyP2(unittest.TestCase):
         self.assertEqual(proof['full_rule_semantics'],'UNKNOWN')
         self.assertEqual(proof['individual_mg0'],'UNKNOWN')
 
+    def test_original_p2_source_json_rejects_duplicate_keys_and_nan(self):
+        from c07_p2_fifty_asset_type_domain import binary_json
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":5,"bevel_radius_mm":0}'),{})
+        self.assertEqual(binary_json(b'{"nested":{"z":1,"z":2}}'),{})
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":NaN}'),{})
+        self.assertEqual(binary_json(b'{"slope":-Infinity}'),{})
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":5}'),
+                         {"bevel_radius_mm":5})
+        prior=self.run_check()
+        rid='AAA-200-G-063'
+        self.assertTrue(prior['rules'][rid]['original_native_domain_predicates'][
+            'original_explicit_bevel_radius_mm_in_arch_contract'])
+        self.add('P2_ARCH_CONTRACT','architecture.json',
+                 b'{"bevel_radius_mm":5,"bevel_radius_mm":5}')
+        self.rebuild()
+        tested=self.run_check()
+        self.assertFalse(tested['rules'][rid]['original_native_domain_predicates'][
+            'original_explicit_bevel_radius_mm_in_arch_contract'])
+        self.assertEqual(tested['rules'][rid]['full_rule_semantics'],'UNKNOWN')
+        self.assertEqual(tested['individual_mg0_passes'],0)
+
     def test_cross_attempt_replay_rejected(self):
         self.f.work=copy.deepcopy(self.f.work)
         self.f.work['attempt_id']='f'*64
