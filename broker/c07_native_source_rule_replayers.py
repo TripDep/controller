@@ -1,4 +1,4 @@
-"""Thirteen source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Nineteen source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -16,6 +16,21 @@ NATIVE_RULES = {
         'pre_D_path_line_strings_decoded',
         'main_and_secondary_path_ids_named',
         'original_path_geojson_sha_pinned')),
+    'AAA-200-O-141': ('budget', (
+        'original_platform_and_scene_budget_scoped',
+        'real_native_scene_fits_declared_triangle_budget',
+        'real_original_material_and_rgba_cost_within_pre_d_budget')),
+    'AAA-200-P-151': ('collision', (
+        'source_solid_surface_regions_explicit_and_valid',
+        'each_original_solid_region_has_real_collision_faces',
+        'each_declared_solid_region_exists_in_original_visual_geometry')),
+    'AAA-200-P-152': ('collision', (
+        'original_visual_and_collision_exports_distinct',
+        'separate_actual_triangle_sets_independently_read',
+        'collision_and_visual_triangle_geometry_independently_distinct')),
+    'AAA-200-P-153': ('collision', (
+        'original_collision_triangle_budget_explicit',
+        'actual_collision_complexity_within_original_limits')),
     'AAA-200-L-117': ('uv', (
         'all_original_uv_triangle_pairs_compared',
         'no_positive_area_overlap_under_original_policy')),
@@ -62,13 +77,14 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These eleven literals have independently decidable original-byte acceptance
+# These fifteen literals have independently decidable original-byte acceptance
 # conditions. The other four source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
     'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
-    'AAA-200-O-142',
+    'AAA-200-O-141', 'AAA-200-O-142',
+    'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
     'AAA-200-O-148', 'AAA-200-S-189', 'AAA-200-T-194',
     'AAA-200-T-197',
 ))
@@ -118,6 +134,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p3_geometry_semantics import inspect
     elif domain == 'budget':
         from c07_p5_budget_semantics import inspect
+    elif domain == 'collision':
+        from c07_p6_collision_semantics import inspect
     elif domain == 'delivery':
         from c07_p8_delivery_semantics import inspect
     elif domain == 'uv':
