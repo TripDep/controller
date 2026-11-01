@@ -62,9 +62,19 @@ def valid_sha(v):return type(v) is str and bool(re.fullmatch(r'[a-f0-9]{64}',v))
 def pairs(v):return type(v) is list and len(v)>=2 and all(
     type(x) is list and len(x)>=2 and all(type(c) in (float,int) and math.isfinite(c) for c in x[:2]) for x in v)
 def jbytes(raw):
+    # Reject ambiguous original evidence: duplicate keys or non-finite JSON
+    # must never silently resolve to a producer-chosen positive predicate.
     if type(raw) is not bytes or len(raw)>2_000_000:return {}
+    def strict_pairs(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise ValueError('C07_P1_DUPLICATE_SOURCE_JSON_KEY')
+            out[key]=value
+        return out
     try:
-        out=json.loads(raw)
+        out=json.loads(raw,object_pairs_hook=strict_pairs,
+                       parse_constant=lambda token: (_ for _ in ()).throw(
+                           ValueError('C07_P1_NONFINITE_SOURCE_JSON')))
         return out if type(out) is dict else {}
     except (TypeError,ValueError,UnicodeDecodeError):return {}
 
