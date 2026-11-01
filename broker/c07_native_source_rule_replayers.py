@@ -9,11 +9,6 @@ import hashlib
 import json
 
 import supervisor_judgment as judgment
-import c07_p3_geometry_semantics as topology
-import c07_p1_thirty_native_domain as p1
-import c07_p5_budget_semantics as budget
-import c07_p8_delivery_semantics as delivery
-import c07_mg0_individual as mg0
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
@@ -45,8 +40,6 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-INSPECTORS = {'p1': p1.inspect, 'topology': topology.inspect, 'budget': budget.inspect,
-              'delivery': delivery.inspect}
 
 class NativeRuleEvidenceBlocked(ValueError):
     pass
@@ -83,8 +76,21 @@ def build_packet(source_context, rule_id, *, expected=None):
     if expected is not None:
         need(actual_binding == expected, 'C07_REPLAYER_ATTEMPT_OPERATION_SOURCE_MISMATCH')
     domain, criteria = NATIVE_RULES[rule_id]
-    report = INSPECTORS[domain](inv, plan, controller, asset, step, work,
-                                source_loader=loader)
+    # Import domain readers only after reviewed enrollment has initialized;
+    # the existing evidence modules import approved_validators indirectly.
+    if domain == 'p1':
+        from c07_p1_thirty_native_domain import inspect
+    elif domain == 'topology':
+        from c07_p3_geometry_semantics import inspect
+    elif domain == 'budget':
+        from c07_p5_budget_semantics import inspect
+    elif domain == 'delivery':
+        from c07_p8_delivery_semantics import inspect
+    else:
+        raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
+    from c07_mg0_individual import inspect_batch
+    report = inspect(inv, plan, controller, asset, step, work,
+                     source_loader=loader)
     source = report['rules'][rule_id]
     checks = (source['original_native_measured_criteria'] if domain == 'p1'
               else source['original_machine_checks'])
@@ -100,7 +106,7 @@ def build_packet(source_context, rule_id, *, expected=None):
          'C07_REPLAYER_ORIGINAL_RULE_OR_AUDIT_CHANGED')
     # Re-evaluate the individual canonical MG0 triggers from the original
     # current operation audit, rather than copying a producer MG0 flag.
-    audit = mg0.inspect_batch(controller.master.read_bytes(),
+    audit = inspect_batch(controller.master.read_bytes(),
         controller.audit_path(asset).read_bytes(), asset,
         work['master_sha256'], [rule_id], work['attempt_id'],
         operation_sha256=work['operation_sha256'])
