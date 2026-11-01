@@ -482,9 +482,19 @@ def inspect(context, rule_id):
                   bool(causal_fix),
                   bool(causal_fix))
     checks=dict(zip(RULES[rule_id],map(bool,vals)))
+    original_cases_complete=True
+    if rule_id in ('AAA-200-T-198','AAA-200-T-199'):
+        original_cases_complete=bool(type(history.get('issues')) is list
+            and len(history['issues'])>=2 and all(
+                type(issue) is dict and
+                type(issue.get('id')) is str and
+                re.fullmatch(r'case-[A-Z]',issue['id']) and
+                original('P8_DEFECT_CASE_'+issue['id'][-1],'.glb') is not None
+                and original('P8_DEFECT_FIXED_'+issue['id'][-1],'.glb') is not None
+                for issue in history['issues']))
     return {
         'rule_id':rule_id,'checks':checks,
-        'evidence_complete':bool(all(x is not None for x in
+        'evidence_complete':bool(original_cases_complete and all(x is not None for x in
             ((archive,source,export,plan_raw) if rule_id in
                 ('AAA-200-T-191','AAA-200-T-193') else
              (guide_raw,source,export,plan_raw) if rule_id==
