@@ -1412,6 +1412,43 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Four literal P4 material predicates: actual exported
+                # PBR factors, physical class assignments and PNG map links.
+                # Source-bound observations never grant owner/MG0 approval.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_material_semantics import (
+                        IDS as P4_MATERIAL_IDS, inspect as inspect_p4_material)
+                    p4_material = inspect_p4_material(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_material['source_rule_count'] == 4
+                           and set(p4_material['rules']) == set(P4_MATERIAL_IDS)
+                           and p4_material['full_rule_semantic_passes'] == 0
+                           and p4_material['individual_mg0_passes'] == 0
+                           and p4_material['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p4_material['rules'].values()),
+                           'CONTROLLED_P4_ORIGINAL_MATERIAL_FALSE_PASS')
+                    if p4_material['original_material_metrics'][
+                            'exported_materials'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_PBR_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_material['original_audit_sha256'],
+                            original_audit_tail=p4_material['original_audit_tail'],
+                            source_rule_ids=list(P4_MATERIAL_IDS),
+                            original_material_metrics=p4_material[
+                                'original_material_metrics'],
+                            original_rule_machine_checks=p4_material['rules'],
+                            machine_positive_obligations=p4_material[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Five additional literal P5 quantitative oracles on original
                 # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
                 # This is read-only machine evidence, never full MG0 or QA.
