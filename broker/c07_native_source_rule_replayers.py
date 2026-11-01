@@ -56,6 +56,15 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
+# These five literals have independently decidable original-byte acceptance
+# conditions. The other eight source readers are diagnostic CANDIDATES only;
+# never enroll or dispatch them as full positive semantic validators.
+FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-L-112', 'AAA-200-M-128', 'AAA-200-O-142',
+    'AAA-200-O-148', 'AAA-200-T-194',
+))
+REVIEWED_RULES = {rid: NATIVE_RULES[rid] for rid in FULL_LITERAL_REVIEWED}
+REVIEWED_VALIDATORS = {rid: VALIDATORS[rid] for rid in FULL_LITERAL_REVIEWED}
 
 class NativeRuleEvidenceBlocked(ValueError):
     pass
@@ -161,7 +170,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'scope': judgment.SEMANTIC_SCOPE,
         'validator_id': VALIDATORS[rule_id],
         'binding': actual_binding,
-        'rule': {'result': 'PASS' if all(checks.values()) else 'FAIL',
+        'rule': {'result': ('PASS' if all(checks.values()) else 'FAIL')
+                           if rule_id in FULL_LITERAL_REVIEWED else 'UNKNOWN',
                  'checks': checks,
                  'proof_digest': judgment.digest(proof)},
         'mg0': {'binding': actual_binding, 'triggered': True if mg_failed else None,
@@ -179,7 +189,7 @@ def native_rule_readback(api, packet, expected, spec, *, source_context=None):
          type(spec) is dict and callable(source_context),
          'C07_REPLAYER_NO_INDEPENDENT_ORIGINAL_SOURCE_READER')
     rule_id = expected.get('rule_id')
-    need(rule_id in NATIVE_RULES and
+    need(rule_id in FULL_LITERAL_REVIEWED and
          spec.get('validator_id') == VALIDATORS[rule_id] and
          set(spec.get('criteria', ())) == set(NATIVE_RULES[rule_id][1]) and
          spec.get('requirement_sha256') == expected.get('requirement_sha256'),
