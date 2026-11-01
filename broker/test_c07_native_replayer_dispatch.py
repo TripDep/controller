@@ -65,7 +65,7 @@ def result(rid, status='PASS'):
 class Tests(unittest.TestCase):
     def test_explicit_whitelist_exactly_reviewed_native_implementations(self):
         self.assertEqual(set(d.REPLAYERS), set(approved.REVIEWED))
-        self.assertEqual(len(d.REPLAYERS), 38)
+        self.assertEqual(len(d.REPLAYERS), 40)
         self.assertNotIn('AAA-200-B-010', d.REPLAYERS)
 
     def test_b012_dispatch_to_actual_source_replayer(self):
