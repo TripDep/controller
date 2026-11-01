@@ -150,7 +150,7 @@ class P345Forty(unittest.TestCase):
         self.assertEqual(binary_json(b'{"x":Infinity}'),{})
         self.assertEqual(binary_json(b'{"x":1e999}'),{})
         self.assertEqual(binary_json(b'{"x":-1e999}'),{})
-        self.assertEqual(binary_json(b'\\xff'),{})
+        self.assertEqual(binary_json(b'\xff'),{})
         self.assertEqual(binary_json(b'{"x":1.25}'),{'x':1.25})
 
     def test_native_glb_metadata_rejects_duplicate_or_nonfinite_values(self):
