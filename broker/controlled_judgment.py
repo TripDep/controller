@@ -1378,6 +1378,40 @@ class ControlledJudgment:
                             advancement_authorized=False)
                         j.need(p3_triangles['totals']['degenerate_triangles'] == 0,
                                'CONTROLLED_P3_REAL_DEGENERATE_TRIANGLES_FOUND')
+                # Three literal P3 UV rules: independent distortion,
+                # actual embedded texture texel density and UV pair overlap.
+                # Registered original bytes and pre-D pins are mandatory.
+                if plans[0]['plan'].get('phase') in R146_PHASES:
+                    from c07_p3_uv_semantics import (
+                        IDS as P3_UV_IDS, inspect as inspect_p3_uv)
+                    p3_uv = inspect_p3_uv(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p3_uv['source_rule_count'] == 3
+                           and set(p3_uv['rules']) == set(P3_UV_IDS)
+                           and p3_uv['full_rule_semantic_passes'] == 0
+                           and p3_uv['individual_mg0_passes'] == 0
+                           and p3_uv['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p3_uv['rules'].values()),
+                           'CONTROLLED_P3_ORIGINAL_UV_FALSE_MG0_PASS')
+                    if p3_uv['original_uv_metrics']['triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P3_ORIGINAL_UV_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p3_uv['original_audit_sha256'],
+                            original_audit_tail=p3_uv['original_audit_tail'],
+                            source_rule_ids=list(P3_UV_IDS),
+                            original_uv_metrics=p3_uv['original_uv_metrics'],
+                            original_rule_machine_checks=p3_uv['rules'],
+                            machine_positive_obligations=p3_uv[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Five additional literal P5 quantitative oracles on original
                 # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
                 # This is read-only machine evidence, never full MG0 or QA.
