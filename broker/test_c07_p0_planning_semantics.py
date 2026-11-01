@@ -58,7 +58,9 @@ class Tests(unittest.TestCase):
             20: {"criteria": [
                 {"id": "TRIANGLE_LIMIT", "metric": "triangles",
                  "operator": "<=", "threshold": 10000,
-                 "measurement_source": "Native GLB accessor parser"}]},
+                 "measurement_source": "Native GLB accessor parser",
+                 "measurement_source_sha256":
+                     self.f.work["work_dependencies"][dep]}]},
         }
         self.measurements = {"measurements": {
             "bridge_count": 2, "collision_surfaces": 3}}
@@ -121,6 +123,23 @@ class Tests(unittest.TestCase):
                                  "UNKNOWN")
                 self.docs[n][key] = old
                 self.sync()
+
+    def test_B20_measurement_source_must_match_reopened_dependency(self):
+        rid = "AAA-200-B-020"
+        self.docs[20]["criteria"][0]["measurement_source_sha256"] = "f"*64
+        self.sync()
+        result = self.review()
+        self.assertEqual(result["rules"][rid]["machine_scope"], "UNKNOWN")
+        self.assertFalse(result["rules"][rid]["original_machine_checks"][
+            "every_criterion_names_independent_measurement_source"])
+
+    def test_B16_deep_dag_is_iterative_and_cycles_still_rejected(self):
+        from c07_p0_planning_semantics import _no_cycle
+        nodes = ["N%04d" % n for n in range(2000)]
+        edges = [[nodes[i], nodes[i+1]] for i in range(len(nodes)-1)]
+        self.assertTrue(_no_cycle(nodes, edges))
+        self.assertFalse(_no_cycle(nodes, edges + [[nodes[-1], nodes[0]]]))
+        self.assertFalse(_no_cycle(nodes, edges + [[nodes[0], "UNKNOWN"]]))
 
     def test_missing_original_documents_do_not_create_positive_passes(self):
         for n in self.docs:
