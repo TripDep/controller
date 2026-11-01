@@ -1426,6 +1426,40 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Three additional literal P3 atlas, normal-bake source
+                # and geometry-vs-reference oracles. Owner approval of a
+                # reference cannot be inferred from a file name or hash.
+                if plans[0]['plan'].get('phase') in R146_PHASES:
+                    from c07_p3_finalization_semantics import (
+                        IDS as P3_FINAL_IDS, inspect as inspect_p3_final)
+                    p3_final = inspect_p3_final(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p3_final['source_rule_count'] == 3
+                           and set(p3_final['rules']) == set(P3_FINAL_IDS)
+                           and p3_final['full_rule_semantic_passes'] == 0
+                           and p3_final['individual_mg0_passes'] == 0
+                           and p3_final['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p3_final['rules'].values()),
+                           'CONTROLLED_P3_FINALIZATION_FALSE_OWNER_PASS')
+                    if p3_final['metrics']['native_triangles']:
+                        self.append('SUPERVISOR_C07_P3_ORIGINAL_FINALIZATION',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p3_final['original_audit_sha256'],
+                            original_audit_tail=p3_final['original_audit_tail'],
+                            source_rule_ids=list(P3_FINAL_IDS),
+                            original_finalization_metrics=p3_final['metrics'],
+                            original_rule_machine_checks=p3_final['rules'],
+                            machine_positive_obligations=p3_final[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Four literal P4 material predicates: actual exported
                 # PBR factors, physical class assignments and PNG map links.
                 # Source-bound observations never grant owner/MG0 approval.
