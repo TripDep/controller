@@ -70,6 +70,7 @@ class P1SpatialNativeTests(unittest.TestCase):
         test.f.plan['p1_evidence_contract']['original_artifact_sha256'].pop(
             'SECONDARY_EXPORT')
         test.f.rebuild()
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, RID)['rule']['result'], 'UNKNOWN')
 
     def test_tampered_registered_glb_and_cross_attempt_fail_closed(self):
