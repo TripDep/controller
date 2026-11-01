@@ -52,6 +52,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
                         [(0,1,2)])
         self.before=glb([(0.5,0,0),(1.5,0,0),(0.5,1,0)],
                         [(0,1,2)])
+        self.case_b=glb([(0.8,0,0),(1.8,0,0),(0.8,1,0)],
+                        [(0,1,2)])
         self.f.add_item('SOURCE_EDITABLE','scene.blend',self.source)
         self.f.add_item('NATIVE_EXPORT','scene.glb',self.export)
         self.f.add_item('BASELINE_SNAPSHOT','before.glb',self.before)
@@ -74,7 +76,7 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
              'before_sha256':sha(self.before),'after_sha256':sha(self.export)},
             {'id':'case-B','root_cause':'ORIGIN_DEVIATION',
              'corrective_action':'reapply transformed export',
-             'before_sha256':sha(self.before),'after_sha256':sha(self.export)},
+             'before_sha256':sha(self.case_b),'after_sha256':sha(self.export)},
         ]}
         # Original method bytes are deterministic, source-only translations;
         # the consumer will interpret their AST but never execute user code.
@@ -117,6 +119,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.f.add_item('SOURCE_EDITABLE','scene.blend',self.source)
         self.f.add_item('NATIVE_EXPORT','scene.glb',self.export)
         self.f.add_item('BASELINE_SNAPSHOT','before.glb',self.before)
+        self.f.add_item('P8_DEFECT_CASE_A','before_case_a.glb',self.before)
+        self.f.add_item('P8_DEFECT_CASE_B','before_case_b.glb',self.case_b)
         self.f.add_item('P8_METHOD_BEFORE','method_before.py',self.before_script)
         self.f.add_item('P8_METHOD_AFTER','method_after.py',self.after_script)
         self.f.add_item('P8_DELIVERY_PLAN','p8_delivery.json',
@@ -198,6 +202,29 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-199')['checks'][
             'changed_method_and_corrected_original_geometry_bound_to_same_current_operation'])
+
+    def test_duplicate_history_rows_same_original_cannot_prove_recurrence(self):
+        self.fixture.docs['P8_DEFECT_HISTORY']['issues'][1]['before_sha256']=sha(self.before)
+        self.refresh()
+        row=self.row('AAA-200-T-198')
+        self.assertFalse(row['checks'][
+            'recurrent_original_defect_events_and_precorrection_geometry_authenticated'])
+        self.assertFalse(row['checks'][
+            'original_after_geometry_corrects_same_recurring_cause_within_source_limit'])
+
+    def test_second_original_case_geometry_without_defect_rejects_recurrence(self):
+        self.case_b=self.export
+        self.fixture.docs['P8_DEFECT_HISTORY']['issues'][1]['before_sha256']=sha(self.case_b)
+        self.refresh()
+        self.assertFalse(self.row('AAA-200-T-198')['checks'][
+            'recurrent_original_defect_events_and_precorrection_geometry_authenticated'])
+
+    def test_historical_claim_without_original_case_artifact_rejected(self):
+        self.f.plan['p678_evidence_contract']['original_artifact_sha256'].pop(
+            'P8_DEFECT_CASE_B')
+        self.f.rebuild()
+        self.assertFalse(self.row('AAA-200-T-198')['checks'][
+            'recurrent_original_defect_events_and_precorrection_geometry_authenticated'])
 
     def test_cosmetic_ast_change_is_not_a_causal_method_fix(self):
         self.after_script=b'def run(): return 1\\n'
