@@ -39,7 +39,7 @@ class MacroFortyOriginalTests(unittest.TestCase):
                                  'BLOCKED':1,'NOT_DUE':0}
         with self.assertRaisesRegex(MacroExecutionBlocked,
                                     'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
-            require_source_execution(result)
+            require_source_execution(result, source_context=ctx)
 
     def test_all_40_unknown_unpinned_cannot_receive_execution_certificate(self):
         _,ctx=self.context('P5')
@@ -52,7 +52,7 @@ class MacroFortyOriginalTests(unittest.TestCase):
                                  'BLOCKED':0,'NOT_DUE':0}
         with self.assertRaisesRegex(
                 MacroExecutionBlocked,'C07_P345_CERTIFICATE_PRE_D_PIN_NOT_VERIFIED'):
-            require_source_execution(result)
+            require_source_execution(result, source_context=ctx)
 
     def test_file_io_error_is_blocked_not_silent_pass(self):
         _,ctx=self.context('P5')
@@ -63,7 +63,7 @@ class MacroFortyOriginalTests(unittest.TestCase):
         self.assertEqual(result['result_counts']['PASS'],0)
         with self.assertRaisesRegex(MacroExecutionBlocked,
                                     'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
-            require_source_execution(result)
+            require_source_execution(result, source_context=ctx)
 
     def test_certification_of_only_complete_source_replay_never_promotes_mg0(self):
         _,ctx=self.context('P5')
@@ -76,12 +76,34 @@ class MacroFortyOriginalTests(unittest.TestCase):
                                   enumerate(NATIVE_RULES[rid][1])}
         result['result_counts']={'PASS':0,'FAIL':0,'UNKNOWN':40,
                                  'BLOCKED':0,'NOT_DUE':0}
-        certificate=require_source_execution(result)
+        # A forged report used to be accepted here. The gate must now
+        # independently re-run all forty original-source replayers and reject
+        # the caller's invented pin checks even when shape and counts match.
+        with self.assertRaisesRegex(
+                MacroExecutionBlocked,
+                'C07_P345_CERTIFICATE_ORIGINAL_REPLAY_MISMATCH'):
+            require_source_execution(result,source_context=ctx)
+        # Only in an isolated mocked gate test may source replay be simulated:
+        # its certificate must still grant no full literal, MG0 or FiveM PASS.
+        with patch('c07_p345_macro_execution.run',return_value=result):
+            certificate=require_source_execution(result,source_context=ctx)
         self.assertTrue(certificate['source_execution_verified'])
         self.assertFalse(certificate['full_semantics_verified'])
         self.assertFalse(certificate['independent_mg0_verified'])
         self.assertFalse(certificate['fivem_verified'])
         self.assertFalse(certificate['advancement_authorized'])
+
+    def test_forged_report_without_trusted_context_is_rejected(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        with self.assertRaisesRegex(
+                MacroExecutionBlocked,
+                'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
+            require_source_execution(result,source_context=ctx)
+        # The certificate cannot be minted by merely supplying a report:
+        # explicitly require a consuming-side source context.
+        with self.assertRaises(TypeError):
+            require_source_execution(result)
 
     def test_all_40_original_literals_replayed_in_one_source_operation(self):
         _,ctx=self.context('P5')
