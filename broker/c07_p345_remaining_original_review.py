@@ -82,13 +82,20 @@ def boxes_close(a,b,tol):
         abs(a['bounds'][k][j]-b['bounds'][k][j])<=tol
         for k in range(2) for j in range(3)))
 def triangle_counts(raw):
-    """Read every actual GLB triangle; accessor bbox/counts are not geometry."""
+    """Compare native triangles with multiplicity AND front-face winding.
+
+    A reversed triangle has the same three vertices and bounds but may be
+    culled in the rendered asset. Cyclic index rotations preserve winding;
+    reversed order does not. Atlas/approved-export comparisons must also
+    preserve duplicate triangle multiplicity, not just the set of surfaces.
+    """
     if raw is None:
         return None
     triangles = _triangles(raw)
-    return Counter(tuple(sorted(tuple(float(c) for c in vertex)
-                                for vertex in triangle))
-                   for triangle in triangles)
+    def oriented(triangle):
+        vertices=tuple(tuple(float(c) for c in v) for v in triangle)
+        return min(vertices[i:]+vertices[:i] for i in range(3))
+    return Counter(oriented(triangle) for triangle in triangles)
 
 def actual_primitive_texture_reuse(doc):
     """One image in two shader slots of ONE primitive is not texture reuse.
@@ -426,7 +433,7 @@ def inspect(source_context,rule_id):
         before_surface=triangle_counts(baseline_raw) if baseline_raw else None
         after_surface=triangle_counts(raw) if raw else None
         same_geometry=bool(before_surface and after_surface and
-                           set(before_surface)==set(after_surface))
+                           before_surface==after_surface)
         measured=bool(before is not None and after is not None and
                       before>after>=1 and type(target) is int and target>=1
                       and before-after>=target and atlas_images and
