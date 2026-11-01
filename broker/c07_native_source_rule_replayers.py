@@ -29,9 +29,9 @@ NATIVE_RULES = {
         'all_five_wood_stone_metal_glass_plaster_materials_bound_to_original_primitives',
         'five_original_materials_have_distinct_physical_pbr_and_alpha_properties')),
     'AAA-200-M-127': ('p4_material_macro_full', (
-        'pre_d_original_pixel_diversity_and_variance_limits_sha_pinned',
-        'all_original_embedded_rgba_channels_recomputed_from_png_bytes',
-        'real_original_colors_and_variance_within_pre_d_material_ranges')),
+        'pre_d_weathering_purpose_and_original_reference_sha_pinned',
+        'original_exported_texture_and_weathering_reference_pixels_recomputed',
+        'actual_weathering_distribution_within_pre_d_motivated_limits')),
     'AAA-200-M-129': ('p4_material_macro_full', (
         'original_pre_d_target_rage_shader_and_native_export_source_sha_pinned',
         'original_native_rage_shader_descriptors_independently_parsed',
