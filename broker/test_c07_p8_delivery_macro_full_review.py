@@ -62,7 +62,9 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
                         [(0,1,2)])
         self.before=glb([(0.5,0,0),(1.5,0,0),(0.5,1,0)],
                         [(0,1,2)])
-        self.case_b=glb([(0.8,0,0),(1.8,0,0),(0.8,1,0)],
+        self.case_b=glb([(0.5,0,0),(0.5,1.5,0),(1.5,0,0)],
+                        [(0,1,2)])
+        self.fixed_b=glb([(0,0,0),(0,1.5,0),(1,0,0)],
                         [(0,1,2)])
         self.f.add_item('SOURCE_EDITABLE','scene.blend',self.source)
         self.f.add_item('NATIVE_EXPORT','scene.glb',self.export)
@@ -86,7 +88,7 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
              'before_sha256':sha(self.before),'after_sha256':sha(self.export)},
             {'id':'case-B','root_cause':'ORIGIN_DEVIATION',
              'corrective_action':'reapply transformed export',
-             'before_sha256':sha(self.case_b),'after_sha256':sha(self.export)},
+             'before_sha256':sha(self.case_b),'after_sha256':sha(self.fixed_b)},
         ]}
         # Original method bytes are deterministic, source-only translations;
         # the consumer will interpret their AST but never execute user code.
@@ -131,6 +133,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.f.add_item('BASELINE_SNAPSHOT','before.glb',self.before)
         self.f.add_item('P8_DEFECT_CASE_A','before_case_a.glb',self.before)
         self.f.add_item('P8_DEFECT_CASE_B','before_case_b.glb',self.case_b)
+        self.f.add_item('P8_DEFECT_FIXED_A','fixed_case_a.glb',self.export)
+        self.f.add_item('P8_DEFECT_FIXED_B','fixed_case_b.glb',self.fixed_b)
         self.f.add_item('P8_METHOD_BEFORE','method_before.py',self.before_script)
         self.f.add_item('P8_METHOD_AFTER','method_after.py',self.after_script)
         self.f.add_item('P8_DELIVERY_PLAN','p8_delivery.json',
@@ -167,6 +171,21 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
             self.f.records.append(event)
         self.f.controller.audit_path(self.f.asset).write_bytes(
             b''.join(canonical(row)+b'\n' for row in self.f.records))
+        # Rechecks are separately authenticated and ordered after the
+        # associated original negative findings in this exact operation.
+        for issue in self.fixture.docs['P8_DEFECT_HISTORY']['issues']:
+            event={'asset':self.f.asset,'event':'QUALITY_RECHECK',
+                'prev_hash':self.f.records[-1]['record_hash'],
+                'step':self.f.step,'attempt_id':self.f.work['attempt_id'],
+                'operation_sha256':self.f.work['operation_sha256'],
+                'status':'PASS','issue_id':issue['id'],
+                'root_cause':issue['root_cause'],
+                'before_sha256':issue['before_sha256'],
+                'after_sha256':issue['after_sha256']}
+            event['record_hash']=sha(canonical(event))
+            self.f.records.append(event)
+        self.f.controller.audit_path(self.f.asset).write_bytes(
+            b''.join(canonical(row)+bytes([10]) for row in self.f.records))
         self.f.controller._state['last_audit_hash']=self.f.records[-1]['record_hash']
 
     def context(self):
@@ -269,6 +288,23 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.f.rebuild()
         self.assertFalse(self.row('AAA-200-T-198')['checks'][
             'recurrent_original_defect_events_and_precorrection_geometry_authenticated'])
+
+    def test_audit_recheck_not_substitutable_with_producer_json(self):
+        rows=[r for r in self.f.records if r.get('event')!='QUALITY_RECHECK']
+        self.f.records=rows
+        from test_c07_positive_native_process import canonical
+        self.f.controller.audit_path(self.f.asset).write_bytes(
+            b''.join(canonical(r)+bytes([10]) for r in rows))
+        self.f.controller._state['last_audit_hash']=rows[-1]['record_hash']
+        self.assertFalse(self.row('AAA-200-T-198')['checks'][
+            'original_after_geometry_corrects_same_recurring_cause_within_source_limit'])
+
+    def test_second_case_method_replay_must_match_original_triangles(self):
+        self.fixed_b=glb([(0,0,0),(0,1,0),(1,0,0)],[(0,1,2)])
+        self.fixture.docs['P8_DEFECT_HISTORY']['issues'][1]['after_sha256']=sha(self.fixed_b)
+        self.refresh()
+        self.assertFalse(self.row('AAA-200-T-198')['checks'][
+            'original_after_geometry_corrects_same_recurring_cause_within_source_limit'])
 
     def test_duplicate_history_rows_same_original_cannot_prove_recurrence(self):
         self.fixture.docs['P8_DEFECT_HISTORY']['issues'][1]['before_sha256']=sha(self.before)
