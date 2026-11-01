@@ -4,8 +4,10 @@ Actual original-byte fixture positives, individual source mutations and
 negative dispatch. Fixture PASS is never artistic, MG0 or owner approval.
 """
 import copy
+import hashlib
 import unittest
 from pathlib import Path
+import c07_mg0_individual as mg0
 
 from test_c07_p1_design_source_review import P1DesignSourceTests
 from c07_native_source_rule_replayers import (
@@ -36,6 +38,23 @@ class P1ResidualSourceReplayTests(unittest.TestCase):
             'test_thirteen_real_original_pixel_and_geometry_predicates')
         t.setUp()
         self.addCleanup(t.doCleanups)
+        # The P1 design fixture tests source bytes only. The consuming-side
+        # native replayer also requires a current MG0 master and complete
+        # immutable work-item/attempt binding, exactly as the canonical
+        # native-replayer fixture does.
+        f = t.fixture.f
+        master = ('## MG0 — PROCESS FALSIFICATION\n' +
+                  ''.join('- ' + trigger + '\n' for trigger in mg0.TRIGGERS) +
+                  'The response is not limited to fixing the asset.\n' +
+                  'invalidate affected states and reapply the corrected process\n').encode()
+        f.master = master
+        f.controller.master.write_bytes(master)
+        f.work.update(work_item_sha256='e'*64, attempt_number=1,
+                      previous_attempt_id=None)
+        digest = hashlib.sha256(master).hexdigest()
+        f.work['master_sha256'] = f.plan['master_sha256'] = (
+            f.inv['canonical_master_sha256']) = digest
+        f.rebuild()
         return t
 
     @staticmethod
