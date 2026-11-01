@@ -101,7 +101,9 @@ class FiveOriginalCameraViews(unittest.TestCase):
         self.fx.f.plan['p1_evidence_contract']['original_artifact_sha256'].pop(
             'P1_FIVE_VIEW_INSPECTION_POLICY')
         self.fx.f.rebuild()
-        with self.assertRaises(ValueError):self.read()
+        row=self.read()
+        self.assertFalse(row['evidence_complete'])
+        self.assertFalse(any(row['checks'].values()))
 
 if __name__=='__main__':
     unittest.main()
