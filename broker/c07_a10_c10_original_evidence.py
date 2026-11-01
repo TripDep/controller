@@ -103,11 +103,24 @@ def _pdf(raw):
     return type(raw) is bytes and len(raw)>=13 and raw.startswith(b'%PDF-') and b'%%EOF' in raw[-1024:]
 
 def _note(raw):
+    # Original research notes are untrusted evidence. No duplicate-key
+    # override, NaN/Infinity or oversized JSON can produce positive facts.
+    need(type(raw) is bytes and 0 < len(raw) <= 1_000_000,
+         'R140_ORIGINAL_NOTE_SIZE')
+    def unique_pairs(rows):
+        out={}
+        for key,value in rows:
+            need(key not in out,'R140_DUPLICATE_ORIGINAL_NOTE_KEY')
+            out[key]=value
+        return out
+    def reject_nonfinite(token):
+        raise ResearchBlocked('R140_NONFINITE_ORIGINAL_NOTE')
     try:
-        d=json.loads(raw)
-        return d if type(d) is dict and d.get('schema')==NOTE_SCHEMA else {}
-    except (ValueError,TypeError,UnicodeError):
+        d=json.loads(raw.decode('utf-8'),object_pairs_hook=unique_pairs,
+                     parse_constant=reject_nonfinite)
+    except (ValueError,UnicodeError):
         return {}
+    return d if type(d) is dict and d.get('schema')==NOTE_SCHEMA else {}
 
 def _nonempty(v):return type(v) is str and bool(v.strip())
 def _textlist(v):
