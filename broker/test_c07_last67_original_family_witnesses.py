@@ -236,7 +236,7 @@ class R150Last67(Q200Witness):
         event["record_hash"]=sha(canonical(event))
         self.f.records.append(event)
         self.f.controller.audit_path(self.f.asset).write_bytes(
-            b"".join(canonical(r)+b"\\n" for r in self.f.records))
+            b"".join(canonical(r)+bytes((10,)) for r in self.f.records))
         self.f.controller._state["last_audit_hash"]=event["record_hash"]
         r=self.review67()
         self.assertEqual(r["rules"][rid]["semantic_verdict"],"FAIL")
