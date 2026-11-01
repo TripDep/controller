@@ -42,7 +42,7 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
 
     def test_each_approved_validator_requires_independent_readback(self):
         self.assertEqual(len(approved.REVIEWED),41)
-        self.assertEqual(len(NATIVE_RULES),26)
+        self.assertEqual(len(NATIVE_RULES),29)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
         for rid in sorted(set(approved.REVIEWED) - set(NATIVE_RULES)):
