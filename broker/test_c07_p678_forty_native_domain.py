@@ -158,7 +158,7 @@ class P678Forty(unittest.TestCase):
             b'{"measurement":-Infinity}',
             b'{"measurement":1e999}',
             b'{"measurement":-1e999}',
-            b'\\xff',
+            b'\xff',
         ):
             with self.subTest(raw=raw):
                 self.assertEqual(obj(raw),{})
