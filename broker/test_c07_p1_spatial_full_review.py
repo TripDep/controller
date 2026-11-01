@@ -83,5 +83,59 @@ class P1SpatialNativeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_packet(ctx, RID)
 
+
+    def alignment_context(self):
+        test, ctx, scene = self.context()
+        scene['building_world_placements']['secondary']['translation_xyz'] = [1,0,0]
+        scene['module_alignment_pairs'] = [{
+            'primary_vertex_xyz':[1,0,0],
+            'secondary_vertex_xyz':[0,0,0],
+            'max_gap_m':0.01}]
+        test.put('P1_SCENE_CONTRACT', 'p1_scene.json', encode(scene))
+        test.rebuild()
+        ctx['controller'] = test.f.controller
+        return test, ctx, scene
+
+    def test_f054_original_glb_alignment_positive_and_mg0_unknown(self):
+        _, ctx, _ = self.alignment_context()
+        packet = build_packet(ctx, 'AAA-200-F-054')
+        self.assertEqual(packet['rule']['result'], 'PASS')
+        self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
+        rid = 'AAA-200-F-054'
+        expected = judgment.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
+        from c07_native_source_rule_replayers import NATIVE_RULES, VALIDATORS
+        spec = {'validator_id': VALIDATORS[rid],
+                'criteria': list(NATIVE_RULES[rid][1]),
+                'requirement_sha256': expected['requirement_sha256'],
+                'source_ref': '1'*40}
+        self.assertEqual(replay(None, packet, expected, spec,
+                                source_context=lambda _:ctx)['documentary_result'],
+                         'PASS')
+
+    def test_f054_real_gap_and_forged_anchor_are_not_accepted(self):
+        test, ctx, scene = self.alignment_context()
+        scene['building_world_placements']['secondary']['translation_xyz'] = [1.4,0,0]
+        test.put('P1_SCENE_CONTRACT', 'p1_scene.json', encode(scene))
+        test.rebuild()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-F-054')['rule']['result'],
+                         'FAIL')
+        scene['building_world_placements']['secondary']['translation_xyz'] = [1,0,0]
+        scene['module_alignment_pairs'][0]['secondary_vertex_xyz'] = [0.25,0,0]
+        test.put('P1_SCENE_CONTRACT', 'p1_scene.json', encode(scene))
+        test.rebuild()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-F-054')['rule']['result'],
+                         'FAIL')
+
+    def test_f054_missing_original_source_pin_unknown(self):
+        test, ctx, _ = self.alignment_context()
+        test.f.plan['p1_evidence_contract']['original_artifact_sha256'].pop(
+            'NATIVE_EXPORT')
+        test.f.rebuild()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-F-054')['rule']['result'],
+                         'UNKNOWN')
+
 if __name__ == '__main__':
     unittest.main()
