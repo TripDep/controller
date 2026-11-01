@@ -116,7 +116,10 @@ class Tests(unittest.TestCase):
                           ('P6_WALKABILITY',w6.IDS),
                           ('P7_RAGE',r7.IDS),
                           ('P8_FINAL',q8.IDS)):
+            deep_required=label in ('P6_WALKABILITY','P7_RAGE','P8_FINAL')
             self.p678_specific[label]={
+                **({'original_cross_source_positive_obligations':len(ids)-2}
+                   if deep_required else {}),
                 'source_rule_count':len(ids),
                 'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
                 'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
@@ -125,6 +128,12 @@ class Tests(unittest.TestCase):
                 'rules':{rid:{
                     'original_machine_checks':{
                         label+'_source_a':True,label+'_source_b':True},
+                    **({'original_cross_source_semantic':{
+                        label+'_'+rid+'_independent':rid not in (
+                            'AAA-200-P-160','AAA-200-Q-167',
+                            'AAA-200-Q-170','AAA-200-S-189',
+                            'AAA-200-S-190')}}
+                       if deep_required else {}),
                     'requirement_sha256':'d'*64,'source_sha256':'c'*64,
                     'exact_attempt_id':ATTEMPT,'operation_sha256':OPERATION,
                     'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
@@ -209,6 +218,26 @@ class Tests(unittest.TestCase):
             self.assertEqual(result['p345_forty_source_macro'],self.p345_macro)
             self.assertEqual(mg0.call_args.args[4],sorted(batch.COHORT))
             return result
+
+    def test_p678_twenty_six_extra_original_semantics_required(self):
+        for label in ('P6_WALKABILITY','P7_RAGE','P8_FINAL'):
+            rid=next(iter(self.p678_specific[label]['rules']))
+            row=self.p678_specific[label]['rules'][rid]
+            saved=row.pop('original_cross_source_semantic')
+            with self.subTest(reader=label,missing=rid):
+                with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                             'CROSS_SOURCE_SEMANTIC_MISSING'):
+                    self.run_batch()
+            row['original_cross_source_semantic']=saved
+            self.p678_specific[label][
+                'original_cross_source_positive_obligations']+=1
+            with self.subTest(reader=label,forged_count=rid):
+                with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                             'CROSS_SOURCE_COUNTS_UNTRUSTED'):
+                    self.run_batch()
+            self.p678_specific[label][
+                'original_cross_source_positive_obligations']-=1
+        self.run_batch()
 
     def test_exact_100_distinct_canonical_ids_and_zero_fake_passes(self):
         self.assertEqual(len(batch.COHORT),100)
