@@ -127,6 +127,82 @@ class Tests(unittest.TestCase):
         self.assertEqual(result["individual_mg0_passes"], 0)
         self.assertFalse(result["advancement_authorized"])
 
+    def test_ten_distinct_original_cross_source_semantics(self):
+        report = self.examine()
+        self.assertEqual(
+            report["original_cross_source_positive_obligations"], 8)
+        self.assertEqual(set(report["rules"]), set(IDS))
+        seen = set()
+        for n, rid in zip(range(161, 171), IDS):
+            with self.subTest(rule=rid):
+                row = report["rules"][rid]
+                deep = row["original_cross_source_semantic"]
+                self.assertEqual(len(deep), 1)
+                self.assertTrue(seen.isdisjoint(deep))
+                seen.update(deep)
+                self.assertIs(next(iter(deep.values())),
+                              n not in (167, 170))
+                self.assertEqual(row["full_rule_semantics"], "UNKNOWN")
+                self.assertEqual(row["individual_mg0"], "UNKNOWN")
+                self.assertFalse(row["advancement_authorized"])
+        self.assertEqual(len(seen), 10)
+
+    def test_all_ten_cross_file_predicates_reject_original_mutations(self):
+        changes = {
+            161: ("P7_FXMANIFEST", MANIFEST +
+                  b"files {'stream/scene.ytyp'}\\n"),
+            162: ("P7_YTYP_XML",
+                  b'<CMapTypes><archetypes>'
+                  b'<Item type="CBaseArchetypeDef"><name>scene_arch</name>'
+                  b'<assetName>scene_drawable</assetName></Item>'
+                  b'<Item type="CBaseArchetypeDef"><name>scene_extra</name>'
+                  b'<assetName>scene_drawable</assetName></Item>'
+                  b'</archetypes></CMapTypes>'),
+            163: ("P7_YDR_XML",
+                  XML["P7_YDR_XML"].replace(
+                      b"</Drawable>",
+                      b"<TextureName>leaf_diffuse</TextureName></Drawable>")),
+            164: ("P7_YTYP_XML",
+                  b'<CMapTypes><archetypes>'
+                  b'<Item type="CBaseArchetypeDef"><name>scene_arch</name>'
+                  b'<assetName>scene_other</assetName></Item>'
+                  b'<Item type="CBaseArchetypeDef"><name>unused_arch</name>'
+                  b'<assetName>scene_drawable</assetName></Item>'
+                  b'</archetypes></CMapTypes>'),
+            165: ("P7_CODEWALKER_REPORT",
+                  {"entity_positions": [
+                      {"archetype":"scene_arch","xyz":[2.0,2.0,3.0]}],
+                   "lod_near_m":10.0,"lod_far_m":100.0}),
+            166: ("P7_YBN_XML",
+                  b'<BoundsFile><Bounds type="Composite"><Children>'
+                  b'<Item type="UnknownBound"/></Children></Bounds></BoundsFile>'),
+            167: ("P7_EXPORT_TRACE",
+                  {"addon":"Sollumz","addon_version":"2.7.0",
+                   "asset":self.f.asset,
+                   "source_sha256":self.f.items["SOURCE_EDITABLE"]["sha256"],
+                   "export_sha256":fixture.sha(self.files["NATIVE_EXPORT"]),
+                   "self_reported_independent_provenance":True}),
+            168: ("P7_SHADER_POLICY",
+                  {"allowed_shader_names":["unsupported_shader"]}),
+            169: ("P7_VIEW_TOP", self.files["P7_VIEW_FRONT"]),
+            170: ("P7_FIVEM_LOG",
+                  {"engine":"FiveM","asset":self.f.asset,
+                   "frame_ms_samples":[16.0]*20,
+                   "self_reported_owner_approved":True}),
+        }
+        for n, (role, bad) in changes.items():
+            with self.subTest(rule=n):
+                previous = copy.deepcopy(self.files[role])
+                self.files[role] = bad
+                self.put()
+                row = self.examine()["rules"]["AAA-200-Q-%03d" % n]
+                self.assertIs(
+                    next(iter(row["original_cross_source_semantic"].values())),
+                    False)
+                self.assertEqual(row["full_rule_semantics"], "UNKNOWN")
+                self.files[role] = previous
+                self.put()
+
     def test_each_literal_has_independent_adversarial_negative(self):
         mutations = {
             161: ("P7_FXMANIFEST", b"game 'gta5'"),
