@@ -165,8 +165,8 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                 and triangles <= limit_tri,
             "real_original_material_and_rgba_cost_within_pre_d_budget":
                 native is not None and images is not None
-                and 0 < material_count <= limit_mat
-                and type(limit_mat) is int and _positive(limit_tex)
+                and type(limit_mat) is int and 0 < material_count <= limit_mat
+                and _positive(limit_tex)
                 and texture_bytes is not None
                 and texture_bytes <= limit_tex * 1024 * 1024,
         },
