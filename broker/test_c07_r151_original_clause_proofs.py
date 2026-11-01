@@ -159,6 +159,40 @@ class OriginalLineEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(r.UnverifiedLineEvidence,'COMPOSITE_CANONICAL_DRIFT'):
             r.compile_contract(self.inventory,self.plan)
 
+    def test_all_72_composites_outside_first200_are_individually_enforced(self):
+        # Regression: R151 formerly indexed external composite clauses but
+        # silently omitted them from the expected source-line evidence.
+        extras={f'EXTRA-{n:03}' for n in range(72)}
+        self.composites.clear()
+        self.composites.update(extras)
+        self.comp_report['due_composites']={
+            rid:{'source_sha256':self.inventory['rules'][rid]['source_sha256'],
+                 'requirement_sha256':self.inventory['rules'][rid]['requirement_sha256'],
+                 'independent_verifier_ready':False,
+                 'subchecks':[{'subcheck_id':rid+':SC001'}],
+                 'source_decomposition':'SOURCE_LIST_CANDIDATES_REVIEW_PENDING'}
+            for rid in extras}
+        contract=r.compile_contract(self.inventory,self.plan)
+        self.assertEqual(len(contract['rows']),272)
+        self.assertEqual(set(extras)-set(self.ids),extras)
+        missing=r.assess(contract,self.work,[],self.registered,self.reader)
+        self.assertEqual(missing['missing_source_line_witnesses'],
+                         sum(x['source_line_count'] for x in contract['rows'].values()))
+        self.assertEqual(set(missing['rule_status']),set(contract['rows']))
+        rid=sorted(extras)[0]
+        row=contract['rows'][rid]
+        packet=self.packet(rule_id=rid,
+            line_id=row['lines'][0]['line_id'],
+            line_sha256=row['lines'][0]['line_sha256'],
+            requirement_sha256=row['requirement_sha256'],
+            source_lane=row['required_independent_lanes'][0],
+            answer='NO')
+        result=r.assess(contract,self.work,[packet],self.registered,self.reader)
+        self.assertEqual(result['result'],'FAIL')
+        self.assertEqual(result['rule_status'][rid],'FAIL')
+        self.assertEqual(result['full_rule_semantic_passes'],0)
+        self.assertFalse(result['advancement_authorized'])
+
     def test_original_controller_inspect_without_manifest_never_passes(self):
         controller=type('Controller',(),{})()
         controller.master=type('Master',(),{'read_bytes':lambda _:self.master})()
