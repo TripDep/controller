@@ -1,6 +1,8 @@
 """Adversarial N-131..140 original PNG pixel and native lighting tests."""
 import copy
 import json
+import struct
+import zlib
 import unittest
 from pathlib import Path
 import test_c07_positive_native_process as fixture
@@ -11,6 +13,20 @@ from test_c07_p4_texture_semantics import png,solid,gradient
 from c07_p345_forty_native_evidence import TEXT
 from c07_p4_lighting_semantics import IDS,inspect,OriginalLightingBlocked
 from c07_positive_native_process import NativeEvidenceBlocked
+
+def repack_png_same_pixels(raw):
+    chunks=[];off=8
+    while off<len(raw):
+        n=struct.unpack_from(">I",raw,off)[0]
+        tag=raw[off+4:off+8]
+        data=raw[off+8:off+8+n]
+        chunks.append((tag,data));off+=n+12
+    def pack(tag,data):
+        return (struct.pack(">I",len(data))+tag+data+
+                struct.pack(">I",zlib.crc32(tag+data)&0xffffffff))
+    return raw[:8]+b"".join(pack(tag,zlib.compress(
+        zlib.decompress(data),0) if tag==b"IDAT" else data)
+        for tag,data in chunks)
 
 POLICY={
  "min_neutral_luma":40,"max_neutral_luma":150,
@@ -110,6 +126,15 @@ class Tests(unittest.TestCase):
                 elif kind=="views":self.views[key]=old
                 else:self.native=old
                 self.put()
+    def test_distinct_png_bytes_same_pixels_do_not_count_as_views(self):
+        self.views["VISUAL_VIEW_REAR"]=repack_png_same_pixels(
+            self.views["VISUAL_VIEW_FRONT"])
+        self.assertNotEqual(fixture.sha(self.views["VISUAL_VIEW_REAR"]),
+                            fixture.sha(self.views["VISUAL_VIEW_FRONT"]))
+        self.put()
+        self.assertEqual(self.examine()["rules"][IDS[7]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
+
     def test_missing_pre_d_pins_cannot_become_positive(self):
         self.f.plan["p345_evidence_contract"]["original_artifact_sha256"].clear()
         self.f.rebuild()
