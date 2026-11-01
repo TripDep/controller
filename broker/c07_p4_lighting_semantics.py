@@ -120,7 +120,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     eye_ok=finite(eye) and 1.2<=eye<=2.2
     four=[views["VISUAL_VIEW_"+v] for v in
           ("FRONT","REAR","SIDE","TOP")]
-    four_ok=all(four) and len({v["sha256"] for v in four})==4
+    four_ok=all(four) and len({v["pixel_sha256"] for v in four})==4
     report_bound=(native is not None
                   and report.get("native_sha256")==sha(native)
                   and report.get("qa_status") in ("PENDING","UNKNOWN","FAIL")
@@ -131,7 +131,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       132:{"original_neutral_cinematic_modes_declared":bool(modes_ok),
            "neutral_cinematic_original_pixel_sources_distinct":
                bool(neutral and cinematic and
-                    neutral["sha256"]!=cinematic["sha256"])},
+                    neutral["pixel_sha256"]!=cinematic["pixel_sha256"])},
       133:{"original_native_triangle_defects_scanned":bool(geometry_ok),
            "neutral_original_png_has_measurable_surface_variance":
                bool(neutral and neutral["variance"]>10)},
@@ -151,11 +151,11 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       139:{"original_underside_view_pixel_decoded":underside is not None,
            "original_underside_distinct_from_cinematic":
                bool(underside and cinematic and
-                    underside["sha256"]!=cinematic["sha256"])},
+                    underside["pixel_sha256"]!=cinematic["pixel_sha256"])},
       140:{"original_technical_qa_report_bound_to_native":bool(report_bound),
            "original_presentation_view_separate_from_neutral":
                bool(cinematic and neutral and
-                    cinematic["sha256"]!=neutral["sha256"])},
+                    cinematic["pixel_sha256"]!=neutral["pixel_sha256"])},
     }
     rules={}
     for n,rid in zip(NUMBERS,IDS):
