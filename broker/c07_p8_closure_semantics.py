@@ -11,6 +11,7 @@ from pathlib import PurePosixPath
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p5_budget_semantics import _json
+from c07_p3_geometry_semantics import geometry
 from c07_p678_forty_native_domain import TEXT, PHASES
 
 NUMBERS = tuple(range(195, 201))
@@ -131,6 +132,21 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             and row.get("evidence_sha256") ==
                 sha(original(row["evidence_role"]))
             for row in observed))
+    # Replay the *declared* SOURCE_BYTES test from the independently reopened
+    # original editable and GLB bytes. Other RUN labels have no reviewed
+    # executor here: they cannot be silently accepted as performed tests.
+    try:
+        source_bytes_decoded = bool(source and export and
+            source.startswith(b"BLENDER") and len(source) >= 12 and
+            geometry(export))
+    except (ValueError, KeyError, TypeError, IndexError):
+        source_bytes_decoded = False
+    declared_runs_replayed = bool(
+        observed_bound and guide_bindings and source_bytes_decoded and
+        all(row["id"] == "SOURCE_BYTES"
+            and row["evidence_role"] == "NATIVE_EXPORT"
+            and row["evidence_sha256"] == sha(export)
+            for row in observed))
     candidate_only = (guide.get("status") == "CANDIDATE"
                       and guide.get("owner_approved") is False
                       and state.get("delivery_status") != "DELIVERABLE")
@@ -172,6 +188,8 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             "original_test_matrix_explicitly_separates_run_and_not_run": disclosure,
             "every_reported_run_references_registered_original_evidence":
                 observed_bound,
+            "declared_source_byte_test_replayed_from_originals":
+                declared_runs_replayed,
         },
         197: {
             "original_candidate_not_self_labelled_approved": candidate_only,
