@@ -346,6 +346,10 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    # T198/T199 root-cause and corrective method are independently
+    # measured across distinct current operation audit findings, before/after
+    # original GLBs and a safe source-only method transformation replay.
+    'AAA-200-T-198', 'AAA-200-T-199',
     # M121 physical identification, M122 real reflectance, M125 credible
     # variation and M127 motivated weathering are not provable by producer
     # labels and static pixel variance. Keep their SCOPED checks, no FULL.
