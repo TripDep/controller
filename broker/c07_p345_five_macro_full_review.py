@@ -22,6 +22,42 @@ def need(ok,msg):
     if not ok:raise CrossMacroBlocked(msg)
 def sha(raw):return hashlib.sha256(raw).hexdigest()
 
+def all_embedded_textures_really_used(doc):
+    """Every independently decoded embedded image must feed a real native
+    primitive via an actual UV0 accessor. An unused pretty PNG is no proof."""
+    materials=doc.get('materials')
+    images=doc.get('images')
+    textures=doc.get('textures')
+    if not (type(materials) is list and type(images) is list
+            and type(textures) is list and images):
+        return False
+    used=set()
+    for mesh in doc.get('meshes',[]):
+        if type(mesh) is not dict:return False
+        for primitive in mesh.get('primitives',[]):
+            if type(primitive) is not dict:return False
+            attrib=primitive.get('attributes')
+            mid=primitive.get('material')
+            if (type(attrib) is not dict or
+                    type(attrib.get('TEXCOORD_0')) is not int or
+                    type(mid) is not int or not 0<=mid<len(materials)):
+                return False
+            mat=materials[mid]
+            if type(mat) is not dict:return False
+            pbr=mat.get('pbrMetallicRoughness')
+            base=pbr.get('baseColorTexture') if type(pbr) is dict else None
+            if type(base) is not dict:return False
+            tid=base.get('index')
+            if type(tid) is not int or not 0<=tid<len(textures):
+                return False
+            texture=textures[tid]
+            img=texture.get('source') if type(texture) is dict else None
+            if type(img) is not int or not 0<=img<len(images):
+                return False
+            used.add(img)
+    return used==set(range(len(images)))
+
+
 def inspect(ctx,rule_id):
     need(type(ctx) is dict and set(ctx)=={
         'inventory','plan','controller','asset','step','work','source_loader'}
@@ -122,7 +158,8 @@ def inspect(ctx,rule_id):
                 corroborated=bool(independent['evidence_complete'] and
                                    all(independent['checks'].values()) and
                                    images and
-                                   len(images)==len(doc.get('images',[])))
+                                   len(images)==len(doc.get('images',[]))
+                                   and all_embedded_textures_really_used(doc))
                 checks[list(checks)[-1]]=bool(checks[list(checks)[-1]]
                                                and corroborated)
                 evidence={'independent_surface_reference_replay':corroborated}
