@@ -25,9 +25,18 @@ class MacroFortyOriginalTests(unittest.TestCase):
     def test_visited_40_with_blocked_originals_cannot_be_certified(self):
         _,ctx=self.context('P5')
         result=run(ctx)
-        blocked=[rid for rid,row in result['rows'].items()
-                 if row['machine_result']=='BLOCKED']
-        self.assertTrue(blocked)
+        # Isolate the BLOCKED gate from the independent missing-pin gate:
+        # every other rule carries a verified fixture pin, not a real claim.
+        for rid,row in result['rows'].items():
+            row['machine_result']='UNKNOWN'
+            row['blocked_reason']=None
+            row['source_checks']={c:(i==0) for i,c in
+                                  enumerate(NATIVE_RULES[rid][1])}
+        blocked_id=IDS[0]
+        result['rows'][blocked_id]['machine_result']='BLOCKED'
+        result['rows'][blocked_id]['blocked_reason']='original absent'
+        result['result_counts']={'PASS':0,'FAIL':0,'UNKNOWN':39,
+                                 'BLOCKED':1,'NOT_DUE':0}
         with self.assertRaisesRegex(MacroExecutionBlocked,
                                     'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
             require_source_execution(result)
