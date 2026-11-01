@@ -27,6 +27,8 @@ from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, packa
 
 CASES = (
     (P1Thirty, 'AAA-200-E-044', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (UVFixture, 'AAA-200-L-115',
+     'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (UVFixture, 'AAA-200-L-116',
      'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
@@ -113,9 +115,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_twenty_five_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 25)
-        self.assertEqual(len(set(x[1] for x in CASES)), 25)
+    def test_twenty_six_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 26)
+        self.assertEqual(len(set(x[1] for x in CASES)), 26)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -216,6 +218,13 @@ class NativeOriginalReplayerTests(unittest.TestCase):
             uv=[(0,0),(2,0),(2,2),(0,2)]))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-L-116')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(UVFixture,
+            'test_three_actual_uv_oracles_are_not_full_rule_or_mg0')
+        from test_c07_p3_uv_semantics import uv_glb
+        test.put(native=uv_glb(uv=[(0,0),(1,0),(1,0.1),(0,0.1)]))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-115')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(CollisionFixture,
             'test_four_real_collision_oracles_not_fivem_or_mg0')
