@@ -23,31 +23,40 @@ CASES = (
      'test_ten_distinct_original_scoped_observations_not_full_review'),
 )
 
-class WalkWithUntrustedLog(WalkFixture):
-    def setUp(self):
-        super().setUp()
-        self.f.add_item('FIVEM_COLLISION_RUNTIME_LOG',
-                        'fivem_collision.log',
-                        b'producer labelled FiveM test - untrusted')
-        self.f.plan['p678_evidence_contract'][
-            'original_artifact_sha256'][
-            'FIVEM_COLLISION_RUNTIME_LOG'] = (
-            self.f.items['FIVEM_COLLISION_RUNTIME_LOG']['sha256'])
-        self.f.rebuild()
-
-class WalkBadOriginalSolid(WalkFixture):
-    def setUp(self):
-        super().setUp()
-        self.collision = glb(
-            [(0.1,0.1,0),(0.9,0.1,0),(0.0,0.8)],
-            [(0,1,2)], NORMALS)
-        self.put()
-
-class FinalForgedOwnerClaim(FinalFixture):
-    def setUp(self):
-        super().setUp()
-        self.docs['P8_INTERNAL_QA']['owner_approved'] = True
-        self.put()
+def modified_fixture(kind):
+    # Local fixture classes are not collected as unrelated inherited test
+    # suites by unittest discovery. Their source is changed BEFORE binding
+    # the current master/attempt, never inside an already-open audit.
+    if kind == 'log':
+        class WalkWithUntrustedLog(WalkFixture):
+            def setUp(self):
+                super().setUp()
+                self.f.add_item('FIVEM_COLLISION_RUNTIME_LOG',
+                                'fivem_collision.log',
+                                b'producer labelled FiveM test - untrusted')
+                self.f.plan['p678_evidence_contract'][
+                    'original_artifact_sha256'][
+                    'FIVEM_COLLISION_RUNTIME_LOG'] = (
+                    self.f.items['FIVEM_COLLISION_RUNTIME_LOG']['sha256'])
+                self.f.rebuild()
+        return WalkWithUntrustedLog
+    if kind == 'solid':
+        class WalkBadOriginalSolid(WalkFixture):
+            def setUp(self):
+                super().setUp()
+                self.collision = glb(
+                    [(0.1,0.1,0),(0.9,0.1,0),(0.0,0.8,0)],
+                    [(0,1,2)], NORMALS)
+                self.put()
+        return WalkBadOriginalSolid
+    if kind == 'owner':
+        class FinalForgedOwnerClaim(FinalFixture):
+            def setUp(self):
+                super().setUp()
+                self.docs['P8_INTERNAL_QA']['owner_approved'] = True
+                self.put()
+        return FinalForgedOwnerClaim
+    raise ValueError('unknown source mutation')
 
 class P678ResidualSourceReplayTests(unittest.TestCase):
     def context(self, fixture, method):
@@ -70,7 +79,7 @@ class P678ResidualSourceReplayTests(unittest.TestCase):
     def test_each_new_original_rule_has_source_checks_and_unknown_result(self):
         for rid, fixture, method in CASES:
             with self.subTest(rule=rid):
-                positive_fixture = (WalkWithUntrustedLog
+                positive_fixture = (modified_fixture('log')
                                     if rid.endswith('160') else fixture)
                 _, ctx = self.context(positive_fixture, method)
                 packet = build_packet(ctx, rid)
@@ -93,9 +102,9 @@ class P678ResidualSourceReplayTests(unittest.TestCase):
                 # trusted MG0 master and current operation are bound. Editing
                 # an already-open audited operation would correctly fail SHA.
                 changed_fixture = (
-                    WalkBadOriginalSolid if rid.endswith('155') else
-                    WalkWithUntrustedLog if rid.endswith('160') else
-                    FinalForgedOwnerClaim)
+                    modified_fixture('solid') if rid.endswith('155') else
+                    modified_fixture('log') if rid.endswith('160') else
+                    modified_fixture('owner'))
                 _, changed_ctx = self.context(changed_fixture, method)
                 after = build_packet(changed_ctx, rid)
                 self.assertEqual(after['rule']['result'], 'UNKNOWN')
