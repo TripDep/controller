@@ -79,6 +79,19 @@ class Tests(unittest.TestCase):
                 'individual_mg0':'UNKNOWN','advancement_authorized':False}
                 for rid in DESIGN_IDS},
         }
+        from c07_p1_remaining_visual_review import IDS as QUANT_IDS
+        self.p1_quant={
+            'family_rule_count':30,'rule_count':13,
+            'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+            'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
+            'advancement_authorized':False,'full_semantic_passes':0,
+            'individual_mg0_passes':0,
+            'rules':{rid:{
+                'checks':{'pre_d_policy_and_current_original_bytes_reopened':True,
+                          'rule_specific_original_measurement_within_pre_d_contract':False},
+                'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
+                'advancement_authorized':False} for rid in QUANT_IDS},
+        }
         import c07_p6_collision_semantics as c6
         import c07_p6_walkability_semantics as w6
         import c07_p7_rage_semantics as r7
@@ -139,6 +152,8 @@ class Tests(unittest.TestCase):
                     return_value=self.p345_macro) as macro,
               patch('c07_p1_design_source_review.inspect',
                     return_value=self.p1_design) as design,
+              patch('c07_p1_remaining_visual_review.inspect_family',
+                    return_value=self.p1_quant) as quantitative,
               patch('c07_p6_collision_semantics.inspect',
                     return_value=self.p678_specific['P6_COLLISION']) as col,
               patch('c07_p6_walkability_semantics.inspect',
@@ -158,6 +173,10 @@ class Tests(unittest.TestCase):
             self.assertEqual(macro.call_args_list[0].args[0],
                              macro.call_args_list[1].args[0])
             design.assert_called_once()
+            quantitative.assert_called_once()
+            self.assertEqual(quantitative.call_args.args[0]['work'],self.work)
+            self.assertEqual(result['p1_thirteen_original_quantitative'],
+                             self.p1_quant)
             for reader in (col,walk,rage,qa):
                 reader.assert_called_once()
                 self.assertEqual(reader.call_args.args[:2],(self.inv,self.plan))
