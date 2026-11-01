@@ -85,7 +85,7 @@ def inside(p,polygon):
     return hit
 def polygon_area(p):
     return abs(sum(a[0]*b[1]-b[0]*a[1]
-                   for a,b in zip(p,p[1:]+p[:1]))/2
+                   for a,b in zip(p,p[1:]+p[:1])))/2
 def triangle_signatures(triangles):
     signatures=[]
     for tri in triangles:
