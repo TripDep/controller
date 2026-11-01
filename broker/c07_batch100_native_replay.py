@@ -171,6 +171,33 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
              v.get('advancement_authorized') is False
              for rid,v in p1_design['rules'].items()),
          'C07_BATCH100_P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED')
+    # Supplement the already-present 13-rule P1 design reader with
+    # independent per-pixel silhouette, palette, focal contrast, native
+    # void-triangle and path-endpoint measurements on ONE source snapshot.
+    # This is a second source-specific measurement, never FULL or MG0.
+    from c07_p1_remaining_visual_review import (
+        inspect_family as inspect_p1_quantitative, IDS as P1_QUANT_IDS)
+    p1_quantitative=inspect_p1_quantitative({
+        'inventory':inventory,'plan':plan,'controller':controller,
+        'asset':asset,'step':step,'work':work,
+        'source_loader':source_loader})
+    need(p1_quantitative.get('family_rule_count')==30 and
+         p1_quantitative.get('rule_count')==13 and
+         set(p1_quantitative.get('rules',{}))==set(P1_DESIGN_IDS)==set(P1_QUANT_IDS) and
+         p1_quantitative.get('attempt_id')==work['attempt_id'] and
+         p1_quantitative.get('operation_sha256')==work['operation_sha256'] and
+         p1_quantitative.get('original_audit_sha256')==audit['audit_sha256'] and
+         p1_quantitative.get('original_audit_tail')==audit['audit_tail_sha256'] and
+         p1_quantitative.get('advancement_authorized') is False and
+         p1_quantitative.get('full_semantic_passes')==0 and
+         p1_quantitative.get('individual_mg0_passes')==0 and
+         all(type(row.get('checks')) is dict and len(row['checks'])==2 and
+             all(type(v) is bool for v in row['checks'].values()) and
+             row.get('full_rule_semantics')=='UNKNOWN' and
+             row.get('individual_mg0')=='UNKNOWN' and
+             row.get('advancement_authorized') is False
+             for row in p1_quantitative['rules'].values()),
+         'C07_BATCH100_P1_QUANTITATIVE_SOURCE_REPLAY_UNTRUSTED')
     # The full forty-rule P3/P4/P5 macro is mandatory in the 100-rule
     # consuming-side operation. It explicitly visits each source-specific
     # replayer; this does not promote a source-only candidate to FULL or MG0.
@@ -258,6 +285,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     return {
         'p678_thirty_rule_specific_original': family_reports,
         'p1_thirteen_original_design': p1_design,
+        'p1_thirteen_original_quantitative': p1_quantitative,
         'p345_forty_source_macro': p345_macro,
         'p345_execution_only_certificate': p345_execution_certificate,
         'native_semantic_code_review': code_registry,
