@@ -86,7 +86,17 @@ NATIVE_RULES = {
         'original_target_local_bounds_declared',
         'original_local_bounds_match_pre_D_expected_extent')),
     'AAA-200-L-111': ('topology', (
-        'all_original_mesh_primitives_scanned', 'nonmanifold_edge_count_zero')),
+        'all_original_mesh_primitives_topologically_inspected',
+        'original_mesh_edges_no_nonmanifold_or_degenerate',
+        'original_mesh_faces_unique')),
+    'AAA-200-L-113': ('topology', (
+        'all_original_triangle_areas_independently_recomputed',
+        'no_original_degenerate_or_duplicate_faces',
+        'original_geometry_matches_source_pinned_reference')),
+    'AAA-200-L-114': ('topology', (
+        'all_original_vertex_normals_finite_and_unit_length',
+        'every_original_vertex_normal_matches_face_orientation',
+        'original_face_orientation_matches_source_pinned_reference')),
     'AAA-200-L-112': ('topology', (
         'no_duplicate_geometric_faces', 'no_exact_duplicate_coordinate_vertices')),
     'AAA-200-O-142': ('budget', (
@@ -108,7 +118,8 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
+    'AAA-200-E-047', 'AAA-200-F-052',
+    'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
@@ -184,6 +195,12 @@ def build_packet(source_context, rule_id, *, expected=None):
     source = report['rules'][rule_id]
     checks = dict(source['original_native_measured_criteria'] if domain == 'p1'
                   else source['original_machine_checks'])
+    topology_review = None
+    if domain == 'topology' and rule_id in (
+            'AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
+        from c07_p3_topology_full_review import inspect as review_topology
+        topology_review = review_topology(source_context, rule_id)
+        checks = topology_review['checks']
     if rule_id == 'AAA-200-S-189':
         # A critical from another attempt, operation, or a closed historical
         # step cannot establish the current delivery firewall. Re-read the
@@ -237,6 +254,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if topology_review is not None:
+        proof['original_topology_review'] = topology_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
@@ -248,8 +267,11 @@ def build_packet(source_context, rule_id, *, expected=None):
         'scope': judgment.SEMANTIC_SCOPE,
         'validator_id': VALIDATORS[rule_id],
         'binding': actual_binding,
-        'rule': {'result': ('PASS' if all(checks.values()) else 'FAIL')
-                           if rule_id in FULL_LITERAL_REVIEWED else 'UNKNOWN',
+        'rule': {'result': (
+                     'UNKNOWN' if topology_review is not None
+                     and not topology_review['evidence_complete']
+                     else ('PASS' if all(checks.values()) else 'FAIL')
+                     if rule_id in FULL_LITERAL_REVIEWED else 'UNKNOWN'),
                  'checks': checks,
                  'proof_digest': judgment.digest(proof)},
         'mg0': {'binding': actual_binding, 'triggered': True if mg_failed else None,
