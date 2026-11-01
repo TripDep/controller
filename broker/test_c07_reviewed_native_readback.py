@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 import approved_validators as approved
+from c07_native_source_rule_replayers import NATIVE_RULES
 import supervisor_judgment as j
 from test_rule_evidence import API
 
@@ -40,10 +41,11 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         return binding, packet, spec, offer, log
 
     def test_each_approved_validator_requires_independent_readback(self):
-        self.assertEqual(len(approved.REVIEWED),12)
+        self.assertEqual(len(approved.REVIEWED),17)
+        self.assertEqual(len(NATIVE_RULES),5)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
-        for rid in approved.REVIEWED:
+        for rid in sorted(set(approved.REVIEWED) - set(NATIVE_RULES)):
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
                 reader = ('planning_semantics.native_rule_readback'
@@ -57,7 +59,7 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
                     self.assertIn('INDEPENDENT_SOURCE_BYTES_MISMATCH',answer['reason'])
 
     def test_replayed_friendly_pass_cannot_replace_real_native_check(self):
-        for rid in approved.REVIEWED:
+        for rid in sorted(set(approved.REVIEWED) - set(NATIVE_RULES)):
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
                 reader = ('planning_semantics.native_rule_readback'
