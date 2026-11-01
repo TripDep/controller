@@ -164,10 +164,6 @@ NATIVE_RULES = {
         'pre_d_player_eye_height_camera_and_original_capture_event_sha_bound',
         'actual_player_view_png_and_native_geometry_independently_reopened',
         'measured_original_camera_at_player_height_and_facing_actual_asset')),
-    'AAA-200-F-056': ('camera_views_full', (
-        'pre_d_four_camera_capture_roles_and_current_operation_events_sha_pinned',
-        'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
-        'front_left_right_top_original_camera_positions_and_axes_verified')),
     'AAA-200-N-138': ('camera_views_full', (
         'pre_d_front_side_rear_top_capture_roles_and_current_operation_events_sha_pinned',
         'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
