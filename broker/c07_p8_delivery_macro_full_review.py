@@ -362,8 +362,8 @@ def inspect(context, rule_id):
                 i['root_cause']=='ORIGIN_DEVIATION' and
                 type(i['corrective_action']) is str and
                 i['corrective_action'] and
-                export is not None and
-                i['after_sha256']==sha(export) for i in issues)
+                type(i['after_sha256']) is str and
+                HEX.fullmatch(i['after_sha256']) for i in issues)
             and len(set(i['id'] for i in issues))==len(issues))
         center=policy.get('target_bbox_min')
         threshold=policy.get('max_origin_error_m')
@@ -379,6 +379,7 @@ def inspect(context, rule_id):
         # Each original case is a different hash-pinned, independently decoded
         # mesh with a measured pre-correction origin defect.
         independently_bad=[]
+        repaired=[]
         if recurring and original_policy:
             for issue in issues:
                 case_id=issue['id']
@@ -386,16 +387,25 @@ def inspect(context, rule_id):
                     independently_bad=[];break
                 role='P8_DEFECT_CASE_'+case_id[-1]
                 case_raw=original(role,'.glb')
-                if case_raw is None or sha(case_raw)!=issue['before_sha256']:
-                    independently_bad=[];break
+                fixed_raw=original('P8_DEFECT_FIXED_'+case_id[-1],'.glb')
+                if (case_raw is None or fixed_raw is None or
+                    sha(case_raw)!=issue['before_sha256'] or
+                    sha(fixed_raw)!=issue['after_sha256']):
+                    independently_bad=[];repaired=[];break
                 try:
                     measured=read_mesh_geometry(case_raw)
+                    corrected=read_mesh_geometry(fixed_raw)
                     deviation=_origin_error(measured,center)
+                    after_case=_origin_error(corrected,center)
                 except (ValueError,TypeError,KeyError,IndexError,OverflowError):
                     independently_bad=[];break
                 if deviation is None or deviation<=threshold:
-                    independently_bad=[];break
+                    independently_bad=[];repaired=[];break
                 independently_bad.append((sha(case_raw),deviation))
+                repaired.append(bool(after_case is not None and
+                    after_case<=threshold and after_case<deviation and
+                    _method_reproduces_actual_geometry(before_script,
+                        after_script,case_raw,fixed_raw)))
         separate_cases=bool(recurring and len(independently_bad)==len(issues)
             and len({h for h,_ in independently_bad})==len(issues))
         # The registered files are necessary but do not prove the defects
@@ -421,9 +431,29 @@ def inspect(context, rule_id):
                 and e.get('before_sha256')==issue['before_sha256']
                 and e.get('after_sha256')==issue['after_sha256']])==1
                 for issue in issues))
+        # Every recurring case also needs a distinct current-attempt
+        # correction recheck after its defect finding. A copied QA label
+        # or one general successful export cannot certify recurrence.
+        rechecks=([e for e in audit[openings[0]+1:]
+                   if e.get('event')=='QUALITY_RECHECK'
+                   and e.get('step')==step
+                   and e.get('attempt_id')==work['attempt_id']
+                   and e.get('operation_sha256')==work['operation_sha256']
+                   and e.get('root_cause')=='ORIGIN_DEVIATION'
+                   and e.get('status')=='PASS']
+                  if len(openings)==1 else [])
+        all_rechecked=bool(actual_findings and len(rechecks)==len(issues)
+            and len(repaired)==len(issues) and all(repaired)
+            and all(len([e for e in rechecks
+                if e.get('issue_id')==issue['id']
+                and e.get('before_sha256')==issue['before_sha256']
+                and e.get('after_sha256')==issue['after_sha256']
+                and audit.index(e)>next(j for j,f in enumerate(audit)
+                    if f in findings and f.get('issue_id')==issue['id'])])==1
+                for issue in issues))
         was_bad=bool(actual_findings and original_policy and
              prior_error is not None and prior_error>threshold)
-        fixed=bool(was_bad and after_error is not None and
+        fixed=bool(all_rechecked and was_bad and after_error is not None and
              after_error<=threshold and after_error<prior_error and
              all(after_error<error for _,error in independently_bad) and
              before is not None and sha(before)!=sha(export))
