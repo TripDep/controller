@@ -174,7 +174,10 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     # The full forty-rule P3/P4/P5 macro is mandatory in the 100-rule
     # consuming-side operation. It explicitly visits each source-specific
     # replayer; this does not promote a source-only candidate to FULL or MG0.
-    from c07_p345_macro_execution import run as run_p345_macro
+    from c07_p345_macro_execution import (
+        run as run_p345_macro,
+        require_source_execution as certify_p345_source_execution,
+    )
     p345_macro=run_p345_macro({
         'inventory':inventory,'plan':plan,'controller':controller,
         'asset':asset,'step':step,'work':work,
@@ -190,6 +193,9 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          p345_macro.get('owner_approved') is False and
          set(p345_macro.get('rows',{}))==set(p345.IDS),
          'C07_BATCH100_P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED')
+    # A 40/40 visit count can include 40 BLOCKED readers: it is NOT a
+    # successful execution until every original reader actually finished.
+    p345_execution_certificate=certify_p345_source_execution(p345_macro)
     # The P6-P8 thirty-rule family also has four genuinely rule-specific
     # original-byte readers (collision 4, walkability 6, RAGE 10, final QA 10).
     # They must all execute on the SAME original Controller attempt and audit.
@@ -251,6 +257,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         'p678_thirty_rule_specific_original': family_reports,
         'p1_thirteen_original_design': p1_design,
         'p345_forty_source_macro': p345_macro,
+        'p345_execution_only_certificate': p345_execution_certificate,
         'native_semantic_code_review': code_registry,
         'schema': 'gg-c07-exact100-original-native-replay-v1',
         'rule_count': 100, 'rule_ids': sorted(COHORT),
