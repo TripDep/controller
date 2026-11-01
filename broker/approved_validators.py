@@ -9,6 +9,7 @@ import re
 
 from planning_semantics import ENGINE_RULE, VALIDATOR as PLANNING_VALIDATOR, CRITERIA as PLANNING_CRITERIA
 from r173_rule_semantics import VALIDATOR as R173_VALIDATOR
+from c07_native_source_rule_replayers import NATIVE_RULES, VALIDATORS as NATIVE_VALIDATORS
 
 R173_CRITERIA={
  'AAA-200-A-008':('uncertain_walkability_explicit','unknown_world_water_z_explicit',
@@ -46,6 +47,7 @@ R173_CRITERIA={
 REVIEWED={
  ENGINE_RULE:(PLANNING_VALIDATOR,tuple(PLANNING_CRITERIA)),
  **{rule:(R173_VALIDATOR,criteria) for rule,criteria in R173_CRITERIA.items()},
+ **{rule:(NATIVE_VALIDATORS[rule],criteria) for rule,(_,criteria) in NATIVE_RULES.items()},
 }
 
 class InvalidEnrollment(ValueError):pass
@@ -78,6 +80,9 @@ def validate(enrolled,inventory):
         if validator==PLANNING_VALIDATOR:
             require(re.fullmatch('[a-f0-9]{40}', str(spec.get('source_ref',''))),
                     'VALIDATOR_PLANNING_EVIDENCE_IMMUTABLE_REF:'+rid)
+        if validator in set(NATIVE_VALIDATORS.values()):
+            require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
+                    'VALIDATOR_NATIVE_SOURCE_EVIDENCE_IMMUTABLE_REF:'+rid)
         if validator==R173_VALIDATOR:
             require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
                     'VALIDATOR_R173_EVIDENCE_IMMUTABLE_REF:'+rid)
