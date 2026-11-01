@@ -217,6 +217,8 @@ def inspect_family(source_context):
     for n,checks in checks_by_number.items():
         rid='AAA-200-'+('D' if n<=40 else 'E' if n==46 else 'F')+'-%03d'%n
         results[rid]={'schema':SCHEMA,'rule_id':rid,
+            'source_sha256':inv['rules'][rid]['source_sha256'],
+            'requirement_sha256':inv['rules'][rid]['requirement_sha256'],
             'checks':dict(zip(names,checks)),
             'metrics':{'void_triangle_fraction':void_ratio if n==34 else None,
                        'palette_max_rgb_error':palette_error if n==33 else None,
