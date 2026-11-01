@@ -39,7 +39,38 @@ class FiveOriginalCameraViews(unittest.TestCase):
                     encode(self.policy))
         for v,raw in self.rasters.items():
             self.fx.put('VISUAL_VIEW_'+v,v.lower()+'.png',raw)
+        # Independent current-operation render events: four source-recovered
+        # original captures must corroborate the five-view geometric test.
+        from c07_p1_five_camera_native_review import unit,sub
+        frames=[]
+        for v in ('FRONT','LEFT','RIGHT','TOP'):
+            role='VISUAL_VIEW_'+v
+            cam=self.policy['cameras'][v]
+            frames.append({
+                'role':role,'position_xyz':cam['position_xyz'],
+                'forward_xyz':unit(sub(cam['target_xyz'],cam['position_xyz'])),
+                'image_sha256':self.fx.f.items[role]['sha256']})
+        trace={'schema':'gg-c07-native-camera-capture-v1',
+               'attempt_id':self.fx.f.work['attempt_id'],
+               'operation_sha256':self.fx.f.work['operation_sha256'],
+               'frames':frames}
+        self.fx.put('P1_CAMERA_CAPTURE_TRACE','p1_camera_trace.json',
+                    encode(trace))
         self.fx.rebuild()
+        from test_c07_positive_native_process import canonical,sha
+        f=self.fx.f
+        for frame in frames:
+            row={'asset':f.asset,'event':'RENDER_CAPTURED',
+                 'prev_hash':f.records[-1]['record_hash'],
+                 'step':f.step,'attempt_id':f.work['attempt_id'],
+                 'operation_sha256':f.work['operation_sha256'],
+                 'source_role':frame['role'],
+                 'image_sha256':frame['image_sha256']}
+            row['record_hash']=sha(canonical(row))
+            f.records.append(row)
+        f.controller.audit_path(f.asset).write_bytes(
+            b''.join(canonical(row)+bytes([10]) for row in f.records))
+        f.controller._state['last_audit_hash']=f.records[-1]['record_hash']
 
     def ctx(self):
         f=self.fx.f
@@ -58,6 +89,23 @@ class FiveOriginalCameraViews(unittest.TestCase):
             'TOP']['projected_area_m2'],.001)
         self.assertFalse(row['advancement_authorized'])
         self.assertEqual(row['fivem_runtime'],'UNVERIFIED')
+
+    def test_missing_current_capture_events_never_claims_full_original_view(self):
+        self.fx.rebuild()
+        result=self.read()
+        self.assertFalse(result['evidence_complete'])
+        self.assertFalse(result['checks'][CRITERIA[0]])
+
+    def test_four_capture_events_with_wrong_source_hash_never_pass(self):
+        f=self.fx.f
+        f.records[-1]['image_sha256']='0'*64
+        from test_c07_positive_native_process import canonical,sha
+        f.records[-1]['record_hash']=sha(canonical({
+            k:v for k,v in f.records[-1].items() if k!='record_hash'}))
+        f.controller.audit_path(f.asset).write_bytes(
+            b''.join(canonical(x)+bytes([10]) for x in f.records))
+        f.controller._state['last_audit_hash']=f.records[-1]['record_hash']
+        self.assertFalse(self.read()['checks'][CRITERIA[0]])
 
     def test_forged_five_labels_with_same_pose_rejected(self):
         self.policy['cameras']['TOP']=copy.deepcopy(
