@@ -69,16 +69,112 @@ def snapshot(*, cohort=None, reviewed=None, replay=None,
     }
 
 
+
+# Immutable 100-ID source cohort partitioned into WHOLE multi-rule macros.
+# These are grouped completeness gates, not newly invented validators.
+MACRO_GROUPS = (
+    ('P1_DESIGN_SITE_BLOCKOUT_30', tuple(COHORT[:30])),
+    ('P3_P5_GEOMETRY_MATERIAL_LOD_40', tuple(COHORT[30:70])),
+    ('P6_P8_COLLISION_RAGE_QA_30', tuple(COHORT[70:])),
+)
+FROZEN_MACRO_PREFIXES = (
+    ('D', 'E', 'F'),
+    ('L', 'M', 'N', 'O'),
+    ('P', 'Q', 'S'),
+)
+
+
+def macro_snapshot():
+    """Recompute complete macro-family code coverage; never count micro PASSes.
+
+    Every AAA-200 alphabetic family must have all TEN source-specific native
+    consumers. A single partial reviewer cannot certify a family or macro.
+    Operational MG0/asset acceptance are separate, unverified authorizations.
+    """
+    current = snapshot()
+    seen = set()
+    groups = []
+    for (name, members), expected_letters in zip(
+            MACRO_GROUPS, FROZEN_MACRO_PREFIXES):
+        expected = set()
+        families = []
+        for letter in expected_letters:
+            family = tuple(x for x in members if
+                           x.split('-')[2] == letter)
+            if len(family) != 10:
+                raise CohortIncomplete(
+                    'C07_MACRO_FAMILY_NOT_TEN_CANONICAL_RULES:' + letter)
+            numbers = [int(x.rsplit('-', 1)[1]) for x in family]
+            expected_numbers = list(range(
+                (ord(letter) - ord('A')) * 10 + 1,
+                (ord(letter) - ord('A') + 1) * 10 + 1))
+            if numbers != expected_numbers:
+                raise CohortIncomplete(
+                    'C07_MACRO_FAMILY_NONCANONICAL_LITERAL_ORDER:' + letter)
+            expected.update(family)
+            reviewed = sorted(set(family) & set(current['code_reviewed_ids']))
+            missing = sorted(set(family) - set(reviewed))
+            inconsistent = sorted(set(family) &
+                                  set(current['registry_inconsistent_ids']))
+            families.append({
+                'family': letter, 'rule_count': 10,
+                'code_reviewed': len(reviewed), 'missing': len(missing),
+                'missing_ids': missing, 'inconsistent_ids': inconsistent,
+                'code_family_ready': not missing and not inconsistent,
+                'operational_mg0': 'UNVERIFIED',
+                'asset_acceptance': 'UNVERIFIED',
+            })
+        if set(members) != expected or seen.intersection(members):
+            raise CohortIncomplete('C07_MACRO_FAMILY_COHORT_DRIFT:' + name)
+        seen.update(members)
+        groups.append({
+            'macro': name, 'rule_count': len(members),
+            'family_count': len(families), 'families': families,
+            'code_reviewed': sum(f['code_reviewed'] for f in families),
+            'code_missing': sum(f['missing'] for f in families),
+            'code_macro_ready': all(f['code_family_ready'] for f in families),
+            'independent_mg0': 'UNVERIFIED',
+            'owner_acceptance': 'UNVERIFIED',
+            'fivem_runtime': 'UNVERIFIED',
+            'advancement_authorized': False,
+        })
+    if seen != set(COHORT) or len(seen) != 100 or len(groups) != 3:
+        raise CohortIncomplete('C07_MACRO_FROZEN_100_PARTITION_INVALID')
+    return {
+        'schema': 'c07-frozen100-whole-family-macro-code-gate-v1',
+        'cohort_count': 100, 'macro_count': 3, 'family_count': 10,
+        'code_reviewed': current['code_reviewed_count'],
+        'code_missing': current['code_missing_count'],
+        'macros': groups, 'code_all_macros_ready': all(
+            g['code_macro_ready'] for g in groups),
+        'independent_mg0': 'UNVERIFIED',
+        'owner_acceptance': 'UNVERIFIED',
+        'fivem_runtime': 'UNVERIFIED',
+        'c07_finished': False,
+        'advancement_authorized': False,
+    }
+
+
+def require_macro_code_ready(name, report):
+    """Independent recount rejects forged macro totals and partial families."""
+    actual = macro_snapshot()
+    if (type(report) is not dict or report != actual or
+            name not in {g['macro'] for g in actual['macros']}):
+        raise CohortIncomplete('C07_MACRO_SOURCE_CODE_RECOUNT_MISMATCH')
+    group = next(g for g in actual['macros'] if g['macro'] == name)
+    if not group['code_macro_ready']:
+        raise CohortIncomplete('C07_MACRO_WHOLE_FAMILIES_INCOMPLETE:' + name)
+    return True
+
+
 def require_code100(report):
-    """Never let partial code enrollment masquerade as a completed cohort."""
-    if (type(report) is not dict or report.get('schema') !=
-            'c07-code-reviewed-100-gate-v1' or
-            report.get('cohort_count') != 100 or
-            report.get('code_100_ready') is not True or
-            report.get('code_reviewed_count') != 100 or
-            report.get('code_missing_count') != 0 or
-            report.get('code_missing_ids') != [] or
-            report.get('registry_inconsistent_ids') != []):
+    """Recount the real registries; reject a forged '100/100' report."""
+    current = snapshot()
+    if (type(report) is not dict or report != current or
+            not current['code_100_ready'] or
+            current['code_reviewed_count'] != 100 or
+            current['code_missing_count'] != 0 or
+            current['registry_inconsistent_ids'] != []):
         raise CohortIncomplete('C07_100_SEMANTIC_REPLAYERS_NOT_COMPLETED')
     return True
 
