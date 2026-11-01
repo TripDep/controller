@@ -25,9 +25,9 @@ NATIVE_RULES = {
         'actual_original_embedded_texture_quadrants_recomputed',
         'all_real_texture_variation_exceeds_original_local_contrast_limit')),
     'AAA-200-M-126': ('p4_material_macro_full', (
-        'pre_d_original_weathering_reference_and_limits_sha_pinned',
-        'original_texture_and_reference_pixel_distributions_independently_reopened',
-        'real_original_texture_weathering_mean_and_local_spread_within_limits')),
+        'pre_d_five_physical_material_class_ranges_and_original_export_sha_pinned',
+        'all_five_wood_stone_metal_glass_plaster_materials_bound_to_original_primitives',
+        'five_original_materials_have_distinct_physical_pbr_and_alpha_properties')),
     'AAA-200-M-127': ('p4_material_macro_full', (
         'pre_d_original_pixel_diversity_and_variance_limits_sha_pinned',
         'all_original_embedded_rgba_channels_recomputed_from_png_bytes',
@@ -262,8 +262,10 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-M-121', 'AAA-200-M-122', 'AAA-200-M-125',
-    'AAA-200-M-126', 'AAA-200-M-127',
+    # M121 physical identification, M122 real reflectance, M125 credible
+    # variation and M127 motivated weathering are not provable by producer
+    # labels and static pixel variance. Keep their SCOPED checks, no FULL.
+    'AAA-200-M-126',
     'AAA-200-O-149',
     'AAA-200-F-059',
     'AAA-200-S-182', 'AAA-200-S-187',
