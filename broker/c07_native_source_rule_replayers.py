@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-F-059': ('p1_structural_fix_full', (
+        'pre_d_complete_structural_defect_correction_and_detail_gate_policy_sha_pinned',
+        'every_original_structural_before_after_mesh_recomputed_and_correction_effective',
+        'all_original_structural_rechecks_pass_before_first_detail_phase_event')),
     'AAA-200-S-182': ('p8_final_process_full', (
         'pre_d_complete_original_component_alignment_proportion_and_axis_policy_sha_pinned',
         'every_original_world_component_bounds_and_forward_axis_independently_measured',
@@ -226,6 +230,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-F-059',
     'AAA-200-S-182', 'AAA-200-S-187',
     'AAA-200-S-183',
     'AAA-200-M-123',
@@ -307,6 +312,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_full_review import inspect as inspect_p5_full
     elif domain == 'p1_blockout_full':
         from c07_p1_blockout_full_review import inspect as inspect_blockout
+    elif domain == 'p1_structural_fix_full':
+        from c07_p1_structural_correction_full_review import inspect as inspect_structural_fix
     elif domain == 'p1_spatial':
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     elif domain == 'p1_paths_full':
@@ -337,6 +344,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
     p1_blockout_review = (inspect_blockout(source_context, rule_id)
                           if domain == 'p1_blockout_full' else None)
+    p1_structural_fix_review = (inspect_structural_fix(source_context, rule_id)
+                                if domain == 'p1_structural_fix_full' else None)
     p1_spatial_review = (inspect_p1_spatial(source_context, rule_id)
                          if domain == 'p1_spatial' else None)
     p1_paths_review = (inspect_p1_paths(source_context, rule_id)
@@ -362,7 +371,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
-                        (p5_review, p1_spatial_review, p1_paths_review,
+                        (p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p8_intersection_review,
@@ -455,6 +464,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_spatial_review'] = p1_spatial_review
     if p1_blockout_review is not None:
         proof['original_p1_blockout_review'] = p1_blockout_review
+    if p1_structural_fix_review is not None:
+        proof['original_p1_structural_fix_review'] = p1_structural_fix_review
     if p1_paths_review is not None:
         proof['original_p1_paths_access_review'] = p1_paths_review
     if p1_site_review is not None:
