@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for fifteen original-source native per-rule replayers.
+"""Adversarial source-byte tests for nineteen original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -21,6 +21,7 @@ from test_c07_p4_texture_semantics import Tests as TextureFixture
 from test_c07_p8_final_qa_semantics import Tests as FinalFixture
 from test_c07_p8_closure_semantics import Tests as ClosureFixture
 from test_c07_p5_budget_semantics import Tests as BudgetFixture, BUDGET
+from test_c07_p6_collision_semantics import Tests as CollisionFixture, POLICY, VISUAL
 from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
 
 CASES = (
@@ -38,6 +39,14 @@ CASES = (
      'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
     (GeometryFixture, 'AAA-200-L-112',
      'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (BudgetFixture, 'AAA-200-O-141',
+     'test_five_original_quantitative_oracles_no_mg0'),
+    (CollisionFixture, 'AAA-200-P-151',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (CollisionFixture, 'AAA-200-P-152',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (CollisionFixture, 'AAA-200-P-153',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
     (BudgetFixture, 'AAA-200-O-142',
      'test_five_original_quantitative_oracles_no_mg0'),
     (BudgetFixture, 'AAA-200-O-148',
@@ -91,9 +100,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_fifteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 15)
-        self.assertEqual(len(set(x[1] for x in CASES)), 15)
+    def test_nineteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 19)
+        self.assertEqual(len(set(x[1] for x in CASES)), 19)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -159,6 +168,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                     p = ctx['controller'].root / 'scene.glb'
                 elif rid.startswith('AAA-200-O'):
                     p = ctx['controller'].root / 'budget.json'
+                elif rid.startswith('AAA-200-P'):
+                    p = ctx['controller'].root / 'collision_policy.json'
                 else:
                     p = ctx['controller'].root / 'scene.zip'
                 p.write_bytes(p.read_bytes() + b'forged')
@@ -172,11 +183,24 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-L-112')['rule']['result'], 'FAIL')
 
+        test, ctx = self.context(CollisionFixture,
+            'test_four_real_collision_oracles_not_fivem_or_mg0')
+        test.put(policy=dict(POLICY,solid_surfaces=[{'name':'distant',
+            'min_xyz':[4,4,-1], 'max_xyz':[5,5,1]}]))
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-151')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(CollisionFixture,
+            'test_four_real_collision_oracles_not_fivem_or_mg0')
+        test.put(collision=VISUAL)
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-152')['rule']['result'], 'FAIL')
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-153')['rule']['result'], 'FAIL')
+
         test, ctx = self.context(BudgetFixture,
             'test_five_original_quantitative_oracles_no_mg0')
         test.put(budget=dict(BUDGET, max_triangles=1))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-142')['rule']['result'], 'FAIL')
+        self.assertEqual(build_packet(ctx, 'AAA-200-O-141')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(TextureFixture,
             'test_six_original_pixel_oracles_observed_not_approved')
