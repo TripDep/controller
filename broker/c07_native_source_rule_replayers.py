@@ -394,6 +394,114 @@ NATIVE_RULES = {
         'independent_fivem_engine_execution_provenance',
     )),
 }
+
+# Ten P1 visual-design originals: three independent source readers, eight
+# literal-bound measurements each. They are NOT FULL: artistic judgement and
+# authenticated renderer/owner provenance are not established by pixels.
+P1_RESIDUAL_CANDIDATES = {
+    'AAA-200-D-031': ('p1_residual_source', (
+        'real_reference_front_luminance_recomputed',
+        'actual_quadrant_profile_matches_pre_d_style_bound',
+        'original_style_reference_and_current_have_real_nonflat_pixels',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-031_pre_d_original',
+        'AAA-200-D-031_native_projection',
+        'AAA-200-D-031_cross_source',
+    )),
+    'AAA-200-D-032': ('p1_residual_source', (
+        'real_peer_current_luminance_recomputed',
+        'original_peer_current_quadrant_profiles_within_source_bound',
+        'actual_peer_and_current_source_have_nonflat_independent_pixels',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-032_pre_d_original',
+        'AAA-200-D-032_native_projection',
+        'AAA-200-D-032_cross_source',
+    )),
+    'AAA-200-D-033': ('p1_residual_source', (
+        'actual_hex_palette_and_material_png_decoded',
+        'measured_material_mean_within_original_palette_band',
+        'original_palette_spans_real_luminance_and_material_has_variation',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-033_pre_d_original',
+        'AAA-200-D-033_native_projection',
+        'AAA-200-D-033_cross_source',
+    )),
+    'AAA-200-D-034': ('p1_residual_source', (
+        'original_void_polygon_areas_and_real_native_footprint_measured',
+        'actual_void_ratio_within_original_maximum',
+        'every_original_void_polygon_is_inside_measured_native_footprint',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-034_pre_d_original',
+        'AAA-200-D-034_native_projection',
+        'AAA-200-D-034_cross_source',
+    )),
+    'AAA-200-D-035': ('p1_residual_source', (
+        'actual_reference_front_quadrant_pixels_reconstructed',
+        'original_reference_current_profile_within_silhouette_proxy_bound',
+        'original_silhouette_reference_and_front_have_measured_contrast',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-035_pre_d_original',
+        'AAA-200-D-035_native_projection',
+        'AAA-200-D-035_cross_source',
+    )),
+    'AAA-200-D-036': ('p1_residual_source', (
+        'actual_native_focal_anchor_maps_to_original_image_quadrant',
+        'original_focal_quadrant_salience_measured_above_source_minimum',
+        'original_focal_point_lies_inside_actual_native_geometry_envelope',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-036_pre_d_original',
+        'AAA-200-D-036_native_projection',
+        'AAA-200-D-036_cross_source',
+    )),
+    'AAA-200-D-037': ('p1_residual_source', (
+        'four_original_view_pixel_buffers_are_distinct',
+        'actual_original_quadrant_repetition_below_pre_d_limit',
+        'four_original_view_quadrant_profiles_are_pairwise_distinct',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-037_pre_d_original',
+        'AAA-200-D-037_native_projection',
+        'AAA-200-D-037_cross_source',
+    )),
+    'AAA-200-D-038': ('p1_residual_source', (
+        'real_material_png_has_original_minimum_distinct_colors',
+        'original_material_pixel_variance_inside_source_band',
+        'actual_original_material_has_nonflat_color_and_pixel_variance',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-038_pre_d_original',
+        'AAA-200-D-038_native_projection',
+        'AAA-200-D-038_cross_source',
+    )),
+    'AAA-200-D-039': ('p1_residual_source', (
+        'original_player_eye_height_matches_pre_d_player_scale',
+        'player_camera_target_faces_actual_native_geometry',
+        'player_eye_outside_native_envelope_and_target_inside',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-039_pre_d_original',
+        'AAA-200-D-039_native_projection',
+        'AAA-200-D-039_cross_source',
+    )),
+    'AAA-200-D-040': ('p1_residual_source', (
+        'original_component_role_map_resolves_actual_glb_mesh_names',
+        'original_named_geometry_nonempty_and_internal_qa_not_owner_pass',
+        'every_actual_native_mesh_has_exactly_one_source_component_role',
+        'pre_d_policy_and_current_original_bytes_reopened',
+        'rule_specific_original_measurement_within_pre_d_contract',
+        'AAA-200-D-040_pre_d_original',
+        'AAA-200-D-040_native_projection',
+        'AAA-200-D-040_cross_source',
+    )),
+}
+NATIVE_RULES.update(P1_RESIDUAL_CANDIDATES)
+
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
 # These twenty-two literals have independently decidable original-byte acceptance
@@ -504,6 +612,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_full_review import inspect as inspect_p5_full
     elif domain == 'p5_alpha_cost_full':
         from c07_p5_alpha_cost_full_review import inspect as inspect_alpha_cost
+    elif domain == 'p1_residual_source':
+        from c07_p1_residual_macro_replay import inspect as inspect_p1_residual
     elif domain == 'p1_blockout_full':
         from c07_p1_blockout_full_review import inspect as inspect_blockout
     elif domain == 'p1_structural_fix_full':
@@ -560,6 +670,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
     alpha_cost_review = (inspect_alpha_cost(source_context, rule_id)
                          if domain == 'p5_alpha_cost_full' else None)
+    p1_residual_review = (inspect_p1_residual(source_context, rule_id)
+                          if domain == 'p1_residual_source' else None)
     p1_blockout_review = (inspect_blockout(source_context, rule_id)
                           if domain == 'p1_blockout_full' else None)
     p1_structural_fix_review = (inspect_structural_fix(source_context, rule_id)
@@ -611,7 +723,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
-                        (alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
+                        (p1_residual_review, alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, visual_qa_three_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
@@ -703,6 +815,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p5_full_review'] = p5_review
     if alpha_cost_review is not None:
         proof['original_p5_alpha_cost_review'] = alpha_cost_review
+    if p1_residual_review is not None:
+        proof['original_p1_residual_eight_source_checks'] = p1_residual_review
     if p1_spatial_review is not None:
         proof['original_p1_spatial_review'] = p1_spatial_review
     if p1_blockout_review is not None:
