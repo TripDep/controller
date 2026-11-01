@@ -32,9 +32,9 @@ CRITERIA = {
 126: ('pre_d_five_physical_material_class_ranges_and_original_export_sha_pinned',
       'all_five_wood_stone_metal_glass_plaster_materials_bound_to_original_primitives',
       'five_original_materials_have_distinct_physical_pbr_and_alpha_properties'),
-127: ('pre_d_original_pixel_diversity_and_variance_limits_sha_pinned',
-      'all_original_embedded_rgba_channels_recomputed_from_png_bytes',
-      'real_original_colors_and_variance_within_pre_d_material_ranges'),
+127: ('pre_d_weathering_purpose_and_original_reference_sha_pinned',
+      'original_exported_texture_and_weathering_reference_pixels_recomputed',
+      'actual_weathering_distribution_within_pre_d_motivated_limits'),
 129: ('original_pre_d_target_rage_shader_and_native_export_source_sha_pinned',
       'original_native_rage_shader_descriptors_independently_parsed',
       'original_shaders_vertex_attributes_and_texture_channels_compatible'),
@@ -245,8 +245,8 @@ def inspect(source_context, rule_id):
               local, contrast),
         126: (bool(raw_contract and raw_glb and five_policy),
               all_five_used, five_real),
-        127: (bool(raw_contract and raw_glb and var_policy),
-              pixels, variance),
+        127: (bool(raw_contract and raw_glb and raw_ref and wp),
+              comparable, spread),
         # This source reader deliberately cannot certify RAGE shader support
         # from glTF PBR material labels or producer-generated QA JSON.
         129: (bool(raw_contract and raw_glb and
