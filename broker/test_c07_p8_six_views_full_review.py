@@ -80,7 +80,7 @@ class P8SixViewsTests(unittest.TestCase):
         packet,expected,spec=self.packet(ctx)
         self.assertIn(P8,FULL_LITERAL_REVIEWED)
         self.assertEqual(packet['rule']['result'],'FAIL')
-        self.assertTrue(all(packet['rule']['checks'].values()))
+        self.assertFalse(packet['rule']['checks'][NATIVE_RULES[P8][1][2]])
         self.assertEqual(packet['mg0']['result'],'UNKNOWN')
         self.assertFalse(packet['mg0']['result']=='PASS')
         self.assertEqual(semantic_packet(packet,expected,spec)['result'],
