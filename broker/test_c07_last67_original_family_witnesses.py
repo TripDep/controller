@@ -219,6 +219,38 @@ class R150Last67(Q200Witness):
                                     "EXACT_RESERVED_WORK"):
             self.review67()
 
+    def test_authentic_original_negative_result_is_fail_not_unknown(self):
+        # Append a genuine, correctly chained negative event for the exact
+        # original attempt. An independent observation must not be masked.
+        from test_c07_positive_native_process import canonical
+        rid=self.r150_ids[0]
+        old=self.f.records[-1]["record_hash"]
+        event={
+            "asset":self.f.asset,
+            "event":"VERIFIED_STATE_REVOKED",
+            "prev_hash":old,
+            "step":self.f.step,
+            "rule_id":rid,
+            "result":"FAIL"
+        }
+        event["record_hash"]=sha(canonical(event))
+        self.f.records.append(event)
+        self.f.controller.audit_path(self.f.asset).write_bytes(
+            b"".join(canonical(r)+b"\\n" for r in self.f.records))
+        self.f.controller._state["last_audit_hash"]=event["record_hash"]
+        r=self.review67()
+        self.assertEqual(r["rules"][rid]["semantic_verdict"],"FAIL")
+        self.assertEqual(r["rules"][rid]["original_current_attempt_negative_hashes"],
+                         [event["record_hash"]])
+        self.assertEqual(r["rules"][rid]["individual_mg0"],"UNKNOWN")
+        self.assertFalse(r["advancement_authorized"])
+
+    def test_family_original_artifact_mutation_is_rejected(self):
+        (self.f.root/"r150_master_chain.json").write_bytes(b"FALSIFIED")
+        with self.assertRaisesRegex(NativeEvidenceBlocked,
+                                    "REGISTERED_ARTIFACT_BYTES_CHANGED"):
+            self.review67()
+
     def test_incomplete_inventory_cannot_omit_a_canonical_family(self):
         del self.f.inv["rules"][self.r150_ids[0]]
         with self.assertRaisesRegex(Last67Blocked,
