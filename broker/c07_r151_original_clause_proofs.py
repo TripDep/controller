@@ -249,9 +249,10 @@ def assess(contract, work, packets, registered, source_loader):
          'R151_FALSE_FULL_RULE_SEMANTIC_PASS')
     return {
         'schema': SCHEMA,
-        'source_rule_count': 200,
+        'source_rule_count': contract['source_rule_count'],
         'source_rule_ids_sha256': contract['source_rule_ids_sha256'],
-        'all_composite_source_rules': 72,
+        'all_composite_source_rules': sum(
+            1 for row in contract['rows'].values() if row.get('composite_flag')),
         'source_lines_covered': contract['source_lines_covered'],
         'original_proof_packets_reopened': len(received),
         'machine_format_probes_positive_not_semantic': format_positive,
