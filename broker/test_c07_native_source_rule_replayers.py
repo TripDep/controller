@@ -205,6 +205,36 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     build_packet(ctx, rid, expected=expected)
 
+    def test_three_topology_replayers_in_real_backend_independent_readback(self):
+        import json
+        from unittest.mock import patch
+        for rid in ('AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
+            with self.subTest(rule=rid):
+                _, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
+                packet = build_packet(ctx, rid, expected=expected)
+                spec = self.spec(ctx, rid)
+                origin = {'run_id': 41, 'job_id': 42, 'run_attempt': 1,
+                          'head_sha': '8'*40}
+                def attempt(p):
+                    offer = {'native_origin': origin,
+                             'expected_packet_sha256': j.digest(p)}
+                    signed = ('2026-11-01T06:00:00Z ' + j.PREFIX +
+                              json.dumps(p, separators=(',', ':')))
+                    backend = j.NativeRuleBackend(
+                        object(), {rid: spec}, source_context=lambda _: ctx)
+                    with patch.object(j.evidence, 'native', return_value=signed):
+                        return backend.rule(rid, expected, offer)
+                observed = attempt(packet)
+                self.assertEqual(observed['result'], 'UNKNOWN')
+                self.assertEqual(observed['mg0'], 'UNKNOWN')
+                forged = copy.deepcopy(packet)
+                forged['rule']['proof_digest'] = 'f'*64
+                self.assertEqual(attempt(forged)['result'], 'UNKNOWN')
+                self.assertEqual(attempt(forged)['reason'],
+                                 'C07_REPLAYER_PRODUCER_PACKET_NOT_RECOMPUTED')
+
     def test_original_topology_full_literals_reject_measured_defects(self):
         from test_c07_p3_geometry_semantics import TRI, UP, glb
         for rid, native, expected in (
