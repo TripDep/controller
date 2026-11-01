@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-043': ('p1_spatial', (
+        'pre_d_two_building_world_placements_and_ratio_targets_sha_pinned',
+        'actual_original_world_space_building_extents_independently_measured',
+        'real_building_clearance_footprint_and_height_ratios_meet_pre_d_limits')),
     'AAA-200-E-044': ('p1', (
         'pre_D_path_line_strings_decoded',
         'main_and_secondary_path_ids_named',
@@ -126,7 +130,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-E-047', 'AAA-200-F-052',
+    'AAA-200-E-043', 'AAA-200-E-047', 'AAA-200-F-052',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
@@ -197,18 +201,23 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p8_closure_semantics import inspect
     elif domain == 'p5_full':
         from c07_p5_full_review import inspect as inspect_p5_full
+    elif domain == 'p1_spatial':
+        from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     else:
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
-    if p5_review is not None:
+    p1_spatial_review = (inspect_p1_spatial(source_context, rule_id)
+                         if domain == 'p1_spatial' else None)
+    full_review = p5_review if p5_review is not None else p1_spatial_review
+    if full_review is not None:
         from c07_positive_native_process import _original_attempt
         _, tail, _, audit_sha = _original_attempt(
             inv, plan, controller, asset, step, work)
         report = {'rules': {rule_id: {
             'requirement_sha256': row['requirement_sha256'],
             'source_sha256': row['source_sha256'],
-            'original_machine_checks': p5_review['checks']}},
+            'original_machine_checks': full_review['checks']}},
             'attempt_id': work['attempt_id'],
             'operation_sha256': work['operation_sha256'],
             'original_audit_sha256': audit_sha,
@@ -282,6 +291,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_topology_review'] = topology_review
     if p5_review is not None:
         proof['original_p5_full_review'] = p5_review
+    if p1_spatial_review is not None:
+        proof['original_p1_spatial_review'] = p1_spatial_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
@@ -297,8 +308,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                      'UNKNOWN' if (
                          (topology_review is not None and
                           not topology_review['evidence_complete']) or
-                         (p5_review is not None and
-                          not p5_review['evidence_complete']))
+                         (full_review is not None and
+                          not full_review['evidence_complete']))
                      else ('PASS' if all(checks.values()) else 'FAIL')
                      if rule_id in FULL_LITERAL_REVIEWED else 'UNKNOWN'),
                  'checks': checks,
