@@ -26,12 +26,20 @@ def native_glb():
     return (struct.pack('<4sII',b'glTF',2,12+8+len(raw)+8+len(coords))+
             struct.pack('<I4s',len(raw),b'JSON')+raw+
             struct.pack('<I4s',len(coords),b'BIN\x00')+coords)
-def png(mask,w,h,base,*,invert_checker=False):
+def png(mask,w,h,base,*,shuffle_foreground=False):
+    values=[(base if (x+y)%2 else base+20) if mask[y*w+x] else 0
+            for y in range(h) for x in range(w)]
+    if shuffle_foreground:
+        # Swap two differently colored foreground pixels. The entire
+        # histogram, mean, alpha/mask and dimensions remain EXACTLY equal.
+        a=next(i for i,v in enumerate(values) if mask[i] and v==base)
+        b=next(i for i,v in enumerate(values) if mask[i] and v==base+20)
+        values[a],values[b]=values[b],values[a]
     raw=bytearray()
     for y in range(h):
         raw.append(0)
         for x in range(w):
-            v=(base if (x+y+int(invert_checker))%2 else base+20) if mask[y*w+x] else 0
+            v=values[y*w+x]
             raw.extend((v,v,v))
     def chunk(tag,payload):
         return (struct.pack('>I',len(payload))+tag+payload+
@@ -161,7 +169,7 @@ class NativeRasterFamily(unittest.TestCase):
         # image dimensions and silhouette. A global-mean comparator would
         # have falsely accepted both reference and peer equivalence.
         front_mask=mask_from_triangles(TRI,'FRONT',self.w,self.h)
-        altered=png(front_mask,self.w,self.h,190,invert_checker=True)
+        altered=png(front_mask,self.w,self.h,190,shuffle_foreground=True)
         self.t.put('REFERENCE_IMAGE','reference_image.png',altered)
         self.t.put('SCENE_PEER_REFERENCE','scene_peer_reference.png',altered)
         self.sync()
