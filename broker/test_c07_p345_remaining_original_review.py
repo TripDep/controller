@@ -67,7 +67,8 @@ class RemainingP345Tests(unittest.TestCase):
         test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',baseline)
         test.add('P3_ATLAS_POLICY','atlas_policy.json',encoded({
             'min_material_binding_reduction':1,
-            'min_atlas_color_variance':5}))
+            'min_atlas_color_variance':5,
+            'max_atlas_sample_rgb_delta':0}))
         test.add('P3_BAKE_POLICY','bake_policy.json',
                  encoded({'normal_bake_required':True}))
         test.add('P3_BAKED_NORMAL','baked_normal.png',png(tangent_normals()))
@@ -226,6 +227,26 @@ class RemainingP345Tests(unittest.TestCase):
         result=build_packet(ctx,rid)['rule']['checks']
         self.assertTrue(result[CRITERIA[118][1]])
         self.assertFalse(result[CRITERIA[118][2]])
+
+    def test_atlas_color_fidelity_rejects_changed_original_uv_pixels(self):
+        test,ctx=self.context()
+        rid='AAA-200-L-118'
+        self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
+            CRITERIA[118][2]])
+        changed=with_embedded_texture(uv_glb(with_texture=False),
+                                      png(solid(25)))
+        changed=rewrite_glb(changed,decorated)
+        def second(doc):
+            doc['meshes'][0]['primitives'].append(
+                copy.deepcopy(doc['meshes'][0]['primitives'][0]))
+        changed=rewrite_glb(changed,second)
+        changed=two_material_bindings(changed)
+        test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',changed)
+        test.sync()
+        ctx['controller']=test.f.controller
+        checks=build_packet(ctx,rid)['rule']['checks']
+        self.assertTrue(checks[CRITERIA[118][1]])
+        self.assertFalse(checks[CRITERIA[118][2]])
 
     def test_approved_export_same_bbox_and_count_but_different_faces_fails(self):
         test,ctx=self.context()
