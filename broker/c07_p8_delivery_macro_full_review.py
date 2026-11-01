@@ -327,14 +327,37 @@ def inspect(context, rule_id):
                 independently_bad.append((sha(case_raw),deviation))
         separate_cases=bool(recurring and len(independently_bad)==len(issues)
             and len({h for h,_ in independently_bad})==len(issues))
-        was_bad=bool(separate_cases and original_policy and
+        # The registered files are necessary but do not prove the defects
+        # happened in the current operation. Independently replay the original
+        # Controller chain and require one current finding per distinct case.
+        openings=[i for i,e in enumerate(audit)
+                  if e.get('event')=='SUPERVISOR_OPERATION_OPENED'
+                  and e.get('step')==step]
+        findings=([e for e in audit[openings[0]+1:]
+                   if e.get('event')=='QUALITY_FINDING'
+                   and e.get('step')==step
+                   and e.get('attempt_id')==work['attempt_id']
+                   and e.get('operation_sha256')==work['operation_sha256']
+                   and e.get('root_cause')=='ORIGIN_DEVIATION'
+                   and e.get('status') in ('OPEN','FAIL')]
+                  if len(openings)==1 else [])
+        actual_findings=bool(
+            separate_cases and len(findings)==len(issues)
+            and {e.get('issue_id') for e in findings}==
+                {i['id'] for i in issues}
+            and all(len([e for e in findings
+                if e.get('issue_id')==issue['id']
+                and e.get('before_sha256')==issue['before_sha256']
+                and e.get('after_sha256')==issue['after_sha256']])==1
+                for issue in issues))
+        was_bad=bool(actual_findings and original_policy and
              prior_error is not None and prior_error>threshold)
         fixed=bool(was_bad and after_error is not None and
              after_error<=threshold and after_error<prior_error and
              all(after_error<error for _,error in independently_bad) and
              before is not None and sha(before)!=sha(export))
         if rule_id=='AAA-200-T-198':
-            vals=(separate_cases,was_bad,fixed)
+            vals=(actual_findings,was_bad,fixed)
         else:
             changed=bool(before_script and after_script and
                 before_script!=after_script and method.get('before_sha256')==
