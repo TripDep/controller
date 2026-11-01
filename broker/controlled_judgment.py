@@ -1529,6 +1529,46 @@ class ControlledJudgment:
                         report_sha256=line200['report_sha256'],
                         result='UNKNOWN_NEEDS_INDEPENDENT_FULL_RULE_AND_MG0',
                         advancement_authorized=False)
+                # R152: in three canonical batches 200+200+163, open the
+                # ORIGINAL registered current-attempt source-line evidence for
+                # every remaining ID outside the frozen R122 first 200.
+                # These are tamper/replay-resistant observations, not full
+                # positive semantics, MG0 or permission to release.
+                from c07_r152_remaining563_line_proofs import inspect as inspect_r152
+                remaining563 = inspect_r152(
+                    self.inventory,plans[0]['plan'],self.c,self.asset,
+                    step,reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(remaining563['source_rule_count']==563
+                       and remaining563['remaining_source_batches']==[200,200,163]
+                       and len(remaining563['batch_reports'])==3
+                       and remaining563['all_563_original_source_lines_indexed'] is True
+                       and remaining563['full_rule_semantic_passes']==0
+                       and remaining563['individual_mg0_passes']==0
+                       and remaining563['owner_approval_verified'] is False
+                       and remaining563['advancement_authorized'] is False
+                       and all(len(b['rule_status'])==b['source_rule_count']
+                           and b['result'] in ('UNKNOWN','FAIL')
+                           for b in remaining563['batch_reports']),
+                       'CONTROLLED_R152_SOURCE_LINES_CANNOT_FAKE_MG0_OR_PASS')
+                j.need(remaining563['result'] != 'FAIL',
+                       'CONTROLLED_R152_ORIGINAL_SOURCE_LINE_FAILURE_STOP')
+                if remaining563['manifest_batches_present']:
+                    self.append('SUPERVISOR_C07_R152_REMAINING563_ORIGINAL_LINES',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=remaining563['original_audit_sha256'],
+                        original_audit_tail=remaining563['original_audit_tail'],
+                        source_rule_count=563,
+                        batch_sizes=[200,200,163],
+                        registered_manifests=remaining563['manifest_batches_present'],
+                        original_proof_packets_reopened=remaining563[
+                            'original_proof_packets_reopened'],
+                        report_sha256=remaining563['report_sha256'],
+                        full_rule_semantic_passes=0,individual_mg0_passes=0,
+                        result='UNKNOWN_REQUIRES_REAL_SEMANTIC_AND_MG0',
+                        advancement_authorized=False)
                 self.append('SUPERVISOR_C07_R127_UNIFIED200_ORIGINAL_MG0',
                     step=step, attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
