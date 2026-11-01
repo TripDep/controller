@@ -98,9 +98,14 @@ def validate(plan, inventory):
         need(type(value) is dict and set(value) == {"schema", "rules"} and
              value["schema"] == CONTRACT and
              type(value["rules"]) is dict and
-             set(value["rules"]) == set(IDS),
-             "C07_PRE_D_Q200_EXACT_200_WITNESSES")
+             bool(value["rules"]) and
+             set(value["rules"]) <= set(IDS),
+             "C07_PRE_D_Q200_CANONICAL_WITNESSES_ONLY")
+        # A partially evidenced batch remains UNKNOWN for absent IDs; do
+        # not invent 200 signed witnesses or force a false prerequisite.
         for n, rid in enumerate(IDS, 1):
+            if rid not in value["rules"]:
+                continue
             row = value["rules"][rid]
             need(type(row) is dict and set(row) == {
                  "question_sha256", "source_role", "source_sha256",
