@@ -9,7 +9,7 @@ import re
 
 from approved_validators import REVIEWED, R173_VALIDATOR
 from planning_semantics import VALIDATOR as PLANNING_VALIDATOR
-from c07_native_source_rule_replayers import (NATIVE_RULES, VALIDATORS as NATIVE_VALIDATORS,
+from c07_native_source_rule_replayers import (REVIEWED_RULES as NATIVE_RULES, REVIEWED_VALIDATORS as NATIVE_VALIDATORS,
                                                native_rule_readback as native_source_readback)
 
 R173_IDS = frozenset((
