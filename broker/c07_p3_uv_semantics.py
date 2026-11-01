@@ -172,7 +172,20 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     native=geometry(raw) if raw is not None else None
     doc,binary=_glb_parts(raw) if native is not None else ({},b"")
     imgs=_texture_bytes(doc,binary) if native is not None else None
-    pixels=(imgs[0]["width"],imgs[0]["height"]) if imgs and len(imgs)==1 else None
+    # A raster is a texel-density witness only when the exported material
+    # actually references that exact embedded image, not a spare PNG.
+    prims=[p for m in doc.get("meshes",[]) for p in m.get("primitives",[])]
+    textures=doc.get("textures",[])
+    materials=doc.get("materials",[])
+    linked=(len(prims)==1 and len(textures)==1 and len(materials)>0
+            and textures[0].get("source")==0
+            and type(prims[0].get("material")) is int
+            and 0<=prims[0]["material"]<len(materials)
+            and materials[prims[0]["material"]].get(
+                "pbrMetallicRoughness",{}).get(
+                "baseColorTexture",{}).get("index")==0)
+    pixels=(imgs[0]["width"],imgs[0]["height"]) if (
+        imgs and len(imgs)==1 and linked) else None
     scale=policy.get("meters_per_unit")
     scanned=(_scan(doc,binary,scale,pixels) if native is not None
              and _positive(scale) and scale<=100 else None)
@@ -182,7 +195,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     target=policy.get("texel_px_per_m")
     tolerance=policy.get("texel_density_tolerance_pct")
     no_overlap=True
-    complete=bool(scanned)
+    # Multi-primitive overlap needs cross-primitive material/UV intent proof.
+    complete=bool(scanned) and len(scanned)==1
     overlap_count=0
     for triangles,_,_ in scanned or []:
         if len(triangles)>2000:
