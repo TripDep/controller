@@ -118,6 +118,8 @@ def _note(raw):
     try:
         d=json.loads(raw.decode('utf-8'),object_pairs_hook=unique_pairs,
                      parse_constant=reject_nonfinite)
+    except ResearchBlocked:
+        raise
     except (ValueError,UnicodeError):
         return {}
     return d if type(d) is dict and d.get('schema')==NOTE_SCHEMA else {}
