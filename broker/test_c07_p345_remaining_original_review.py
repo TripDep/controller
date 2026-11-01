@@ -130,16 +130,17 @@ class RemainingP345Tests(unittest.TestCase):
                 self.assertEqual(set(packet['rule']['checks']),
                                  set(NATIVE_RULES[rid][1]))
                 self.assertEqual(packet['rule']['result'],
-                    'PASS' if rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143')
+                    'PASS' if rid in ('AAA-200-L-118','AAA-200-L-119','AAA-200-L-120','AAA-200-O-143')
                     else 'UNKNOWN')
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
                 self.assertEqual(rid in FULL_LITERAL_REVIEWED,
-                    rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143'))
+                    rid in ('AAA-200-L-118','AAA-200-L-119','AAA-200-L-120',
+                            'AAA-200-O-143','AAA-200-O-147'))
                 self.assertFalse(packet['mg0']['checks'].get(
                     'canonical_triggers_checked',True))
                 self.assertFalse(packet['rule']['checks'][
                     CRITERIA[int(rid[-3:])][-1]] if int(rid[-3:]) not in
-                    (118,119,120,143) else False)
+                    (118,119,120,143,147) else False)
 
     def test_each_rule_loses_its_source_observation_when_original_pin_removed(self):
         for n,role in PIN.items():
@@ -166,7 +167,7 @@ class RemainingP345Tests(unittest.TestCase):
                 self.assertTrue(checks[CRITERIA[n][0]])
                 self.assertTrue(checks[CRITERIA[n][1]])
                 self.assertEqual(packet['rule']['result'],
-                    'PASS' if n in (118,143) else 'UNKNOWN')
+                    'PASS' if n in (118,119,143) else 'UNKNOWN')
         rid=next(x for x in RULES if x.endswith('-120'))
         self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
             CRITERIA[120][1]])
@@ -376,9 +377,12 @@ class RemainingP345Tests(unittest.TestCase):
                       'criteria':list(NATIVE_RULES[rid][1]),
                       'requirement_sha256':expected['requirement_sha256'],
                       'source_ref':'1'*40}
-                if rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143'):
-                    self.assertEqual(replay(None,packet,expected,spec,
-                        source_context=lambda _:ctx)['documentary_result'],'PASS')
+                if rid in ('AAA-200-L-118','AAA-200-L-119',
+                           'AAA-200-L-120','AAA-200-O-143','AAA-200-O-147'):
+                    result=replay(None,packet,expected,spec,
+                        source_context=lambda _:ctx)
+                    self.assertEqual(result['documentary_result'],
+                        'UNKNOWN' if rid=='AAA-200-O-147' else 'PASS')
                 else:
                     with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
                         replay(None,packet,expected,spec,
