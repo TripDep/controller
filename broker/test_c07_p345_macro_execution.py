@@ -32,6 +32,19 @@ class MacroFortyOriginalTests(unittest.TestCase):
                                     'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
             require_source_execution(result)
 
+    def test_all_40_unknown_unpinned_cannot_receive_execution_certificate(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        for rid,row in result['rows'].items():
+            row['machine_result']='UNKNOWN'
+            row['blocked_reason']=None
+            row['source_checks']={c:False for c in NATIVE_RULES[rid][1]}
+        result['result_counts']={'PASS':0,'FAIL':0,'UNKNOWN':40,
+                                 'BLOCKED':0,'NOT_DUE':0}
+        with self.assertRaisesRegex(
+                MacroExecutionBlocked,'C07_P345_CERTIFICATE_PRE_D_PIN_NOT_VERIFIED'):
+            require_source_execution(result)
+
     def test_file_io_error_is_blocked_not_silent_pass(self):
         _,ctx=self.context('P5')
         with patch('c07_p345_macro_execution.build_packet',
@@ -50,7 +63,8 @@ class MacroFortyOriginalTests(unittest.TestCase):
         for rid,row in result['rows'].items():
             row['machine_result']='UNKNOWN'
             row['blocked_reason']=None
-            row['source_checks']={c:False for c in NATIVE_RULES[rid][1]}
+            row['source_checks']={c:(i==0) for i,c in
+                                  enumerate(NATIVE_RULES[rid][1])}
         result['result_counts']={'PASS':0,'FAIL':0,'UNKNOWN':40,
                                  'BLOCKED':0,'NOT_DUE':0}
         certificate=require_source_execution(result)
