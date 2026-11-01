@@ -1367,6 +1367,9 @@ class ControlledJudgment:
                     source_current_attempt_failures=q200_actual['source_current_attempt_failures'],
                     verified_semantic_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                j.need(not any(v['semantic_verdict']=='FAIL'
+                               for v in q200_actual['rules'].values()),
+                       'CONTROLLED_R148_ORIGINAL_QUESTION_FAILURE_STOP')
                 # R149: the remaining 100 original Q-201..300. Dynamic
                 # Q280..285 and late G2/G3/G4/owner Q299/300 MUST NOT become
                 # PASS from source bytes or the assistant's declaration.
@@ -1400,6 +1403,9 @@ class ControlledJudgment:
                     original_witnesses_observed=q100_final['source_witnesses_observed'],
                     semantic_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                j.need(not any(v['semantic_verdict']=='FAIL'
+                               for v in q100_final['rules'].values()),
+                       'CONTROLLED_R149_ORIGINAL_QUESTION_FAILURE_STOP')
                 # R150: original auxiliary-source readback for the final 67
                 # canonical rule IDs. Applicability without verified scope
                 # stays UNKNOWN; no evidence receipt can mint semantic/MG0 PASS.
@@ -1434,6 +1440,9 @@ class ControlledJudgment:
                     exact_source_rule_evidence=last67_actual['rules'],
                     full_semantic_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                j.need(not any(v['semantic_verdict']=='FAIL'
+                               for v in last67_actual['rules'].values()),
+                       'CONTROLLED_R150_ORIGINAL_FAMILY_FAILURE_STOP')
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
