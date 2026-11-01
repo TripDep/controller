@@ -96,9 +96,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                 and min_neutral<=neutral["mean"]<=max_neutral
                 and neutral["variance"]>1)
     mode_names=policy.get("modes")
-    modes_ok=(type(mode_names) is list and
-              set(mode_names)=={"NEUTRAL","CINEMATIC"}
-              and len(mode_names)==2)
+    modes_ok=(type(mode_names) is list and len(mode_names)==2
+              and all(type(x) is str for x in mode_names)
+              and set(mode_names)=={"NEUTRAL","CINEMATIC"})
     geometry_ok=(metrics is not None and all(
         m["degenerate_triangles"]==0 and m["duplicate_geometric_faces"]==0
         for m in metrics))
