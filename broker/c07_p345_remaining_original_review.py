@@ -21,6 +21,7 @@ from c07_p4_texture_semantics import rgba, _embedded
 from c07_p6_collision_semantics import _triangles
 from c07_p3_geometry_semantics import _read_accessor
 from visual_content_metrics import decode_grid, VisualContentBlocked
+from c07_p345_light_pixel_replay import pixel_light_response
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -481,13 +482,19 @@ def inspect(source_context,rule_id):
         neutral=view('LIGHT_NEUTRAL_VIEW')
         checks=(bool(original('P4_LIGHTING_QA','.json') and direct),
                 bool(pbr and rgb_different(direct,neutral) and
-                     direct['mean']>neutral['mean']),False)
+                     direct['mean']>neutral['mean'] and
+                     pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
+                                          original('LIGHT_DIRECT_VIEW','.png'),
+                                          direction=1,minimum_delta=5)),False)
     elif n==135:
         shadow=view('LIGHT_SHADOW_VIEW')
         neutral=view('LIGHT_NEUTRAL_VIEW')
         checks=(bool(original('P4_LIGHTING_QA','.json') and shadow),
                 bool(pbr and rgb_different(shadow,neutral) and
-                     shadow['mean']<neutral['mean']),False)
+                     shadow['mean']<neutral['mean'] and
+                     pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
+                                          original('LIGHT_SHADOW_VIEW','.png'),
+                                          direction=-1,minimum_delta=5)),False)
     elif n==136:
         reflection=view('REFLECTION_VIEW')
         material_plan=policy('P4_MATERIAL_PLAN')
@@ -498,7 +505,10 @@ def inspect(source_context,rule_id):
         checks=(bool(original('P4_MATERIAL_PLAN','.json') and
                      material_plan.get('fivem_shader_profile') and reflection),
                 bool(metal and reflection and
-                     rgb_different(reflection,view('LIGHT_NEUTRAL_VIEW'))),False)
+                     rgb_different(reflection,view('LIGHT_NEUTRAL_VIEW')) and
+                     pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
+                                          original('REFLECTION_VIEW','.png'),
+                                          direction=0,minimum_delta=5)),False)
     elif n==139:
         underside=view('VISUAL_VIEW_UNDERSIDE')
         qa=policy('P345_QA_REPORT')
@@ -516,6 +526,9 @@ def inspect(source_context,rule_id):
                      original('P4_LIGHTING_QA','.json')),
                 bool(presentation and technical and
                      rgb_different(presentation,technical) and
+                     pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
+                                          original('LIGHT_CINEMATIC_VIEW','.png'),
+                                          direction=0,minimum_delta=5) and
                      type(qa.get('unresolved_findings')) is list and
                      light.get('presentation_mode')=='STUDIO_ONLY'),False)
     elif n==143:
