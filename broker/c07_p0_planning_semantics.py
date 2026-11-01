@@ -29,6 +29,7 @@ ROLE_BY_NUMBER = {
     20: "P0_ACCEPTANCE",
 }
 SCHEMA = "gg-c07-p0-nine-original-planning-oracles-v1"
+MEASUREMENT_ROLE = "P0_MEASUREMENTS"
 HEX = re.compile(r"[a-f0-9]{64}\Z")
 
 class OriginalPlanningBlocked(ValueError):
@@ -118,7 +119,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     original = _registered_artifacts(records, state, step, source_loader, work)
     docs = {}
     for role, path, digest, raw in original:
-        if role in ROLE_BY_NUMBER.values():
+        if role in set(ROLE_BY_NUMBER.values()) | {MEASUREMENT_ROLE}:
             need(role not in docs and Path(path).suffix.lower() == ".json",
                  "C07_P0_DUPLICATE_OR_NONJSON_ROLE:" + role)
             docs[role] = original_json(raw)
@@ -158,6 +159,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     delivery = doc(17)
     risks = doc(18)
     estimate = doc(19)
+    measurements = docs.get(MEASUREMENT_ROLE, {}).get("measurements", {})
     acceptance = doc(20)
     candidates = reuse.get("candidates")
     approved = locks.get("approved")
@@ -253,16 +255,32 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         },
         19: {
             "time_estimate_uses_measured_task_hours":
-                items(tasks) and all(
+                items(tasks) and type(measurements) is dict and
+                MEASUREMENT_ROLE in docs and all(
                     type(x) is dict and text(x.get("task")) and
+                    text(x.get("measurement_key")) and
+                    finite(measurements.get(x.get("measurement_key"))) and
+                    measurements[x["measurement_key"]] > 0 and
+                    finite(x.get("hours_per_unit")) and
+                    x["hours_per_unit"] > 0 and
                     finite(x.get("estimated_hours")) and
                     0 < x["estimated_hours"] <= 10000 and
+                    abs(x["estimated_hours"] -
+                        measurements[x["measurement_key"]] *
+                        x["hours_per_unit"]) < 1e-6 and
                     text(x.get("evidence_basis"))
                     for x in tasks or []),
             "estimate_total_independently_recomputed":
-                items(tasks) and finite(estimate.get("total_hours")) and
-                abs(sum(x.get("estimated_hours", 0)
-                        for x in tasks or [] if type(x) is dict)
+                items(tasks) and type(measurements) is dict and
+                MEASUREMENT_ROLE in docs and
+                all(type(x) is dict and
+                    x.get("measurement_key") in measurements and
+                    finite(x.get("hours_per_unit")) and
+                    finite(measurements[x["measurement_key"]])
+                    for x in tasks or []) and
+                finite(estimate.get("total_hours")) and
+                abs(sum(measurements[x["measurement_key"]] *
+                        x["hours_per_unit"] for x in tasks or [])
                     - estimate["total_hours"]) < 1e-6,
         },
         20: {
