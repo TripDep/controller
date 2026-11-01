@@ -80,9 +80,11 @@ class P5FullNativeReviewTests(unittest.TestCase):
         bad = copy.deepcopy(policy)
         bad['importance_lod_profiles']['hero']['min_far_m'] = 110
         fixture.put(budget=bad)
+        ctx['controller'] = fixture.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-144')['rule']['result'],
                          'FAIL')
         fixture.put(budget=policy, lod=fixture.native)
+        ctx['controller'] = fixture.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-144')['rule']['result'],
                          'FAIL')
 
@@ -91,6 +93,7 @@ class P5FullNativeReviewTests(unittest.TestCase):
         fixture.f.plan['p345_evidence_contract']['original_artifact_sha256'].pop(
             'LOD_EXPORT')
         fixture.f.rebuild()
+        ctx['controller'] = fixture.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-144')['rule']['result'],
                          'UNKNOWN')
 
@@ -103,6 +106,7 @@ class P5FullNativeReviewTests(unittest.TestCase):
         fixture.f.plan['p345_evidence_contract']['original_artifact_sha256'][
             'BASELINE_SNAPSHOT'] = fixture.f.items['BASELINE_SNAPSHOT']['sha256']
         fixture.f.rebuild()
+        ctx['controller'] = fixture.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-146')['rule']['result'],
                          'FAIL')
 
