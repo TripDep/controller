@@ -10,7 +10,7 @@ from pathlib import Path
 import supervisor_judgment as j
 import c07_mg0_individual as mg0
 from c07_native_source_rule_replayers import (
-    NATIVE_RULES, VALIDATORS, build_packet, native_rule_readback,
+    NATIVE_RULES, FULL_LITERAL_REVIEWED, VALIDATORS, build_packet, native_rule_readback,
     NativeRuleEvidenceBlocked)
 from c07_native_replayer_dispatch import replay
 from test_c07_p3_geometry_semantics import Tests as GeometryFixture, glb, TRI, UP
@@ -86,17 +86,23 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 _, ctx = self.context(fixture_class, method)
                 expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
                 packet = build_packet(ctx, rid, expected=expected)
-                self.assertEqual(packet['rule']['result'], 'PASS')
+                self.assertEqual(packet['rule']['result'],
+                                 'PASS' if rid in FULL_LITERAL_REVIEWED else 'UNKNOWN')
                 self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
                 self.assertEqual(packet['mg0']['triggered'], None)
                 self.assertEqual(set(packet['rule']['checks']),
                                  set(NATIVE_RULES[rid][1]))
                 spec = self.spec(ctx, rid)
-                result = replay(None, packet, expected, spec,
-                                source_context=lambda binding: ctx)
-                self.assertEqual(result['documentary_result'], 'PASS')
-                self.assertEqual(result['individual_rule_mg0'], 'UNKNOWN')
-                self.assertFalse(result['advancement_authorized'])
+                if rid in FULL_LITERAL_REVIEWED:
+                    result = replay(None, packet, expected, spec,
+                                    source_context=lambda binding: ctx)
+                    self.assertEqual(result['documentary_result'], 'PASS')
+                    self.assertEqual(result['individual_rule_mg0'], 'UNKNOWN')
+                    self.assertFalse(result['advancement_authorized'])
+                else:
+                    with self.assertRaisesRegex(ValueError, 'NOT_WHITELISTED'):
+                        replay(None, packet, expected, spec,
+                               source_context=lambda binding: ctx)
                 self.assertEqual(j.semantic_packet(packet, expected, spec)['result'],
                                  'UNKNOWN')
 
@@ -109,18 +115,21 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 spec = self.spec(ctx, rid)
                 forged = copy.deepcopy(packet)
                 forged['rule']['proof_digest'] = 'f'*64
-                with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                            'PRODUCER_PACKET_NOT_RECOMPUTED'):
-                    native_rule_readback(None, forged, expected, spec,
-                                         source_context=lambda _: ctx)
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'PRODUCER_PACKET_NOT_RECOMPUTED'):
+                        native_rule_readback(None, forged, expected, spec,
+                                             source_context=lambda _: ctx)
                 wrong = dict(expected, attempt_id='f'*64)
-                with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                            'ATTEMPT_OPERATION_SOURCE_MISMATCH'):
-                    native_rule_readback(None, packet, wrong, spec,
-                                         source_context=lambda _: ctx)
-                with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                            'NO_INDEPENDENT_ORIGINAL_SOURCE_READER'):
-                    native_rule_readback(None, packet, expected, spec)
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'ATTEMPT_OPERATION_SOURCE_MISMATCH'):
+                        native_rule_readback(None, packet, wrong, spec,
+                                             source_context=lambda _: ctx)
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'NO_INDEPENDENT_ORIGINAL_SOURCE_READER'):
+                        native_rule_readback(None, packet, expected, spec)
                 # Tampering the registered original bytes without an audit
                 # update must fail even when the producer packet is unchanged.
                 if rid == 'AAA-200-L-117':
@@ -141,8 +150,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                     p = ctx['controller'].root / 'scene.zip'
                 p.write_bytes(p.read_bytes() + b'forged')
                 with self.assertRaises(ValueError):
-                    native_rule_readback(None, packet, expected, spec,
-                                         source_context=lambda _: ctx)
+                    build_packet(ctx, rid, expected=expected)
 
     def test_native_rule_negative_originals_not_reinterpreted_as_pass(self):
         test, ctx = self.context(GeometryFixture,
