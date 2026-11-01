@@ -129,16 +129,19 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test, ctx = self.context(GeometryFixture,
             'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
         test.put(glb(TRI, [(0,1,2), (2,1,0)], UP))
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-L-112')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(BudgetFixture,
             'test_five_original_quantitative_oracles_no_mg0')
         test.put(budget=dict(BUDGET, max_triangles=1))
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-142')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(DeliveryFixture,
             'test_four_original_delivery_oracles_no_false_fivem_pass')
         test.put(archive=package(plan(), wrong_version=True))
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-T-194')['rule']['result'], 'FAIL')
 
 if __name__ == '__main__':
