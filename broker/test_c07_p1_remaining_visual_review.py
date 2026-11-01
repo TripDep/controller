@@ -95,7 +95,7 @@ class P1ResidualFamilyTests(unittest.TestCase):
                 self.assertFalse(r['advancement_authorized'])
                 # E046 has its separate full original-geometry consumer;
                 # these 13 residual metrics remain diagnostics, not MG0.
-                if rid in ('AAA-200-E-046', 'AAA-200-F-057'):
+                if rid in ('AAA-200-E-046', 'AAA-200-F-056', 'AAA-200-F-057'):
                     self.assertIn(rid,FULL_LITERAL_REVIEWED)
                     self.assertIn(rid,REPLAYERS)
                 else:
