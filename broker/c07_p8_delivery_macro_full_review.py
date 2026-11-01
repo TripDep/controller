@@ -327,7 +327,7 @@ def inspect(context, rule_id):
     if rule_id=='AAA-200-T-191':
         vals=(bool(source and export and plan_raw),
               package_ok,
-              bool(readable and identities))
+              bool(readable and identities and blender_blocks(source)))
     elif rule_id=='AAA-200-T-193':
         vals=(package_ok, bool(package_ok and readable),
               bool(package_ok and blender_blocks(source)))
