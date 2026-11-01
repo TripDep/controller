@@ -186,7 +186,8 @@ def assess(contract, work, packets, registered, source_loader):
         need(path not in allowed, 'R151_DUPLICATE_ORIGINAL_ARTIFACT_PATH')
         allowed[path] = item
     expected = {}
-    for rid in contract['selected']:
+    # All 72 composites remain actionable even when not in frozen 200.
+    for rid in contract['rows']:
         for line in contract['rows'][rid]['lines']:
             expected[(rid, line['line_id'])] = line
     received = {}
@@ -237,18 +238,21 @@ def assess(contract, work, packets, registered, source_loader):
             no.append(lid)
     missing = sorted(set(expected) - set(received))
     rule_status = {}
-    for rid in contract['selected']:
+    for rid in contract['rows']:
         failed = any(k[0] == rid and v['verdict'] == 'FAIL'
                      for k, v in received.items())
         rule_status[rid] = 'FAIL' if failed else 'UNKNOWN'
-    need(len(rule_status) == 200 and all(v in ('FAIL', 'UNKNOWN')
+    need(len(rule_status) == len(contract['rows']) and
+         set(contract['selected']) <= set(rule_status) and
+         all(v in ('FAIL', 'UNKNOWN')
                                          for v in rule_status.values()),
          'R151_FALSE_FULL_RULE_SEMANTIC_PASS')
     return {
         'schema': SCHEMA,
-        'source_rule_count': 200,
+        'source_rule_count': contract['source_rule_count'],
         'source_rule_ids_sha256': contract['source_rule_ids_sha256'],
-        'all_composite_source_rules': 72,
+        'all_composite_source_rules': sum(
+            1 for row in contract['rows'].values() if row.get('composite_flag')),
         'source_lines_covered': contract['source_lines_covered'],
         'original_proof_packets_reopened': len(received),
         'machine_format_probes_positive_not_semantic': format_positive,
