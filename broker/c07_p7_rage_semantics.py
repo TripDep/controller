@@ -12,6 +12,7 @@ import xml.etree.ElementTree as ET
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p5_budget_semantics import _json, _glb_parts
+from c07_p3_geometry_semantics import _read_accessor
 from c07_a10_c10_original_evidence import original_image
 from c07_p678_forty_native_domain import TEXT, PHASES
 
@@ -169,7 +170,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     game = _json(game_raw) if game_raw is not None else {}
     editable = original("SOURCE_EDITABLE", ".blend")
     native_raw = original("NATIVE_EXPORT", ".glb")
-    glb = _glb_parts(native_raw)[0] if native_raw is not None else {}
+    glb, glb_binary = _glb_parts(native_raw) if native_raw is not None else ({}, b"")
     pngs = [original("P7_VIEW_" + name, ".png")
             for name in ("FRONT", "SIDE", "TOP")]
     views = [original_image(raw) if raw is not None else None for raw in pngs]
@@ -183,10 +184,6 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         and re.search(r"(?m)^\s*this_is_a_map\s*['\"]yes['\"]", manifest_text))
     manifest_ytyp = bool(re.search(r"['\"][^'\"]+\.ytyp['\"]", manifest_text))
     drawable_name = value(drawable, "Name").casefold() if drawable is not None else ""
-    shader_items = [value(x, "Name").casefold()
-                    for x in nodes(drawable, "Item")
-                    if x in nodes(drawable, "Item") and
-                    any(local(y.tag) == "shaders" for y in drawable.iter())]
     # Explicit shader nodes under ShaderGroup/Shaders, never generic mesh names.
     shaders = []
     for group in nodes(drawable, "Shaders"):
@@ -216,11 +213,43 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                               trace.get("source_sha256") == sha(editable)
                               and trace.get("export_sha256") == sha(native_raw)
                               and trace.get("asset") == asset)
+    def uv_valid(attributes):
+        if type(attributes) is not dict or not (
+                {"POSITION", "NORMAL", "TEXCOORD_0"} <= set(attributes)):
+            return False
+        try:
+            positions = _read_accessor(glb, glb_binary, attributes["POSITION"])
+            normals = _read_accessor(glb, glb_binary, attributes["NORMAL"])
+            idx = attributes["TEXCOORD_0"]
+            accessors, views = glb["accessors"], glb["bufferViews"]
+            if (type(idx) is not int or not 0 <= idx < len(accessors)
+                    or len(positions) != len(normals)):
+                return False
+            accessor = accessors[idx]
+            if (accessor.get("type") != "VEC2"
+                    or accessor.get("componentType") != 5126
+                    or accessor.get("count") != len(positions)
+                    or "sparse" in accessor):
+                return False
+            view_idx = accessor.get("bufferView")
+            if type(view_idx) is not int or not 0 <= view_idx < len(views):
+                return False
+            view = views[view_idx]
+            off = view.get("byteOffset", 0)
+            local_off = accessor.get("byteOffset", 0)
+            stride = view.get("byteStride", 8)
+            size = view.get("byteLength")
+            return (view.get("buffer") == 0
+                    and all(type(x) is int and x >= 0
+                            for x in (off, local_off, stride, size))
+                    and stride >= 8
+                    and off + size <= len(glb_binary)
+                    and local_off + (len(positions)-1)*stride + 8 <= size)
+        except (ValueError, KeyError, IndexError, TypeError):
+            return False
     glb_attrs = [p.get("attributes", {}) for mesh in glb.get("meshes", [])
                  for p in mesh.get("primitives", [])] if type(glb) is dict else []
-    attrs_valid = bool(glb_attrs and all(type(a) is dict and
-                        {"POSITION", "NORMAL", "TEXCOORD_0"} <= set(a)
-                        for a in glb_attrs))
+    attrs_valid = bool(glb_attrs and all(uv_valid(a) for a in glb_attrs))
     allowed = policy.get("allowed_shader_names")
     shader_policy = (type(allowed) is list and bool(allowed)
                      and len(allowed) <= 128
