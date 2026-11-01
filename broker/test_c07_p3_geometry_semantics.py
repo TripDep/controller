@@ -166,5 +166,51 @@ class Tests(unittest.TestCase):
                                     "LITERAL_SOURCE_CHANGED"):
             self.examine()
 
+    def test_original_glb_rejects_ambiguous_json_across_nested_objects(self):
+        """Real GLB bytes, not a QA flag: duplicate keys and NaN fail closed."""
+        raw = glb(TRI, [(0,1,2)], UP)
+        jsz = struct.unpack_from("<I", raw, 12)[0]
+        original = raw[20:20+jsz].rstrip(b" ")
+        binary = raw[28+jsz:]
+        def rebuild(document):
+            padded = document + b" " * (-len(document) % 4)
+            return (struct.pack("<4sII", b"glTF", 2,
+                                28 + len(padded) + len(binary)) +
+                    struct.pack("<I4s", len(padded), b"JSON") + padded +
+                    struct.pack("<I4s", len(binary), b"BIN\\x00") + binary)
+        cases = (
+            (original[:-1] + b',"meshes":[]}', "DUPLICATE_JSON_KEY"),
+            (original.replace(b'"count":3', b'"count":3,"count":4', 1),
+             "DUPLICATE_JSON_KEY"),
+            (original.replace(b'"version":"2.0"',
+                              b'"version":"2.0","unknown":NaN'),
+             "NONFINITE_JSON"),
+            (original.replace(b'"version":"2.0"',
+                              b'"version":"2.0","unknown":Infinity'),
+             "NONFINITE_JSON"),
+            (original.replace(b'"version":"2.0"', b'"version":"\\xff"'),
+             "MALFORMED_JSON"),
+        )
+        for document, error in cases:
+            with self.subTest(error=error, document=document[:90]):
+                with self.assertRaisesRegex(OriginalTopologyBlocked, error):
+                    geometry(rebuild(document))
+        self.assertEqual(geometry(raw)[0]["triangles"], 1)
+
+    def test_original_glb_binary_buffer_cannot_claim_extra_padding(self):
+        raw = glb(TRI, [(0,1,2)], UP)
+        jsz = struct.unpack_from("<I", raw, 12)[0]
+        doc = json.loads(raw[20:20+jsz])
+        doc["buffers"][0]["byteLength"] -= 4
+        binary = raw[28+jsz:]
+        document = json.dumps(doc, separators=(",", ":")).encode()
+        document += b" " * (-len(document) % 4)
+        changed = (struct.pack("<4sII", b"glTF", 2,
+                               28 + len(document) + len(binary)) +
+                   struct.pack("<I4s", len(document), b"JSON") + document +
+                   struct.pack("<I4s", len(binary), b"BIN\\x00") + binary)
+        with self.assertRaisesRegex(OriginalTopologyBlocked, "GLB_TABLES"):
+            geometry(changed)
+
 if __name__ == "__main__":
     unittest.main()
