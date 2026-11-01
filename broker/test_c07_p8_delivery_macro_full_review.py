@@ -87,6 +87,20 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
             'max_origin_error_m':0.05}
         self.f.work.update(work_item_sha256='e'*64,
                            attempt_number=1,previous_attempt_id=None)
+        # Use the actual canonical MG0 section required by native readback.
+        # This fixture never grants independent process correction or PASS.
+        from c07_mg0_individual import TRIGGERS
+        master=('## MG0 — PROCESS FALSIFICATION\\n' +
+            ''.join('- '+trigger+'\\n' for trigger in TRIGGERS) +
+            'The response is not limited to fixing the asset.\\n'
+            'invalidate affected states and reapply the corrected process\\n'
+        ).replace('\\n','\n').encode()
+        self.f.master=master
+        self.f.controller.master.write_bytes(master)
+        new_sha=sha(master)
+        self.f.work['master_sha256']=new_sha
+        self.f.plan['master_sha256']=new_sha
+        self.f.inv['canonical_master_sha256']=new_sha
         self.refresh()
 
     def refresh(self):
