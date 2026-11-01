@@ -99,15 +99,30 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     # Compare original collision and original terrain Z at coincident XY
     # triangle centroids. This is a source geometry proxy, NOT a game test.
     max_gap=policy.get("terrain_contact_max_gap_m")
-    contact_ok=(coll_tris is not None and terrain_tris is not None
-        and finite(max_gap) and 0<=max_gap<=0.5
-        and any(abs(sum(p[2] for p in c)/3-
-                    sum(p[2] for p in t)/3)<=max_gap
-                and abs(sum(p[0] for p in c)/3-
-                        sum(p[0] for p in t)/3)<=0.05
-                and abs(sum(p[1] for p in c)/3-
-                        sum(p[1] for p in t)/3)<=0.05
-                for c in coll_tris for t in terrain_tris))
+    # Hash measured terrain centroids into 5 cm XY cells. This preserves
+    # exact 5 cm XY tolerance with adjacent-cell probes and avoids O(N*M)
+    # scans of large collision/terrain exports.
+    contact_ok=False
+    if (coll_tris is not None and terrain_tris is not None
+            and finite(max_gap) and 0<=max_gap<=0.5):
+        def center(tri):
+            return tuple(sum(p[i] for p in tri)/3 for i in range(3))
+        def cell(v):
+            return (math.floor(v[0]/0.05),math.floor(v[1]/0.05))
+        terrain_grid={}
+        for tri in terrain_tris:
+            p=center(tri)
+            terrain_grid.setdefault(cell(p),[]).append(p)
+        for tri in coll_tris:
+            p=center(tri)
+            x,y=cell(p)
+            if any(abs(p[0]-q[0])<=0.05 and
+                   abs(p[1]-q[1])<=0.05 and
+                   abs(p[2]-q[2])<=max_gap
+                   for dx in (-1,0,1) for dy in (-1,0,1)
+                   for q in terrain_grid.get((x+dx,y+dy),())):
+                contact_ok=True
+                break
     vehicle_clear=(vehicle_ok and coll_tris is not None
         and all(not any(_aabb_intersects(t,_box(z)) for t in coll_tris)
                 for z in vehicle))
