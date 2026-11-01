@@ -127,6 +127,8 @@ class Tests(unittest.TestCase):
                     'requirement_sha256'):
             expected, spec, packet = fixture()
             expected[key] = 'not-a-digest'
+            if key == 'requirement_sha256':
+                spec['requirement_sha256'] = expected[key]
             with self.subTest(key=key):
                 with self.assertRaisesRegex(d.SourceReplayBlocked,
                                             'ATTEMPT_OPERATION_SOURCE_SHA'):
