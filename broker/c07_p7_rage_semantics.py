@@ -8,6 +8,7 @@ approval. In-game rule 170 deliberately cannot pass on self-reported logs.
 import hashlib
 import math
 import re
+import struct
 from pathlib import PurePosixPath
 import xml.etree.ElementTree as ET
 
@@ -246,12 +247,20 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             local_off = accessor.get("byteOffset", 0)
             stride = view.get("byteStride", 8)
             size = view.get("byteLength")
-            return (view.get("buffer") == 0
-                    and all(type(x) is int and x >= 0
-                            for x in (off, local_off, stride, size))
-                    and stride >= 8
-                    and off + size <= len(glb_binary)
-                    and local_off + (len(positions)-1)*stride + 8 <= size)
+            bounds_ok = (view.get("buffer") == 0
+                         and all(type(x) is int and x >= 0
+                                 for x in (off, local_off, stride, size))
+                         and stride >= 8
+                         and off + size <= len(glb_binary)
+                         and local_off + (len(positions)-1)*stride + 8 <= size)
+            if not bounds_ok:
+                return False
+            for i in range(len(positions)):
+                u,v = struct.unpack_from("<ff", glb_binary,
+                                         off+local_off+i*stride)
+                if not (math.isfinite(u) and math.isfinite(v)):
+                    return False
+            return True
         except (ValueError, KeyError, IndexError, TypeError):
             return False
     glb_attrs = [p.get("attributes", {}) for mesh in glb.get("meshes", [])
