@@ -142,7 +142,7 @@ class P1ResidualFamilyTests(unittest.TestCase):
 
     def test_original_binary_tamper_cannot_be_repaired_by_policy_labels(self):
         self.assertTrue(all(self.read(IDS[0])['checks'].values()))
-        Path(self.t.t.f.items['NATIVE_EXPORT']['path']).write_bytes(b'forged')
+        Path(self.t.f.items['NATIVE_EXPORT']['path']).write_bytes(b'forged')
         with self.assertRaises(ValueError):
             self.read(IDS[0])
 
