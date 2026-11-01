@@ -130,16 +130,16 @@ class RemainingP345Tests(unittest.TestCase):
                 self.assertEqual(set(packet['rule']['checks']),
                                  set(NATIVE_RULES[rid][1]))
                 self.assertEqual(packet['rule']['result'],
-                    'PASS' if rid in ('AAA-200-L-118','AAA-200-O-143')
+                    'PASS' if rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143')
                     else 'UNKNOWN')
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
                 self.assertEqual(rid in FULL_LITERAL_REVIEWED,
-                    rid in ('AAA-200-L-118','AAA-200-O-143'))
+                    rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143'))
                 self.assertFalse(packet['mg0']['checks'].get(
                     'canonical_triggers_checked',True))
                 self.assertFalse(packet['rule']['checks'][
                     CRITERIA[int(rid[-3:])][-1]] if int(rid[-3:]) not in
-                    (118,119,143) else False)
+                    (118,119,120,143) else False)
 
     def test_each_rule_loses_its_source_observation_when_original_pin_removed(self):
         for n,role in PIN.items():
@@ -295,7 +295,7 @@ class RemainingP345Tests(unittest.TestCase):
                 after=build_packet(ctx,rid)['rule']['checks']
                 self.assertFalse(after[CRITERIA[n][2 if n==118 else 1]])
                 self.assertEqual(build_packet(ctx,rid)['rule']['result'],
-                                 'FAIL' if n==118 else 'UNKNOWN')
+                                 'FAIL' if n in (118,120) else 'UNKNOWN')
 
     def test_approved_export_same_bbox_and_count_but_different_faces_fails(self):
         test,ctx=self.context()
@@ -376,7 +376,7 @@ class RemainingP345Tests(unittest.TestCase):
                       'criteria':list(NATIVE_RULES[rid][1]),
                       'requirement_sha256':expected['requirement_sha256'],
                       'source_ref':'1'*40}
-                if rid in ('AAA-200-L-118','AAA-200-O-143'):
+                if rid in ('AAA-200-L-118','AAA-200-L-120','AAA-200-O-143'):
                     self.assertEqual(replay(None,packet,expected,spec,
                         source_context=lambda _:ctx)['documentary_result'],'PASS')
                 else:
