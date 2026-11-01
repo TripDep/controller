@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-S-183': ('p8_intersection_full', (
+        'pre_d_complete_component_roles_placement_and_intersection_policy_sha_pinned',
+        'every_current_original_component_world_triangle_independently_recomputed',
+        'all_original_component_pairs_decisively_nonintersecting_or_exact_duplicate_detected')),
     'AAA-200-S-181': ('camera_views_full', (
         'pre_d_six_original_view_roles_current_render_events_and_view_qa_sha_pinned',
         'six_original_view_pixel_arrays_and_native_geometry_independently_distinct',
@@ -214,6 +218,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-S-183',
     'AAA-200-M-123',
     'AAA-200-E-048', 'AAA-200-F-055',
     'AAA-200-E-049', 'AAA-200-E-050', 'AAA-200-F-053',
@@ -309,6 +314,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_lighting_player_full_review import inspect as inspect_p4_lighting
     elif domain == 'p4_pbr_maps_full':
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
+    elif domain == 'p8_intersection_full':
+        from c07_p8_intersection_full_review import inspect as inspect_intersections
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -335,6 +342,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                           if domain == 'p4_lighting_player_full' else None)
     p4_pbr_review = (inspect_pbr_maps(source_context, rule_id)
                      if domain == 'p4_pbr_maps_full' else None)
+    p8_intersection_review = (inspect_intersections(source_context, rule_id)
+                              if domain == 'p8_intersection_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
@@ -343,7 +352,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                         (p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
-                         p4_pbr_review, p6_invisible_review,
+                         p4_pbr_review, p8_intersection_review,
+                         p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
@@ -445,6 +455,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_lighting_review'] = p4_lighting_review
     if p4_pbr_review is not None:
         proof['original_p4_pbr_review'] = p4_pbr_review
+    if p8_intersection_review is not None:
+        proof['original_p8_intersection_review'] = p8_intersection_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
