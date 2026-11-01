@@ -28,6 +28,7 @@ CASES = (
     (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
     (FinalFixture, 'AAA-200-S-189', 'test_ten_distinct_original_scoped_observations_not_full_review'),
     (ClosureFixture, 'AAA-200-T-196', 'test_five_scoped_observations_and_final_rule_unknown'),
+    (ClosureFixture, 'AAA-200-T-197', 'test_five_scoped_observations_and_final_rule_unknown'),
     (P1Thirty, 'AAA-200-E-042', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (P1Thirty, 'AAA-200-E-047', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (P1Thirty, 'AAA-200-F-052', 'test_exact_30_individual_P1_and_90_unique_predicates'),
@@ -79,8 +80,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
     def test_thirteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 13)
-        self.assertEqual(len(set(x[1] for x in CASES)), 13)
+        self.assertEqual(len(CASES), 14)
+        self.assertEqual(len(set(x[1] for x in CASES)), 14)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -170,6 +171,13 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.put(archive=package(plan(), wrong_version=True))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-T-194')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(ClosureFixture,
+            'test_five_scoped_observations_and_final_rule_unknown')
+        test.docs['P8_MAINTENANCE_GUIDE']['owner_approved'] = True
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-197')['rule']['result'], 'FAIL')
 
 if __name__ == '__main__':
     unittest.main()
