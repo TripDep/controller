@@ -1463,6 +1463,42 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Six literal P4 texture and lighting source oracles:
+                # reconstruct original embedded PNG pixels, measure real
+                # variance and compare independently registered light views.
+                # Pixel variation never implies artistic/RAGE/owner MG0 PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_texture_semantics import (
+                        IDS as P4_PIXEL_IDS, inspect as inspect_p4_pixels)
+                    p4_pixels = inspect_p4_pixels(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_pixels['source_rule_count'] == 6
+                           and set(p4_pixels['rules']) == set(P4_PIXEL_IDS)
+                           and p4_pixels['full_rule_semantic_passes'] == 0
+                           and p4_pixels['individual_mg0_passes'] == 0
+                           and p4_pixels['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p4_pixels['rules'].values()),
+                           'CONTROLLED_P4_PIXEL_FALSE_FULL_PASS')
+                    if p4_pixels['metrics']['decoded_original_textures'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_PIXEL_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_pixels['original_audit_sha256'],
+                            original_audit_tail=p4_pixels['original_audit_tail'],
+                            source_rule_ids=list(P4_PIXEL_IDS),
+                            original_pixel_metrics=p4_pixels['metrics'],
+                            original_rule_machine_checks=p4_pixels['rules'],
+                            machine_positive_obligations=p4_pixels[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Five additional literal P5 quantitative oracles on original
                 # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
                 # This is read-only machine evidence, never full MG0 or QA.
