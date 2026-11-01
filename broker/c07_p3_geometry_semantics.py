@@ -65,6 +65,29 @@ def _read_accessor(doc, binary, index, *, scalar=False):
          "C07_P3_NONFINITE_VERTEX_OR_NORMAL")
     return [r[0] for r in result] if scalar else result
 
+def _strict_original_glb_json(raw):
+    """Reject ambiguous native GLB JSON, including nested duplicate keys.
+
+    JSON extensions/extras are untrusted original evidence as well: a producer
+    must not be able to hide a second material, mesh or accessor behind the
+    first occurrence of a repeated key, or smuggle non-finite values.
+    """
+    def unique_pairs(items):
+        obj = {}
+        for key, value in items:
+            need(key not in obj, "C07_P3_GLB_DUPLICATE_JSON_KEY")
+            obj[key] = value
+        return obj
+    def nonfinite(token):
+        raise OriginalTopologyBlocked("C07_P3_GLB_NONFINITE_JSON")
+    try:
+        doc = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_pairs,
+                         parse_constant=nonfinite)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise OriginalTopologyBlocked("C07_P3_GLB_MALFORMED_JSON") from exc
+    need(type(doc) is dict, "C07_P3_GLB_JSON_OBJECT_REQUIRED")
+    return doc
+
 def geometry(raw):
     need(type(raw) is bytes and 52 <= len(raw) <= 250_000_000 and
          raw[:4] == b"glTF", "C07_P3_ORIGINAL_GLB_BYTES")
@@ -74,7 +97,7 @@ def geometry(raw):
     need(jtype == b"JSON" and 2 <= jsz <= 8_000_000 and
          jsz % 4 == 0 and 28 + jsz <= len(raw),
          "C07_P3_GLB_JSON")
-    doc = json.loads(raw[20:20 + jsz])
+    doc = _strict_original_glb_json(raw[20:20 + jsz])
     size, btype = struct.unpack_from("<I4s", raw, 20 + jsz)
     need(btype == b"BIN\x00" and size % 4 == 0 and
          28 + jsz + size == len(raw), "C07_P3_GLB_BIN")
@@ -85,6 +108,7 @@ def geometry(raw):
          len(doc["buffers"]) == 1 and
          type(doc["buffers"][0].get("byteLength")) is int and
          0 < doc["buffers"][0]["byteLength"] <= len(binary) and
+         len(binary) - doc["buffers"][0]["byteLength"] <= 3 and
          doc["meshes"], "C07_P3_GLB_TABLES")
     reports = []
     for mesh_index, mesh in enumerate(doc["meshes"]):
