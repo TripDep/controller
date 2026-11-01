@@ -24,6 +24,8 @@ class P1DDesignOriginalTests(unittest.TestCase):
         scene['min_void_fraction']=0.01
         scene['max_void_fraction']=0.1
         scene['max_repeated_signature_ratio']=1
+        scene['style_max_mean_rgb_delta']=255
+        scene['area_max_mean_rgb_delta']=255
         t.put('P1_SCENE_CONTRACT','p1_scene.json',encode(scene))
         t.rebuild()
         return t
