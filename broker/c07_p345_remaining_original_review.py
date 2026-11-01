@@ -11,7 +11,7 @@ import hashlib
 import math
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
-from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json
+from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json, PHASE_INDEX
 from c07_p5_budget_semantics import _glb_parts
 from c07_p5_optimization_semantics import _mesh, _references
 from c07_p5_full_review import material_bindings
@@ -88,8 +88,12 @@ def inspect(source_context,rule_id):
     inv,plan,controller,asset,step,work,loader=(
         source_context[k] for k in ('inventory','plan','controller',
                                     'asset','step','work','source_loader'))
-    need(plan.get('phase') in ('P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'),
-         'C07_P345_REMAINING_PHASE')
+    n=int(rule_id.rsplit('-',1)[1])
+    required_phase=3 if n<=120 else 4 if n<=140 else 5
+    need(plan.get('phase') in PHASE_INDEX and
+         PHASE_INDEX[plan['phase']]>=required_phase and
+         plan.get('phase')==work.get('phase'),
+         'C07_P345_REMAINING_CANONICAL_PHASE')
     # The original forty-rule reader enforces every canonical literal,
     # catalog digest, phase, current master and active operation.
     report=inspect_p345(inv,plan,controller,asset,step,work,source_loader=loader)
