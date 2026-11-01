@@ -5,6 +5,7 @@ audit are original reread evidence. No successful artifact upload or named
 FiveM log demonstrates gameplay correctness, owner acceptance or MG0 PASS.
 """
 import json
+import math
 import re
 from c07_positive_native_process import _original_attempt,_registered_artifacts,_archive_semantics,sha
 from c07_native_output_oracle import read_mesh_geometry,OriginalGeometryBlocked
@@ -183,11 +184,26 @@ def need(ok,msg):
 def named(x):return type(x) is str and bool(x.strip())
 def names(x):return type(x) is list and bool(x) and all(named(v) for v in x)
 def obj(b):
-    if type(b) is not bytes or len(b)>2_000_000:return {}
+    """Read source JSON strictly: a forged last-key-wins QA PASS is not evidence."""
+    if type(b) is not bytes or not b or len(b)>2_000_000:return {}
+    def unique(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:raise ValueError('R147_DUPLICATE_ORIGINAL_JSON_KEY')
+            result[key]=value
+        return result
+    def finite_float(token):
+        value=float(token)
+        if not math.isfinite(value):
+            raise ValueError('R147_NONFINITE_ORIGINAL_JSON')
+        return value
+    def no_constant(token):
+        raise ValueError('R147_NONSTANDARD_ORIGINAL_JSON')
     try:
-        x=json.loads(b)
+        x=json.loads(b.decode('utf-8'),object_pairs_hook=unique,
+                     parse_float=finite_float,parse_constant=no_constant)
         return x if type(x) is dict else {}
-    except (ValueError,TypeError,UnicodeError):return {}
+    except (ValueError,TypeError,UnicodeError,OverflowError):return {}
 
 def inspect(inv,plan,controller,asset,step,work,*,source_loader):
     need(type(inv) is dict and inv.get('schema')=='gg-effective-family-inventory-v1' and
