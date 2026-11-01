@@ -69,7 +69,10 @@ def original_json(raw):
 
 def _no_cycle(nodes, edges):
     """Bounded iterative DAG check: no recursion-limit bypass or stack crash."""
-    if type(nodes) is not list or len(set(nodes)) != len(nodes):
+    if (type(nodes) is not list or
+            any(type(n) is not str for n in nodes) or
+            len(set(nodes)) != len(nodes) or
+            type(edges) is not list or len(edges) > 100_000):
         return False
     indegree = {n: 0 for n in nodes}
     forward = {n: [] for n in nodes}
