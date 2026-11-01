@@ -91,6 +91,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     normals=json_role("P8_NORMALS_REPORT")
     regression=json_role("P8_REGRESSION_REPORT")
     machine=json_role("P8_MACHINE_REPORT")
+    test_matrix=json_role("P8_TEST_MATRIX")
     internal=json_role("P8_INTERNAL_QA")
     material=png_role("P8_MATERIAL_RENDER")
     context=png_role("P8_AREA_CONTEXT")
@@ -149,6 +150,30 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         and all(type(x) is dict and x.get("status") in ("RUN","NOT_RUN","FAIL")
                 and type(x.get("id")) is str and bool(x["id"])
                 for x in machine_checks))
+    # A source-pinned test matrix must separate machine, visual and in-game
+    # categories without laundering a producer FiveM RUN claim into proof.
+    # Native geometry and six independent pixel rasters are re-read above.
+    rows=test_matrix.get("tests")
+    by_id={r.get("id"):r for r in rows} if (
+        type(rows) is list and len(rows)==3 and
+        all(type(r) is dict and type(r.get("id")) is str for r in rows)
+        and len({r["id"] for r in rows})==3) else {}
+    auto=by_id.get("AUTOMATED_NATIVE",{})
+    visual=by_id.get("VISUAL_SIX",{})
+    game=by_id.get("FIVEM_RUNTIME",{})
+    categories_separated=bool(
+        set(by_id)=={"AUTOMATED_NATIVE","VISUAL_SIX","FIVEM_RUNTIME"}
+        and auto.get("category")=="AUTOMATED" and auto.get("status")=="RUN"
+        and auto.get("evidence_role")=="NATIVE_EXPORT"
+        and native is not None and auto.get("evidence_sha256")==sha(native)
+        and bool(metrics)
+        and visual.get("category")=="VISUAL" and visual.get("status")=="RUN"
+        and unique and type(visual.get("view_sha256")) is dict
+        and visual["view_sha256"]=={
+            "VISUAL_VIEW_"+v:views[v]["sha256"] for v in VIEWS}
+        and game.get("category")=="ENGINE" and game.get("status")=="NOT_RUN"
+        and game.get("evidence_sha256") is None
+        and game.get("evidence_role") is None)
     # A critical finding cannot be self-cleared; we only check fail-closed
     # behavior when a critical OPEN is recorded in original audit.
     critical=[r for r in audit if r.get("step")==step
@@ -182,7 +207,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       187:{"original_baseline_export_bytes_differ":bool(changed),
            "original_regression_tests_bound_to_before_after":bool(regression_bound)},
       188:{"original_machine_report_bound_to_real_export":bool(machine_bound),
-           "six_distinct_visual_views_separate_from_machine_report":bool(unique)},
+           "six_distinct_visual_views_separate_from_machine_report":bool(unique),
+           "original_test_categories_and_unattested_engine_separated":
+               categories_separated},
       189:{"original_critical_finding_present":bool(critical),
            "critical_finding_keeps_controller_delivery_blocked":
                 bool(critical and blocked)},
