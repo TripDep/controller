@@ -41,12 +41,8 @@ CRITERIA = {
       'original_shaders_vertex_attributes_and_texture_channels_compatible'),
 130: ('pre_d_original_multi_light_material_response_policy_sha_pinned',
       'actual_registered_neutral_direct_shadow_pixel_buffers_recomputed',
-      'trusted_independent_renderer_provenance_and_real material response verified'),
+      'trusted_independent_renderer_provenance_and_real_material_response_verified'),
 }
-# Fix typographic ambiguity in the last name at source, not through a
-# generic helper or a producer-supplied criteria list.
-CRITERIA[130] = CRITERIA[130][0:2] + (
-    'trusted_independent_renderer_provenance_and_real_material_response_verified',)
 
 class MaterialMacroBlocked(ValueError):
     pass
