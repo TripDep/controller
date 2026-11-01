@@ -118,7 +118,8 @@ class Tests(unittest.TestCase):
                           ('P8_FINAL',q8.IDS)):
             deep_required=label in ('P6_WALKABILITY','P7_RAGE','P8_FINAL')
             self.p678_specific[label]={
-                **({'original_cross_source_positive_obligations':len(ids)-2}
+                **({'original_cross_source_positive_obligations':
+                     len(ids)-(1 if label=='P6_WALKABILITY' else 2)}
                    if deep_required else {}),
                 'source_rule_count':len(ids),
                 'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
