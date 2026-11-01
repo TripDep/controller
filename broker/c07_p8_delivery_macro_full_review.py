@@ -68,7 +68,7 @@ def _blender_sdna(raw,byte_order):
         values=[]
         for _ in range(n):
             if index>=len(raw):return None
-            end=raw.find(b'\\x00',index,min(len(raw),index+512))
+            end=raw.find(b'\x00',index,min(len(raw),index+512))
             if end<=index:return None
             values.append(raw[index:end])
             index=end+1
