@@ -147,6 +147,24 @@ class Tests(unittest.TestCase):
             self.assertFalse(next(iter(report["rules"][
                 "AAA-200-S-%03d"%n]["original_cross_source_semantic"].values())))
 
+    def test_s185_rejects_original_glb_with_corrupted_embedded_png(self):
+        # Material and texture table indices remain valid, but the actual
+        # original GLB bufferView contains an invalid PNG signature. A table-
+        # only source reader would incorrectly call the material verified.
+        self.assertIn(b"\\x89PNG\\r\\n\\x1a\\n",self.native)
+        self.native=self.native.replace(
+            b"\\x89PNG\\r\\n\\x1a\\n",
+            b"\\x89PNX\\r\\n\\x1a\\n",1)
+        self.put()
+        self.add_critical()
+        row=self.examine()["rules"]["AAA-200-S-185"]
+        self.assertTrue(row["original_machine_checks"][
+            "original_export_has_material_and_texture_tables"])
+        self.assertFalse(next(iter(
+            row["original_cross_source_semantic"].values())))
+        self.assertEqual(row["full_rule_semantics"],"UNKNOWN")
+        self.assertEqual(row["individual_mg0"],"UNKNOWN")
+
     def test_each_original_rule_has_independent_adversarial_negative(self):
         changes={
           181:("views","REAR",self.views["FRONT"]),
