@@ -206,6 +206,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-193')['checks'][
             'editable_source_has_blender_block_structure_not_just_magic_header'])
+        self.assertFalse(self.row('AAA-200-T-191')['checks'][
+            'independently_parsed_real_native_geometry_and_original_manifest_consistent'])
 
     def test_blender_dna1_structure_rejects_spoofed_metadata_and_bad_blocks(self):
         original=blender_envelope()
