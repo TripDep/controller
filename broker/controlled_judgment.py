@@ -1623,6 +1623,46 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Ten literal P7 RAGE preflight predicates on original
+                # CodeWalker XML, pinned GLB vertex attributes, resource
+                # manifest, placement and image bytes. Source-labelled
+                # Sollumz/FiveM logs remain UNATTESTED and cannot pass MG0.
+                if plans[0]['plan'].get('phase') in (
+                        'P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p7_rage_semantics import (
+                        IDS as P7_RAGE_IDS, inspect as inspect_p7_rage)
+                    p7_rage = inspect_p7_rage(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p7_rage['source_rule_count'] == 10
+                           and set(p7_rage['rules']) == set(P7_RAGE_IDS)
+                           and p7_rage['full_rule_semantic_passes'] == 0
+                           and p7_rage['individual_mg0_passes'] == 0
+                           and p7_rage['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p7_rage['rules'].values())
+                           and p7_rage['rules']['AAA-200-Q-170'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT'
+                           and p7_rage['rules']['AAA-200-Q-167'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT',
+                           'CONTROLLED_P7_FAKE_RAGE_FIVEM_OR_MG0_PASS')
+                    if p7_rage['metrics']['archetypes'] > 0:
+                        self.append('SUPERVISOR_C07_P7_ORIGINAL_RAGE_PREFLIGHT',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p7_rage['original_audit_sha256'],
+                            original_audit_tail=p7_rage['original_audit_tail'],
+                            source_rule_ids=list(P7_RAGE_IDS),
+                            original_rage_preflight_metrics=p7_rage['metrics'],
+                            original_rule_machine_checks=p7_rage['rules'],
+                            machine_positive_obligations=p7_rage[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
