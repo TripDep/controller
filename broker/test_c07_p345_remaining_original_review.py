@@ -129,9 +129,12 @@ class RemainingP345Tests(unittest.TestCase):
                 packet=build_packet(ctx,rid)
                 self.assertEqual(set(packet['rule']['checks']),
                                  set(NATIVE_RULES[rid][1]))
-                self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                self.assertEqual(packet['rule']['result'],
+                    'PASS' if rid in ('AAA-200-L-118','AAA-200-O-143')
+                    else 'UNKNOWN')
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
-                self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+                self.assertEqual(rid in FULL_LITERAL_REVIEWED,
+                    rid in ('AAA-200-L-118','AAA-200-O-143'))
                 self.assertFalse(packet['mg0']['checks'].get(
                     'canonical_triggers_checked',True))
                 self.assertFalse(packet['rule']['checks'][
@@ -162,7 +165,8 @@ class RemainingP345Tests(unittest.TestCase):
                 checks=packet['rule']['checks']
                 self.assertTrue(checks[CRITERIA[n][0]])
                 self.assertTrue(checks[CRITERIA[n][1]])
-                self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                self.assertEqual(packet['rule']['result'],
+                    'PASS' if n in (118,143) else 'UNKNOWN')
         rid=next(x for x in RULES if x.endswith('-120'))
         self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
             CRITERIA[120][1]])
