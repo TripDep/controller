@@ -64,8 +64,9 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
                           if rid == 'AAA-200-B-012'
                           else 'r173_rule_semantics.native_rule_readback')
                 with patch.object(j.evidence,'native',return_value=log), patch(
-                        reader, return_value={'documentary_result':'PASS',
-                                              'individual_rule_mg0':'UNKNOWN'}) as native:
+                        reader, return_value={'rule_id':rid, 'documentary_result':'PASS',
+                                              'individual_rule_mg0':'UNKNOWN',
+                                              'advancement_authorized':False}) as native:
                     answer = j.NativeRuleBackend(API(),{rid:spec}).rule(rid,binding,offer)
                     native.assert_called_once()
                     self.assertEqual(answer['result'],'UNKNOWN')
