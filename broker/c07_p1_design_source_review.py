@@ -222,9 +222,76 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'original_audit_has_no_detail_phase_started_before_qa':bool(
               no_detail and qa.get('open_findings'))},
     }
+    # Third, independent, source-byte geometric/pixel criterion for every
+    # remaining P1 design literal. These checks measure original evidence,
+    # never aesthetic quality or an independent human review. The two earlier
+    # predicates are insufficient by themselves (e.g. matching four quadrant
+    # means can hide a flat, repeated, or mispositioned source image).
+    def in_native(v):
+        return bool(bbox and vec(v) and all(
+            low[i]-0.01<=v[i]<=high[i]+0.01 for i in range(3)))
+    def image_contrast(v):
+        return bool(v and num(v.get('variance'),0,65025) and
+                    v['variance']>1 and v.get('unique_rgb',0)>1)
+    def outside(v):
+        return bool(bbox and vec(v) and any(
+            v[i]<low[i]-0.01 or v[i]>high[i]+0.01 for i in range(3)))
+    side_cameras=bool(cams_ok and
+        cams['front']['eye_xyz'][1]<low[1]-0.01 and
+        cams['left']['eye_xyz'][0]<low[0]-0.01 and
+        cams['right']['eye_xyz'][0]>high[0]+0.01 and
+        cams['top']['eye_xyz'][2]>high[2]+0.01)
+    deep={
+      31:('original_style_reference_and_current_have_real_nonflat_pixels',
+          bool(image_contrast(reference) and image_contrast(front) and
+               reference['pixel_sha256']!=front['pixel_sha256'])),
+      32:('actual_peer_and_current_source_have_nonflat_independent_pixels',
+          bool(image_contrast(peer) and image_contrast(front) and
+               peer['pixel_sha256']!=front['pixel_sha256'])),
+      33:('original_palette_spans_real_luminance_and_material_has_variation',
+          bool(hexcolors and max(luminances)-min(luminances)>=30 and
+               image_contrast(material))),
+      34:('every_original_void_polygon_is_inside_measured_native_footprint',
+          bool(void_ok and bbox and all(
+               all(low[0]-0.01<=p[0]<=high[0]+0.01 and
+                   low[1]-0.01<=p[1]<=high[1]+0.01 for p in poly)
+               for poly in voids))),
+      35:('original_silhouette_reference_and_front_have_measured_contrast',
+          bool(image_contrast(reference) and image_contrast(front))),
+      36:('original_focal_point_lies_inside_actual_native_geometry_envelope',
+          in_native(focus)),
+      37:('four_original_view_quadrant_profiles_are_pairwise_distinct',
+          bool(all(views) and all(diff(a,b)>0.01 for i,a in
+              enumerate(views) for b in views[i+1:]))),
+      38:('actual_original_material_has_nonflat_color_and_pixel_variance',
+          image_contrast(material)),
+      39:('player_eye_outside_native_envelope_and_target_inside',
+          bool(player_ok and outside(pc.get('eye_xyz')) and
+               in_native(pc.get('target_xyz')))),
+      40:('every_actual_native_mesh_has_exactly_one_source_component_role',
+          bool(roles_ok and len(mesh_names)==len(role_map) and
+               len(set(role_map.values()))==len(role_map) and
+               set(role_map.values())==mesh_names)),
+      46:('source_entrance_exit_names_are_disjoint_and_native_bounded',
+          bool(access_ok and set(entrance).isdisjoint(exit_) and
+               len(set(entrance))==len(entrance) and
+               len(set(exit_))==len(exit_))),
+      56:('front_left_right_top_cameras_outside_correct_native_faces',
+          side_cameras),
+      57:('source_composition_finding_is_current_native_bbox_defect',
+          bool(bbox_mismatch and no_detail and
+               'BBOX_MISMATCH' in qa.get('open_findings',[]) if
+               type(qa.get('open_findings')) is list else False)),
+    }
+    need(len(deep)==13 and set(deep)==set(NUMBERS) and
+         len({name for name,_ in deep.values()})==13 and
+         all(type(ok) is bool for _,ok in deep.values()),
+         'C07_P1_DESIGN_THIRTEEN_INDEPENDENT_ORIGINAL_MEASURES')
+    for number,(name,measured) in deep.items():
+        checks[number][name]=measured
     need(len(checks)==13 and set(checks)==set(NUMBERS)
-         and len({key for c in checks.values() for key in c})==26
-         and all(type(c) is dict and len(c)==2 and
+         and len({key for c in checks.values() for key in c})==39
+         and all(type(c) is dict and len(c)==3 and
                  all(type(v) is bool for v in c.values()) for c in checks.values()),
          'C07_P1_DESIGN_EXACT_THIRTEEN_PREDICATES')
     result={}
