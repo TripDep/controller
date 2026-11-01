@@ -80,10 +80,10 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         ]}
         # Original method bytes are deterministic, source-only translations;
         # the consumer will interpret their AST but never execute user code.
-        self.before_script=(b'def correct_origin(vertices):\\n'
-            b'    return [[p[0],p[1],p[2]] for p in vertices]\\n')
-        self.after_script=(b'def correct_origin(vertices):\\n'
-            b'    return [[p[0]-0.5,p[1],p[2]] for p in vertices]\\n')
+        self.before_script=(b'def correct_origin(vertices):\n'
+            b'    return [[p[0],p[1],p[2]] for p in vertices]\n')
+        self.after_script=(b'def correct_origin(vertices):\n'
+            b'    return [[p[0]-0.5,p[1],p[2]] for p in vertices]\n')
         self.f.add_item('P8_METHOD_BEFORE','method_before.py',
                         self.before_script)
         self.f.add_item('P8_METHOD_AFTER','method_after.py',
@@ -234,8 +234,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
             'original_before_and_after_method_code_sha_and_valid_python_ast_reopened'])
 
     def test_wrong_offset_against_real_triangles_fails(self):
-        self.after_script=(b'def correct_origin(vertices):\\n'
-            b'    return [[p[0]-0.4,p[1],p[2]] for p in vertices]\\n')
+        self.after_script=(b'def correct_origin(vertices):\n'
+            b'    return [[p[0]-0.4,p[1],p[2]] for p in vertices]\n')
         self.fixture.docs['P8_METHOD_CHANGE']['after_sha256']=sha(self.after_script)
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-199')['checks'][
@@ -245,7 +245,7 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         from c07_p8_delivery_macro_full_review import _safe_origin_formula
         bad=(b'import os\\ndef correct_origin(vertices): return vertices\\n',
              b'def correct_origin(vertices): return __import__("os").system("id")\\n',
-             b'def correct_origin(vertices):\\n'
+             b'def correct_origin(vertices):\n'
              b'  return [[evil(p[0]),p[1],p[2]] for p in vertices]\\n')
         for script in bad:
             with self.subTest(script=script):
