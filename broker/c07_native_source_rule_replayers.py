@@ -12,6 +12,34 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-M-121': ('p4_material_macro_full', (
+        'pre_d_original_physical_material_classification_sha_pinned',
+        'every_actual_exported_primitive_material_has_canonical_class',
+        'all_actual_original_roughness_and_metallic_values_in_physical_class_ranges')),
+    'AAA-200-M-122': ('p4_material_macro_full', (
+        'pre_d_light_response_and_pbr_factor_contract_sha_pinned',
+        'all_original_exported_material_roughness_and_reflectance_measured',
+        'real_original_direct_neutral_shadow_pixels_follow_source_bounds')),
+    'AAA-200-M-125': ('p4_material_macro_full', (
+        'pre_d_original_surface_variation_limits_sha_pinned',
+        'actual_original_embedded_texture_quadrants_recomputed',
+        'all_real_texture_variation_exceeds_original_local_contrast_limit')),
+    'AAA-200-M-126': ('p4_material_macro_full', (
+        'pre_d_original_weathering_reference_and_limits_sha_pinned',
+        'original_texture_and_reference_pixel_distributions_independently_reopened',
+        'real_original_texture_weathering_mean_and_local_spread_within_limits')),
+    'AAA-200-M-127': ('p4_material_macro_full', (
+        'pre_d_original_pixel_diversity_and_variance_limits_sha_pinned',
+        'all_original_embedded_rgba_channels_recomputed_from_png_bytes',
+        'real_original_colors_and_variance_within_pre_d_material_ranges')),
+    'AAA-200-M-129': ('p4_material_macro_full', (
+        'original_pre_d_target_rage_shader_and_native_export_source_sha_pinned',
+        'original_native_rage_shader_descriptors_independently_parsed',
+        'original_shaders_vertex_attributes_and_texture_channels_compatible')),
+    'AAA-200-M-130': ('p4_material_macro_full', (
+        'pre_d_original_multi_light_material_response_policy_sha_pinned',
+        'actual_registered_neutral_direct_shadow_pixel_buffers_recomputed',
+        'trusted_independent_renderer_provenance_and_real_material_response_verified')),
     'AAA-200-O-149': ('p5_alpha_cost_full', (
         'pre_d_complete_vegetation_transparency_cost_budget_and_roles_sha_pinned',
         'all_original_alpha_primitives_and_texture_bytes_independently_measured',
@@ -234,6 +262,8 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-M-121', 'AAA-200-M-122', 'AAA-200-M-125',
+    'AAA-200-M-126', 'AAA-200-M-127',
     'AAA-200-O-149',
     'AAA-200-F-059',
     'AAA-200-S-182', 'AAA-200-S-187',
@@ -337,6 +367,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_lighting_player_full_review import inspect as inspect_p4_lighting
     elif domain == 'p4_pbr_maps_full':
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
+    elif domain == 'p4_material_macro_full':
+        from c07_p4_material_macro_full_review import inspect as inspect_p4_material
     elif domain == 'p8_intersection_full':
         from c07_p8_intersection_full_review import inspect as inspect_intersections
     elif domain == 'p8_final_process_full':
@@ -371,6 +403,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                           if domain == 'p4_lighting_player_full' else None)
     p4_pbr_review = (inspect_pbr_maps(source_context, rule_id)
                      if domain == 'p4_pbr_maps_full' else None)
+    p4_material_review = (inspect_p4_material(source_context, rule_id)
+                          if domain == 'p4_material_macro_full' else None)
     p8_intersection_review = (inspect_intersections(source_context, rule_id)
                               if domain == 'p8_intersection_full' else None)
     p8_final_process_review = (inspect_final_process(source_context, rule_id)
@@ -383,7 +417,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                         (alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
-                         p4_pbr_review, p8_intersection_review,
+                         p4_pbr_review, p4_material_review,
+                         p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -491,6 +526,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_lighting_review'] = p4_lighting_review
     if p4_pbr_review is not None:
         proof['original_p4_pbr_review'] = p4_pbr_review
+    if p4_material_review is not None:
+        proof['original_p4_material_macro_review'] = p4_material_review
     if p8_intersection_review is not None:
         proof['original_p8_intersection_review'] = p8_intersection_review
     if p8_final_process_review is not None:
