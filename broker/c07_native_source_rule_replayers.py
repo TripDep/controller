@@ -12,6 +12,18 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-N-131': ('p4_lighting_player_full', (
+        'original_pre_d_neutral_light_policy_and_capture_event_sha_bound',
+        'actual_neutral_view_pixels_redecoded_and_channel_balance_measured',
+        'real_native_geometry_and_neutral_qa_luminance_in_source_range')),
+    'AAA-200-N-132': ('p4_lighting_player_full', (
+        'pre_d_distinct_neutral_cinematic_modes_and_two_original_events_bound',
+        'actual_neutral_and_cinematic_pixel_arrays_independently_distinct',
+        'two_original_capture_modes_have_separate_source_roles_and_luminance')),
+    'AAA-200-N-137': ('p4_lighting_player_full', (
+        'pre_d_player_eye_height_camera_and_original_capture_event_sha_bound',
+        'actual_player_view_png_and_native_geometry_independently_reopened',
+        'measured_original_camera_at_player_height_and_facing_actual_asset')),
     'AAA-200-F-056': ('camera_views_full', (
         'pre_d_four_camera_capture_roles_and_current_operation_events_sha_pinned',
         'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
@@ -190,6 +202,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-N-131', 'AAA-200-N-132', 'AAA-200-N-137',
     'AAA-200-F-056', 'AAA-200-N-138',
     'AAA-200-E-048', 'AAA-200-F-055',
     'AAA-200-E-049', 'AAA-200-E-050', 'AAA-200-F-053',
@@ -281,6 +294,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_terrain_full_review import inspect as inspect_terrain
     elif domain == 'camera_views_full':
         from c07_camera_views_full_review import inspect as inspect_camera_views
+    elif domain == 'p4_lighting_player_full':
+        from c07_p4_lighting_player_full_review import inspect as inspect_p4_lighting
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -303,6 +318,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                          if domain == 'p1_terrain_full' else None)
     camera_views_review = (inspect_camera_views(source_context, rule_id)
                            if domain == 'camera_views_full' else None)
+    p4_lighting_review = (inspect_p4_lighting(source_context, rule_id)
+                          if domain == 'p4_lighting_player_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
@@ -310,7 +327,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
-                         camera_views_review, p6_invisible_review,
+                         camera_views_review, p4_lighting_review,
+                         p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
@@ -408,6 +426,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_terrain_review'] = p1_terrain_review
     if camera_views_review is not None:
         proof['original_camera_views_review'] = camera_views_review
+    if p4_lighting_review is not None:
+        proof['original_p4_lighting_review'] = p4_lighting_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
