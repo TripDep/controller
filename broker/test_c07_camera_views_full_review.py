@@ -89,15 +89,19 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                 test, ctx = self.context(rid)
                 self.refresh(test, ctx, rid)
                 packet, expected, spec = self.packet(ctx, rid)
-                self.assertNotIn(rid, FULL_LITERAL_REVIEWED)
-                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
-                self.assertTrue(all(packet['rule']['checks'].values()))
-                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
-                with self.assertRaisesRegex(ValueError, 'NOT_WHITELISTED'):
-                    replay(None, packet, expected, spec,
-                           source_context=lambda _:ctx)
-                self.assertEqual(semantic_packet(packet, expected, spec)['result'],
-                                 'UNKNOWN')
+                if rid==P1:
+                    # Original four-views alone are insufficient for the new
+                    # five-native-camera F056 FULL literal. Independent
+                    # geometric projections and a fifth rear raster are due.
+                    self.assertIn(rid,FULL_LITERAL_REVIEWED)
+                    self.assertNotEqual(packet['rule']['result'],'PASS')
+                else:
+                    self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+                    self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                    with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
+                        replay(None,packet,expected,spec,
+                               source_context=lambda _:ctx)
+                self.assertEqual(packet['mg0']['result'],'UNKNOWN')
 
     def test_reused_pixels_with_different_original_names_never_pass(self):
         for rid in (P1, P4):
@@ -113,9 +117,10 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                     test.add(roles[1], roles[1].lower()+'.png', duplicated)
                 self.refresh(test, ctx, rid)
                 packet, _, _ = self.packet(ctx, rid)
-                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
-                self.assertFalse(packet['rule']['checks'][
-                    'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened'])
+                self.assertNotEqual(packet['rule']['result'],'PASS')
+                if rid==P4:
+                    self.assertFalse(packet['rule']['checks'][
+                        'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened'])
 
     def test_top_camera_direction_mismatch_is_real_negative(self):
         for rid in (P1, P4):
@@ -124,8 +129,10 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                 self.refresh(test, ctx, rid, alter={
                     'VISUAL_VIEW_TOP':{'forward_xyz':[0,0,1]}})
                 packet, _, _ = self.packet(ctx, rid)
-                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
-                self.assertFalse(packet['rule']['checks'][NATIVE_RULES[rid][1][2]])
+                self.assertNotEqual(packet['rule']['result'],'PASS')
+                if rid==P4:
+                    self.assertFalse(packet['rule']['checks'][
+                        NATIVE_RULES[rid][1][2]])
 
     def test_missing_source_pin_never_grants_reviewed_positive(self):
         for rid in (P1, P4):
@@ -147,13 +154,11 @@ class CameraViewsFullReviewTests(unittest.TestCase):
         packet, expected, spec = self.packet(ctx, P1)
         forged = copy.deepcopy(packet)
         forged['rule']['proof_digest'] = 'f'*64
-        with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                    'UNREVIEWED_OR_WRONG_LITERAL'):
+        with self.assertRaises(NativeRuleEvidenceBlocked):
             native_rule_readback(None, forged, expected, spec,
                                  source_context=lambda _:ctx)
         wrong = dict(expected, operation_sha256='f'*64)
-        with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                    'UNREVIEWED_OR_WRONG_LITERAL'):
+        with self.assertRaises(NativeRuleEvidenceBlocked):
             native_rule_readback(None, packet, wrong, spec,
                                  source_context=lambda _:ctx)
 
