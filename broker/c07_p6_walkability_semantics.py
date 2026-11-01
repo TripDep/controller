@@ -190,11 +190,12 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         tolerance=policy.get("max_visual_collision_gap_m",0.05)
         if not finite(tolerance) or not 0<=tolerance<=0.2:
             return False
-        return all(any(
-            math.dist(center(v),center(c))<=tolerance
-            for c in coll_tris if _centroid_in(c,_box(zone)))
-            for zone in solid for v in native_tris
-            if _centroid_in(v,_box(zone)))
+        return all(
+            any(_centroid_in(v,_box(zone)) for v in native_tris) and
+            all(any(math.dist(center(v),center(c))<=tolerance
+                    for c in coll_tris if _centroid_in(c,_box(zone)))
+                for v in native_tris if _centroid_in(v,_box(zone)))
+            for zone in solid)
     deep={
       155:("original_solid_visual_triangles_supported_by_collision_geometry",
            bool(actual_solid_contact())),
