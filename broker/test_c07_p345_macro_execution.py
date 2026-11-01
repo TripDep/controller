@@ -4,11 +4,12 @@ No fixture can certify MG0, FiveM, user approval or source provenance of a
 renderer. Verify full source set, exact due phases, contamination and UNKNOWNs.
 """
 import unittest
+from unittest.mock import patch
 
 from test_c07_native_source_rule_replayers import NativeOriginalReplayerTests
 from test_c07_p345_forty_native_evidence import P345Forty
 from c07_p345_forty_native_evidence import TEXT, IDS
-from c07_p345_macro_execution import run, MacroExecutionBlocked
+from c07_p345_macro_execution import run, require_source_execution, MacroExecutionBlocked
 from c07_native_source_rule_replayers import (
     NATIVE_RULES, FULL_LITERAL_REVIEWED)
 
@@ -20,6 +21,44 @@ class MacroFortyOriginalTests(unittest.TestCase):
         test.sync()
         ctx['controller']=test.f.controller
         return test,ctx
+
+    def test_visited_40_with_blocked_originals_cannot_be_certified(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        blocked=[rid for rid,row in result['rows'].items()
+                 if row['machine_result']=='BLOCKED']
+        self.assertTrue(blocked)
+        with self.assertRaisesRegex(MacroExecutionBlocked,
+                                    'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
+            require_source_execution(result)
+
+    def test_file_io_error_is_blocked_not_silent_pass(self):
+        _,ctx=self.context('P5')
+        with patch('c07_p345_macro_execution.build_packet',
+                   side_effect=FileNotFoundError('registered original absent')):
+            result=run(ctx)
+        self.assertEqual(result['result_counts']['BLOCKED'],40)
+        self.assertEqual(result['result_counts']['PASS'],0)
+        with self.assertRaisesRegex(MacroExecutionBlocked,
+                                    'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
+            require_source_execution(result)
+
+    def test_certification_of_only_complete_source_replay_never_promotes_mg0(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        # The following is an isolated gate fixture, not asset source evidence.
+        for rid,row in result['rows'].items():
+            row['machine_result']='UNKNOWN'
+            row['blocked_reason']=None
+            row['source_checks']={c:False for c in NATIVE_RULES[rid][1]}
+        result['result_counts']={'PASS':0,'FAIL':0,'UNKNOWN':40,
+                                 'BLOCKED':0,'NOT_DUE':0}
+        certificate=require_source_execution(result)
+        self.assertTrue(certificate['source_execution_verified'])
+        self.assertFalse(certificate['full_semantics_verified'])
+        self.assertFalse(certificate['independent_mg0_verified'])
+        self.assertFalse(certificate['fivem_verified'])
+        self.assertFalse(certificate['advancement_authorized'])
 
     def test_all_40_original_literals_replayed_in_one_source_operation(self):
         _,ctx=self.context('P5')
