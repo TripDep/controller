@@ -30,7 +30,9 @@ class Tests(unittest.TestCase):
         # fixtures. Real consumer source replay is adversarially tested in
         # test_planning_semantics and test_c07_reviewed_native_readback.
         native_fixture = patch('planning_semantics.native_rule_readback',
-                               return_value={'individual_rule_mg0':'UNKNOWN',
+                               return_value={'rule_id':p.ENGINE_RULE,
+                                             'documentary_result':'PASS',
+                                             'individual_rule_mg0':'UNKNOWN',
                                              'advancement_authorized':False})
         native_fixture.start()
         self.addCleanup(native_fixture.stop)
