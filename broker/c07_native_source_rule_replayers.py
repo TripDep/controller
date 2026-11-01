@@ -16,6 +16,14 @@ NATIVE_RULES = {
         'pre_D_path_line_strings_decoded',
         'main_and_secondary_path_ids_named',
         'original_path_geojson_sha_pinned')),
+    'AAA-200-O-144': ('p5_full', (
+        'pre_d_importance_specific_lod_distance_policy_authenticated',
+        'original_native_and_lod_meshes_measured_and_spatially_coherent',
+        'real_lod_reduction_and_switch_distances_match_importance_policy')),
+    'AAA-200-O-146': ('p5_full', (
+        'original_baseline_and_material_reduction_policy_sha_pinned',
+        'original_before_after_material_bindings_independently_counted',
+        'measured_material_binding_reduction_meets_pre_d_target')),
     'AAA-200-O-141': ('budget', (
         'original_platform_and_scene_budget_scoped',
         'real_native_scene_fits_declared_triangle_budget',
@@ -121,7 +129,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-047', 'AAA-200-F-052',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
-    'AAA-200-O-141', 'AAA-200-O-142',
+    'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
     'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159',
     'AAA-200-O-148', 'AAA-200-S-188', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
@@ -187,11 +195,27 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p8_final_qa_semantics import inspect
     elif domain == 'closure':
         from c07_p8_closure_semantics import inspect
+    elif domain == 'p5_full':
+        from c07_p5_full_review import inspect as inspect_p5_full
     else:
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
-    report = inspect(inv, plan, controller, asset, step, work,
-                     source_loader=loader)
+    p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
+    if p5_review is not None:
+        from c07_positive_native_process import _original_attempt
+        _, tail, _, audit_sha = _original_attempt(
+            inv, plan, controller, asset, step, work)
+        report = {'rules': {rule_id: {
+            'requirement_sha256': row['requirement_sha256'],
+            'source_sha256': row['source_sha256'],
+            'original_machine_checks': p5_review['checks']}},
+            'attempt_id': work['attempt_id'],
+            'operation_sha256': work['operation_sha256'],
+            'original_audit_sha256': audit_sha,
+            'original_audit_tail': tail, 'advancement_authorized': False}
+    else:
+        report = inspect(inv, plan, controller, asset, step, work,
+                         source_loader=loader)
     source = report['rules'][rule_id]
     checks = dict(source['original_native_measured_criteria'] if domain == 'p1'
                   else source['original_machine_checks'])
@@ -256,6 +280,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     }
     if topology_review is not None:
         proof['original_topology_review'] = topology_review
+    if p5_review is not None:
+        proof['original_p5_full_review'] = p5_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
@@ -268,8 +294,11 @@ def build_packet(source_context, rule_id, *, expected=None):
         'validator_id': VALIDATORS[rule_id],
         'binding': actual_binding,
         'rule': {'result': (
-                     'UNKNOWN' if topology_review is not None
-                     and not topology_review['evidence_complete']
+                     'UNKNOWN' if (
+                         (topology_review is not None and
+                          not topology_review['evidence_complete']) or
+                         (p5_review is not None and
+                          not p5_review['evidence_complete']))
                      else ('PASS' if all(checks.values()) else 'FAIL')
                      if rule_id in FULL_LITERAL_REVIEWED else 'UNKNOWN'),
                  'checks': checks,
