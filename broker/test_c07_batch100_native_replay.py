@@ -73,10 +73,10 @@ class Tests(unittest.TestCase):
         }
 
     def run_batch(self):
-        with patch.object(batch.p1,'inspect',return_value=self.reports[0]) as p1, \\
-             patch.object(batch.p345,'inspect',return_value=self.reports[1]) as p345, \\
-             patch.object(batch.p678,'inspect',return_value=self.reports[2]) as p678, \\
-             patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0:
+        with (patch.object(batch.p1,'inspect',return_value=self.reports[0]) as p1,
+              patch.object(batch.p345,'inspect',return_value=self.reports[1]) as p345,
+              patch.object(batch.p678,'inspect',return_value=self.reports[2]) as p678,
+              patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0):
             result=batch.inspect(self.inv,self.plan,Controller(),'GARDEN','STEP100',
                                  self.work,source_loader=lambda path:b'')
             for reader in (p1,p345,p678):
