@@ -140,6 +140,9 @@ class Tests(unittest.TestCase):
         self.assertTrue(_no_cycle(nodes, edges))
         self.assertFalse(_no_cycle(nodes, edges + [[nodes[-1], nodes[0]]]))
         self.assertFalse(_no_cycle(nodes, edges + [[nodes[0], "UNKNOWN"]]))
+        self.assertFalse(_no_cycle(nodes + [{"malformed": True}], edges))
+        self.assertFalse(_no_cycle(nodes, edges + [["bad"]]))
+        self.assertFalse(_no_cycle(nodes, edges * 60))
 
     def test_missing_original_documents_do_not_create_positive_passes(self):
         for n in self.docs:
