@@ -93,6 +93,10 @@ NATIVE_RULES = {
         'expected_original_structural_envelope_declared',
         'native_original_bounds_recomputed',
         'actual_original_native_bbox_matches_envelope')),
+    'AAA-200-F-054': ('p1_spatial', (
+        'pre_d_complete_module_alignment_pair_contract_sha_pinned',
+        'every_alignment_anchor_recomputed_from_actual_original_mesh_vertices',
+        'all_actual_world_space_module_anchor_gaps_within_original_tolerance')),
     'AAA-200-F-052': ('p1', (
         'actual_original_local_extents_independently_decoded',
         'original_target_local_bounds_declared',
@@ -130,7 +134,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-E-043', 'AAA-200-E-047', 'AAA-200-F-052',
+    'AAA-200-E-043', 'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-F-054',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
