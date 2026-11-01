@@ -79,6 +79,29 @@ class Tests(unittest.TestCase):
                 'individual_mg0':'UNKNOWN','advancement_authorized':False}
                 for rid in DESIGN_IDS},
         }
+        import c07_p6_collision_semantics as c6
+        import c07_p6_walkability_semantics as w6
+        import c07_p7_rage_semantics as r7
+        import c07_p8_final_qa_semantics as q8
+        self.p678_specific={}
+        for label,ids in (('P6_COLLISION',c6.IDS),
+                          ('P6_WALKABILITY',w6.IDS),
+                          ('P7_RAGE',r7.IDS),
+                          ('P8_FINAL',q8.IDS)):
+            self.p678_specific[label]={
+                'source_rule_count':len(ids),
+                'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+                'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
+                'advancement_authorized':False,
+                'full_rule_semantic_passes':0,'individual_mg0_passes':0,
+                'rules':{rid:{
+                    'original_machine_checks':{
+                        label+'_source_a':True,label+'_source_b':True},
+                    'requirement_sha256':'d'*64,'source_sha256':'c'*64,
+                    'exact_attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+                    'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
+                    'advancement_authorized':False} for rid in ids},
+            }
         self.p345_macro={
             'canonical_rule_count':40,'due_count':40,
             'visited_due_count':40,
@@ -106,7 +129,15 @@ class Tests(unittest.TestCase):
               patch('c07_p345_macro_execution.run',
                     return_value=self.p345_macro) as macro,
               patch('c07_p1_design_source_review.inspect',
-                    return_value=self.p1_design) as design):
+                    return_value=self.p1_design) as design,
+              patch('c07_p6_collision_semantics.inspect',
+                    return_value=self.p678_specific['P6_COLLISION']) as col,
+              patch('c07_p6_walkability_semantics.inspect',
+                    return_value=self.p678_specific['P6_WALKABILITY']) as walk,
+              patch('c07_p7_rage_semantics.inspect',
+                    return_value=self.p678_specific['P7_RAGE']) as rage,
+              patch('c07_p8_final_qa_semantics.inspect',
+                    return_value=self.p678_specific['P8_FINAL']) as qa):
             result=batch.inspect(self.inv,self.plan,Controller(),'GARDEN','STEP100',
                                  self.work,source_loader=lambda path:b'')
             for reader in (p1,p345,p678):
@@ -114,6 +145,11 @@ class Tests(unittest.TestCase):
             self.assertEqual(mg0.call_args.kwargs['operation_sha256'],OPERATION)
             macro.assert_called_once()
             design.assert_called_once()
+            for reader in (col,walk,rage,qa):
+                reader.assert_called_once()
+                self.assertEqual(reader.call_args.args[:2],(self.inv,self.plan))
+            self.assertEqual(result['p678_thirty_rule_specific_original'],
+                             self.p678_specific)
             self.assertEqual(design.call_args.args[:2],(self.inv,self.plan))
             self.assertEqual(result['p1_thirteen_original_design'],self.p1_design)
             self.assertEqual(macro.call_args.args[0]['work'],self.work)
@@ -185,6 +221,18 @@ class Tests(unittest.TestCase):
         self.reports[0]['rules'][rid]['full_rule_semantics']='UNKNOWN'
         self.mg0['rules'][rid]['verdict']='PASS'
         with self.assertRaisesRegex(batch.NativeBatchBlocked,'MG0_FALSE_POSITIVE'):
+            self.run_batch()
+
+    def test_p678_all_thirty_original_rules_reject_forged_pass_or_missing(self):
+        self.p678_specific['P7_RAGE']['advancement_authorized']=True
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P678_FAMILY_ORIGINAL_READER_UNTRUSTED'):
+            self.run_batch()
+        self.p678_specific['P7_RAGE']['advancement_authorized']=False
+        self.p678_specific['P8_FINAL']['rules'].pop(
+            next(iter(self.p678_specific['P8_FINAL']['rules'])))
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P678_FAMILY_ORIGINAL_READER_UNTRUSTED'):
             self.run_batch()
 
     def test_p1_family_refuses_forged_design_approval_or_missing_id(self):
