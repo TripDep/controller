@@ -1,4 +1,4 @@
-"""Seven P4 original-material semantics in one source cohort, five decidable.
+"""Seven P4 original-material semantics; one five-class source-decidable.
 
 Positive/negative original GLB+PNG evidence, producer replay, audit pinning.
 No fixture grants actual MG0/owner/FiveM PASS or renderer/RAGE authenticity.
@@ -27,14 +27,43 @@ def normalize_base():
         glb(QUAD,[(0,1,2),(0,2,3)],NORMALS),
         png(gradient())), material)
 
+def five_materials(doc):
+    physical = {
+        'wood':(0.8,0.05,[0.4,0.2,0.1,1.0]),
+        'stone':(0.7,0.0,[0.5,0.5,0.5,1.0]),
+        'metal':(0.2,0.9,[0.7,0.7,0.7,1.0]),
+        'glass':(0.05,0.0,[0.6,0.8,0.9,0.4]),
+        'plaster':(0.95,0.0,[0.9,0.85,0.7,1.0]),
+    }
+    template=copy.deepcopy(doc['materials'][0])
+    primitive=copy.deepcopy(doc['meshes'][0]['primitives'][0])
+    doc['materials']=[]
+    doc['meshes'][0]['primitives']=[]
+    for idx,(name,(rough,metal,color)) in enumerate(physical.items()):
+        m=copy.deepcopy(template)
+        m['name']=name
+        m['pbrMetallicRoughness']['roughnessFactor']=rough
+        m['pbrMetallicRoughness']['metallicFactor']=metal
+        m['pbrMetallicRoughness']['baseColorFactor']=color
+        m['alphaMode']='BLEND' if name=='glass' else 'OPAQUE'
+        doc['materials'].append(m)
+        p=copy.deepcopy(primitive)
+        p['material']=idx
+        doc['meshes'][0]['primitives'].append(p)
+
 def shifted():
     return png([[(r+10,g+10,b+10,a) for r,g,b,a in row]
                 for row in gradient()])
 
 POLICY={
     'physical_material_classes':{
-        'stone':{'roughness':[0.6,0.8],'metallic':[0.0,0.15]}},
-    'material_to_class':{'stone':'stone'},
+        'wood':{'roughness':[0.75,0.85],'metallic':[0.0,0.1]},
+        'stone':{'roughness':[0.6,0.8],'metallic':[0.0,0.15]},
+        'metal':{'roughness':[0.1,0.3],'metallic':[0.8,1.0]},
+        'glass':{'roughness':[0.0,0.1],'metallic':[0.0,0.1]},
+        'plaster':{'roughness':[0.9,1.0],'metallic':[0.0,0.1]}},
+    'material_to_class':{n:n for n in
+        ('wood','stone','metal','glass','plaster')},
     'surface_variation':{'min_distinct_rgb':10,
         'min_quadrant_luma_delta':10,
         'min_variance':40,'max_variance':20000},
@@ -51,7 +80,8 @@ class P4MaterialMacroTests(unittest.TestCase):
             self, P345Forty, 'test_p4_30_due_and_p5_40_due')
         test.f.plan['phase'] = 'P4'
         test.f.work['phase'] = 'P4'
-        test.add('NATIVE_EXPORT','scene.glb',normalize_base())
+        test.add('NATIVE_EXPORT','scene.glb',
+                 rewrite_glb(normalize_base(),five_materials))
         test.add('P4_MATERIAL_CONFORMANCE','p4_material_conformance.json',
                  encoded(POLICY))
         test.add('P4_WEATHERING_REFERENCE','p4_weathering_reference.png',
@@ -79,14 +109,15 @@ class P4MaterialMacroTests(unittest.TestCase):
         all_ten={'AAA-200-M-%03d' % i for i in range(121,131)}
         self.assertEqual(set(NATIVE_RULES)&all_ten, all_ten)
         enrolled=set(FULL_LITERAL_REVIEWED)&all_ten
-        self.assertEqual(enrolled,all_ten-
-                         {'AAA-200-M-129','AAA-200-M-130'})
-        self.assertEqual(len(enrolled),8)
+        self.assertEqual(enrolled,
+                         {'AAA-200-M-123','AAA-200-M-124',
+                          'AAA-200-M-126','AAA-200-M-128'})
+        self.assertEqual(len(enrolled),4)
         self.assertEqual(set(NATIVE_RULES)&set(RULES),set(RULES))
 
     def test_all_seven_literal_rules_are_distinct_and_source_bound(self):
         self.assertEqual(len(RULES),7)
-        self.assertEqual(len(DECIDABLE),5)
+        self.assertEqual(len(DECIDABLE),1)
         self.assertEqual(set(CRITERIA),{121,122,125,126,127,129,130})
         self.assertEqual(len({x for row in CRITERIA.values() for x in row}),21)
         test,ctx=self.context()
@@ -111,7 +142,7 @@ class P4MaterialMacroTests(unittest.TestCase):
                     self.assertEqual(readback['individual_rule_mg0'],'UNKNOWN')
                     self.assertFalse(readback['advancement_authorized'])
 
-    def test_all_five_positive_replayers_reject_producer_digest_forgery(self):
+    def test_five_class_replayer_rejects_producer_digest_forgery(self):
         _,ctx=self.context()
         for rid in sorted(DECIDABLE):
             with self.subTest(rule=rid):
@@ -133,7 +164,7 @@ class P4MaterialMacroTests(unittest.TestCase):
         test.sync()
         ctx['controller']=test.f.controller
         packet,_,_=self.packet(ctx,'AAA-200-M-121')
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][
             'all_actual_original_roughness_and_metallic_values_in_physical_class_ranges'])
 
@@ -143,7 +174,7 @@ class P4MaterialMacroTests(unittest.TestCase):
         test.sync()
         ctx['controller']=test.f.controller
         packet,_,_=self.packet(ctx,'AAA-200-M-122')
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][
             'real_original_direct_neutral_shadow_pixels_follow_source_bounds'])
 
@@ -155,10 +186,26 @@ class P4MaterialMacroTests(unittest.TestCase):
         test.add('NATIVE_EXPORT','scene.glb',native)
         test.sync()
         ctx['controller']=test.f.controller
-        for rid in ('AAA-200-M-125','AAA-200-M-126','AAA-200-M-127'):
+        for rid in ('AAA-200-M-125','AAA-200-M-127'):
             with self.subTest(rule=rid):
                 packet,_,_=self.packet(ctx,rid)
-                self.assertEqual(packet['rule']['result'],'FAIL')
+                self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                self.assertFalse(all(packet['rule']['checks'].values()))
+
+    def test_five_class_original_missing_or_out_of_range_is_real_fail(self):
+        test,ctx=self.context()
+        packet,_,_=self.packet(ctx,'AAA-200-M-126')
+        self.assertEqual(packet['rule']['result'],'PASS')
+        policy=copy.deepcopy(POLICY)
+        policy['physical_material_classes']['metal']['metallic']=[0.0,0.1]
+        test.add('P4_MATERIAL_CONFORMANCE','p4_material_conformance.json',
+                 encoded(policy))
+        test.sync()
+        ctx['controller']=test.f.controller
+        packet,_,_=self.packet(ctx,'AAA-200-M-126')
+        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertFalse(packet['rule']['checks'][
+            'five_original_materials_have_distinct_physical_pbr_and_alpha_properties'])
 
     def test_missing_original_policy_pin_is_unknown(self):
         test,ctx=self.context()
