@@ -24,10 +24,6 @@ NATIVE_RULES = {
         'pre_d_two_building_world_placements_and_ratio_targets_sha_pinned',
         'actual_original_world_space_building_extents_independently_measured',
         'real_building_clearance_footprint_and_height_ratios_meet_pre_d_limits')),
-    'AAA-200-E-044': ('p1', (
-        'pre_D_path_line_strings_decoded',
-        'main_and_secondary_path_ids_named',
-        'original_path_geojson_sha_pinned')),
     'AAA-200-O-144': ('p5_full', (
         'pre_d_importance_specific_lod_distance_policy_authenticated',
         'original_native_and_lod_meshes_measured_and_spatially_coherent',
