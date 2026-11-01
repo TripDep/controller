@@ -36,6 +36,10 @@ NATIVE_RULES = {
         'original_platform_and_scene_budget_scoped',
         'real_native_scene_fits_declared_triangle_budget',
         'real_original_material_and_rgba_cost_within_pre_d_budget')),
+    'AAA-200-P-154': ('p6_access_full', (
+        'pre_d_four_access_kinds_and_clearance_limits_original_sha_pinned',
+        'original_door_and_passage_free_and_stair_tread_rises_measured',
+        'original_stair_and_side_rail_collision_and_visual_geometry_verified')),
     'AAA-200-P-151': ('collision', (
         'source_solid_surface_regions_explicit_and_valid',
         'each_original_solid_region_has_real_collision_faces',
@@ -152,7 +156,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153', 'AAA-200-P-156',
-    'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159',
+    'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159', 'AAA-200-P-154',
     'AAA-200-O-148', 'AAA-200-S-188', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
     'AAA-200-T-196', 'AAA-200-T-197',
 ))
@@ -222,6 +226,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     elif domain == 'p1_paths_full':
         from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
+    elif domain == 'p6_access_full':
+        from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
         from c07_p6_invisible_collision_full_review import inspect as inspect_invisible
     else:
@@ -232,11 +238,13 @@ def build_packet(source_context, rule_id, *, expected=None):
                          if domain == 'p1_spatial' else None)
     p1_paths_review = (inspect_p1_paths(source_context, rule_id)
                        if domain == 'p1_paths_full' else None)
+    p6_access_review = (inspect_access(source_context, rule_id)
+                        if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
-                         p6_invisible_review)
+                         p6_invisible_review, p6_access_review)
                         if review is not None), None)
     if full_review is not None:
         from c07_positive_native_process import _original_attempt
@@ -325,6 +333,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_paths_access_review'] = p1_paths_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
+    if p6_access_review is not None:
+        proof['original_p6_access_review'] = p6_access_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
