@@ -11,12 +11,14 @@ import math
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p1_thirty_native_domain import inspect as p1_inspect, jbytes
 from c07_p345_forty_native_evidence import inspect as p345_inspect
+from c07_p678_forty_native_domain import inspect as p678_inspect
 from c07_native_output_oracle import read_mesh_geometry
 from visual_content_metrics import decode_grid, VisualContentBlocked
 
 P1 = 'AAA-200-F-056'
 P4 = 'AAA-200-N-138'
-RULES = frozenset((P1, P4))
+P8 = 'AAA-200-S-181'
+RULES = frozenset((P1, P4, P8))
 CRITERIA = {
     P1: (
         'pre_d_four_camera_capture_roles_and_current_operation_events_sha_pinned',
@@ -26,14 +28,21 @@ CRITERIA = {
         'pre_d_front_side_rear_top_capture_roles_and_current_operation_events_sha_pinned',
         'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
         'front_side_rear_top_original_camera_positions_and_axes_verified'),
+    P8: (
+        'pre_d_six_original_view_roles_current_render_events_and_view_qa_sha_pinned',
+        'six_original_view_pixel_arrays_and_native_geometry_independently_distinct',
+        'six_original_camera_axes_and_individual_view_qa_checks_replayed'),
 }
 VIEWS = {
     P1: ('VISUAL_VIEW_FRONT','VISUAL_VIEW_LEFT',
          'VISUAL_VIEW_RIGHT','VISUAL_VIEW_TOP'),
     P4: ('VISUAL_VIEW_FRONT','VISUAL_VIEW_SIDE',
          'VISUAL_VIEW_REAR','VISUAL_VIEW_TOP'),
+    P8: ('VISUAL_VIEW_FRONT','VISUAL_VIEW_LEFT','VISUAL_VIEW_RIGHT',
+         'VISUAL_VIEW_REAR','VISUAL_VIEW_TOP','VISUAL_VIEW_UNDERSIDE'),
 }
-TRACE = {P1:'P1_CAMERA_CAPTURE_TRACE', P4:'P4_CAMERA_CAPTURE_TRACE'}
+TRACE = {P1:'P1_CAMERA_CAPTURE_TRACE', P4:'P4_CAMERA_CAPTURE_TRACE',
+         P8:'P8_CAMERA_CAPTURE_TRACE'}
 
 class OriginalViewsBlocked(ValueError):
     pass
@@ -61,7 +70,8 @@ def direction_ok(role, camera, bounds):
         return False
     label = role.rsplit('_', 1)[-1]
     axis = {'FRONT':(0,1,0),'LEFT':(1,0,0),'SIDE':(1,0,0),
-            'RIGHT':(-1,0,0),'REAR':(0,-1,0),'TOP':(0,0,-1)}.get(label)
+            'RIGHT':(-1,0,0),'REAR':(0,-1,0),'TOP':(0,0,-1),
+            'UNDERSIDE':(0,0,1)}.get(label)
     if axis is None or sum(direction[i]*axis[i] for i in range(3)) < 0.99999:
         return False
     lo, hi = bounds['bbox_min'], bounds['bbox_max']
@@ -71,7 +81,8 @@ def direction_ok(role, camera, bounds):
             'SIDE':position[0] < lo[0]-margin,
             'RIGHT':position[0] > hi[0]+margin,
             'REAR':position[1] > hi[1]+margin,
-            'TOP':position[2] > hi[2]+margin}
+            'TOP':position[2] > hi[2]+margin,
+            'UNDERSIDE':position[2] < lo[2]-margin}
     return bool(side[label])
 
 def inspect(source_context, rule_id):
@@ -87,13 +98,19 @@ def inspect(source_context, rule_id):
         p1_inspect(inv, plan, controller, asset, step, work,
                    source_loader=loader)
         pin_key = 'p1_evidence_contract'
-    else:
+    elif rule_id == P4:
         need(plan.get('phase') in ('P4','P5','P6','P7','P8','VERIFY',
                                   'G2','G3','G4','DELIVERY'),
              'C07_P4_VIEWS_WRONG_PHASE')
         p345_inspect(inv, plan, controller, asset, step, work,
                      source_loader=loader)
         pin_key = 'p345_evidence_contract'
+    else:
+        need(plan.get('phase') in ('P8','VERIFY','G2','G3','G4','DELIVERY'),
+             'C07_P8_VIEWS_WRONG_PHASE')
+        p678_inspect(inv, plan, controller, asset, step, work,
+                     source_loader=loader)
+        pin_key = 'p678_evidence_contract'
     rows, tail, state, audit_sha = _original_attempt(
         inv, plan, controller, asset, step, work)
     need(sha(controller.master.read_bytes()) == work['master_sha256'] and
@@ -153,18 +170,30 @@ def inspect(source_context, rule_id):
                                              for channel in pixel))}
         except (ValueError, TypeError, VisualContentBlocked):
             continue
-    pixels_ok = bool(bounds and len(decoded) == 4 and
-        len({v['pixel_sha256'] for v in decoded.values()}) == 4 and
+    pixels_ok = bool(bounds and len(decoded) == len(wanted) and
+        len({v['pixel_sha256'] for v in decoded.values()}) == len(wanted) and
         all(decoded[role]['sha256'] == frame_by_role.get(role, {}).get('image_sha256')
             for role in wanted))
-    camera_ok = bool(pixels_ok and trace_ok and audit_ok and
+    qa_raw = original('P8_VIEW_QA', '.json') if rule_id == P8 else None
+    qa = jbytes(qa_raw) if qa_raw is not None else {}
+    qa_ok = (rule_id != P8 or bool(
+        type(qa.get('checked_roles')) is list and
+        len(qa['checked_roles']) == len(wanted) and
+        set(qa['checked_roles']) == set(wanted) and
+        type(qa.get('defect_counts')) is dict and
+        set(qa['defect_counts']) == set(wanted) and
+        all(type(v) is int and 0 <= v <= 10000
+            for v in qa['defect_counts'].values())))
+    camera_ok = bool(pixels_ok and trace_ok and audit_ok and qa_ok and
         all(direction_ok(role, frame_by_role[role], bounds) for role in wanted))
     checks = dict(zip(CRITERIA[rule_id], (
         bool(trace_ok and audit_ok and trace_raw is not None and
+             (rule_id != P8 or qa_raw is not None) and
              all(original(role, '.png') is not None for role in wanted)),
         pixels_ok, camera_ok)))
     complete = bool(trace_ok and audit_ok and native is not None and
-        trace_raw is not None and len(decoded) == 4)
+        trace_raw is not None and len(decoded) == len(wanted) and
+        (rule_id != P8 or qa_raw is not None))
     need(set(checks) == set(CRITERIA[rule_id]) and
          all(type(v) is bool for v in checks.values()),
          'C07_VIEWS_EXACT_RULE_CRITERIA_CHANGED')

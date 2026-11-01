@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-S-181': ('camera_views_full', (
+        'pre_d_six_original_view_roles_current_render_events_and_view_qa_sha_pinned',
+        'six_original_view_pixel_arrays_and_native_geometry_independently_distinct',
+        'six_original_camera_axes_and_individual_view_qa_checks_replayed')),
     'AAA-200-M-123': ('p4_pbr_maps_full', (
         'pre_d_gltf2_pbr_supported_normal_roughness_channels_and_original_export_sha_pinned',
         'every_original_native_material_references_two_valid_distinct_embedded_png_maps_with_uv',
@@ -206,6 +210,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-S-181',
     'AAA-200-M-123',
     'AAA-200-N-131', 'AAA-200-N-132', 'AAA-200-N-137',
     'AAA-200-F-056', 'AAA-200-N-138',
