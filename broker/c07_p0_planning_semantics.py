@@ -133,7 +133,16 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         need(type(key) is str and HEX.fullmatch(key) and
              type(path) is str and bool(path),
              "C07_P0_DEPENDENCY_PATH_OR_ID")
-        raw = source_loader(path)
+        relative = Path(path)
+        root = controller.root.resolve()
+        full = root / relative
+        need(not relative.is_absolute() and ".." not in relative.parts and
+             str(relative) == path and
+             full.resolve().is_relative_to(root) and full.is_file() and
+             not any(part.is_symlink() for part in
+                     (full, *list(full.parents)[:len(relative.parts)])),
+             "C07_P0_DEPENDENCY_PATH_NOT_ORIGINAL:" + key)
+        raw = full.read_bytes()
         need(type(raw) is bytes and sha(raw) == dep_hashes[key],
              "C07_P0_DEPENDENCY_BYTES_CHANGED:" + key)
         verified_deps[key] = dep_hashes[key]
