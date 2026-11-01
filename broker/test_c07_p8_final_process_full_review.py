@@ -124,13 +124,15 @@ class FinalProcessFullReviewTests(unittest.TestCase):
         self.assertEqual(self.packet(ctx,SPATIAL)[0]['rule']['result'],'FAIL')
 
     def test_spatial_forward_alignment_and_ratio_negative(self):
-        for name in ('forward','alignment','ratio'):
+        for name in ('forward','alignment','ratio','axis_swap'):
             policy=copy.deepcopy(SPATIAL_POLICY)
             if name=='forward':
                 policy['expected_forward_world']['NATIVE_EXPORT']=[-1,0,0]
             elif name=='alignment':
                 policy['placements']['SECONDARY_EXPORT']['translation_xyz']=[1.1,0,0]
                 policy['world_bounds']['SECONDARY_EXPORT']=[[1.1,0,0],[2.1,1,1]]
+            elif name=='axis_swap':
+                policy['native_to_world_axis_matrix']=[[0,-1,0],[1,0,0],[0,0,1]]
             else:
                 policy['dimension_ratios'][0]['max_ratio']=0.5
             with self.subTest(name=name):
