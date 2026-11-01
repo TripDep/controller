@@ -132,7 +132,12 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     renderer={'FRONT':photo('VISUAL_VIEW_FRONT'),'LEFT':photo('VISUAL_VIEW_LEFT'),
        'RIGHT':photo('VISUAL_VIEW_RIGHT'),'TOP':photo('VISUAL_VIEW_TOP')}
     multiple_views=all(renderer.values()) and len({x['sha256'] for x in renderer.values()})==4
-    current=[r for r in rows if r.get('step')==step]
+    # A same-step QA event from a previous failed attempt is not evidence
+    # for this reserved operation. The original audit can contain retries.
+    current=[r for r in rows if r.get('step')==step and
+             r.get('attempt_id')==work['attempt_id'] and
+             r.get('operation_sha256')==work['operation_sha256'] and
+             r.get('master_sha256')==work['master_sha256']]
     audit=lambda kind:any(r.get('event')==kind for r in current)
     geo=c_paths.get('features')
     path_lines=type(geo) is list and bool(geo) and all(
