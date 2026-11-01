@@ -9,7 +9,7 @@ import math
 from c07_positive_native_process import _original_attempt,_registered_artifacts
 from c07_p1_thirty_native_domain import inspect as inspect_p1,jbytes
 from c07_p6_collision_semantics import _triangles
-from c07_a10_c10_original_evidence import original_image
+from visual_content_metrics import decode_grid, VisualContentBlocked
 
 RULE='AAA-200-F-056'
 VIEWS=('FRONT','REAR','LEFT','RIGHT','TOP')
@@ -136,11 +136,11 @@ def inspect(ctx,rid):
         if checks[CRITERIA[1]]:
             decoded=[]
             for raw in images.values():
-                try:decoded.append(original_image(raw))
-                except (ValueError,TypeError,KeyError,IndexError,OverflowError):
+                try:decoded.append(decode_grid(raw,step=1))
+                except (VisualContentBlocked,ValueError,TypeError,KeyError,IndexError,OverflowError):
                     decoded.append(None)
             checks[CRITERIA[2]]=bool(all(decoded) and
-                 len({x['pixel_sha256'] for x in decoded})==5)
+                 len({tuple(x[2]) for x in decoded})==5)
     return {'rule_id':RULE,'checks':checks,'evidence_complete':True,
             'native_camera_projection_report':report,
             'original_audit_sha256':audit_sha,
