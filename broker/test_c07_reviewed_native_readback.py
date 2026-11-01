@@ -1,4 +1,4 @@
-"""Fail-closed native proof consumption across 12 approved documentary rules.
+"""Fail-closed native proof consumption across the explicitly reviewed documentary rules.
 
 CI fixtures prove routing and rejection, not 3D asset quality or MG0 PASS.
 """
@@ -42,7 +42,7 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
 
     def test_each_approved_validator_requires_independent_readback(self):
         self.assertEqual(len(approved.REVIEWED),29)
-        self.assertEqual(len(NATIVE_RULES),11)
+        self.assertEqual(len(NATIVE_RULES),17)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
         for rid in sorted(set(approved.REVIEWED) - set(NATIVE_RULES)):
