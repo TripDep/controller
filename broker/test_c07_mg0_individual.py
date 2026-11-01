@@ -193,5 +193,50 @@ class Tests(unittest.TestCase):
             mg.inspect_batch(damaged,raw,ASSET,sha(damaged),[RULE],ATTEMPT)
 
 
+
+    def test_operation_bound_batch_ignores_other_operation_on_same_attempt(self):
+        op_a='a'*64
+        op_b='d'*64
+        self.add('STEP_CLOSE',True,result='PASS',operation_sha256=op_a)
+        self.add('USER_REVIEW',True,result='FAIL',detected_by='OWNER',
+                 owner_evidence_sha256='e'*64,assistant_preflight_passed=True,
+                 operation_sha256=op_b)
+        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        a=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
+                           operation_sha256=op_a)
+        b=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
+                           operation_sha256=op_b)
+        self.assertEqual(a['counts'],{'FAIL':0,'UNKNOWN':1,'PASS':0})
+        self.assertEqual(b['counts'],{'FAIL':1,'UNKNOWN':0,'PASS':0})
+        self.assertTrue(a['operation_bound'])
+        self.assertEqual(a['operation_sha256'],op_a)
+        self.assertFalse(a['advancement_authorized'])
+
+    def test_mg0_baseline_must_not_reference_another_operation(self):
+        op_a='a'*64
+        op_b='d'*64
+        passed=self.add('STEP_CLOSE',True,result='PASS',
+                        operation_sha256=op_a)
+        self.add('MG0_BASELINE_PASS',True,
+                 previous_pass_record_hash=passed['record_hash'],
+                 operation_sha256=op_b)
+        self.add('USER_REVIEW',True,result='FAIL',detected_by='OWNER',
+                 owner_evidence_sha256='e'*64,
+                 assistant_preflight_passed=False,
+                 operation_sha256=op_b)
+        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
+                                operation_sha256=op_b)
+        self.assertEqual(report['counts']['FAIL'],0)
+        self.assertEqual(report['counts']['UNKNOWN'],1)
+        self.assertEqual(report['individual_mg0_passes'],0)
+
+    def test_mg0_bound_batch_rejects_untrusted_operation_identifier(self):
+        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        for operation in ('main','F'*64,'f'*63,123):
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(IntakeBlocked,'BATCH_EXACT_OPERATION_SHA'):
+                    mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),
+                                     [RULE],ATTEMPT,operation_sha256=operation)
 if __name__=='__main__':
     unittest.main()
