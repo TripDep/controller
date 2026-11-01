@@ -60,7 +60,7 @@ NATIVE_RULES = {
         'pre_d_original_atlas_and_baseline_contract_sha_bound',
         'actual_native_and_baseline_material_texture_bindings_recomputed',
         'measured_original_atlas_binding_reduction_and_texture_quality_retained')),
-    'AAA-200-L-119': ('p345_remaining_scoped', (
+    'AAA-200-L-119': ('p345_bake_reuse_macro_full', (
         'pre_d_original_bake_necessity_and_source_normal_map_sha_bound',
         'actual_exported_normal_texture_and_baked_png_pixels_redecoded',
         'actual_baked_map_channels_and_exported_normal_image_match')),
@@ -100,7 +100,7 @@ NATIVE_RULES = {
         'pre_d_original_lod_transition_policy_and_views_sha_bound',
         'actual_original_near_far_lod_geometry_and_pixels_recomputed',
         'trusted_renderer_continuity_and_no_visible_lod_popping_confirmed')),
-    'AAA-200-O-147': ('p345_remaining_scoped', (
+    'AAA-200-O-147': ('p345_bake_reuse_macro_full', (
         'pre_d_original_texture_reuse_and_quality_policy_sha_bound',
         'actual_shared_original_glb_image_bindings_and_pixels_recomputed',
         'independent_scene_quality_not_degraded_by_reuse_confirmed')),
@@ -479,6 +479,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
     elif domain == 'p4_material_macro_full':
         from c07_p4_material_macro_full_review import inspect as inspect_p4_material
+    elif domain == 'p345_bake_reuse_macro_full':
+        from c07_p345_bake_reuse_macro_full_review import inspect as inspect_bake_reuse
     elif domain == 'p345_five_macro_full':
         from c07_p345_five_macro_full_review import inspect as inspect_five_macro
     elif domain == 'p345_remaining_scoped':
@@ -531,6 +533,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                      if domain == 'p4_pbr_maps_full' else None)
     p4_material_review = (inspect_p4_material(source_context, rule_id)
                           if domain == 'p4_material_macro_full' else None)
+    p345_bake_reuse_review = (inspect_bake_reuse(source_context, rule_id)
+                              if domain == 'p345_bake_reuse_macro_full' else None)
     p345_five_macro_review = (inspect_five_macro(source_context, rule_id)
                              if domain == 'p345_five_macro_full' else None)
     p345_remaining_review = (inspect_remaining(source_context, rule_id)
@@ -552,7 +556,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, visual_qa_three_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
-                         p345_remaining_review, p345_five_macro_review, p8_delivery_review, p8_three_quality_review, p8_intersection_review,
+                         p345_remaining_review, p345_five_macro_review, p345_bake_reuse_review, p8_delivery_review, p8_three_quality_review, p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -670,6 +674,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_pbr_review'] = p4_pbr_review
     if p4_material_review is not None:
         proof['original_p4_material_macro_review'] = p4_material_review
+    if p345_bake_reuse_review is not None:
+        proof['original_p345_bake_reuse_macro_review'] = p345_bake_reuse_review
     if p345_five_macro_review is not None:
         proof['original_p345_five_macro_review'] = p345_five_macro_review
     if p345_remaining_review is not None:
