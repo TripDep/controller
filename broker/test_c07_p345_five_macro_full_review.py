@@ -68,6 +68,7 @@ class FiveMacroOriginals(unittest.TestCase):
         fake=glb(QUAD,[(0,1,3),(1,2,3)],NORMALS)
         test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',fake)
         test.sync()
+        ctx['controller']=test.f.controller
         self.assertNotEqual(build_packet(ctx,rid)['rule']['result'],'PASS')
 
     def test_physical_class_pbr_cannot_be_labeled_wood_when_real_metallic(self):
@@ -78,6 +79,7 @@ class FiveMacroOriginals(unittest.TestCase):
         test.add('P4_MATERIAL_CONFORMANCE','p4_material_conformance.json',
                  encoded(bad))
         test.sync()
+        ctx['controller']=test.f.controller
         self.assertEqual(build_packet(ctx,rid)['rule']['result'],'FAIL')
 
     def test_disconnected_uv_or_unreferenced_pbr_image_cannot_prove_variation(self):
@@ -94,6 +96,7 @@ class FiveMacroOriginals(unittest.TestCase):
                             primitive['attributes'].pop('TEXCOORD_0',None)
                 test.add('NATIVE_EXPORT','scene.glb',rewrite_glb(original,remove_uv))
                 test.sync()
+                ctx['controller']=test.f.controller
                 result=build_packet(ctx,rid)
                 self.assertEqual(result['rule']['result'],'FAIL')
 
@@ -103,6 +106,7 @@ class FiveMacroOriginals(unittest.TestCase):
         test.add('P4_WEATHERING_REFERENCE',
                  'p4_weathering_reference.png',png(solid(240)))
         test.sync()
+        ctx['controller']=test.f.controller
         self.assertNotEqual(build_packet(ctx,rid)['rule']['result'],'PASS')
 
     def test_invisible_geometry_removal_must_preserve_each_unique_original_face(self):
@@ -110,6 +114,7 @@ class FiveMacroOriginals(unittest.TestCase):
         test,ctx=self.setup_source(rid)
         test.add('P5_HIDDEN_BASELINE','hidden_before.glb',test.art['NATIVE_EXPORT'])
         test.sync()
+        ctx['controller']=test.f.controller
         self.assertEqual(build_packet(ctx,rid)['rule']['result'],'FAIL')
 
     def test_original_pins_missing_remain_unknown_and_not_forged_pass(self):
@@ -123,6 +128,7 @@ class FiveMacroOriginals(unittest.TestCase):
                 ctx['plan']['p345_evidence_contract'][
                     'original_artifact_sha256'].pop(role)
                 test.f.rebuild()
+                ctx['controller']=test.f.controller
                 self.assertNotEqual(build_packet(ctx,rid)['rule']['result'],'PASS')
 
 if __name__=='__main__':
