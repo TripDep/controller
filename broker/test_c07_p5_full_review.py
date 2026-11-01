@@ -30,7 +30,7 @@ def two_material_bindings(raw):
     encoded += b' ' * (-len(encoded) % 4)
     return (struct.pack('<4sII', b'glTF', 2, 28+len(encoded)+len(binary))
             + struct.pack('<I4s', len(encoded), b'JSON') + encoded
-            + struct.pack('<I4s', len(binary), b'BIN\\x00') + binary)
+            + struct.pack('<I4s', len(binary), b'BIN\x00') + binary)
 
 class P5FullNativeReviewTests(unittest.TestCase):
     def context(self):
