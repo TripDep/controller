@@ -8,8 +8,8 @@ independent MG0, owner acceptance, FiveM or advancement authorization.
 """
 from c07_cohort_completion_gate import catalog200_macro_snapshot
 from c07_native_source_rule_replayers import (
-    FULL_LITERAL_REVIEWED, NATIVE_RULES, build_packet)
-from supervisor_judgment import binding
+    FULL_LITERAL_REVIEWED, NATIVE_RULES, VALIDATORS, build_packet)
+from supervisor_judgment import binding, semantic_packet
 
 PHASE_INDEX = {'P'+str(i):i for i in range(9)}
 CONTEXT_KEYS = frozenset((
@@ -98,6 +98,12 @@ def inspect(context):
                         row['blocked_reason'] = (
                             type(exc).__name__ + ':' + str(exc)[:200])
                     else:
+                        # Reuse the canonical strict packet validator, not
+                        # just a few convenient producer fields.
+                        semantic_packet(packet, expected, {
+                            'validator_id': VALIDATORS[rid],
+                            'criteria': NATIVE_RULES[rid][1],
+                        })
                         requirement = packet.get('rule', {})
                         mg0 = packet.get('mg0', {})
                         checks = requirement.get('checks')
