@@ -141,8 +141,13 @@ class Tests(unittest.TestCase):
             validate(self.plan, self.inv)
         self.plan["question_200_original_witnesses"] = q200(self.inv)
         del self.plan["question_200_original_witnesses"]["rules"]["Q-180"]
+        # The missing original is still UNKNOWN in the native Q200 reader,
+        # rather than being forged merely to satisfy a batch count.
+        self.assertTrue(validate(self.plan, self.inv)[
+            "original_evidence_must_be_reread"])
+        self.plan["question_200_original_witnesses"]["rules"]["Q-201"] = {}
         with self.assertRaisesRegex(EvidenceContractBlocked,
-                                    "Q200_EXACT_200"):
+                                    "Q200_CANONICAL_WITNESSES_ONLY"):
             validate(self.plan, self.inv)
 
     def test_pre_d_mother_control_requires_actual_known_rule(self):
