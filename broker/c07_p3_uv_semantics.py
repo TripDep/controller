@@ -155,7 +155,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     records=_registered_artifacts(audit,state,step,source_loader,work)
     found={}
     for role,path,digest,raw in records:
-        if role in ("NATIVE_EXPORT","P3_UV_POLICY"):
+        if role in ("NATIVE_EXPORT","P3_UV_POLICY","P3_RELATED_EXPORT"):
             need(role not in found,"C07_P3_UV_DUPLICATE_ROLE:"+role)
             found[role]=(path,digest,raw)
     contract=plan.get("p345_evidence_contract",{})
@@ -191,6 +191,30 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
              and _positive(scale) and scale<=100 else None)
     anis=[x for _,a,_ in scanned or [] for x in a]
     density=[x for _,_,d in scanned or [] for x in d]
+    # Independently reopen a distinct related asset; density consistency
+    # cannot be certified by comparing a single asset against itself.
+    peer_raw=original("P3_RELATED_EXPORT",".glb")
+    peer_native=geometry(peer_raw) if peer_raw is not None else None
+    peer_doc,peer_bin=_glb_parts(peer_raw) if peer_native is not None else ({},b"")
+    peer_images=_texture_bytes(peer_doc,peer_bin) if peer_native is not None else None
+    peer_prims=[p for m in peer_doc.get("meshes",[])
+                for p in m.get("primitives",[])]
+    peer_textures=peer_doc.get("textures",[])
+    peer_materials=peer_doc.get("materials",[])
+    peer_linked=(len(peer_prims)==1 and len(peer_textures)==1
+        and len(peer_materials)>0
+        and peer_textures[0].get("source")==0
+        and type(peer_prims[0].get("material")) is int
+        and 0<=peer_prims[0]["material"]<len(peer_materials)
+        and peer_materials[peer_prims[0]["material"]].get(
+            "pbrMetallicRoughness",{}).get(
+            "baseColorTexture",{}).get("index")==0)
+    peer_pixels=(peer_images[0]["width"],peer_images[0]["height"]) if (
+        peer_images and len(peer_images)==1 and peer_linked) else None
+    peer_scanned=(_scan(peer_doc,peer_bin,scale,peer_pixels)
+                  if peer_native is not None and _positive(scale)
+                  and scale<=100 else None)
+    peer_density=[x for _,_,d in peer_scanned or [] for x in d]
     max_ratio=policy.get("max_uv_edge_anisotropy")
     target=policy.get("texel_px_per_m")
     tolerance=policy.get("texel_density_tolerance_pct")
@@ -224,6 +248,14 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                 and math.isfinite(tolerance) and 0<=tolerance<=100
                 and all(abs(v-target)<=target*tolerance/100
                         for v in density),
+            "distinct_original_related_asset_density_matches_pre_d_tolerance":
+                bool(density and peer_density and peer_raw != raw)
+                and type(policy.get("related_asset_id")) is str
+                and bool(policy["related_asset_id"].strip())
+                and _positive(target) and type(tolerance) in (int,float)
+                and math.isfinite(tolerance) and 0<=tolerance<=100
+                and all(abs(v-target)<=target*tolerance/100
+                        for v in density+peer_density),
         },
         117:{
             "all_original_uv_triangle_pairs_compared":
