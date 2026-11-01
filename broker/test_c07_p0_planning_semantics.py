@@ -48,19 +48,25 @@ class Tests(unittest.TestCase):
                            "trigger": "Slope exceeds target",
                            "mitigation": "Independent measured slope QA"}]},
             19: {"tasks": [
-                {"task": "Geometry", "estimated_hours": 2.0,
-                 "evidence_basis": "Original scope quantity"},
-                {"task": "Collision", "estimated_hours": 3.0,
-                 "evidence_basis": "Measured complexity"}],
+                {"task": "Geometry", "measurement_key": "bridge_count",
+                 "hours_per_unit": 1.0, "estimated_hours": 2.0,
+                 "evidence_basis": "Original measured bridge count"},
+                {"task": "Collision", "measurement_key": "collision_surfaces",
+                 "hours_per_unit": 1.0, "estimated_hours": 3.0,
+                 "evidence_basis": "Original measured collision surfaces"}],
                  "total_hours": 5.0},
             20: {"criteria": [
                 {"id": "TRIANGLE_LIMIT", "metric": "triangles",
                  "operator": "<=", "threshold": 10000,
                  "measurement_source": "Native GLB accessor parser"}]},
         }
+        self.measurements = {"measurements": {
+            "bridge_count": 2, "collision_surfaces": 3}}
         self.sync()
 
     def sync(self):
+        self.f.add_item("P0_MEASUREMENTS", "p0_measurements.json",
+                        json.dumps(self.measurements, sort_keys=True).encode())
         for n, doc in self.docs.items():
             raw = json.dumps(doc, sort_keys=True).encode()
             self.f.add_item(ROLE_BY_NUMBER[n],
@@ -119,10 +125,19 @@ class Tests(unittest.TestCase):
     def test_missing_original_documents_do_not_create_positive_passes(self):
         for n in self.docs:
             self.f.items.pop(ROLE_BY_NUMBER[n])
+        self.f.items.pop("P0_MEASUREMENTS")
         self.f.rebuild()
         result = self.review()
         self.assertEqual(result["machine_positive_obligations"], 0)
         self.assertEqual(result["original_registered_planning_documents"], [])
+
+    def test_estimate_without_original_measured_quantities_stays_unknown(self):
+        self.f.items.pop("P0_MEASUREMENTS")
+        self.f.rebuild()
+        result = self.review()
+        self.assertEqual(result["rules"]["AAA-200-B-019"]["machine_scope"],
+                         "UNKNOWN")
+        self.assertEqual(result["full_rule_semantic_passes"], 0)
 
     def test_json_duplicate_key_is_not_silent_override(self):
         self.f.add_item("P0_PROJECT_BRIEF", "p0_project_brief.json",
