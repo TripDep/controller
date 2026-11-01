@@ -183,3 +183,115 @@ def refuse_full_completion(report):
     """No code-only fixture can authorize C07 FINITO or production."""
     require_code100(report)
     raise CohortIncomplete('C07_MG0_OWNER_FIVEM_PROOF_NOT_VERIFIED')
+
+# All 20 AAA-200 families, rather than just the frozen 100 source cohort.
+# This is a structural/source-code gate: NO MG0, artistic or FiveM PASS.
+AAA_CATALOG_SHA = 'f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9'
+
+
+def catalog200_macro_snapshot(inventory):
+    """Audit *whole* canonical A-T families and group them by catalog phase.
+
+    A phase macro is code-ready only if every one of its full ten-rule
+    families has a consuming-side native reader registered in all three
+    authoritative code registries. No micro observation can fill a missing
+    source-specific rule. An entire missing family remains UNKNOWN, not FAIL.
+    """
+    import hashlib
+    from collections import OrderedDict
+
+    if (type(inventory) is not dict or
+            inventory.get('schema') != 'gg-effective-family-inventory-v1' or
+            inventory.get('rule_count') != 763 or
+            type(inventory.get('rules')) is not dict or
+            len(inventory['rules']) != 763 or
+            inventory.get('source_digests', {}).get('aaa_catalog') !=
+            AAA_CATALOG_SHA):
+        raise CohortIncomplete('C07_AAA200_CANONICAL_763_CATALOG_REQUIRED')
+    phase_groups = OrderedDict()
+    seen = set()
+    for index, letter in enumerate('ABCDEFGHIJKLMNOPQRST'):
+        ids = tuple('AAA-200-' + letter + '-' + str(number).zfill(3)
+                    for number in range(index * 10 + 1, index * 10 + 11))
+        phase = None
+        ready = []
+        inconsistent = []
+        for rid in ids:
+            row = inventory['rules'].get(rid)
+            if (type(row) is not dict or
+                    row.get('family') != 'AAA-200' or
+                    row.get('catalog_number') != int(rid.rsplit('-', 1)[1]) or
+                    type(row.get('requirement')) is not str or
+                    not row['requirement'].strip() or
+                    hashlib.sha256(row['requirement'].encode('utf-8')).hexdigest()
+                    != row.get('requirement_sha256') or
+                    row.get('source_sha256') != AAA_CATALOG_SHA or
+                    row.get('catalog_phase') not in
+                    ('P0','P1','P2','P3','P4','P5','P6','P7','P8')):
+                raise CohortIncomplete(
+                    'C07_AAA200_ORIGINAL_LITERAL_OR_PHASE_DRIFT:' + rid)
+            current_phase = row['catalog_phase']
+            if phase is None:
+                phase = current_phase
+            if phase != current_phase:
+                raise CohortIncomplete(
+                    'C07_AAA200_FAMILY_SPLIT_ACROSS_PHASES:' + letter)
+            native = NATIVE_RULES.get(rid)
+            validator = NATIVE_VALIDATORS.get(rid)
+            enrolled = REVIEWED.get(rid)
+            replayed = REPLAYERS.get(rid)
+            if (type(native) is tuple and len(native) == 2 and
+                    type(native[1]) is tuple and len(native[1]) >= 2 and
+                    len(set(native[1])) == len(native[1]) and
+                    type(validator) is str and validator and
+                    enrolled == (validator, native[1]) and
+                    replayed == validator):
+                ready.append(rid)
+            elif any(x is not None for x in
+                     (native, validator, enrolled, replayed)):
+                inconsistent.append(rid)
+        if not ids or seen.intersection(ids):
+            raise CohortIncomplete('C07_AAA200_DUPLICATE_FAMILY_IDS')
+        seen.update(ids)
+        missing = sorted(set(ids) - set(ready))
+        phase_groups.setdefault(phase, []).append({
+            'family': letter, 'canonical_rule_count': 10,
+            'reviewed_native_code': len(ready), 'missing_native_code': len(missing),
+            'missing_ids': missing, 'registry_inconsistencies': inconsistent,
+            'whole_family_code_ready': not missing and not inconsistent,
+            'independent_mg0': 'UNVERIFIED',
+            'full_semantic_asset_verdict': 'UNKNOWN',
+        })
+    if len(seen) != 200 or len(phase_groups) > 9:
+        raise CohortIncomplete('C07_AAA200_200_RULE_PARTITION_DRIFT')
+    macros = []
+    for phase, families in sorted(phase_groups.items()):
+        macros.append({
+            'phase': phase, 'families': families,
+            'rule_count': len(families) * 10,
+            'whole_family_count': len(families),
+            'native_code_reviewed': sum(f['reviewed_native_code']
+                                        for f in families),
+            'missing_native_code': sum(f['missing_native_code']
+                                       for f in families),
+            'whole_macro_code_ready': all(f['whole_family_code_ready']
+                                          for f in families),
+            'operational_mg0': 'UNVERIFIED',
+            'advancement_authorized': False,
+        })
+    return {
+        'schema': 'c07-aaa200-whole-family-phase-macro-code-gate-v1',
+        'canonical_rule_count': 200, 'family_count': 20,
+        'phase_macro_count': len(macros),
+        'native_code_reviewed': sum(x['native_code_reviewed']
+                                    for x in macros),
+        'missing_native_code': sum(x['missing_native_code']
+                                   for x in macros),
+        'macros': macros,
+        'all_macro_code_ready': all(x['whole_macro_code_ready']
+                                    for x in macros),
+        'independent_mg0': 'UNVERIFIED', 'owner_acceptance': 'UNVERIFIED',
+        'fivem_runtime': 'UNVERIFIED',
+        'advancement_authorized': False, 'c07_finished': False,
+    }
+
