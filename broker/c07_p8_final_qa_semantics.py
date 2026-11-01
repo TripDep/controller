@@ -9,7 +9,7 @@ import math
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p3_geometry_semantics import geometry, _read_accessor
 from c07_p5_budget_semantics import _glb_parts, _json
-from c07_a10_c10_original_evidence import original_image
+from c07_p4_texture_semantics import rgba
 from c07_p678_forty_native_domain import TEXT, PHASES
 
 NUMBERS=tuple(range(181,191))
@@ -78,14 +78,14 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         return _json(raw) if raw is not None else {}
     def png_role(role):
         raw=original(role,".png")
-        return original_image(raw) if raw is not None else None
+        return rgba(raw) if raw is not None else None
     native=original("NATIVE_EXPORT",".glb")
     baseline=original("BASELINE_SNAPSHOT",".glb")
     metrics=geometry(native) if native is not None else None
     bbox,doc=bounds(native) if native is not None else (None,{})
     views={v:png_role("VISUAL_VIEW_"+v) for v in VIEWS}
     six=all(views.values())
-    unique=six and len({v["sha256"] for v in views.values()})==6
+    unique=six and len({v["pixel_sha256"] for v in views.values()})==6
     aligned=json_role("P8_ALIGNMENT_REPORT")
     intersections=json_role("P8_INTERSECTION_REPORT")
     normals=json_role("P8_NORMALS_REPORT")
@@ -178,7 +178,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       186:{"original_area_context_raster_decoded":context is not None,
            "area_context_differs_from_original_front_view":
                 bool(context and views["FRONT"] and
-                     context["sha256"]!=views["FRONT"]["sha256"])},
+                     context["pixel_sha256"]!=views["FRONT"]["pixel_sha256"])},
       187:{"original_baseline_export_bytes_differ":bool(changed),
            "original_regression_tests_bound_to_before_after":bool(regression_bound)},
       188:{"original_machine_report_bound_to_real_export":bool(machine_bound),
