@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for twenty-one original-source native per-rule replayers.
+"""Adversarial source-byte tests for twenty-two original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -26,6 +26,8 @@ from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, packa
 
 CASES = (
     (P1Thirty, 'AAA-200-E-044', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (UVFixture, 'AAA-200-L-116',
+     'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (TextureFixture, 'AAA-200-M-124', 'test_six_original_pixel_oracles_observed_not_approved'),
     (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
@@ -104,9 +106,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_twenty_one_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 21)
-        self.assertEqual(len(set(x[1] for x in CASES)), 21)
+    def test_twenty_two_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 22)
+        self.assertEqual(len(set(x[1] for x in CASES)), 22)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -186,6 +188,14 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.put(glb(TRI, [(0,1,2), (2,1,0)], UP))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-L-112')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(UVFixture,
+            'test_three_actual_uv_oracles_are_not_full_rule_or_mg0')
+        from test_c07_p3_uv_semantics import uv_glb, QUAD
+        test.put(related=uv_glb(points=[(x+3,y,z) for x,y,z in QUAD],
+            uv=[(0,0),(2,0),(2,2),(0,2)]))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-116')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(CollisionFixture,
             'test_four_real_collision_oracles_not_fivem_or_mg0')
