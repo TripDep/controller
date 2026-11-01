@@ -64,6 +64,21 @@ class Tests(unittest.TestCase):
                 'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
                 'advancement_authorized':False,'rules':rules,
             })
+        from c07_p1_design_source_review import IDS as DESIGN_IDS
+        self.p1_design={
+            'family_rule_count':30,'rule_count':13,
+            'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+            'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
+            'advancement_authorized':False,'full_semantic_passes':0,
+            'individual_mg0_passes':0,
+            'rules':{rid:{
+                'original_pixel_geometry_checks':{'source_original_a':True,
+                                                  'source_original_b':True},
+                'requirement_sha256':'d'*64,'source_sha256':'c'*64,
+                'full_rule_semantics':'UNKNOWN',
+                'individual_mg0':'UNKNOWN','advancement_authorized':False}
+                for rid in DESIGN_IDS},
+        }
         self.p345_macro={
             'canonical_rule_count':40,'due_count':40,
             'visited_due_count':40,
@@ -89,13 +104,18 @@ class Tests(unittest.TestCase):
               patch.object(batch.p678,'inspect',return_value=self.reports[2]) as p678,
               patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0,
               patch('c07_p345_macro_execution.run',
-                    return_value=self.p345_macro) as macro):
+                    return_value=self.p345_macro) as macro,
+              patch('c07_p1_design_source_review.inspect',
+                    return_value=self.p1_design) as design):
             result=batch.inspect(self.inv,self.plan,Controller(),'GARDEN','STEP100',
                                  self.work,source_loader=lambda path:b'')
             for reader in (p1,p345,p678):
                 reader.assert_called_once()
             self.assertEqual(mg0.call_args.kwargs['operation_sha256'],OPERATION)
             macro.assert_called_once()
+            design.assert_called_once()
+            self.assertEqual(design.call_args.args[:2],(self.inv,self.plan))
+            self.assertEqual(result['p1_thirteen_original_design'],self.p1_design)
             self.assertEqual(macro.call_args.args[0]['work'],self.work)
             self.assertEqual(result['p345_forty_source_macro'],self.p345_macro)
             self.assertEqual(mg0.call_args.args[4],sorted(batch.COHORT))
@@ -165,6 +185,17 @@ class Tests(unittest.TestCase):
         self.reports[0]['rules'][rid]['full_rule_semantics']='UNKNOWN'
         self.mg0['rules'][rid]['verdict']='PASS'
         with self.assertRaisesRegex(batch.NativeBatchBlocked,'MG0_FALSE_POSITIVE'):
+            self.run_batch()
+
+    def test_p1_family_refuses_forged_design_approval_or_missing_id(self):
+        self.p1_design['advancement_authorized']=True
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED'):
+            self.run_batch()
+        self.p1_design['advancement_authorized']=False
+        self.p1_design['rules'].pop(next(iter(self.p1_design['rules'])))
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED'):
             self.run_batch()
 
     def test_p345_macro_refuses_forged_40_rule_approval_or_missing(self):
