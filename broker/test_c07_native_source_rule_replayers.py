@@ -73,7 +73,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 original_fixture.canonical({k: v for k, v in finding.items()
                                             if k != 'record_hash'}))
             f.controller.audit_path(f.asset).write_bytes(b''.join(
-                original_fixture.canonical(row) + b'\\n'
+                original_fixture.canonical(row) + b'\n'
                 for row in f.records))
             f.controller._state['last_audit_hash'] = finding['record_hash']
         return test, {
@@ -198,7 +198,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         finding['record_hash'] = original_fixture.sha(original_fixture.canonical(
             {k: v for k, v in finding.items() if k != 'record_hash'}))
         test.f.controller.audit_path(test.f.asset).write_bytes(b''.join(
-            original_fixture.canonical(row) + b'\\n' for row in test.f.records))
+            original_fixture.canonical(row) + b'\n' for row in test.f.records))
         test.f.controller._state['last_audit_hash'] = finding['record_hash']
         self.assertEqual(build_packet(ctx, 'AAA-200-S-189')['rule']['result'], 'FAIL')
 
