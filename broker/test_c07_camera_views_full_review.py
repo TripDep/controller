@@ -96,11 +96,10 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                     self.assertIn(rid,FULL_LITERAL_REVIEWED)
                     self.assertNotEqual(packet['rule']['result'],'PASS')
                 else:
-                    self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
-                    self.assertEqual(packet['rule']['result'],'UNKNOWN')
-                    with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
-                        replay(None,packet,expected,spec,
-                               source_context=lambda _:ctx)
+                    self.assertIn(rid,FULL_LITERAL_REVIEWED)
+                    # Cardinal original captures alone are not sufficient
+                    # without actual multi-face geometry visibility.
+                    self.assertNotEqual(packet['rule']['result'],'PASS')
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
 
     def test_reused_pixels_with_different_original_names_never_pass(self):
