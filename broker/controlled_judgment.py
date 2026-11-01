@@ -1533,6 +1533,41 @@ class ControlledJudgment:
                                 'machine_positive_obligations'],
                             full_rule_semantic_passes=0, individual_mg0_passes=0,
                             advancement_authorized=False)
+                # N-131..140 original pixel lighting, camera-view and
+                # technical QA observations; no owner/FiveM/MG0 certification.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_lighting_semantics import (
+                        IDS as P4_LIGHT_IDS, inspect as inspect_p4_light)
+                    p4_light = inspect_p4_light(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_light['source_rule_count'] == 10
+                           and set(p4_light['rules']) == set(P4_LIGHT_IDS)
+                           and p4_light['full_rule_semantic_passes'] == 0
+                           and p4_light['individual_mg0_passes'] == 0
+                           and p4_light['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p4_light['rules'].values()),
+                           'CONTROLLED_P4_LIGHTING_FALSE_MG0_PASS')
+                    if p4_light['metrics']['decoded_view_count'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_LIGHTING_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_light['original_audit_sha256'],
+                            original_audit_tail=p4_light['original_audit_tail'],
+                            source_rule_ids=list(P4_LIGHT_IDS),
+                            original_light_metrics=p4_light['metrics'],
+                            original_rule_machine_checks=p4_light['rules'],
+                            machine_positive_obligations=p4_light[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Five additional literal P5 quantitative oracles on original
                 # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
                 # This is read-only machine evidence, never full MG0 or QA.
