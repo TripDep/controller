@@ -77,12 +77,11 @@ class NativeRasterFamily(unittest.TestCase):
              'RIGHT':{'position_xyz':[2,.5,.5],'forward_xyz':[-1,0,0]},
              'TOP':{'position_xyz':[.5,.5,2],'forward_xyz':[0,0,-1]},
           },
+        }
         for camera in self.policy['cameras'].values():
             camera['projection']='ORTHOGRAPHIC'
             camera['orthographic_width_m']=1.25
             camera['orthographic_height_m']=1.25
-
-        }
         self.sync()
     def sync(self):
         self.t.put('P1_NATIVE_RASTER_POLICY','raster_policy.json',
