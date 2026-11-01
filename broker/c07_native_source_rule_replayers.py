@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-O-149': ('p5_alpha_cost_full', (
+        'pre_d_complete_vegetation_transparency_cost_budget_and_roles_sha_pinned',
+        'all_original_alpha_primitives_and_texture_bytes_independently_measured',
+        'actual_original_vegetation_transparent_triangle_draw_and_rgba_costs_within_pre_d_budget')),
     'AAA-200-F-059': ('p1_structural_fix_full', (
         'pre_d_complete_structural_defect_correction_and_detail_gate_policy_sha_pinned',
         'every_original_structural_before_after_mesh_recomputed_and_correction_effective',
@@ -230,6 +234,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-O-149',
     'AAA-200-F-059',
     'AAA-200-S-182', 'AAA-200-S-187',
     'AAA-200-S-183',
@@ -310,6 +315,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p8_closure_semantics import inspect
     elif domain == 'p5_full':
         from c07_p5_full_review import inspect as inspect_p5_full
+    elif domain == 'p5_alpha_cost_full':
+        from c07_p5_alpha_cost_full_review import inspect as inspect_alpha_cost
     elif domain == 'p1_blockout_full':
         from c07_p1_blockout_full_review import inspect as inspect_blockout
     elif domain == 'p1_structural_fix_full':
@@ -342,6 +349,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
+    alpha_cost_review = (inspect_alpha_cost(source_context, rule_id)
+                         if domain == 'p5_alpha_cost_full' else None)
     p1_blockout_review = (inspect_blockout(source_context, rule_id)
                           if domain == 'p1_blockout_full' else None)
     p1_structural_fix_review = (inspect_structural_fix(source_context, rule_id)
@@ -371,7 +380,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
-                        (p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
+                        (alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p8_intersection_review,
@@ -460,6 +469,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_topology_review'] = topology_review
     if p5_review is not None:
         proof['original_p5_full_review'] = p5_review
+    if alpha_cost_review is not None:
+        proof['original_p5_alpha_cost_review'] = alpha_cost_review
     if p1_spatial_review is not None:
         proof['original_p1_spatial_review'] = p1_spatial_review
     if p1_blockout_review is not None:
