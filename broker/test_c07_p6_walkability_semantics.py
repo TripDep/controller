@@ -19,6 +19,10 @@ POLICY={
  "vehicle_corridors":[{"name":"road","kind":"vehicle",
                        "min_xyz":[2,2,-0.5],"max_xyz":[5,5,2]}],
  "min_vehicle_width_m":2.5,
+ "min_vehicle_height_m":2.0,
+ "min_player_width_m":0.8,
+ "terrain_contact_regions":[{"name":"floor_contact",
+     "min_xyz":[-0.1,-0.1,-0.1],"max_xyz":[1.1,1.1,0.1]}],
  "terrain_contact_max_gap_m":0.1,
 }
 class Tests(unittest.TestCase):
@@ -100,6 +104,22 @@ class Tests(unittest.TestCase):
         self.f.rebuild()
         self.assertEqual(self.examine()["rules"][IDS[-1]]["machine_scope"],
                          "UNKNOWN_OR_DEFECT")
+    def test_player_contact_and_vehicle_height_originals_are_not_producer_labels(self):
+        for key,value,rid in (
+            ("min_player_width_m",2.0,"AAA-200-P-157"),
+            ("terrain_contact_regions",[{"name":"remote",
+                 "min_xyz":[8,8,8],"max_xyz":[9,9,9]}],"AAA-200-P-158"),
+            ("min_vehicle_height_m",4.0,"AAA-200-P-159"),
+        ):
+            with self.subTest(rule=rid):
+                old=copy.deepcopy(self.policy[key])
+                self.policy[key]=value
+                self.put()
+                self.assertEqual(self.examine()["rules"][rid]["machine_scope"],
+                                 "UNKNOWN_OR_DEFECT")
+                self.policy[key]=old
+                self.put()
+
     def test_missing_pre_d_pin_is_not_a_positive(self):
         self.f.plan["p678_evidence_contract"]["original_artifact_sha256"].pop(
             "P6_COLLISION_POLICY")
