@@ -12,6 +12,10 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-041': ('p1_site_full', (
+        'pre_d_site_survey_boundary_and_metric_dimensions_sha_pinned',
+        'original_survey_polygon_area_and_extents_independently_measured',
+        'native_original_mesh_extents_inside_measured_site_boundary')),
     'AAA-200-E-044': ('p1_paths_full', (
         'pre_d_original_geojson_and_path_class_contract_sha_pinned',
         'all_original_path_features_have_unique_ids_valid_nonzero_geometry_and_explicit_class',
@@ -97,10 +101,10 @@ NATIVE_RULES = {
     'AAA-200-T-197': ('closure', (
         'original_candidate_not_self_labelled_approved',
         'source_bound_candidate_and_export_exist')),
-    'AAA-200-E-042': ('p1', (
-        'original_xyz_coordinate_origin_declared',
-        'original_coordinate_basis_named',
-        'native_local_GLTF_positions_available')),
+    'AAA-200-E-042': ('p1_site_full', (
+        'pre_d_metric_axis_contract_and_native_source_sha_pinned',
+        'right_handed_axis_basis_origin_orientation_and_scale_verified',
+        'actual_original_mesh_geometry_reopened_in_defined_local_coordinates')),
     'AAA-200-E-047': ('p1', (
         'expected_original_structural_envelope_declared',
         'native_original_bounds_recomputed',
@@ -158,6 +162,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-E-041', 'AAA-200-E-042',
     'AAA-200-E-043', 'AAA-200-E-044', 'AAA-200-E-045', 'AAA-200-E-047',
     'AAA-200-F-052', 'AAA-200-F-054', 'AAA-200-F-058',
     'AAA-200-F-051', 'AAA-200-F-060',
@@ -237,6 +242,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
     elif domain == 'p1_paths_full':
         from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
+    elif domain == 'p1_site_full':
+        from c07_p1_site_contract_full_review import inspect as inspect_site
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -251,14 +258,16 @@ def build_packet(source_context, rule_id, *, expected=None):
                          if domain == 'p1_spatial' else None)
     p1_paths_review = (inspect_p1_paths(source_context, rule_id)
                        if domain == 'p1_paths_full' else None)
+    p1_site_review = (inspect_site(source_context, rule_id)
+                      if domain == 'p1_site_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
-                         p6_invisible_review, p6_access_review,
-                         p1_blockout_review)
+                         p1_site_review, p6_invisible_review,
+                         p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
         from c07_positive_native_process import _original_attempt
@@ -347,6 +356,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_blockout_review'] = p1_blockout_review
     if p1_paths_review is not None:
         proof['original_p1_paths_access_review'] = p1_paths_review
+    if p1_site_review is not None:
+        proof['original_p1_site_contract_review'] = p1_site_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
