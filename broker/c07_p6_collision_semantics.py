@@ -50,6 +50,11 @@ def _triangles(raw):
          "C07_P6_TRIANGLE_COUNT_MISMATCH")
     return triangles
 
+def _canonical_triangle_geometry(triangles):
+    """Normalize triangle/vertex order; different GLB bytes are not separation."""
+    return tuple(sorted(tuple(sorted(tuple(v) for v in tri))
+                        for tri in triangles))
+
 def _centroid_in(triangle,box):
     lo,hi=box
     point=[sum(p[k] for p in triangle)/3 for k in range(3)]
@@ -149,7 +154,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
             "separate_actual_triangle_sets_independently_read":
                 c_count>0 and v_count>0,
             "collision_and_visual_triangle_geometry_independently_distinct":
-                c_count>0 and v_count>0 and collision != visual,
+                c_count>0 and v_count>0 and
+                _canonical_triangle_geometry(collision) !=
+                _canonical_triangle_geometry(visual),
         },
         153:{
             "original_collision_triangle_budget_explicit":
