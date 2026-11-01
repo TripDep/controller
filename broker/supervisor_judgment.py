@@ -110,13 +110,8 @@ class NativeRuleBackend:
             # No fall-through to a generic semantic_packet verifier. Every
             # reviewed ID must replay the underlying immutable source through
             # its own independent consuming-side implementation.
-            if rule == 'AAA-200-B-012':
-                from planning_semantics import native_rule_readback
-            elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
-                from r173_rule_semantics import native_rule_readback
-            else:
-                need(False, 'JUDGMENT_NO_NATIVE_SOURCE_REPLAYER_FOR_RULE')
-            native_rule_readback(self.api, packet, expected, spec)
+            from c07_native_replayer_dispatch import replay as replay_original_source
+            replay_original_source(self.api, packet, expected, spec)
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):
