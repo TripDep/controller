@@ -102,7 +102,9 @@ class Tests(unittest.TestCase):
                     'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
                     'advancement_authorized':False} for rid in ids},
             }
+        from c07_native_source_rule_replayers import NATIVE_RULES
         self.p345_macro={
+            'schema':'c07-p345-forty-original-source-macro-v1',
             'canonical_rule_count':40,'due_count':40,
             'visited_due_count':40,
             'attempt_id':ATTEMPT,
@@ -110,7 +112,13 @@ class Tests(unittest.TestCase):
             'advancement_authorized':False,
             'individual_mg0_independently_approved':False,
             'fivem_runtime_approved':False,'owner_approved':False,
-            'rows':{rid:{'machine_result':'UNKNOWN'}
+            'result_counts':{'PASS':0,'FAIL':0,'UNKNOWN':40,
+                             'BLOCKED':0,'NOT_DUE':0},
+            # This is a fixture proving the gate, NOT a real source replay.
+            'rows':{rid:{
+                'machine_result':'UNKNOWN','blocked_reason':None,
+                'source_checks':{name:False
+                                  for name in NATIVE_RULES[rid][1]}}
                     for rid in batch.p345.IDS},
         }
         self.mg0={
@@ -255,6 +263,17 @@ class Tests(unittest.TestCase):
         self.p345_macro['rows'].pop(batch.p345.IDS[0])
         with self.assertRaisesRegex(batch.NativeBatchBlocked,
                                     'P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED'):
+            self.run_batch()
+
+    def test_40_visited_with_one_blocked_is_not_certified(self):
+        rid=batch.p345.IDS[10]
+        self.p345_macro['rows'][rid]['machine_result']='BLOCKED'
+        self.p345_macro['rows'][rid]['blocked_reason']='original missing'
+        self.p345_macro['rows'][rid]['source_checks']={}
+        self.p345_macro['result_counts']['BLOCKED']=1
+        self.p345_macro['result_counts']['UNKNOWN']=39
+        with self.assertRaisesRegex(ValueError,
+                                    'C07_P345_CERTIFICATE_SOURCE_REPLAY_BLOCKED'):
             self.run_batch()
 
     def test_missing_exact_operation_pin_and_source_requirement_rejected(self):
