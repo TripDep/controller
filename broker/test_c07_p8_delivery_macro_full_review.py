@@ -140,6 +140,24 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
             'original_artifact_sha256':{
                 role:meta['sha256'] for role,meta in self.f.items.items()}}
         self.f.rebuild()
+        # In the original Controller chain, each observed recurrent defect
+        # must have its own current-attempt finding after the reservation.
+        from test_c07_positive_native_process import canonical
+        for issue in self.fixture.docs['P8_DEFECT_HISTORY']['issues']:
+            event={'asset':self.f.asset,'event':'QUALITY_FINDING',
+                'prev_hash':self.f.records[-1]['record_hash'],
+                'step':self.f.step,'attempt_id':self.f.work['attempt_id'],
+                'operation_sha256':self.f.work['operation_sha256'],
+                'severity':'HIGH','status':'OPEN',
+                'issue_id':issue['id'],
+                'root_cause':issue['root_cause'],
+                'before_sha256':issue['before_sha256'],
+                'after_sha256':issue['after_sha256']}
+            event['record_hash']=sha(canonical(event))
+            self.f.records.append(event)
+        self.f.controller.audit_path(self.f.asset).write_bytes(
+            b''.join(canonical(row)+b'\n' for row in self.f.records))
+        self.f.controller._state['last_audit_hash']=self.f.records[-1]['record_hash']
 
     def context(self):
         return {'inventory':self.f.inv,'plan':self.f.plan,
@@ -202,6 +220,11 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
         self.refresh()
         self.assertFalse(self.row('AAA-200-T-199')['checks'][
             'changed_method_and_corrected_original_geometry_bound_to_same_current_operation'])
+
+    def test_history_without_current_original_audit_findings_is_not_recurrence(self):
+        self.f.rebuild()
+        self.assertFalse(self.row('AAA-200-T-198')['checks'][
+            'recurrent_original_defect_events_and_precorrection_geometry_authenticated'])
 
     def test_duplicate_history_rows_same_original_cannot_prove_recurrence(self):
         self.fixture.docs['P8_DEFECT_HISTORY']['issues'][1]['before_sha256']=sha(self.before)
