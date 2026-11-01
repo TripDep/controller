@@ -69,7 +69,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
             event['record_hash'] = sha(canonical(event))
             f.records.append(event)
         f.controller.audit_path(f.asset).write_bytes(
-            b''.join(canonical(row)+b'\\n' for row in f.records))
+            b''.join(canonical(row)+bytes([10]) for row in f.records))
         f.controller._state['last_audit_hash'] = f.records[-1]['record_hash']
         ctx['controller'] = f.controller
 
