@@ -127,6 +127,26 @@ class R140Test(unittest.TestCase):
                     self.read()
             self.f.inv['rules'][rid]['requirement']=old
 
+    def test_duplicate_nested_original_research_key_cannot_override_provenance(self):
+        original=json.loads(self.contents['NOTE_REFERENCE_INDEX'])
+        raw=json.dumps(original,ensure_ascii=False,separators=(',',':')).encode()
+        raw=raw[:-1]+b',"work_asset":"FORGED"}'
+        self.contents['NOTE_REFERENCE_INDEX']=raw
+        self.f.add_item('NOTE_REFERENCE_INDEX','note_reference_index.json',raw)
+        self.contract()
+        with self.assertRaisesRegex(ResearchBlocked,'DUPLICATE_ORIGINAL_NOTE_KEY'):
+            self.read()
+
+    def test_nonfinite_original_license_note_never_becomes_positive(self):
+        original=json.loads(self.contents['NOTE_LICENSE'])
+        raw=json.dumps(original,separators=(',',':')).encode()
+        raw=raw[:-1]+b',"unverified_metric":NaN}'
+        self.contents['NOTE_LICENSE']=raw
+        self.f.add_item('NOTE_LICENSE','note_license.json',raw)
+        self.contract()
+        with self.assertRaisesRegex(ResearchBlocked,'NONFINITE_ORIGINAL_NOTE'):
+            self.read()
+
     def test_raw_photo_mutation_without_audit_fails_closed(self):
         (self.f.root/'photo_front.png').write_bytes(b'FAKE IMAGE')
         with self.assertRaisesRegex(NativeEvidenceBlocked,'REGISTERED_ARTIFACT_BYTES_CHANGED'):
