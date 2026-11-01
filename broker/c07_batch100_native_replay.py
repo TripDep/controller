@@ -301,6 +301,22 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                  row.get('individual_mg0')=='UNKNOWN' and
                  row.get('advancement_authorized') is False,
                  'C07_BATCH100_P678_PER_LITERAL_SOURCE_UNTRUSTED:'+rid)
+        # Twenty-six additional source-specific P6/P7/P8 semantic predicates
+        # are mandatory observations on the SAME original operation. A
+        # negative is valid UNKNOWN evidence; absent/forged fields are not.
+        if name in ('P6_WALKABILITY','P7_RAGE','P8_FINAL'):
+            for rid,row in report['rules'].items():
+                extra=row.get('original_cross_source_semantic')
+                need(type(extra) is dict and len(extra)==1 and
+                     all(type(key) is str and key and type(value) is bool
+                         for key,value in extra.items()),
+                     'C07_BATCH100_P678_CROSS_SOURCE_SEMANTIC_MISSING:'+rid)
+            need(type(report.get('original_cross_source_positive_obligations'))
+                 is int and
+                 report['original_cross_source_positive_obligations']==sum(
+                     next(iter(row['original_cross_source_semantic'].values()))
+                     for row in report['rules'].values()),
+                 'C07_BATCH100_P678_CROSS_SOURCE_COUNTS_UNTRUSTED:'+name)
         family_reports[name]=report
         seen.update(ids)
     need(len(seen)==30 and seen==set(p678.IDS[:30]),
