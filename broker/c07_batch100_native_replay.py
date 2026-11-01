@@ -1,0 +1,163 @@
+"""C07 exact 100-rule native evidence replay, NOT a 100-rule PASS shortcut.
+
+The cohort is 30 P1, 40 P3-P5 and 30 P6-P8 *asset-agnostic*
+canonical AAA-200 rules. Every source predicate is recomputed by its existing
+original-byte reader, then compared to the same exact Controller attempt and
+operation-bound individual MG0 audit. No signed producer verdict is trusted.
+
+This is the consuming-side machine-evidence layer only. It does not turn a
+partial predicate, synthetic test, missing independent full-literal review,
+unknown MG0 or owner acceptance into REVIEWED or an operational PASS.
+"""
+import hashlib
+import json
+import re
+
+import c07_p1_thirty_native_domain as p1
+import c07_p345_forty_native_evidence as p345
+import c07_p678_forty_native_domain as p678
+import c07_mg0_individual as mg0
+
+COHORT = tuple(p1.IDS) + tuple(p345.IDS) + tuple(p678.IDS[:30])
+HEX64 = re.compile(r'[a-f0-9]{64}\Z')
+FIELDS = (
+    ('P1', 'original_native_measured_criteria', 3),
+    ('P345', 'machine_observations', 2),
+    ('P678', 'native_original_machine_evidence', 2),
+)
+
+class NativeBatchBlocked(ValueError):
+    pass
+
+def need(value, code):
+    if not value:
+        raise NativeBatchBlocked(code)
+
+def digest(value):
+    return hashlib.sha256(json.dumps(
+        value, sort_keys=True, ensure_ascii=False, separators=(',', ':'),
+        allow_nan=False).encode('utf-8')).hexdigest()
+
+def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
+    """Replay 100 exact original-source predicates on one P8+ operation.
+
+    No source bytes are uploaded to Git; the loader must independently reopen
+    the registered originals in the governed Controller environment.
+    """
+    need(len(COHORT) == 100 and len(set(COHORT)) == 100 and
+         len(p1.IDS) == 30 and len(p345.IDS) == 40 and len(p678.IDS) == 40,
+         'C07_BATCH100_FROZEN_SOURCE_COHORT_CHANGED')
+    need(type(inventory) is dict and inventory.get('rule_count') == 763 and
+         type(inventory.get('rules')) is dict and
+         type(plan) is dict and type(work) is dict and
+         plan.get('phase') == work.get('phase') and
+         plan['phase'] in p678.PHASES and
+         p678.PHASES[plan['phase']] >= 8 and
+         plan.get('asset_type') == work.get('asset_type') and
+         plan.get('master_sha256') == work.get('master_sha256') and
+         type(asset) is str and asset and asset == asset.upper() and
+         type(step) is str and bool(step) and callable(source_loader),
+         'C07_BATCH100_TRUSTED_CURRENT_P8_OPERATION_REQUIRED')
+    for key in ('master_sha256', 'attempt_id', 'operation_sha256'):
+        need(type(work.get(key)) is str and HEX64.fullmatch(work[key]),
+             'C07_BATCH100_WORK_BINDING_MISSING:' + key)
+    need(inventory.get('canonical_master_sha256') == work['master_sha256'],
+         'C07_BATCH100_CANONICAL_MASTER_DRIFT')
+    # These are real original-byte readers. They reject canonical literal drift,
+    # altered audit reservation, missing native files and unpinned source data.
+    groups = (
+        ('P1', p1.IDS, p1.inspect(inventory, plan, controller, asset, step, work,
+                                source_loader=source_loader)),
+        ('P345', p345.IDS, p345.inspect(inventory, plan, controller, asset, step, work,
+                                      source_loader=source_loader)),
+        ('P678', p678.IDS, p678.inspect(inventory, plan, controller, asset, step, work,
+                                      source_loader=source_loader)),
+    )
+    master_raw = controller.master.read_bytes()
+    audit_raw = controller.audit_path(asset).read_bytes()
+    need(hashlib.sha256(master_raw).hexdigest() == work['master_sha256'],
+         'C07_BATCH100_MASTER_BYTES_NOT_CURRENT')
+    audit = mg0.inspect_batch(
+        master_raw, audit_raw, asset, work['master_sha256'],
+        sorted(COHORT), work['attempt_id'],
+        operation_sha256=work['operation_sha256'])
+    need(audit.get('rule_count') == 100 and
+         audit.get('operation_bound') is True and
+         audit.get('operation_sha256') == work['operation_sha256'] and
+         audit.get('attempt_id') == work['attempt_id'] and
+         audit.get('individual_mg0_passes') == 0 and
+         audit.get('advancement_authorized') is False and
+         set(audit.get('rules', {})) == set(COHORT),
+         'C07_BATCH100_INDEPENDENT_OPERATION_MG0_UNTRUSTED')
+    need(audit['audit_sha256'] == hashlib.sha256(audit_raw).hexdigest(),
+         'C07_BATCH100_AUDIT_ORIGINAL_BYTES_DRIFT')
+    all_rows = {}
+    for label, ids, report in groups:
+        need(type(report) is dict and
+             set(report.get('rules', {})) == set(ids) and
+             report.get('master_sha256') == work['master_sha256'] and
+             report.get('attempt_id') == work['attempt_id'] and
+             report.get('operation_sha256') == work['operation_sha256'] and
+             report.get('original_audit_sha256') == audit['audit_sha256'] and
+             report.get('original_audit_tail') == audit['audit_tail_sha256'] and
+             report.get('advancement_authorized') is False,
+             'C07_BATCH100_ORIGINAL_READER_CONTEXT_CHANGED:' + label)
+        criterion_field, criterion_count = next(
+            (field, count) for name, field, count in FIELDS if name == label)
+        for rid in ids:
+            if rid not in COHORT:
+                continue
+            row = report['rules'][rid]
+            source = inventory['rules'].get(rid, {})
+            checks = row.get(criterion_field)
+            need(type(checks) is dict and len(checks) == criterion_count and
+                 len(set(checks)) == criterion_count and
+                 all(type(k) is str and k and type(v) is bool
+                     for k, v in checks.items()) and
+                 row.get('source_sha256') == source.get('source_sha256') and
+                 row.get('requirement_sha256') == source.get('requirement_sha256') and
+                 type(source.get('requirement_sha256')) is str and
+                 HEX64.fullmatch(source['requirement_sha256']) and
+                 row.get('full_rule_semantics') == 'UNKNOWN' and
+                 row.get('individual_mg0') == 'UNKNOWN' and
+                 row.get('advancement_authorized') is False,
+                 'C07_BATCH100_PER_RULE_ORIGINAL_PROOF_UNTRUSTED:' + rid)
+            verdict = audit['rules'][rid]['verdict']
+            need(verdict in ('FAIL', 'UNKNOWN'),
+                 'C07_BATCH100_MG0_FALSE_POSITIVE:' + rid)
+            all_rows[rid] = {
+                'source_sha256': source['source_sha256'],
+                'requirement_sha256': source['requirement_sha256'],
+                'native_reader': label,
+                'original_source_predicates': checks,
+                'source_predicates_observed': all(checks.values()),
+                'individual_mg0': verdict,
+                'full_literal_semantic_verdict': (
+                    'FAIL' if verdict == 'FAIL' else 'UNKNOWN'),
+                'missing_positive_proof': (
+                    ['ORIGINAL_SOURCE_PREDICATE_UNPROVEN']
+                    if not all(checks.values()) else []) +
+                    ['INDEPENDENT_FULL_LITERAL_REVIEW_UNVERIFIED',
+                     'INDEPENDENT_INDIVIDUAL_MG0_UNVERIFIED'],
+                'reviewed_enrollment_authorized': False,
+                'advancement_authorized': False,
+            }
+    need(len(all_rows) == 100 and set(all_rows) == set(COHORT),
+         'C07_BATCH100_INCOMPLETE_SOURCE_COVERAGE')
+    return {
+        'schema': 'gg-c07-exact100-original-native-replay-v1',
+        'rule_count': 100, 'rule_ids': sorted(COHORT),
+        'master_sha256': work['master_sha256'],
+        'attempt_id': work['attempt_id'],
+        'operation_sha256': work['operation_sha256'],
+        'original_audit_sha256': audit['audit_sha256'],
+        'original_audit_tail': audit['audit_tail_sha256'],
+        'original_source_predicates_observed': sum(
+            r['source_predicates_observed'] for r in all_rows.values()),
+        'mg0_fail_count': sum(r['individual_mg0'] == 'FAIL'
+                              for r in all_rows.values()),
+        'full_reviewed_new': 0, 'full_semantic_passes': 0,
+        'individual_mg0_passes': 0, 'advancement_authorized': False,
+        'rules': all_rows,
+        'results_sha256': digest(all_rows),
+    }
