@@ -100,7 +100,9 @@ def inspect(ctx,rid):
     capture=inspect_capture(ctx,RULE)
     frames=jbytes(trace_bytes).get('frames')
     agree=False
-    if valid and type(frames) is list and len(frames)==4:
+    if (valid and capture['evidence_complete'] and
+            all(capture['checks'].values()) and
+            type(frames) is list and len(frames)==4):
         frame_by_role={frame.get('role'):frame for frame in frames
                        if type(frame) is dict}
         agree=bool(len(frame_by_role)==4 and all(
