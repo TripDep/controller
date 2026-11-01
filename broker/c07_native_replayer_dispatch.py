@@ -26,8 +26,8 @@ BINDING_KEYS = frozenset((
     'rule_id', 'master_sha256', 'source_sha256',
     'requirement_sha256', 'work_dependencies',
 ))
-HEX40 = re.compile(r'[0-9a-f]{40}\\Z')
-HEX64 = re.compile(r'[0-9a-f]{64}\\Z')
+HEX40 = re.compile(r'[0-9a-f]{40}\Z')
+HEX64 = re.compile(r'[0-9a-f]{64}\Z')
 
 
 class SourceReplayBlocked(ValueError):
