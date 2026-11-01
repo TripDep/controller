@@ -12,6 +12,18 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-S-184': ('p8_three_final_quality_macro', (
+        'pre_d_original_normals_defect_policy_and_six_view_audit_sha_pinned',
+        'original_face_winding_unit_normals_and_non_degenerate_surfaces_recomputed',
+        'original_six_distinct_capture_pixels_and_zero_surface_qa_artifacts_replayed')),
+    'AAA-200-S-185': ('p8_three_final_quality_macro', (
+        'pre_d_original_export_material_reference_and_texture_policy_sha_pinned',
+        'all_actual_original_uv_primitives_bind_decodable_embedded_pbr_textures',
+        'original_material_qa_image_color_and_physical_factors_match_reference_limits')),
+    'AAA-200-S-186': ('p8_three_final_quality_macro', (
+        'pre_d_original_context_scene_reference_and_anchor_policy_sha_pinned',
+        'original_asset_and_environment_geometry_spatially_compatible_with_anchor',
+        'original_area_context_capture_and_environment_palette_meet_site_reference_limits')),
     'AAA-200-F-056': ('p1_five_camera_original_full', (
         'five_pre_d_camera_poses_and_original_sha_sources_authenticated',
         'five_distinct_original_triangle_visibility_projections_measured',
@@ -472,6 +484,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p345_remaining_original_review import inspect as inspect_remaining
     elif domain == 'p8_delivery_macro_full':
         from c07_p8_delivery_macro_full_review import inspect as inspect_t_delivery
+    elif domain == 'p8_three_final_quality_macro':
+        from c07_p8_three_final_quality_macro import inspect as inspect_p8_three
     elif domain == 'p8_intersection_full':
         from c07_p8_intersection_full_review import inspect as inspect_intersections
     elif domain == 'p8_final_process_full':
@@ -522,6 +536,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                              if domain == 'p345_remaining_scoped' else None)
     p8_delivery_review = (inspect_t_delivery(source_context, rule_id)
                           if domain == 'p8_delivery_macro_full' else None)
+    p8_three_quality_review = (inspect_p8_three(source_context, rule_id)
+                               if domain == 'p8_three_final_quality_macro' else None)
     p8_intersection_review = (inspect_intersections(source_context, rule_id)
                               if domain == 'p8_intersection_full' else None)
     p8_final_process_review = (inspect_final_process(source_context, rule_id)
@@ -535,7 +551,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, visual_qa_three_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
-                         p345_remaining_review, p345_five_macro_review, p8_delivery_review, p8_intersection_review,
+                         p345_remaining_review, p345_five_macro_review, p8_delivery_review, p8_three_quality_review, p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -659,6 +675,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p345_remaining_scoped_review'] = p345_remaining_review
     if p8_delivery_review is not None:
         proof['original_p8_delivery_macro_review'] = p8_delivery_review
+    if p8_three_quality_review is not None:
+        proof['original_p8_three_quality_macro_review'] = p8_three_quality_review
     if p8_intersection_review is not None:
         proof['original_p8_intersection_review'] = p8_intersection_review
     if p8_final_process_review is not None:
