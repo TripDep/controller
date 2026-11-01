@@ -15,7 +15,8 @@ OPTIONAL_EVIDENCE_CONTEXT = frozenset((
     "pre_d_control", "reference_evidence_contract", "output_expectation",
     "p1_evidence_contract", "p2_evidence_contract",
     "p345_evidence_contract", "p678_evidence_contract",
-    "question_200_original_witnesses", "acceptance_criteria",
+    "question_200_original_witnesses", "question_100_original_witnesses",
+    "last_67_source_evidence_contract", "acceptance_criteria",
     "mandatory_issue_ids", "timebox_seconds", "visual_hierarchy_contract",
 ))
 PINNED_CONTRACTS = frozenset((
@@ -117,6 +118,54 @@ def validate(plan, inventory):
                      for k in ("source_sha256", "measured_fingerprint")) and
                  row["claim_status"] == "OBSERVATION_ONLY",
                  "C07_PRE_D_Q200_SOURCE_SPECIFIC:" + rid)
+    if "question_100_original_witnesses" in extras:
+        from c07_q100_closing_original_witnesses import (
+            CONTRACT as Q100_CONTRACT, IDS as Q100_IDS,
+            ROLES as Q100_ROLES, topic as q100_topic,
+        )
+        val = plan["question_100_original_witnesses"]
+        need(type(val) is dict and set(val)=={"schema","rules"} and
+             val["schema"]==Q100_CONTRACT and type(val["rules"]) is dict and
+             set(val["rules"])<=set(Q100_IDS),
+             "C07_PRE_D_Q100_CANONICAL_WITNESSES_ONLY")
+        for rid, slot in val["rules"].items():
+            row=inventory["rules"].get(rid,{})
+            number=int(rid[2:])
+            need(type(slot) is dict and set(slot)=={
+                 "question_sha256","source_role","source_sha256",
+                 "measured_fingerprint","claim_status"} and
+                 row.get("family")=="QUESTIONS_300" and
+                 slot["question_sha256"]==row.get("requirement_sha256") and
+                 slot["source_role"]==Q100_ROLES[q100_topic(number)] and
+                 all(type(slot[k]) is str and HEX64.fullmatch(slot[k])
+                     for k in ("source_sha256","measured_fingerprint")) and
+                 slot["claim_status"]=="OBSERVATION_ONLY",
+                 "C07_PRE_D_Q100_SOURCE_SPECIFIC:"+rid)
+    if "last_67_source_evidence_contract" in extras:
+        from c07_last67_original_family_witnesses import (
+            CONTRACT as LAST67_CONTRACT, EXPECTED_FAMILIES,
+        )
+        val=plan["last_67_source_evidence_contract"]
+        need(type(val) is dict and set(val)=={"schema","rules"} and
+             val["schema"]==LAST67_CONTRACT and type(val["rules"]) is dict and
+             len(val["rules"])<=67,
+             "C07_PRE_D_LAST67_CONTRACT_SCHEMA")
+        for rid, slot in val["rules"].items():
+            row=inventory["rules"].get(rid,{})
+            family=row.get("family")
+            need(type(slot) is dict and
+                 set(slot)=={"requirement_sha256","source_sha256",
+                             "witness_role","witness_sha256",
+                             "observed_origin","claim_status"} and
+                 family in EXPECTED_FAMILIES and
+                 slot["requirement_sha256"]==row.get("requirement_sha256") and
+                 slot["source_sha256"]==row.get("source_sha256") and
+                 slot["witness_role"]=="C07_FAMILY_"+family and
+                 type(slot["witness_sha256"]) is str and
+                 HEX64.fullmatch(slot["witness_sha256"]) and
+                 slot["observed_origin"]=="ORIGINAL_REGISTERED_BYTES" and
+                 slot["claim_status"]=="OBSERVATION_ONLY",
+                 "C07_PRE_D_LAST67_SOURCE_SPECIFIC:"+str(rid))
     if "acceptance_criteria" in extras:
         value = plan["acceptance_criteria"]
         need(type(value) is list and 0 < len(value) <= 100 and
