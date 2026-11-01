@@ -64,6 +64,17 @@ class Tests(unittest.TestCase):
                 'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
                 'advancement_authorized':False,'rules':rules,
             })
+        self.p345_macro={
+            'canonical_rule_count':40,'due_count':40,
+            'visited_due_count':40,
+            'attempt_id':ATTEMPT,
+            'operation_sha256':OPERATION,
+            'advancement_authorized':False,
+            'individual_mg0_independently_approved':False,
+            'fivem_runtime_approved':False,'owner_approved':False,
+            'rows':{rid:{'machine_result':'UNKNOWN'}
+                    for rid in batch.p345.IDS},
+        }
         self.mg0={
             'rule_count':100,'operation_bound':True,
             'operation_sha256':OPERATION,'attempt_id':ATTEMPT,
@@ -76,12 +87,17 @@ class Tests(unittest.TestCase):
         with (patch.object(batch.p1,'inspect',return_value=self.reports[0]) as p1,
               patch.object(batch.p345,'inspect',return_value=self.reports[1]) as p345,
               patch.object(batch.p678,'inspect',return_value=self.reports[2]) as p678,
-              patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0):
+              patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0,
+              patch('c07_p345_macro_execution.run',
+                    return_value=self.p345_macro) as macro):
             result=batch.inspect(self.inv,self.plan,Controller(),'GARDEN','STEP100',
                                  self.work,source_loader=lambda path:b'')
             for reader in (p1,p345,p678):
                 reader.assert_called_once()
             self.assertEqual(mg0.call_args.kwargs['operation_sha256'],OPERATION)
+            macro.assert_called_once()
+            self.assertEqual(macro.call_args.args[0]['work'],self.work)
+            self.assertEqual(result['p345_forty_source_macro'],self.p345_macro)
             self.assertEqual(mg0.call_args.args[4],sorted(batch.COHORT))
             return result
 
@@ -149,6 +165,17 @@ class Tests(unittest.TestCase):
         self.reports[0]['rules'][rid]['full_rule_semantics']='UNKNOWN'
         self.mg0['rules'][rid]['verdict']='PASS'
         with self.assertRaisesRegex(batch.NativeBatchBlocked,'MG0_FALSE_POSITIVE'):
+            self.run_batch()
+
+    def test_p345_macro_refuses_forged_40_rule_approval_or_missing(self):
+        self.p345_macro['advancement_authorized']=True
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED'):
+            self.run_batch()
+        self.p345_macro['advancement_authorized']=False
+        self.p345_macro['rows'].pop(batch.p345.IDS[0])
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED'):
             self.run_batch()
 
     def test_missing_exact_operation_pin_and_source_requirement_rejected(self):
