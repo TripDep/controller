@@ -9,6 +9,8 @@ import re
 
 from approved_validators import REVIEWED, R173_VALIDATOR
 from planning_semantics import VALIDATOR as PLANNING_VALIDATOR
+from c07_native_source_rule_replayers import (NATIVE_RULES, VALIDATORS as NATIVE_VALIDATORS,
+                                               native_rule_readback as native_source_readback)
 
 R173_IDS = frozenset((
     'AAA-200-A-008', 'AAA-200-A-009', 'AAA-200-B-011',
@@ -19,6 +21,7 @@ R173_IDS = frozenset((
 REPLAYERS = {
     'AAA-200-B-012': PLANNING_VALIDATOR,
     **{rid: R173_VALIDATOR for rid in R173_IDS},
+    **NATIVE_VALIDATORS,
 }
 BINDING_KEYS = frozenset((
     'work_item_sha256', 'attempt_id', 'operation_sha256',
@@ -39,7 +42,7 @@ def require(ok, reason):
         raise SourceReplayBlocked(reason)
 
 
-def replay(api, packet, expected, spec):
+def replay(api, packet, expected, spec, *, source_context=None):
     """Reopen original private Git bytes via the *rule-specific* replayer.
 
     This function is not a new semantic predicate or MG0 verifier. It only
@@ -88,6 +91,17 @@ def replay(api, packet, expected, spec):
         from planning_semantics import native_rule_readback
     elif rid in R173_IDS:
         from r173_rule_semantics import native_rule_readback
+    elif rid in NATIVE_RULES:
+        result = native_source_readback(api, packet, expected, spec,
+                                        source_context=source_context)
+        require(type(result) is dict and result.get('rule_id') == rid and
+                result.get('documentary_result') in ('PASS', 'FAIL') and
+                result.get('individual_rule_mg0') in ('UNKNOWN', 'FAIL') and
+                packet.get('mg0', {}).get('result') == result['individual_rule_mg0'] and
+                result.get('advancement_authorized') is False and
+                result.get('asset_advancement_authorized') is False,
+                'C07_NATIVE_REPLAY_SOURCE_RULE_CANNOT_AUTHORIZE')
+        return result
     else:
         raise SourceReplayBlocked('C07_NATIVE_REPLAY_NO_SOURCE_REPLAYER')
     result = native_rule_readback(api, packet, expected, spec)
