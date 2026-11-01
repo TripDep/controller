@@ -278,6 +278,19 @@ class Tests(unittest.TestCase):
                                     'P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED'):
             self.run_batch()
 
+    def test_p1_quantitative_family_rejects_forged_full_and_missing_original(self):
+        self.p1_quant['advancement_authorized']=True
+        with self.assertRaisesRegex(
+                batch.NativeBatchBlocked,
+                'C07_BATCH100_P1_QUANTITATIVE_SOURCE_REPLAY_UNTRUSTED'):
+            self.run_batch()
+        self.p1_quant['advancement_authorized']=False
+        self.p1_quant['rules'].pop(next(iter(self.p1_quant['rules'])))
+        with self.assertRaisesRegex(
+                batch.NativeBatchBlocked,
+                'C07_BATCH100_P1_QUANTITATIVE_SOURCE_REPLAY_UNTRUSTED'):
+            self.run_batch()
+
     def test_p345_macro_refuses_forged_40_rule_approval_or_missing(self):
         self.p345_macro['advancement_authorized']=True
         with self.assertRaisesRegex(batch.NativeBatchBlocked,
