@@ -27,8 +27,33 @@ def uv(role,p):
     return ((p[0],p[2]) if role=='FRONT' else
             (p[1],p[2]) if role=='LEFT' else
             (-p[1],p[2]) if role=='RIGHT' else (p[0],p[1]))
-def mask_from_triangles(tris,role,w,h):
-    """Project and rasterize the ORIGINAL triangle coordinates."""
+def calibrated_camera(camera, role):
+    """Require pre-D orthographic calibration, not an auto-fit silhouette.
+
+    Auto-fitting each native view to its own bounds can make a wrong camera,
+    zoom or framing appear to match the registered PNG. Only the source-pinned
+    camera position, direction and physical image span can be used for the
+    original-byte visual evidence.
+    """
+    return (type(camera) is dict and
+            camera.get('projection') == 'ORTHOGRAPHIC' and
+            xyz(camera.get('position_xyz')) and
+            band(camera.get('orthographic_width_m'), 0.05, 100000) and
+            band(camera.get('orthographic_height_m'), 0.05, 100000))
+
+def camera_pixel(point,role,w,h,camera):
+    center=uv(role,camera['position_xyz'])
+    span=(camera['orthographic_width_m'],
+          camera['orthographic_height_m'])
+    return tuple((0.5+(point[i]-center[i])/span[i])*
+                 ((w,h)[i]-1) for i in (0,1))
+
+def mask_from_triangles(tris,role,w,h,camera=None):
+    """Rasterize actual native triangles against the pinned camera framing.
+
+    The camera-free mode is retained for legacy synthetic fixture generation;
+    inspect_family NEVER uses that uncalibrated mode for source evidence.
+    """
     need(type(tris) is list and bool(tris) and
          type(w) is int and type(h) is int and
          8<=w<=256 and 8<=h<=256,'C07_P1_RASTER_SOURCE_OR_RESOLUTION')
@@ -37,6 +62,10 @@ def mask_from_triangles(tris,role,w,h):
     lo=[min(p[i] for p in pts) for i in (0,1)]
     hi=[max(p[i] for p in pts) for i in (0,1)]
     def px(p):
+        if camera is not None:
+            need(calibrated_camera(camera,role),
+                 'C07_P1_RASTER_ORIGINAL_CAMERA_CALIBRATION_REQUIRED')
+            return camera_pixel(p,role,w,h,camera)
         return tuple((p[i]-lo[i])/max(hi[i]-lo[i],1e-9)*
                      ((w,h)[i]-1)*.8+((w,h)[i]-1)*.1 for i in (0,1))
     out=[False]*(w*h)
@@ -99,7 +128,11 @@ def inspect_family(ctx):
     bounds=read_mesh_geometry(native) if native is not None else None
     w,h=policy.get('width'),policy.get('height')
     bg=policy.get('background_rgb')
-    valid=bool(policy_raw and scene_raw and native and bounds and
+    cams=policy.get('cameras')
+    cams_ok=bool(bounds and type(cams) is dict and set(cams)==set(VIEWS)
+        and all(calibrated_camera(cams[r],r) and
+            direction_ok('VISUAL_VIEW_'+r,cams[r],bounds) for r in VIEWS))
+    valid=bool(policy_raw and scene_raw and native and bounds and cams_ok and
         policy.get('schema')=='c07-p1-native-raster-pre-d-v1' and
         type(w) is int and type(h) is int and 8<=w<=256 and 8<=h<=256 and
         xyz(bg) and all(band(v,0,255) for v in bg))
@@ -108,7 +141,7 @@ def inspect_family(ctx):
     if valid:
         for role in VIEWS:
             pictures[role]=decoded(original('VISUAL_VIEW_'+role,'.png'),w,h,bg)
-            projected[role]=mask_from_triangles(tris,role,w,h)
+            projected[role]=mask_from_triangles(tris,role,w,h,cams[role])
     ref=decoded(original('REFERENCE_IMAGE','.png'),w,h,bg) if valid else None
     peer=decoded(original('SCENE_PEER_REFERENCE','.png'),w,h,bg) if valid else None
     front=pictures.get('FRONT')
@@ -120,8 +153,12 @@ def inspect_family(ctx):
           for r in VIEWS} if valid else {r:False for r in VIEWS}
     def compare(a,b,key):
         lim=policy.get(key)
+        # A shuffled image has identical global RGB means but a different
+        # composition. Compare spatially corresponding original pixels.
         return bool(a and b and band(lim,0,441.7) and
-            math.dist(mean(a['pixels']),mean(b['pixels']))<=lim)
+            len(a['pixels'])==len(b['pixels']) and bool(a['pixels']) and
+            sum(math.dist(p,q) for p,q in
+                zip(a['pixels'],b['pixels']))/len(a['pixels'])<=lim)
     fore=[p for p,m in zip(front['pixels'],fmask) if m] if front else []
     swatches=policy.get('palette_rgb')
     pal=bool(fore and type(swatches) is list and swatches and
@@ -137,12 +174,8 @@ def inspect_family(ctx):
     focal=policy.get('focal_xyz')
     focal_ok=False
     if valid and xyz(focal) and front:
-        pts=[uv('FRONT',p) for tri in tris for p in tri]
-        lo=[min(p[i] for p in pts) for i in (0,1)]
-        hi=[max(p[i] for p in pts) for i in (0,1)]
-        q=uv('FRONT',focal)
-        x=round((q[0]-lo[0])/max(hi[0]-lo[0],1e-9)*(w-1)*.8+(w-1)*.1)
-        y=round((q[1]-lo[1])/max(hi[1]-lo[1],1e-9)*(h-1)*.8+(h-1)*.1)
+        x,y=(round(v) for v in camera_pixel(
+            uv('FRONT',focal),'FRONT',w,h,cams['FRONT']))
         focal_ok=bool(0<=x<w and 0<=y<h and fmask[y*w+x])
     sig=[tuple(sorted(tuple(round(v,6) for v in p) for p in tri))
          for tri in tris]
@@ -163,10 +196,6 @@ def inspect_family(ctx):
         all(type(k) is str and k.strip() and type(v) is int and
             0<=v<bounds['mesh_definitions'] for k,v in mesh_roles.items())
         and match['FRONT'])
-    cams=policy.get('cameras')
-    cams_ok=bool(bounds and type(cams) is dict and set(cams)==set(VIEWS)
-        and all(type(cams[r]) is dict and
-            direction_ok('VISUAL_VIEW_'+r,cams[r],bounds) for r in VIEWS))
     four=bool(cams_ok and all(match.values()) and
         all(pictures.get(r) for r in VIEWS) and
         len({pictures[r]['sha'] for r in VIEWS})==4)
