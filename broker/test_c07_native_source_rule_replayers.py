@@ -73,6 +73,20 @@ CASES = (
      'test_four_original_delivery_oracles_no_false_fivem_pass'),
 )
 
+def _complete_positive_coordinate_fixture(test, ctx, rid):
+    """Existing generic P1 fixture precedes E042's explicit metric-axis contract."""
+    if rid != 'AAA-200-E-042':
+        return
+    import json
+    from test_c07_p1_thirty_native_domain import encode
+    scene=json.loads(test.contents['P1_SCENE_CONTRACT'][1])
+    scene.update(meters_per_unit=1,
+                 native_to_world_axis_matrix=[[1,0,0],[0,1,0],[0,0,1]])
+    test.put('P1_SCENE_CONTRACT','p1_scene.json',encode(scene))
+    test.rebuild()
+    ctx['controller']=test.f.controller
+
+
 class NativeOriginalReplayerTests(unittest.TestCase):
     def context(self, fixture_class, method):
         test = fixture_class(method)
@@ -133,7 +147,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         self.assertEqual(len(set(x[1] for x in CASES)), 27)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
-                _, ctx = self.context(fixture_class, method)
+                test, ctx = self.context(fixture_class, method)
+                _complete_positive_coordinate_fixture(test, ctx, rid)
                 expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
                 packet = build_packet(ctx, rid, expected=expected)
                 self.assertEqual(packet['rule']['result'],
@@ -160,6 +175,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 test, ctx = self.context(fixture_class, method)
+                _complete_positive_coordinate_fixture(test, ctx, rid)
                 expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
                 packet = build_packet(ctx, rid, expected=expected)
                 spec = self.spec(ctx, rid)
