@@ -92,6 +92,14 @@ class Tests(unittest.TestCase):
         self.assertEqual(self.examine()["rules"][IDS[1]]["machine_scope"],
                          "UNKNOWN_OR_DEFECT")
 
+    def test_distinct_glb_bytes_with_identical_triangle_geometry_are_not_separation(self):
+        reordered = glb(QUAD,[(0,2,3),(0,1,2)],[(0,0,1)]*4)
+        self.assertNotEqual(reordered, VISUAL)
+        self.put(collision=reordered)
+        r=self.examine()
+        self.assertFalse(r["rules"][IDS[1]]["original_machine_checks"][
+            "collision_and_visual_triangle_geometry_independently_distinct"])
+
     def test_missing_pre_d_collision_pin_cannot_be_positive(self):
         self.f.plan["p678_evidence_contract"]["original_artifact_sha256"].pop(
             "P6_COLLISION_POLICY")
