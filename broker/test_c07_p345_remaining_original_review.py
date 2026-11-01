@@ -8,7 +8,9 @@ import unittest
 
 from test_c07_native_source_rule_replayers import NativeOriginalReplayerTests
 from test_c07_p345_forty_native_evidence import P345Forty, encoded
-from test_c07_p4_material_macro_full_review import normalize_base
+from test_c07_p3_uv_semantics import uv_glb
+from test_c07_p5_budget_semantics import with_embedded_texture
+from test_c07_p4_texture_semantics import material
 from test_c07_p5_full_review import two_material_bindings
 from test_c07_p5_optimization_semantics import rewrite_glb
 from test_c07_p3_geometry_semantics import glb
@@ -45,7 +47,10 @@ class RemainingP345Tests(unittest.TestCase):
             self,P345Forty,'test_p4_30_due_and_p5_40_due')
         test.f.plan['phase']='P5'
         test.f.work['phase']='P5'
-        native=rewrite_glb(normalize_base(),decorated)
+        source=with_embedded_texture(uv_glb(with_texture=False),
+                                     png(gradient()))
+        source=rewrite_glb(source,material)
+        native=rewrite_glb(source,decorated)
         baseline=two_material_bindings(native)
         test.add('NATIVE_EXPORT','scene.glb',native)
         test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',baseline)
@@ -76,7 +81,10 @@ class RemainingP345Tests(unittest.TestCase):
                          ('LIGHT_DIRECT_VIEW',180),
                          ('LIGHT_SHADOW_VIEW',30),
                          ('LIGHT_CINEMATIC_VIEW',130),
-                         ('REFLECTION_VIEW',170)]:
+                         ('REFLECTION_VIEW',170),
+                         ('VISUAL_VIEW_UNDERSIDE',110),
+                         ('LOD_NEAR_VIEW',80),
+                         ('LOD_FAR_VIEW',120)]:
             test.add(role,role.lower()+'.png',png(solid(val)))
         test.sync()
         ctx['controller']=test.f.controller
