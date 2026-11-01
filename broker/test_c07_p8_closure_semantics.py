@@ -151,6 +151,8 @@ class Tests(unittest.TestCase):
         (self.f.root / "method_after.py").write_bytes(b"forged")
         with self.assertRaisesRegex(NativeEvidenceBlocked, "ARTIFACT_BYTES_CHANGED"):
             self.examine()
+        self.f.add_item("P8_METHOD_AFTER", "method_after.py",
+                        b"def run(): return 1\\n")
         self.put()
         self.f.work["attempt_id"] = "f"*64
         with self.assertRaisesRegex(NativeEvidenceBlocked, "EXACT_RESERVED_WORK"):
