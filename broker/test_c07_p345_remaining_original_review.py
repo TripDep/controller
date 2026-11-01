@@ -52,6 +52,12 @@ class RemainingP345Tests(unittest.TestCase):
                                      png(gradient()))
         source=rewrite_glb(source,material)
         native=rewrite_glb(source,decorated)
+        # Two real primitives share the same embedded base-color image;
+        # reusing one image in two slots of a single primitive is not reuse.
+        def second_primitive(doc):
+            doc['meshes'][0]['primitives'].append(
+                copy.deepcopy(doc['meshes'][0]['primitives'][0]))
+        native=rewrite_glb(native,second_primitive)
         baseline=two_material_bindings(native)
         test.add('NATIVE_EXPORT','scene.glb',native)
         test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',baseline)
@@ -178,6 +184,63 @@ class RemainingP345Tests(unittest.TestCase):
                 self.assertNotEqual(before,after)
                 self.assertFalse(after[CRITERIA[n][1]] if n!=118 else
                                  after[CRITERIA[n][2]])
+
+    def test_atlas_requires_same_actual_triangle_surfaces_not_only_bbox(self):
+        test,ctx=self.context()
+        rid='AAA-200-L-118'
+        original=build_packet(ctx,rid)['rule']['checks']
+        self.assertTrue(original[CRITERIA[118][2]])
+        changed=two_material_bindings(uv_glb(
+            faces=[(0,1,3),(1,2,3)],with_texture=True))
+        test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',changed)
+        test.sync()
+        ctx['controller']=test.f.controller
+        result=build_packet(ctx,rid)['rule']['checks']
+        self.assertTrue(result[CRITERIA[118][1]])
+        self.assertFalse(result[CRITERIA[118][2]])
+
+    def test_approved_export_same_bbox_and_count_but_different_faces_fails(self):
+        test,ctx=self.context()
+        rid='AAA-200-L-120'
+        self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
+            CRITERIA[120][1]])
+        changed=uv_glb(faces=[(0,1,3),(1,2,3)],with_texture=False)
+        # Preserve both the number of triangles and the original bounding box.
+        test.add('P3_APPROVED_EXPORT','approved_export.glb',changed)
+        test.sync()
+        ctx['controller']=test.f.controller
+        result=build_packet(ctx,rid)['rule']['checks']
+        self.assertFalse(result[CRITERIA[120][1]])
+
+    def test_hidden_geometry_must_remove_redundant_original_triangles(self):
+        test,ctx=self.context()
+        rid='AAA-200-O-143'
+        self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
+            CRITERIA[143][1]])
+        changed=glb(QUAD,[(0,1,3),(0,3,2),
+                          (0,1,2),(0,2,3),
+                          (0,1,3),(0,3,2)],NORMALS)
+        test.add('P5_HIDDEN_BASELINE','hidden_before.glb',changed)
+        test.sync()
+        ctx['controller']=test.f.controller
+        result=build_packet(ctx,rid)['rule']['checks']
+        self.assertFalse(result[CRITERIA[143][1]])
+
+    def test_reuse_requires_distinct_native_primitives_not_shader_slots(self):
+        test,ctx=self.context()
+        rid='AAA-200-O-147'
+        self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
+            CRITERIA[147][1]])
+        # The single primitive still references the same PNG in base color
+        # and normal slots, but that is not cross-primitive texture reuse.
+        def one_primitive(doc):
+            doc['meshes'][0]['primitives']=doc['meshes'][0]['primitives'][:1]
+        source=rewrite_glb(test.art['NATIVE_EXPORT'],one_primitive)
+        test.add('NATIVE_EXPORT','scene.glb',source)
+        test.sync()
+        ctx['controller']=test.f.controller
+        result=build_packet(ctx,rid)['rule']['checks']
+        self.assertFalse(result[CRITERIA[147][1]])
 
     def test_current_attempt_and_original_source_tamper_block(self):
         test,ctx=self.context()
