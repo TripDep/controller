@@ -8,6 +8,7 @@ approval. In-game rule 170 deliberately cannot pass on self-reported logs.
 import hashlib
 import math
 import re
+from pathlib import PurePosixPath
 import xml.etree.ElementTree as ET
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
@@ -182,7 +183,13 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                       manifest_text)
         and re.search(r"(?m)^\s*game\s*['\"]gta5['\"]", manifest_text)
         and re.search(r"(?m)^\s*this_is_a_map\s*['\"]yes['\"]", manifest_text))
-    manifest_ytyp = bool(re.search(r"['\"][^'\"]+\.ytyp['\"]", manifest_text))
+    ytyp_paths = re.findall(r"['\"]([^'\"\n]+\.ytyp)['\"]", manifest_text)
+    manifest_ytyp = bool(
+        ytyp_paths and all(
+            not path.startswith("/") and "\\" not in path
+            and ".." not in PurePosixPath(path).parts
+            and str(PurePosixPath(path)) == path
+            for path in ytyp_paths))
     drawable_name = value(drawable, "Name").casefold() if drawable is not None else ""
     # Explicit shader nodes under ShaderGroup/Shaders, never generic mesh names.
     shaders = []
