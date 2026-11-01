@@ -26,7 +26,8 @@ class ThreeNewBackendTests(unittest.TestCase):
                 spec = {'validator_id': VALIDATORS[rid],
                         'criteria': list(NATIVE_RULES[rid][1]),
                         'requirement_sha256': expected['requirement_sha256'],
-                        'source_ref': '1'*40}
+                        'source_ref': '1'*40,
+                        'issuer': {'workflow_blob':'a'*40,'public_sha':'b'*40}}
                 origin = {'run_id':41,'job_id':42,'run_attempt':1,
                           'head_sha':'8'*40}
                 def run(candidate):
