@@ -170,7 +170,7 @@ class P4MaterialMacroTests(unittest.TestCase):
         test.sync()
         ctx['controller']=test.f.controller
         packet,_,_=self.packet(ctx,'AAA-200-M-121')
-        self.assertEqual(packet['rule']['result'],'UNKNOWN')
+        self.assertEqual(packet['rule']['result'],'FAIL')
         self.assertFalse(packet['rule']['checks'][
             'all_actual_original_roughness_and_metallic_values_in_physical_class_ranges'])
 
@@ -195,7 +195,7 @@ class P4MaterialMacroTests(unittest.TestCase):
         for rid in ('AAA-200-M-125','AAA-200-M-127'):
             with self.subTest(rule=rid):
                 packet,_,_=self.packet(ctx,rid)
-                self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                self.assertEqual(packet['rule']['result'],'FAIL')
                 self.assertFalse(all(packet['rule']['checks'].values()))
 
     def test_five_class_original_missing_or_out_of_range_is_real_fail(self):
