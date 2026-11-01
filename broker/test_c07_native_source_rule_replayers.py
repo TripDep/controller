@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for nineteen original-source native per-rule replayers.
+"""Adversarial source-byte tests for twenty original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -51,6 +51,8 @@ CASES = (
      'test_five_original_quantitative_oracles_no_mg0'),
     (BudgetFixture, 'AAA-200-O-148',
      'test_five_original_quantitative_oracles_no_mg0'),
+    (DeliveryFixture, 'AAA-200-T-192',
+     'test_four_original_delivery_oracles_no_false_fivem_pass'),
     (DeliveryFixture, 'AAA-200-T-194',
      'test_four_original_delivery_oracles_no_false_fivem_pass'),
 )
@@ -100,9 +102,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_nineteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 19)
-        self.assertEqual(len(set(x[1] for x in CASES)), 19)
+    def test_twenty_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 20)
+        self.assertEqual(len(set(x[1] for x in CASES)), 20)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -187,13 +189,21 @@ class NativeOriginalReplayerTests(unittest.TestCase):
             'test_four_real_collision_oracles_not_fivem_or_mg0')
         test.put(policy=dict(POLICY,solid_surfaces=[{'name':'distant',
             'min_xyz':[4,4,-1], 'max_xyz':[5,5,1]}]))
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-P-151')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(CollisionFixture,
             'test_four_real_collision_oracles_not_fivem_or_mg0')
         test.put(collision=VISUAL)
+        ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-P-152')['rule']['result'], 'FAIL')
         self.assertEqual(build_packet(ctx, 'AAA-200-P-153')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(DeliveryFixture,
+            'test_four_original_delivery_oracles_no_false_fivem_pass')
+        test.put(archive=package(plan(), missing='scene.blend'))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-192')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(BudgetFixture,
             'test_five_original_quantitative_oracles_no_mg0')
