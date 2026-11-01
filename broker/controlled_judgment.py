@@ -1378,6 +1378,11 @@ class ControlledJudgment:
                             advancement_authorized=False)
                         j.need(p3_triangles['totals']['degenerate_triangles'] == 0,
                                'CONTROLLED_P3_REAL_DEGENERATE_TRIANGLES_FOUND')
+                        # A geometrically identical source face appears twice
+                        # in the actual GLB; this is a measurable duplicate,
+                        # not a visual opinion or self-reported QA outcome.
+                        j.need(p3_triangles['totals']['duplicate_geometric_faces'] == 0,
+                               'CONTROLLED_P3_ORIGINAL_DUPLICATE_FACES_FOUND')
                 # Three literal P3 UV rules: independent distortion,
                 # actual embedded texture texel density and UV pair overlap.
                 # Registered original bytes and pre-D pins are mandatory.
