@@ -1498,6 +1498,43 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Five additional P5 optimization observations on exact
+                # registered GLB/LOD/material bytes. Fake FPS samples never
+                # become independent FiveM evidence or individual MG0 PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p5_optimization_semantics import (
+                        IDS as P5_OPTIMIZATION_IDS,
+                        inspect as inspect_p5_optimization)
+                    p5_optimization = inspect_p5_optimization(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p5_optimization['source_rule_count'] == 5
+                           and set(p5_optimization['rules']) ==
+                               set(P5_OPTIMIZATION_IDS)
+                           and p5_optimization['full_rule_semantic_passes'] == 0
+                           and p5_optimization['individual_mg0_passes'] == 0
+                           and p5_optimization['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p5_optimization['rules'].values()),
+                           'CONTROLLED_P5_OPTIMIZATION_FALSE_FULL_PASS')
+                    if p5_optimization['metrics']['native_triangles']:
+                        self.append('SUPERVISOR_C07_P5_ORIGINAL_OPTIMIZATION',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p5_optimization['original_audit_sha256'],
+                            original_audit_tail=p5_optimization['original_audit_tail'],
+                            source_rule_ids=list(P5_OPTIMIZATION_IDS),
+                            original_optimization_metrics=p5_optimization['metrics'],
+                            original_rule_machine_checks=p5_optimization['rules'],
+                            machine_positive_obligations=p5_optimization[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Four literal P6 collision rules: independent visual and
                 # collision GLB triangles, source-locked surface regions,
                 # measured complexity and conservative passage clearances.
