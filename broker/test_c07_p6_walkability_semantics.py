@@ -70,6 +70,23 @@ class Tests(unittest.TestCase):
         self.assertEqual(r["full_rule_semantic_passes"],0)
         self.assertEqual(r["individual_mg0_passes"],0)
         self.assertFalse(r["advancement_authorized"])
+    def test_six_original_semantic_predicates_independent_and_scoped(self):
+        report=self.examine()
+        self.assertEqual(
+            report["original_cross_source_positive_obligations"],5)
+        seen=set()
+        for n,rid in zip(range(155,161),IDS):
+            with self.subTest(rule=rid):
+                row=report["rules"][rid]
+                deep=row["original_cross_source_semantic"]
+                self.assertEqual(len(deep),1)
+                self.assertFalse(seen.intersection(deep))
+                seen.update(deep)
+                self.assertIs(next(iter(deep.values())),n!=160)
+                self.assertEqual(row["full_rule_semantics"],"UNKNOWN")
+                self.assertFalse(row["advancement_authorized"])
+        self.assertEqual(len(seen),6)
+
     def test_each_clause_independent_negative_and_runtime_unattested(self):
         mutations={
           155:("policy","solid_surfaces",[
@@ -93,6 +110,8 @@ class Tests(unittest.TestCase):
                 r=self.examine()
                 self.assertEqual(r["rules"]["AAA-200-P-%03d"%n]["machine_scope"],
                                  "UNKNOWN_OR_DEFECT")
+                self.assertFalse(next(iter(r["rules"][
+                    "AAA-200-P-%03d"%n]["original_cross_source_semantic"].values())))
                 if kind=="policy":self.policy[key]=old
                 else:setattr(self,kind,old)
                 self.put()
@@ -102,8 +121,10 @@ class Tests(unittest.TestCase):
             "FIVEM_COLLISION_RUNTIME_LOG"]=self.f.items[
                 "FIVEM_COLLISION_RUNTIME_LOG"]["sha256"]
         self.f.rebuild()
-        self.assertEqual(self.examine()["rules"][IDS[-1]]["machine_scope"],
-                         "UNKNOWN_OR_DEFECT")
+        runtime=self.examine()["rules"][IDS[-1]]
+        self.assertEqual(runtime["machine_scope"],"UNKNOWN_OR_DEFECT")
+        self.assertFalse(next(iter(
+            runtime["original_cross_source_semantic"].values())))
     def test_player_contact_and_vehicle_height_originals_are_not_producer_labels(self):
         for key,value,rid in (
             ("min_player_width_m",2.0,"AAA-200-P-157"),
