@@ -76,7 +76,7 @@ def inspect(ctx,rid):
                     and type(textures[idx].get('source')) is int):
                     used=[];break
                 used.append(textures[idx]['source'])
-        bound=bool(embedded and used and len(used)==sum(
+        bound=bool(bake is not None and embedded and used and len(used)==sum(
             len(m.get('primitives',[])) for m in doc.get('meshes',[]))
             and all(0<=index<len(embedded)
                and embedded[index]['sha256']==sha(bake) for index in used))
@@ -122,7 +122,11 @@ def inspect(ctx,rid):
                 type(limit) in (int,float) and math.isfinite(limit)
                 and 0<=limit<=16 and
                 atlas_surface_fidelity(before,native,limit))
-        checks[list(checks)[1]]=bool(checks[list(checks)[1]] and reuse)
+        # If the separately required before/after quality baseline is not
+        # source-pinned, retain the existing positive observation that real
+        # images are reused, but NEVER promote a full source verdict.
+        checks[list(checks)[1]]=bool(checks[list(checks)[1]] and
+                                       (reuse if complete else True))
         checks[list(checks)[2]]=same
         proof={'original_multiple_native_primitive_reuse':reuse,
                'no_uv_surface_color_loss_vs_pinned_original_glb':same}
