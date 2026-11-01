@@ -177,20 +177,14 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
             for name in ("FRONT", "SIDE", "TOP")]
     views = [original_image(raw) if raw is not None else None for raw in pngs]
 
-    manifest_text = manifest.decode("utf-8", "replace") if manifest is not None else ""
-    manifest_ok = bool(
-        manifest is not None and len(manifest) < 200_000
-        and re.search(r"(?m)^\s*fx_version\s*['\"][a-zA-Z0-9_-]+['\"]",
-                      manifest_text)
-        and re.search(r"(?m)^\s*game\s*['\"]gta5['\"]", manifest_text)
-        and re.search(r"(?m)^\s*this_is_a_map\s*['\"]yes['\"]", manifest_text))
-    ytyp_paths = re.findall(r"['\"]([^'\"\n]+\.ytyp)['\"]", manifest_text)
-    manifest_ytyp = bool(
-        ytyp_paths and all(
-            not path.startswith("/") and "\\" not in path
-            and ".." not in PurePosixPath(path).parts
-            and str(PurePosixPath(path)) == path
-            for path in ytyp_paths))
+    # A quoted .ytyp in a comment or unrelated Lua string is not a
+    # loadable FiveM resource. Verify active files{} AND data_file declarations
+    # from the exact SHA-pinned original manifest bytes.
+    from c07_p7_manifest_source_semantics import parse as parse_fxmanifest
+    parsed_manifest = parse_fxmanifest(manifest)
+    manifest_ok = parsed_manifest["valid"]
+    manifest_ytyp = parsed_manifest["valid"]
+    ytyp_paths = list(parsed_manifest["ytyp_paths"])
     drawable_name = value(drawable, "Name").casefold() if drawable is not None else ""
     # Explicit shader nodes under ShaderGroup/Shaders, never generic mesh names.
     shaders = []
@@ -360,20 +354,20 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
                    len(ytyp_paths) == len(set(ytyp_paths)) and
                    all(path.startswith("stream/") for path in ytyp_paths))),
         162: ("drawable_bound_to_exactly_one_original_archetype",
-              bool(drawable_name and sum(
+              bool(manifest_ok and drawable_name and sum(
                   v == drawable_name for v in archetypes.values()) == 1)),
         163: ("every_original_drawable_texture_resolves_once",
-              bool(referenced_textures and texture_names and
+              bool(manifest_ok and referenced_textures and texture_names and
                    len(referenced_textures) == len(set(referenced_textures)) and
                    set(referenced_textures) <= set(texture_names))),
         164: ("all_placed_original_archetypes_have_drawable_binding",
-              bool(mapped and all(archetypes.get(name) == drawable_name
+              bool(manifest_ok and mapped and all(archetypes.get(name) == drawable_name
                                   for name, _ in entities))),
         165: ("all_original_map_positions_match_current_codewalker_source",
-              bool(report_matches and entities and
+              bool(manifest_ok and report_matches and entities and
                    all(all(finite(c) for c in xyz) for _, xyz in entities))),
         166: ("original_collision_children_have_supported_bound_types",
-              bool(collision_declared and all(
+              bool(manifest_ok and collision_declared and all(
                   x.attrib.get("type") in (
                       "Box", "Sphere", "Capsule", "Geometry",
                       "GeometryBVH", "Composite")
@@ -382,7 +376,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         168: ("actual_native_vertex_normals_normalized_and_uv_finite",
               bool(attrs_valid and shaders_declared and normalized_normals())),
         169: ("three_original_views_have_distinct_decoded_pixels",
-              bool(report_matches and lod_report and
+              bool(manifest_ok and report_matches and lod_report and
                    all(pixel_digests) and
                    len(set(pixel_digests)) == len(pixel_digests))),
         170: ("independent_fivem_engine_execution_provenance", False),
