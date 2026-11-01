@@ -9,6 +9,7 @@ SHA-pinned pre-D sources and independently decoded native bytes.
 """
 import hashlib
 import math
+from collections import Counter
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json, PHASE_INDEX
@@ -16,6 +17,7 @@ from c07_p5_budget_semantics import _glb_parts
 from c07_p5_optimization_semantics import _mesh, _references
 from c07_p5_full_review import material_bindings
 from c07_p4_texture_semantics import rgba, _embedded
+from c07_p6_collision_semantics import _triangles
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -75,6 +77,55 @@ def boxes_close(a,b,tol):
     return bool(a and b and numeric(tol) and 0<=tol<=10 and all(
         abs(a['bounds'][k][j]-b['bounds'][k][j])<=tol
         for k in range(2) for j in range(3)))
+def triangle_counts(raw):
+    """Read every actual GLB triangle; accessor bbox/counts are not geometry."""
+    if raw is None:
+        return None
+    triangles = _triangles(raw)
+    return Counter(tuple(sorted(tuple(float(c) for c in vertex)
+                                for vertex in triangle))
+                   for triangle in triangles)
+
+def actual_primitive_texture_reuse(doc):
+    """One image in two shader slots of ONE primitive is not texture reuse.
+
+    Reuse must occur on at least two real triangle primitives with UV0 and
+    valid material/texture/image source links, not unused material entries.
+    """
+    materials=doc.get('materials')
+    textures=doc.get('textures')
+    images=doc.get('images')
+    if not all(type(t) is list for t in (materials,textures,images)):
+        return {}
+    usage={}
+    for mesh in doc.get('meshes',[]):
+        if type(mesh) is not dict or type(mesh.get('primitives')) is not list:
+            return {}
+        for primitive in mesh['primitives']:
+            if (type(primitive) is not dict or
+                    type(primitive.get('attributes')) is not dict or
+                    'TEXCOORD_0' not in primitive['attributes']):
+                continue
+            material_id=primitive.get('material')
+            if type(material_id) is not int or not 0<=material_id<len(materials):
+                continue
+            material=materials[material_id]
+            if type(material) is not dict:
+                continue
+            pbr=material.get('pbrMetallicRoughness',{})
+            if type(pbr) is not dict:
+                continue
+            binding=pbr.get('baseColorTexture')
+            if type(binding) is not dict or type(binding.get('index')) is not int:
+                continue
+            idx=binding['index']
+            if not 0<=idx<len(textures) or type(textures[idx]) is not dict:
+                continue
+            source=textures[idx].get('source')
+            if type(source) is int and 0<=source<len(images):
+                usage[source]=usage.get(source,0)+1
+    return usage
+
 def bindings(raw):
     if raw is None:return None
     try:return material_bindings(raw)
@@ -146,10 +197,16 @@ def inspect(source_context,rule_id):
         quality=atlas_policy.get('min_atlas_color_variance')
         atlas_images=bool(embedded and numeric(quality) and quality>0 and
                           all(x['variance']>=quality for x in embedded))
+        # A deleted material with a changed mesh is not an atlas benefit.
+        # Compare actual triangle coordinates, not merely triangle count/bbox.
+        before_surface=triangle_counts(baseline_raw) if baseline_raw else None
+        after_surface=triangle_counts(raw) if raw else None
+        same_geometry=bool(before_surface and after_surface and
+                           set(before_surface)==set(after_surface))
         measured=bool(before is not None and after is not None and
                       before>after>=1 and type(target) is int and target>=1
                       and before-after>=target and atlas_images and
-                      boxes_close(native,baseline,0.01))
+                      boxes_close(native,baseline,0.01) and same_geometry)
         checks=(bool(baseline_raw and original('P3_ATLAS_POLICY','.json')
                      and raw),before is not None and after is not None,measured)
     elif n==119:
@@ -176,9 +233,12 @@ def inspect(source_context,rule_id):
     elif n==120:
         approved_raw=original('P3_APPROVED_EXPORT','.glb')
         approved=_mesh(approved_raw) if approved_raw else None
-        exact=bool(native and approved and
-                   native['triangles']==approved['triangles'] and
-                   boxes_close(native,approved,0.000001))
+        # Identical bbox and triangle count do not prove exported geometry
+        # matches the approved original: compare every triangle coordinate.
+        approved_faces=triangle_counts(approved_raw) if approved_raw else None
+        exported_faces=triangle_counts(raw) if raw else None
+        exact=bool(native and approved and approved_faces and exported_faces
+                   and approved_faces==exported_faces)
         checks=(bool(approved_raw and raw),exact,False)
     elif n==133:
         defects=policy('P4_GEOMETRY_DEFECT_REPORT')
@@ -236,10 +296,22 @@ def inspect(source_context,rule_id):
         before=_mesh(before_raw) if before_raw else None
         hidden=policy('P5_HIDDEN_GEOMETRY_POLICY')
         target=hidden.get('min_removed_triangles')
+        before_faces=triangle_counts(before_raw) if before_raw else None
+        after_faces=triangle_counts(raw) if raw else None
+        removed=(before_faces-after_faces) if before_faces and after_faces else Counter()
+        # Positive source evidence only for independently verified removal
+        # of redundant duplicate triangles; arbitrary removed faces do not
+        # demonstrate that geometry was hidden or unnecessary.
+        duplicate_removal=bool(removed and all(
+            before_faces[face]>1 and after_faces[face]>=1
+            for face in removed))
         checks=(bool(before_raw and original('P5_HIDDEN_GEOMETRY_POLICY','.json')
                      and raw),
                 bool(before and native and type(target) is int and target>0
-                     and before['triangles']-native['triangles']>=target
+                     and sum(removed.values())>=target
+                     and all(after_faces[face]<=before_faces[face]
+                             for face in after_faces)
+                     and duplicate_removal
                      and boxes_close(before,native,0.001)),False)
     elif n==145:
         lod_raw=original('LOD_EXPORT','.glb')
@@ -259,10 +331,11 @@ def inspect(source_context,rule_id):
         budget=policy('P5_PERF_BUDGET')
         min_shared=budget.get('min_shared_texture_bindings')
         quality=budget.get('min_reused_texture_variance')
+        reuse=actual_primitive_texture_reuse(doc)
         checks=(bool(raw and original('P5_PERF_BUDGET','.json')),
                 bool(refs is not None and type(min_shared) is int
-                     and min_shared>=2 and len(refs)>=min_shared
-                     and len(set(refs))<len(refs)
+                     and min_shared>=2 and sum(reuse.values())>=min_shared
+                     and any(count>=2 for count in reuse.values())
                      and embedded and numeric(quality) and quality>0
                      and all(im['variance']>=quality for im in embedded)),False)
     else:
