@@ -12,6 +12,14 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-044': ('p1_paths_full', (
+        'pre_d_original_geojson_and_path_class_contract_sha_pinned',
+        'all_original_path_features_have_unique_ids_valid_nonzero_geometry_and_explicit_class',
+        'measured_main_path_network_connected_and_every_secondary_joins_main')),
+    'AAA-200-E-045': ('p1_paths_full', (
+        'pre_d_access_zone_and_player_actor_policy_sha_pinned',
+        'original_access_and_exclusion_polygons_nonzero_and_actor_labels_valid',
+        'actual_original_access_exclusion_polygon_interiors_do_not_overlap')),
     'AAA-200-E-043': ('p1_spatial', (
         'pre_d_two_building_world_placements_and_ratio_targets_sha_pinned',
         'actual_original_world_space_building_extents_independently_measured',
@@ -134,7 +142,8 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-E-043', 'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-F-054',
+    'AAA-200-E-043', 'AAA-200-E-044', 'AAA-200-E-045', 'AAA-200-E-047',
+    'AAA-200-F-052', 'AAA-200-F-054',
     'AAA-200-L-111', 'AAA-200-L-112', 'AAA-200-L-113', 'AAA-200-L-114',
     'AAA-200-L-115', 'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142', 'AAA-200-O-144', 'AAA-200-O-146',
@@ -207,13 +216,19 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_full_review import inspect as inspect_p5_full
     elif domain == 'p1_spatial':
         from c07_p1_spatial_full_review import inspect as inspect_p1_spatial
+    elif domain == 'p1_paths_full':
+        from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
     else:
         raise NativeRuleEvidenceBlocked('C07_REPLAYER_NO_LITERAL_DOMAIN')
     from c07_mg0_individual import inspect_batch
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
     p1_spatial_review = (inspect_p1_spatial(source_context, rule_id)
                          if domain == 'p1_spatial' else None)
-    full_review = p5_review if p5_review is not None else p1_spatial_review
+    p1_paths_review = (inspect_p1_paths(source_context, rule_id)
+                       if domain == 'p1_paths_full' else None)
+    full_review = next((review for review in
+                        (p5_review, p1_spatial_review, p1_paths_review)
+                        if review is not None), None)
     if full_review is not None:
         from c07_positive_native_process import _original_attempt
         _, tail, _, audit_sha = _original_attempt(
@@ -297,6 +312,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p5_full_review'] = p5_review
     if p1_spatial_review is not None:
         proof['original_p1_spatial_review'] = p1_spatial_review
+    if p1_paths_review is not None:
+        proof['original_p1_paths_access_review'] = p1_paths_review
     mg_failed = verdict == 'FAIL'
     mg_checks = ({'cause_identified': False,
                   'affected_states_invalidated': False,
