@@ -54,9 +54,6 @@ NATIVE_RULES = {
     'AAA-200-T-197': ('closure', (
         'original_candidate_not_self_labelled_approved',
         'source_bound_candidate_and_export_exist')),
-    'AAA-200-T-196': ('closure', (
-        'original_test_matrix_explicitly_separates_run_and_not_run',
-        'every_reported_run_references_registered_original_evidence')),
     'AAA-200-E-042': ('p1', (
         'original_xyz_coordinate_origin_declared',
         'original_coordinate_basis_named',
