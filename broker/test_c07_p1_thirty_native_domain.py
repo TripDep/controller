@@ -99,6 +99,26 @@ class P1Thirty(unittest.TestCase):
                 self.assertEqual(len(item['original_native_measured_criteria']),3)
                 names+=list(item['original_native_measured_criteria'])
         self.assertEqual(len(set(names)),90)
+    def test_original_p1_source_json_rejects_duplicate_keys_and_nan(self):
+        from c07_p1_thirty_native_domain import jbytes
+        self.assertEqual(jbytes(b'{"origin_xyz":[1,2,3],"origin_xyz":[4,5,6]}'),{})
+        self.assertEqual(jbytes(b'{"nested":{"x":1,"x":2}}'),{})
+        self.assertEqual(jbytes(b'{"scale":NaN}'),{})
+        self.assertEqual(jbytes(b'{"scale":Infinity}'),{})
+        self.assertEqual(jbytes(b'{"origin_xyz":[1,2,3]}'),
+                         {'origin_xyz':[1,2,3]})
+        original=self.review()
+        self.put('P1_SCENE_CONTRACT','p1_scene.json',
+                 b'{"origin_xyz":[1,2,3],"origin_xyz":[1,2,3]}')
+        self.rebuild()
+        altered=self.review()
+        self.assertEqual(altered['full_semantic_passes'],0)
+        self.assertEqual(altered['individual_mg0_passes'],0)
+        self.assertNotEqual(original['rules']['AAA-200-E-042'][
+            'original_native_measured_criteria'],
+            altered['rules']['AAA-200-E-042'][
+            'original_native_measured_criteria'])
+
     def test_verified_geometry_contract_really_observed_not_mg0(self):
         r=self.review()
         n=r['rules']['AAA-200-E-047']
