@@ -1549,6 +1549,11 @@ class ControlledJudgment:
                            'CONTROLLED_P8_ORIGINAL_DELIVERY_FALSE_MG0_PASS')
                     if p8_delivery['original_delivery_metrics'][
                             'archive_member_count'] > 0:
+                        # Actual package bytes exist: a mismatched source or
+                        # export is a proven defect, not missing QA metadata.
+                        j.need(p8_delivery['original_delivery_metrics'][
+                                   'source_export_bytes_match'] is True,
+                               'CONTROLLED_P8_ORIGINAL_PACKAGE_SOURCE_EXPORT_MISMATCH')
                         self.append('SUPERVISOR_C07_P8_ORIGINAL_DELIVERY_SEMANTICS',
                             step=step, attempt_id=reserved_work['attempt_id'],
                             operation_sha256=reserved_work['operation_sha256'],
