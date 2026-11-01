@@ -26,12 +26,12 @@ def native_glb():
     return (struct.pack('<4sII',b'glTF',2,12+8+len(raw)+8+len(coords))+
             struct.pack('<I4s',len(raw),b'JSON')+raw+
             struct.pack('<I4s',len(coords),b'BIN\x00')+coords)
-def png(mask,w,h,base):
+def png(mask,w,h,base,*,invert_checker=False):
     raw=bytearray()
     for y in range(h):
         raw.append(0)
         for x in range(w):
-            v=(base if (x+y)%2 else base+20) if mask[y*w+x] else 0
+            v=(base if (x+y+int(invert_checker))%2 else base+20) if mask[y*w+x] else 0
             raw.extend((v,v,v))
     def chunk(tag,payload):
         return (struct.pack('>I',len(payload))+tag+payload+
@@ -77,6 +77,11 @@ class NativeRasterFamily(unittest.TestCase):
              'RIGHT':{'position_xyz':[2,.5,.5],'forward_xyz':[-1,0,0]},
              'TOP':{'position_xyz':[.5,.5,2],'forward_xyz':[0,0,-1]},
           },
+        for camera in self.policy['cameras'].values():
+            camera['projection']='ORTHOGRAPHIC'
+            camera['orthographic_width_m']=1.25
+            camera['orthographic_height_m']=1.25
+
         }
         self.sync()
     def sync(self):
@@ -130,6 +135,43 @@ class NativeRasterFamily(unittest.TestCase):
         self.sync()
         self.assertTrue(all(all(row['checks'].values())
             for row in self.report()['rules'].values()))
+    def test_all_eleven_original_camera_zoom_mismatch_rejects_source_evidence(self):
+        # The native geometry and PNG bytes are unchanged. A falsely
+        # declared zoom must not be auto-fitted into a passing silhouette.
+        self.policy['cameras']['FRONT']['orthographic_width_m']=2.5
+        self.policy['cameras']['FRONT']['orthographic_height_m']=2.5
+        self.sync()
+        rows=self.report()['rules']
+        self.assertFalse(rows['AAA-200-D-035']['checks'][
+            'AAA-200-D-035_native_projection'])
+        self.assertFalse(rows['AAA-200-F-056']['source_observed'])
+        self.assertTrue(all(r['full_rule_semantics']=='UNKNOWN'
+                            for r in rows.values()))
+
+    def test_all_eleven_unpinned_camera_calibration_cannot_be_auto_fitted(self):
+        for camera in self.policy['cameras'].values():
+            camera.pop('orthographic_width_m')
+        self.sync()
+        rows=self.report()['rules']
+        self.assertEqual(len(rows),11)
+        self.assertTrue(all(not row['source_observed']
+                            for row in rows.values()))
+
+    def test_original_reference_and_peer_spatial_shuffle_cannot_pass(self):
+        # Checkerboard inversion preserves the complete RGB histogram,
+        # image dimensions and silhouette. A global-mean comparator would
+        # have falsely accepted both reference and peer equivalence.
+        front_mask=mask_from_triangles(TRI,'FRONT',self.w,self.h)
+        altered=png(front_mask,self.w,self.h,190,invert_checker=True)
+        self.t.put('REFERENCE_IMAGE','reference_image.png',altered)
+        self.t.put('SCENE_PEER_REFERENCE','scene_peer_reference.png',altered)
+        self.sync()
+        rows=self.report()['rules']
+        self.assertFalse(rows['AAA-200-D-031']['source_observed'])
+        self.assertFalse(rows['AAA-200-D-032']['source_observed'])
+        self.assertTrue(all(r['full_rule_semantics']=='UNKNOWN'
+                            for r in rows.values()))
+
     def test_original_png_byte_tamper_is_not_a_valid_render(self):
         p=self.t.f.root/'front.png'
         p.write_bytes(p.read_bytes()+b'FORGED')
