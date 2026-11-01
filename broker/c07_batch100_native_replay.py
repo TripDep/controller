@@ -190,6 +190,56 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          p345_macro.get('owner_approved') is False and
          set(p345_macro.get('rows',{}))==set(p345.IDS),
          'C07_BATCH100_P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED')
+    # The P6-P8 thirty-rule family also has four genuinely rule-specific
+    # original-byte readers (collision 4, walkability 6, RAGE 10, final QA 10).
+    # They must all execute on the SAME original Controller attempt and audit.
+    # A producer's CodeWalker/Sollumz/FiveM-labelled log remains untrusted.
+    import c07_p6_collision_semantics as p6_collision
+    import c07_p6_walkability_semantics as p6_walkability
+    import c07_p7_rage_semantics as p7_rage
+    import c07_p8_final_qa_semantics as p8_final
+    family_readers=(
+        ('P6_COLLISION',p6_collision),
+        ('P6_WALKABILITY',p6_walkability),
+        ('P7_RAGE',p7_rage),
+        ('P8_FINAL',p8_final),
+    )
+    family_reports={}
+    seen=set()
+    for name,module in family_readers:
+        report=module.inspect(inventory,plan,controller,asset,step,work,
+                              source_loader=source_loader)
+        ids=set(module.IDS)
+        need(not seen.intersection(ids) and
+             report.get('source_rule_count')==len(ids) and
+             report.get('attempt_id')==work['attempt_id'] and
+             report.get('operation_sha256')==work['operation_sha256'] and
+             report.get('original_audit_sha256')==audit['audit_sha256'] and
+             report.get('original_audit_tail')==audit['audit_tail_sha256'] and
+             report.get('advancement_authorized') is False and
+             report.get('full_rule_semantic_passes')==0 and
+             report.get('individual_mg0_passes')==0 and
+             set(report.get('rules',{}))==ids,
+             'C07_BATCH100_P678_FAMILY_ORIGINAL_READER_UNTRUSTED:'+name)
+        for rid,row in report['rules'].items():
+            criteria=row.get('original_machine_checks')
+            need(type(criteria) is dict and len(criteria) in (2,3) and
+                 all(type(k) is str and k and type(v) is bool
+                     for k,v in criteria.items()) and
+                 row.get('requirement_sha256')==
+                     inventory['rules'][rid]['requirement_sha256'] and
+                 row.get('source_sha256')==
+                     inventory['rules'][rid]['source_sha256'] and
+                 row.get('exact_attempt_id')==work['attempt_id'] and
+                 row.get('operation_sha256')==work['operation_sha256'] and
+                 row.get('full_rule_semantics')=='UNKNOWN' and
+                 row.get('individual_mg0')=='UNKNOWN' and
+                 row.get('advancement_authorized') is False,
+                 'C07_BATCH100_P678_PER_LITERAL_SOURCE_UNTRUSTED:'+rid)
+        family_reports[name]=report
+        seen.update(ids)
+    need(len(seen)==30 and seen==set(p678.IDS[:30]),
+         'C07_BATCH100_P678_THIRTY_EXACT_FAMILY_INCOMPLETE')
     # The observation report must expose the separately recomputed native
     # code-enrollment count; 100 examined rules are NOT 100 reviewed rules.
     from c07_cohort_completion_gate import snapshot as code_registry_snapshot
@@ -198,6 +248,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          code_registry['registry_inconsistent_ids'] == [],
          'C07_BATCH100_REVIEWED_NATIVE_DISPATCH_INCONSISTENT')
     return {
+        'p678_thirty_rule_specific_original': family_reports,
         'p1_thirteen_original_design': p1_design,
         'p345_forty_source_macro': p345_macro,
         'native_semantic_code_review': code_registry,
