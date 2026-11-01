@@ -67,13 +67,16 @@ class Tests(unittest.TestCase):
         from c07_p1_design_source_review import IDS as DESIGN_IDS
         self.p1_design={
             'family_rule_count':30,'rule_count':13,
+            'source_observed_count':13,
             'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
             'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
             'advancement_authorized':False,'full_semantic_passes':0,
             'individual_mg0_passes':0,
             'rules':{rid:{
                 'original_pixel_geometry_checks':{'source_original_a':True,
-                                                  'source_original_b':True},
+                                                  'source_original_b':True,
+                                                  'source_original_c':True},
+                'source_observed':True,
                 'requirement_sha256':'d'*64,'source_sha256':'c'*64,
                 'full_rule_semantics':'UNKNOWN',
                 'individual_mg0':'UNKNOWN','advancement_authorized':False}
@@ -89,6 +92,8 @@ class Tests(unittest.TestCase):
             'rules':{rid:{
                 'checks':{'pre_d_policy_and_current_original_bytes_reopened':True,
                           'rule_specific_original_measurement_within_pre_d_contract':False},
+                'source_sha256':'c'*64,'requirement_sha256':'d'*64,
+                'source_observed':False,
                 'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
                 'advancement_authorized':False} for rid in QUANT_IDS},
         }
@@ -104,6 +109,7 @@ class Tests(unittest.TestCase):
                           rid+'_native_projection':False,
                           rid+'_cross_source':False},
                 'source_sha256':'c'*64,'requirement_sha256':'d'*64,
+                'source_observed':False,
                 'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
                 'advancement_authorized':False} for rid in RASTER_IDS},
         }
@@ -219,6 +225,71 @@ class Tests(unittest.TestCase):
             self.assertEqual(result['p345_forty_source_macro'],self.p345_macro)
             self.assertEqual(mg0.call_args.args[4],sorted(batch.COHORT))
             return result
+
+    def test_real_original_p1_residual_family_cross_reader_contract(self):
+        # The former batch mock expected TWO design criteria, while the real
+        # source reader emits THREE. Exercise the actual thirteen-rule reader
+        # and all eleven raster rules on one real original Controller fixture.
+        from pathlib import Path
+        from test_c07_p1_design_source_review import P1DesignSourceTests
+        from c07_p1_remaining_visual_review import inspect_family as quantitative
+        from c07_p1_native_raster_projection import inspect_family as raster
+        t=P1DesignSourceTests(
+            'test_thirteen_real_original_pixel_and_geometry_predicates')
+        t.setUp()
+        self.addCleanup(t.doCleanups)
+        f=t.fixture.f
+        ctx={'inventory':f.inv,'plan':f.plan,'controller':f.controller,
+             'asset':f.asset,'step':f.step,'work':f.work,
+             'source_loader':lambda p:Path(p).read_bytes()}
+        design=t.examine()
+        q=quantitative(ctx)
+        r=raster(ctx)
+        audit={'audit_sha256':design['original_audit_sha256'],
+               'audit_tail_sha256':design['original_audit_tail']}
+        certificate=batch._verify_p1_residual_source_macros(
+            design,q,r,f.inv,f.work,audit)
+        self.assertEqual(certificate['residual_rules_replayed'],11)
+        self.assertEqual(certificate['original_measured_checks'],88)
+        self.assertFalse(certificate['full_semantics_verified'])
+        self.assertFalse(certificate['individual_mg0_verified'])
+        self.assertFalse(certificate['advancement_authorized'])
+        # The independently reread third criterion must never be silently
+        # discarded by the consuming-side batch contract.
+        rid='AAA-200-D-031'
+        key=next(iter(design['rules'][rid]['original_pixel_geometry_checks']))
+        design['rules'][rid]['original_pixel_geometry_checks'].pop(key)
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                    'PER_LITERAL_ORIGINAL_PROOF'):
+            batch._verify_p1_residual_source_macros(
+                design,q,r,f.inv,f.work,audit)
+
+    def test_every_p1_residual_id_rejects_forged_original_cross_source(self):
+        self.run_batch()
+        for rid in sorted(self.p1_raster['rules']):
+            row=self.p1_raster['rules'][rid]
+            original=row['source_observed']
+            row['source_observed']=True
+            with self.subTest(rule=rid):
+                with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                             'PER_LITERAL_ORIGINAL_PROOF'):
+                    self.run_batch()
+            row['source_observed']=original
+        self.run_batch()
+
+    def test_p1_family_rejects_cross_attempt_and_requirement_sha_splice(self):
+        self.run_batch()
+        rid='AAA-200-D-034'
+        row=self.p1_quant['rules'][rid]
+        row['requirement_sha256']='e'*64
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                     'PER_LITERAL_ORIGINAL_PROOF'):
+            self.run_batch()
+        row['requirement_sha256']='d'*64
+        self.p1_design['original_audit_sha256']='a'*64
+        with self.assertRaisesRegex(batch.NativeBatchBlocked,
+                                     'ORIGINAL_FAMILY_CONTEXT'):
+            self.run_batch()
 
     def test_p678_twenty_six_extra_original_semantics_required(self):
         for label in ('P6_WALKABILITY','P7_RAGE','P8_FINAL'):
