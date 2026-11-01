@@ -25,6 +25,7 @@ from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, packa
 CASES = (
     (P1Thirty, 'AAA-200-E-044', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
+    (TextureFixture, 'AAA-200-M-124', 'test_six_original_pixel_oracles_observed_not_approved'),
     (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
     (FinalFixture, 'AAA-200-S-189', 'test_ten_distinct_original_scoped_observations_not_full_review'),
     (ClosureFixture, 'AAA-200-T-196', 'test_five_scoped_observations_and_final_rule_unknown'),
@@ -90,8 +91,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
     def test_thirteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 14)
-        self.assertEqual(len(set(x[1] for x in CASES)), 14)
+        self.assertEqual(len(CASES), 15)
+        self.assertEqual(len(set(x[1] for x in CASES)), 15)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -175,6 +176,13 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.put(budget=dict(BUDGET, max_triangles=1))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-142')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(TextureFixture,
+            'test_six_original_pixel_oracles_observed_not_approved')
+        test.policy['min_distinct_rgb'] = 1000
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-M-124')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(DeliveryFixture,
             'test_four_original_delivery_oracles_no_false_fivem_pass')
