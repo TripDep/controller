@@ -199,6 +199,13 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         self.assertEqual(build_packet(ctx, 'AAA-200-P-152')['rule']['result'], 'FAIL')
         self.assertEqual(build_packet(ctx, 'AAA-200-P-153')['rule']['result'], 'FAIL')
 
+        test, ctx = self.context(ClosureFixture,
+            'test_five_scoped_observations_and_final_rule_unknown')
+        test.docs['P8_TEST_MATRIX']['tests'][0]['id'] = 'FAKE_TEST'
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-196')['rule']['result'], 'FAIL')
+
         test, ctx = self.context(DeliveryFixture,
             'test_four_original_delivery_oracles_no_false_fivem_pass')
         test.put(archive=package(plan(), missing='scene.blend'))
