@@ -75,6 +75,15 @@ class P4MaterialMacroTests(unittest.TestCase):
               'issuer':{'workflow_blob':'a'*40,'public_sha':'b'*40}}
         return packet,expected,spec
 
+    def test_whole_M121_to_M130_macro_has_exact_gate(self):
+        all_ten={'AAA-200-M-%03d' % i for i in range(121,131)}
+        self.assertEqual(set(NATIVE_RULES)&all_ten, all_ten)
+        enrolled=set(FULL_LITERAL_REVIEWED)&all_ten
+        self.assertEqual(enrolled,all_ten-
+                         {'AAA-200-M-129','AAA-200-M-130'})
+        self.assertEqual(len(enrolled),8)
+        self.assertEqual(set(NATIVE_RULES)&set(RULES),set(RULES))
+
     def test_all_seven_literal_rules_are_distinct_and_source_bound(self):
         self.assertEqual(len(RULES),7)
         self.assertEqual(len(DECIDABLE),5)
