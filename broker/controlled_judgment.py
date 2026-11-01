@@ -108,9 +108,9 @@ class ControlledJudgment:
             j.need(st.get('d_authorized') and active and active['category'] == 'STATUS',
                    'CONTROLLED_PLAN_REQUIRES_AUTHORIZED_STATUS')
             from c07_plan_evidence_contracts import (
-                OPTIONAL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
+                ALL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
             )
-            base_keys = set(plan) - OPTIONAL_EVIDENCE_CONTEXT
+            base_keys = set(plan) - ALL_EVIDENCE_CONTEXT
             j.need(base_keys in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
                    set(plan['operation']) == OP_KEYS, 'CONTROLLED_PLAN_SCHEMA')
             validate_pre_d_evidence(plan, self.inventory)
@@ -152,9 +152,9 @@ class ControlledJudgment:
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
         from c07_plan_evidence_contracts import (
-            OPTIONAL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
+            ALL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
         )
-        base_keys = set(row['plan']) - OPTIONAL_EVIDENCE_CONTEXT
+        base_keys = set(row['plan']) - ALL_EVIDENCE_CONTEXT
         j.need(base_keys in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
                set(row['plan']['operation']) == OP_KEYS,
                'CONTROLLED_ENROLLED_PLAN_SCHEMA')
