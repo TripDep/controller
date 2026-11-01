@@ -12,6 +12,26 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-T-191': ('p8_delivery_macro_full', (
+        'source_and_native_export_reopened_from_current_original_audit',
+        'crc_verified_package_contains_exact_editable_and_native_export',
+        'independently_parsed_real_native_geometry_and_original_manifest_consistent')),
+    'AAA-200-T-193': ('p8_delivery_macro_full', (
+        'all_original_required_members_are_safe_and_crc_verified',
+        'every_required_native_export_has_parseable_original_glb_geometry',
+        'editable_source_has_blender_block_structure_not_just_magic_header')),
+    'AAA-200-T-195': ('p8_delivery_macro_full', (
+        'original_guide_binds_exact_editable_and_native_source_sha',
+        'installation_paths_match_original_package_and_source_assets',
+        'maintenance_instructions_cover_source_version_and_revalidation_without_extraneous_claims')),
+    'AAA-200-T-198': ('p8_delivery_macro_full', (
+        'recurrent_original_defect_events_and_precorrection_geometry_authenticated',
+        'measured_original_before_geometry_violates_precommitted_origin_limit',
+        'original_after_geometry_corrects_same_recurring_cause_within_source_limit')),
+    'AAA-200-T-199': ('p8_delivery_macro_full', (
+        'original_before_and_after_method_code_sha_and_valid_python_ast_reopened',
+        'method_change_targets_independently_proven_recurring_geometry_defect',
+        'changed_method_and_corrected_original_geometry_bound_to_same_current_operation')),
     'AAA-200-F-057': ('p1_composition_full', (
         'pre_d_composition_target_policy_and_original_qa_source_sha_bound',
         'reported_composition_defect_independently_recomputed_from_original_glb',
@@ -437,6 +457,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_material_macro_full_review import inspect as inspect_p4_material
     elif domain == 'p345_remaining_scoped':
         from c07_p345_remaining_original_review import inspect as inspect_remaining
+    elif domain == 'p8_delivery_macro_full':
+        from c07_p8_delivery_macro_full_review import inspect as inspect_t_delivery
     elif domain == 'p8_intersection_full':
         from c07_p8_intersection_full_review import inspect as inspect_intersections
     elif domain == 'p8_final_process_full':
@@ -479,6 +501,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                           if domain == 'p4_material_macro_full' else None)
     p345_remaining_review = (inspect_remaining(source_context, rule_id)
                              if domain == 'p345_remaining_scoped' else None)
+    p8_delivery_review = (inspect_t_delivery(source_context, rule_id)
+                          if domain == 'p8_delivery_macro_full' else None)
     p8_intersection_review = (inspect_intersections(source_context, rule_id)
                               if domain == 'p8_intersection_full' else None)
     p8_final_process_review = (inspect_final_process(source_context, rule_id)
@@ -492,7 +516,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_circulation_review, p1_composition_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
-                         p345_remaining_review, p8_intersection_review,
+                         p345_remaining_review, p8_delivery_review, p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -608,6 +632,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_material_macro_review'] = p4_material_review
     if p345_remaining_review is not None:
         proof['original_p345_remaining_scoped_review'] = p345_remaining_review
+    if p8_delivery_review is not None:
+        proof['original_p8_delivery_macro_review'] = p8_delivery_review
     if p8_intersection_review is not None:
         proof['original_p8_intersection_review'] = p8_intersection_review
     if p8_final_process_review is not None:
