@@ -186,6 +186,43 @@ class ControlledJudgment:
                not any(x.is_symlink() for x in (full, *full.parents)), 'CONTROLLED_DEPENDENCY_PATH')
         return full
 
+    def native_source_context(self, expected, work, plan):
+        """Read-only original-byte source context, supplied by the consumer.
+
+        A Git workflow does not acquire this context by asserting a path or
+        a PASS. The current Controller's locked state and original files are
+        mandatory; missing Library-mounted originals leave the rule UNKNOWN.
+        """
+        j.need(type(expected) is dict and type(work) is dict and
+               type(plan) is dict and expected.get('rule_id') in
+               self.inventory['rules'] and
+               j.binding(work, self.inventory['rules'][expected['rule_id']],
+                         expected['rule_id']) == expected and
+               plan['phase'] == work['phase'] and
+               plan['master_sha256'] == work['master_sha256'] and
+               self.c.master_identity()['sha256'] == work['master_sha256'],
+               'CONTROLLED_NATIVE_ORIGINAL_CONTEXT_CHANGED')
+        state = self.c.asset_state(self.asset)
+        active = state.get('active_step')
+        j.need(type(active) is dict and type(active.get('step')) is str and
+               self.c.verify_audit_chain(self.asset)['ok'],
+               'CONTROLLED_NATIVE_CURRENT_AUDIT_OR_STEP_MISSING')
+        root = self.c.root.resolve()
+        def source_loader(path):
+            j.need(type(path) is str and path and Path(path).is_absolute(),
+                   'CONTROLLED_NATIVE_ORIGINAL_PATH')
+            p = Path(path)
+            j.need(p.resolve().is_relative_to(root) and p.is_file() and
+                   not p.is_symlink() and
+                   not any(parent.is_symlink() for parent in p.parents
+                           if parent != root and parent.is_relative_to(root)),
+                   'CONTROLLED_NATIVE_ORIGINAL_PATH_OUTSIDE_ROOT')
+            return p.read_bytes()
+        return {'inventory': self.inventory, 'plan': plan,
+                'controller': self.c, 'asset': self.asset,
+                'step': active['step'], 'work': work,
+                'source_loader': source_loader}
+
     def contexts(self):
         return {role: context.validate(json.loads(self.local_file(path).read_text()))
                 for role, path in context.PATHS.items()}
@@ -581,7 +618,9 @@ class ControlledJudgment:
                        mg0_batch['failed_rule_ids'][0])
             current = self.contexts()
             decision = j.native_decision(self.api, origin, plan['issuer'])
-            backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+            backend = j.NativeRuleBackend(self.api, plan['enrolled'],
+                source_context=lambda expected: self.native_source_context(
+                    expected, work, plan))
             fresh = j.judge(self.inventory, work, offers, backend, current_contexts=current,
                             previous_contexts=previous['contexts'] if previous else None,
                             previous_decision=prior_decision)
@@ -2396,7 +2435,9 @@ class ControlledJudgment:
                             'action': 'STOP_CORRECT_RESUBMIT',
                             'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
                 post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
-                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'],
+                source_context=lambda expected: self.native_source_context(
+                    expected, work, plan))
                 fresh = j.judge(self.inventory, work, post_offers, post_backend,
                                 current_contexts=self.contexts(), previous_contexts=prior_context,
                                 previous_decision=prior_decision)
