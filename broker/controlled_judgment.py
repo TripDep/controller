@@ -1378,6 +1378,41 @@ class ControlledJudgment:
                             advancement_authorized=False)
                         j.need(p3_triangles['totals']['degenerate_triangles'] == 0,
                                'CONTROLLED_P3_REAL_DEGENERATE_TRIANGLES_FOUND')
+                # Five additional literal P5 quantitative oracles on original
+                # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
+                # This is read-only machine evidence, never full MG0 or QA.
+                if plans[0]['plan'].get('phase') in (
+                        'P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p5_budget_semantics import (
+                        IDS as P5_BUDGET_IDS, inspect as inspect_p5_budget)
+                    p5_budget = inspect_p5_budget(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p5_budget['source_rule_count'] == 5
+                           and set(p5_budget['rules']) == set(P5_BUDGET_IDS)
+                           and p5_budget['full_rule_semantic_passes'] == 0
+                           and p5_budget['individual_mg0_passes'] == 0
+                           and p5_budget['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p5_budget['rules'].values()),
+                           'CONTROLLED_P5_ORIGINAL_BUDGET_FALSE_PASS')
+                    if p5_budget['metrics']['triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P5_ORIGINAL_BUDGET_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p5_budget['original_audit_sha256'],
+                            original_audit_tail=p5_budget['original_audit_tail'],
+                            source_rule_ids=list(P5_BUDGET_IDS),
+                            measured_original_metrics=p5_budget['metrics'],
+                            original_rule_machine_checks=p5_budget['rules'],
+                            machine_positive_obligations=p5_budget[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
