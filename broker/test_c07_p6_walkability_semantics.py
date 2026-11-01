@@ -59,6 +59,21 @@ class Tests(unittest.TestCase):
         return inspect(self.f.inv,self.f.plan,self.f.controller,
             self.f.asset,self.f.step,self.f.work,
             source_loader=lambda p:Path(p).read_bytes())
+    def test_p155_same_centroid_but_uncovered_solid_vertices_cannot_pass(self):
+        # Both triangles have centroid (1/3,1/3,0). The smaller collision
+        # triangle cannot cover all original visual vertices; a centroid-only
+        # replay would incorrectly call this a solid surface.
+        same_centroid=[(0.1,0.1,0),(0.9,0.1,0),(0.0,0.8,0)]
+        self.collision=glb(same_centroid,[(0,1,2)],NORMALS)
+        self.put()
+        row=self.examine()["rules"]["AAA-200-P-155"]
+        self.assertTrue(row["original_machine_checks"][
+            "original_solid_surface_collision_proxy_recomputed"])
+        self.assertFalse(next(iter(
+            row["original_cross_source_semantic"].values())))
+        self.assertEqual(row["full_rule_semantics"],"UNKNOWN")
+        self.assertEqual(row["individual_mg0"],"UNKNOWN")
+
     def test_five_source_geometry_observations_runtime_unattested(self):
         r=self.examine()
         self.assertEqual(set(r["rules"]),set(IDS))
