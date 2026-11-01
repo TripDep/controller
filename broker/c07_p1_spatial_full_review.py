@@ -15,7 +15,8 @@ from c07_p6_collision_semantics import _triangles
 
 RULE = 'AAA-200-E-043'
 ALIGNMENT_RULE = 'AAA-200-F-054'
-RULES = frozenset((RULE, ALIGNMENT_RULE))
+CONNECTION_RULE = 'AAA-200-F-058'
+RULES = frozenset((RULE, ALIGNMENT_RULE, CONNECTION_RULE))
 CRITERIA = (
     'pre_d_two_building_world_placements_and_ratio_targets_sha_pinned',
     'actual_original_world_space_building_extents_independently_measured',
@@ -26,6 +27,11 @@ ALIGNMENT_CRITERIA = (
     'pre_d_complete_module_alignment_pair_contract_sha_pinned',
     'every_alignment_anchor_recomputed_from_actual_original_mesh_vertices',
     'all_actual_world_space_module_anchor_gaps_within_original_tolerance',
+)
+CONNECTION_CRITERIA = (
+    'pre_d_complete_module_connection_edge_contract_sha_pinned',
+    'every_connection_edge_recomputed_as_real_original_mesh_edge',
+    'all_world_connection_edges_share_length_and_opposite_side_contact',
 )
 
 class P1SpatialReviewBlocked(ValueError):
@@ -120,6 +126,69 @@ def inspect(source_context, rule_id):
                   and all(placement(v) for v in poses.values())
                   and positive(clearance) and ratio_range(area_range)
                   and ratio_range(height_range))
+    if rule_id == CONNECTION_RULE:
+        pairs = scene.get('module_connection_edges')
+        connection_policy = bool(
+            type(poses) is dict and set(poses) == {'primary','secondary'}
+            and all(placement(v) for v in poses.values())
+            and type(pairs) is list and 0 < len(pairs) <= 128
+            and all(type(row) is dict and set(row) == {
+                'primary_edge_xyz','secondary_edge_xyz',
+                'max_gap_m','min_shared_length_m'}
+                and all(type(row[key]) is list and len(row[key]) == 2
+                        and all(type(p) is list and len(p) == 3
+                                and all(numeric(v) for v in p)
+                                for p in row[key])
+                        for key in ('primary_edge_xyz','secondary_edge_xyz'))
+                and positive(row['max_gap_m']) and row['max_gap_m'] <= 0.05
+                and positive(row['min_shared_length_m'])
+                for row in pairs))
+        tris_a = _triangles(raw_a) if raw_a is not None else None
+        tris_b = _triangles(raw_b) if raw_b is not None else None
+        def edges(tris):
+            return {frozenset((tuple(tri[i]),tuple(tri[(i+1)%3])))
+                    for tri in tris for i in range(3)} if tris else set()
+        a_edges,b_edges=edges(tris_a),edges(tris_b)
+        original_edges=bool(connection_policy and a_edges and b_edges
+            and all(frozenset(tuple(p) for p in row['primary_edge_xyz']) in a_edges
+                    and frozenset(tuple(p) for p in row['secondary_edge_xyz']) in b_edges
+                    for row in pairs))
+        def world(point,pose):
+            angle=math.radians(pose['yaw_deg'])
+            co,si=math.cos(angle),math.sin(angle)
+            x,y,z=[point[i]*pose['scale_xyz'][i] for i in range(3)]
+            return (x*co-y*si+pose['translation_xyz'][0],
+                    x*si+y*co+pose['translation_xyz'][1],
+                    z+pose['translation_xyz'][2])
+        def centroid(tris,pose):
+            verts=[world(p,pose) for tri in tris for p in tri]
+            return tuple(sum(p[i] for p in verts)/len(verts) for i in range(3))
+        def connected(row):
+            ea=[world(p,poses['primary']) for p in row['primary_edge_xyz']]
+            eb=[world(p,poses['secondary']) for p in row['secondary_edge_xyz']]
+            gap=min(max(math.dist(ea[0],eb[0]),math.dist(ea[1],eb[1])),
+                    max(math.dist(ea[0],eb[1]),math.dist(ea[1],eb[0])))
+            length_a=math.dist(ea[0],ea[1])
+            length_b=math.dist(eb[0],eb[1])
+            ca=centroid(tris_a,poses['primary'])
+            cb=centroid(tris_b,poses['secondary'])
+            def side(p):
+                return ((ea[1][0]-ea[0][0])*(p[1]-ea[0][1])-
+                        (ea[1][1]-ea[0][1])*(p[0]-ea[0][0]))
+            return (gap<=row['max_gap_m'] and
+                    min(length_a,length_b)>=row['min_shared_length_m'] and
+                    abs(length_a-length_b)<=row['max_gap_m'] and
+                    side(ca)*side(cb)<-1e-8)
+        contact=bool(original_edges and all(connected(row) for row in pairs))
+        checks=dict(zip(CONNECTION_CRITERIA,
+                        (connection_policy,original_edges,contact)))
+        return {'rule_id':rule_id,'checks':checks,
+                'evidence_complete':bool(scene_raw and raw_a and raw_b),
+                'original_audit_sha256':audit_sha,
+                'original_audit_tail':tail,
+                'attempt_id':work['attempt_id'],
+                'operation_sha256':work['operation_sha256'],
+                'individual_mg0':'UNKNOWN','advancement_authorized':False}
     if rule_id == ALIGNMENT_RULE:
         pairs = scene.get('module_alignment_pairs')
         alignment_policy = bool(
