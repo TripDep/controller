@@ -502,6 +502,26 @@ P1_RESIDUAL_CANDIDATES = {
 }
 NATIVE_RULES.update(P1_RESIDUAL_CANDIDATES)
 
+
+# Three P6/P8 original-source residuals complete the 7-ID unreviewed P6-P8
+# family together with Q167-Q170. Player physics, FiveM and independent
+# customer-defect triage are NOT proven by producer-controlled audit labels.
+P678_RESIDUAL_CANDIDATES = {
+    'AAA-200-P-155': ('p678_residual_source', (
+        'original_solid_surface_collision_proxy_recomputed',
+        'original_collision_faces_nonempty',
+        'original_solid_visual_triangles_supported_by_collision_geometry')),
+    'AAA-200-P-160': ('p678_residual_source', (
+        'original_fivem_runtime_log_registered',
+        'independent_fivem_runtime_walkability_attested',
+        'independent_actual_fivem_player_collision_and_walkability_proof')),
+    'AAA-200-S-190': ('p678_residual_source', (
+        'internal_qa_report_binds_export_and_six_rasters',
+        'internal_report_does_not_self_certify_owner',
+        'independent_no_customer_defect_triage_attestation')),
+}
+NATIVE_RULES.update(P678_RESIDUAL_CANDIDATES)
+
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
 # These twenty-two literals have independently decidable original-byte acceptance
@@ -612,6 +632,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_full_review import inspect as inspect_p5_full
     elif domain == 'p5_alpha_cost_full':
         from c07_p5_alpha_cost_full_review import inspect as inspect_alpha_cost
+    elif domain == 'p678_residual_source':
+        from c07_p678_residual_macro_replay import inspect as inspect_p678_residual
     elif domain == 'p1_residual_source':
         from c07_p1_residual_macro_replay import inspect as inspect_p1_residual
     elif domain == 'p1_blockout_full':
@@ -670,6 +692,8 @@ def build_packet(source_context, rule_id, *, expected=None):
     p5_review = inspect_p5_full(source_context, rule_id) if domain == 'p5_full' else None
     alpha_cost_review = (inspect_alpha_cost(source_context, rule_id)
                          if domain == 'p5_alpha_cost_full' else None)
+    p678_residual_review = (inspect_p678_residual(source_context, rule_id)
+                            if domain == 'p678_residual_source' else None)
     p1_residual_review = (inspect_p1_residual(source_context, rule_id)
                           if domain == 'p1_residual_source' else None)
     p1_blockout_review = (inspect_blockout(source_context, rule_id)
@@ -723,7 +747,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
-                        (p1_residual_review, alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
+                        (p678_residual_review, p1_residual_review, alpha_cost_review, p1_structural_fix_review, p5_review, p1_spatial_review, p1_paths_review,
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, visual_qa_three_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
@@ -815,6 +839,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p5_full_review'] = p5_review
     if alpha_cost_review is not None:
         proof['original_p5_alpha_cost_review'] = alpha_cost_review
+    if p678_residual_review is not None:
+        proof['original_p678_residual_rule_source'] = p678_residual_review
     if p1_residual_review is not None:
         proof['original_p1_residual_eight_source_checks'] = p1_residual_review
     if p1_spatial_review is not None:
