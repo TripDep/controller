@@ -177,7 +177,7 @@ class Tests(unittest.TestCase):
             return (struct.pack("<4sII", b"glTF", 2,
                                 28 + len(padded) + len(binary)) +
                     struct.pack("<I4s", len(padded), b"JSON") + padded +
-                    struct.pack("<I4s", len(binary), b"BIN\\x00") + binary)
+                    struct.pack("<I4s", len(binary), b"BIN\x00") + binary)
         cases = (
             (original[:-1] + b',"meshes":[]}', "DUPLICATE_JSON_KEY"),
             (original.replace(b'"count":3', b'"count":3,"count":4', 1),
@@ -188,7 +188,7 @@ class Tests(unittest.TestCase):
             (original.replace(b'"version":"2.0"',
                               b'"version":"2.0","unknown":Infinity'),
              "NONFINITE_JSON"),
-            (original.replace(b'"version":"2.0"', b'"version":"\\xff"'),
+            (original.replace(b'"version":"2.0"', b'"version":"\xff"'),
              "MALFORMED_JSON"),
         )
         for document, error in cases:
@@ -208,7 +208,7 @@ class Tests(unittest.TestCase):
         changed = (struct.pack("<4sII", b"glTF", 2,
                                28 + len(document) + len(binary)) +
                    struct.pack("<I4s", len(document), b"JSON") + document +
-                   struct.pack("<I4s", len(binary), b"BIN\\x00") + binary)
+                   struct.pack("<I4s", len(binary), b"BIN\x00") + binary)
         with self.assertRaisesRegex(OriginalTopologyBlocked, "GLB_TABLES"):
             geometry(changed)
 
