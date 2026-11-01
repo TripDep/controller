@@ -247,8 +247,10 @@ def catalog200_macro_snapshot(inventory):
                     enrolled == (validator, native[1]) and
                     replayed == validator):
                 ready.append(rid)
-            elif any(x is not None for x in
-                     (native, validator, enrolled, replayed)):
+            # Documentary R173 registrations are valid, but are not native
+            # full-literal code review; do not count or mislabel them as a
+            # native-registry inconsistency.
+            elif native is not None or validator is not None:
                 inconsistent.append(rid)
         if not ids or seen.intersection(ids):
             raise CohortIncomplete('C07_AAA200_DUPLICATE_FAMILY_IDS')
