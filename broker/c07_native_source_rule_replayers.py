@@ -12,6 +12,14 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-F-056': ('camera_views_full', (
+        'pre_d_four_camera_capture_roles_and_current_operation_events_sha_pinned',
+        'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
+        'front_left_right_top_original_camera_positions_and_axes_verified')),
+    'AAA-200-N-138': ('camera_views_full', (
+        'pre_d_front_side_rear_top_capture_roles_and_current_operation_events_sha_pinned',
+        'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened',
+        'front_side_rear_top_original_camera_positions_and_axes_verified')),
     'AAA-200-E-048': ('p1_terrain_full', (
         'pre_d_planar_terrain_contact_contract_and_both_original_meshes_sha_pinned',
         'entire_native_projected_footprint_inside_original_support_triangle',
@@ -182,6 +190,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-F-056', 'AAA-200-N-138',
     'AAA-200-E-048', 'AAA-200-F-055',
     'AAA-200-E-049', 'AAA-200-E-050', 'AAA-200-F-053',
     'AAA-200-E-041', 'AAA-200-E-042',
@@ -270,6 +279,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_environment_full_review import inspect as inspect_environment
     elif domain == 'p1_terrain_full':
         from c07_p1_terrain_full_review import inspect as inspect_terrain
+    elif domain == 'camera_views_full':
+        from c07_camera_views_full_review import inspect as inspect_camera_views
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -290,6 +301,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                              if domain == 'p1_environment_full' else None)
     p1_terrain_review = (inspect_terrain(source_context, rule_id)
                          if domain == 'p1_terrain_full' else None)
+    camera_views_review = (inspect_camera_views(source_context, rule_id)
+                           if domain == 'camera_views_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
@@ -297,7 +310,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
                          p1_site_review, p1_environment_review, p1_terrain_review,
-                         p6_invisible_review,
+                         camera_views_review, p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
@@ -393,6 +406,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_environment_review'] = p1_environment_review
     if p1_terrain_review is not None:
         proof['original_p1_terrain_review'] = p1_terrain_review
+    if camera_views_review is not None:
+        proof['original_camera_views_review'] = camera_views_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
