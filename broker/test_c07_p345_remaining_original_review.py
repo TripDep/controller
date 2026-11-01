@@ -377,12 +377,18 @@ class RemainingP345Tests(unittest.TestCase):
                       'criteria':list(NATIVE_RULES[rid][1]),
                       'requirement_sha256':expected['requirement_sha256'],
                       'source_ref':'1'*40}
-                if rid in ('AAA-200-L-118','AAA-200-L-119',
-                           'AAA-200-L-120','AAA-200-O-143','AAA-200-O-147'):
+                if rid=='AAA-200-O-147':
+                    # Code reviewer exists but there is no pre-D approved
+                    # texture reuse baseline in this older fixture. The
+                    # native dispatch must BLOCK any non-PASS replay.
+                    with self.assertRaisesRegex(ValueError,'CANNOT_AUTHORIZE'):
+                        replay(None,packet,expected,spec,
+                               source_context=lambda _:ctx)
+                elif rid in ('AAA-200-L-118','AAA-200-L-119',
+                              'AAA-200-L-120','AAA-200-O-143'):
                     result=replay(None,packet,expected,spec,
                         source_context=lambda _:ctx)
-                    self.assertEqual(result['documentary_result'],
-                        'UNKNOWN' if rid=='AAA-200-O-147' else 'PASS')
+                    self.assertEqual(result['documentary_result'],'PASS')
                 else:
                     with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
                         replay(None,packet,expected,spec,
