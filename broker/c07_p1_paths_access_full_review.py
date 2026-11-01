@@ -166,6 +166,7 @@ def inspect(source_context, rule_id):
                         type(props.get('id')) is not str or
                         not props['id'].strip() or len(props['id'])>100 or
                         props.get('class') not in ('main','secondary') or
+                        type(geo) is not dict or
                         geo.get('type') != 'LineString' or
                         type(coords) is not list or
                         not 2 <= len(coords) <= 1024 or
