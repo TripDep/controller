@@ -115,6 +115,7 @@ class P5FullNativeReviewTests(unittest.TestCase):
         fixture.f.plan['p345_evidence_contract']['original_artifact_sha256'].pop(
             'BASELINE_SNAPSHOT')
         fixture.f.rebuild()
+        ctx['controller'] = fixture.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-O-146')['rule']['result'],
                          'UNKNOWN')
 
