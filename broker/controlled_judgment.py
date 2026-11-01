@@ -1400,6 +1400,40 @@ class ControlledJudgment:
                     original_witnesses_observed=q100_final['source_witnesses_observed'],
                     semantic_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # R150: original auxiliary-source readback for the final 67
+                # canonical rule IDs. Applicability without verified scope
+                # stays UNKNOWN; no evidence receipt can mint semantic/MG0 PASS.
+                from c07_last67_original_family_witnesses import inspect as inspect_r150
+                last67_actual=inspect_r150(
+                    self.inventory,plans[0]['plan'],self.c,self.asset,
+                    step,reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(last67_actual['source_rule_count']==67
+                       and last67_actual['source_families']==13
+                       and len(last67_actual['rules'])==67
+                       and last67_actual['full_semantic_passes']==0
+                       and last67_actual['individual_mg0_passes']==0
+                       and last67_actual['advancement_authorized'] is False
+                       and all(v['semantic_verdict'] in ('UNKNOWN','FAIL')
+                           and v['individual_mg0']=='UNKNOWN'
+                           and v['owner_approval']=='UNKNOWN'
+                           and v['current_asset_applicability'] in
+                               ('DUE','CONTEXT_UNKNOWN')
+                           and v['advancement_authorized'] is False
+                           for v in last67_actual['rules'].values()),
+                       'CONTROLLED_R150_FALSE_67_FAMILY_MG0_OR_SEMANTIC_PASS')
+                self.append('SUPERVISOR_C07_R150_LAST67_ORIGINAL_SOURCE_FAMILIES',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=last67_actual['original_audit_sha256'],
+                    original_audit_tail=last67_actual['original_audit_tail'],
+                    source_rule_count=67,
+                    original_source_files_reopened=last67_actual['canonical_source_files_reopened'],
+                    original_per_rule_witnesses_verified=last67_actual['original_per_rule_witnesses_verified'],
+                    exact_source_rule_evidence=last67_actual['rules'],
+                    full_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R122: first 200 DUE rules lacking reviewed full-positive
                 # validators, distinct from R115's first 200 catalogue IDs.
                 # Read ORIGINAL Controller, original audit and the byte-pinned
