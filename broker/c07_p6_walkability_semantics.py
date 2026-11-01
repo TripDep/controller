@@ -109,6 +109,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     # scans of large collision/terrain exports.
     contact_ok=False
     contact_regions_verified=False
+    matched=[]
     if (coll_tris is not None and terrain_tris is not None
             and finite(max_gap) and 0<=max_gap<=0.5):
         def center(tri):
@@ -179,6 +180,39 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
            "independent_fivem_runtime_walkability_attested":
                runtime_attested},
     }
+    # Six original-geometry semantic obligations beyond source presence.
+    # Static triangle coverage cannot attest a player's FiveM collision test.
+    def center(triangle):
+        return tuple(sum(p[i] for p in triangle)/3 for i in range(3))
+    def actual_solid_contact():
+        if not (solid_proxy and native_tris and coll_tris):
+            return False
+        tolerance=policy.get("max_visual_collision_gap_m",0.05)
+        if not finite(tolerance) or not 0<=tolerance<=0.2:
+            return False
+        return all(any(
+            math.dist(center(v),center(c))<=tolerance
+            for c in coll_tris if _centroid_in(c,_box(zone)))
+            for zone in solid for v in native_tris
+            if _centroid_in(v,_box(zone)))
+    deep={
+      155:("original_solid_visual_triangles_supported_by_collision_geometry",
+           bool(actual_solid_contact())),
+      156:("original_collision_proxy_inside_real_visual_mesh_envelope",
+           bool(collision_inside_visual and coll_tris and native_tris)),
+      157:("original_walkable_corridors_fit_pre_d_player_width",
+           bool(walk_surfaces and walk_clearance)),
+      158:("every_original_collision_triangle_matches_original_terrain_contact",
+           bool(contact_regions_verified and coll_tris and
+                len(matched)==len(coll_tris))),
+      159:("original_vehicle_corridors_have_measured_horizontal_vertical_clearance",
+           bool(widths and vehicle_clear and vehicle_vertical_clearance)),
+      160:("independent_actual_fivem_player_collision_and_walkability_proof",False),
+    }
+    need(set(deep)==set(NUMBERS) and
+         len({name for name,_ in deep.values()})==6 and
+         all(type(v) is bool for _,v in deep.values()),
+         "C07_P6_SIX_DISTINCT_ORIGINAL_SEMANTIC_PREDICATES")
     result={}
     for n,rid in zip(NUMBERS,IDS):
         c=checks[n]
@@ -190,6 +224,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
             "source_sha256":catalog,"exact_attempt_id":work["attempt_id"],
             "operation_sha256":work["operation_sha256"],
             "original_machine_checks":c,
+            "original_cross_source_semantic":{deep[n][0]:deep[n][1]},
             "machine_scope":"OBSERVED_SCOPE_PASS" if all(c.values())
                             else "UNKNOWN_OR_DEFECT",
             "full_rule_semantics":"UNKNOWN","individual_mg0":"UNKNOWN",
@@ -205,5 +240,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                        "fivem_runtime_independently_attested":False},
             "machine_positive_obligations":sum(
                 v["machine_scope"]=="OBSERVED_SCOPE_PASS" for v in result.values()),
+            "original_cross_source_positive_obligations":sum(
+                value for _,value in deep.values()),
             "full_rule_semantic_passes":0,"individual_mg0_passes":0,
             "advancement_authorized":False}
