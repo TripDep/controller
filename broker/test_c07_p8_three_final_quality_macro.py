@@ -129,6 +129,8 @@ class FinalThreeSemanticTests(unittest.TestCase):
     def test_impossible_original_material_reference_tolerance_rejected(self):
         self.policy['max_material_reference_mean_delta']=0
         self.refresh()
+        self.test.add('P8_MATERIAL_REFERENCE','p8_material_reference.png',image(5))
+        self.h.refresh(self.test,self.ctx)
         self.assertFalse(self.row('AAA-200-S-185')['checks'][
             CRITERIA['AAA-200-S-185'][2]])
 
