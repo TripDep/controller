@@ -115,8 +115,13 @@ def inspect(source_context,rule_id):
                      e.get('step')==step and
                      e.get('attempt_id')==work['attempt_id'] and
                      e.get('operation_sha256')==work['operation_sha256']]
-            opened=[i for i,r in current
-                    if r.get('event')=='SUPERVISOR_OPERATION_OPENED']
+            # The canonical OPENED event is linked by reservation_hash
+            # and step, and deliberately carries no attempt_id itself.
+            # _original_attempt above has already authenticated its
+            # reservation -> current work/attempt/operation binding.
+            opened=[i for i,r in enumerate(audit)
+                    if r.get('event')=='SUPERVISOR_OPERATION_OPENED'
+                    and r.get('step')==step]
             qa=[i for i,r in current
                 if r.get('event')=='BLOCKOUT_QA' and
                 r.get('qa_report_sha256')==sha(report_raw) and
