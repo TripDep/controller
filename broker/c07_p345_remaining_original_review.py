@@ -9,6 +9,7 @@ SHA-pinned pre-D sources and independently decoded native bytes.
 """
 import hashlib
 import math
+import struct
 from collections import Counter
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
@@ -150,6 +151,38 @@ def baked_normal_channels_valid(raw):
             good+=1
     return good>=math.ceil(0.95*len(pixels))
 
+def read_original_uv2(doc,binary,index):
+    """Bounded native GLTF VEC2 float accessor (VEC3 geometry reader excludes UV)."""
+    accessors=doc.get('accessors')
+    views=doc.get('bufferViews')
+    if (type(index) is not int or type(accessors) is not list
+            or type(views) is not list or not 0<=index<len(accessors)):
+        return None
+    accessor=accessors[index]
+    if (type(accessor) is not dict or accessor.get('type')!='VEC2'
+            or accessor.get('componentType')!=5126
+            or 'sparse' in accessor or type(accessor.get('count')) is not int
+            or not 3<=accessor['count']<=10000000):
+        return None
+    vi=accessor.get('bufferView')
+    if type(vi) is not int or not 0<=vi<len(views):
+        return None
+    view=views[vi]
+    if type(view) is not dict or view.get('buffer')!=0:
+        return None
+    base=view.get('byteOffset',0)
+    length=view.get('byteLength')
+    offset=accessor.get('byteOffset',0)
+    stride=view.get('byteStride',8)
+    if (not all(type(x) is int and x>=0 for x in
+                (base,length,offset,stride)) or stride<8 or stride%4
+            or base+length>len(binary)
+            or offset+(accessor['count']-1)*stride+8>length):
+        return None
+    uv=[struct.unpack_from('<2f',binary,base+offset+i*stride)
+        for i in range(accessor['count'])]
+    return uv if all(math.isfinite(x) for row in uv for x in row) else None
+
 def sampled_native_surface_colors(raw):
     """Independently sample original embedded base-color pixels at real UVs.
 
@@ -209,8 +242,8 @@ def sampled_native_surface_colors(raw):
                     return None
             width,height,pixels=decoded[source]
             xyz=_read_accessor(doc,binary,attrs['POSITION'])
-            uv=_read_accessor(doc,binary,attrs['TEXCOORD_0'])
-            if len(xyz)!=len(uv):
+            uv=read_original_uv2(doc,binary,attrs['TEXCOORD_0'])
+            if uv is None or len(xyz)!=len(uv):
                 return None
             indices=(_read_accessor(doc,binary,prim['indices'],scalar=True)
                      if 'indices' in prim else list(range(len(xyz))))
