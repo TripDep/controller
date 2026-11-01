@@ -81,6 +81,94 @@ def _origin_error(bounds,target):
         return None
     return math.dist(bounds['bbox_min'],target)
 
+def _safe_origin_formula(script):
+    """Statically interpret a tiny coordinate-only Python AST. NEVER execute it.
+
+    Contract: exactly def correct_origin(vertices):
+        return [[p[0]-dx,p[1]-dy,p[2]-dz] for p in vertices]
+    Identity expressions p[i] are permitted for unchanged axes. Arbitrary
+    user scripts, calls, imports, lambdas and side effects are rejected.
+    """
+    if type(script) is not bytes or not 1<=len(script)<=10000:
+        return None
+    try:
+        tree=ast.parse(script.decode('utf-8'))
+    except (SyntaxError,UnicodeError,ValueError,RecursionError):
+        return None
+    if len(tree.body)!=1 or type(tree.body[0]) is not ast.FunctionDef:
+        return None
+    function=tree.body[0]
+    arguments=function.args
+    if (function.name!='correct_origin' or function.decorator_list or
+            function.returns is not None or function.type_comment is not None or
+            len(function.body)!=1 or type(function.body[0]) is not ast.Return or
+            len(arguments.posonlyargs)!=0 or len(arguments.args)!=1 or
+            arguments.args[0].arg!='vertices' or
+            arguments.vararg is not None or arguments.kwarg is not None or
+            arguments.kwonlyargs or arguments.defaults or
+            arguments.kw_defaults):
+        return None
+    value=function.body[0].value
+    if type(value) is not ast.ListComp or len(value.generators)!=1:
+        return None
+    gen=value.generators[0]
+    if (gen.is_async or gen.ifs or type(gen.target) is not ast.Name or
+            gen.target.id!='p' or type(gen.iter) is not ast.Name or
+            gen.iter.id!='vertices' or type(value.elt) is not ast.List or
+            len(value.elt.elts)!=3):
+        return None
+    offsets=[]
+    for index,expression in enumerate(value.elt.elts):
+        delta=0.0
+        coordinate=expression
+        if type(expression) is ast.BinOp:
+            if type(expression.op) not in (ast.Sub,ast.Add):
+                return None
+            number=expression.right
+            if type(number) is not ast.Constant or not finite(number.value):
+                return None
+            delta=(1 if type(expression.op) is ast.Sub else -1)*number.value
+            if not math.isfinite(delta) or abs(delta)>100:
+                return None
+            coordinate=expression.left
+        if (type(coordinate) is not ast.Subscript or
+                type(coordinate.value) is not ast.Name or
+                coordinate.value.id!='p' or
+                type(coordinate.slice) is not ast.Constant or
+                type(coordinate.slice.value) is not int or
+                coordinate.slice.value!=index):
+            return None
+        offsets.append(float(delta))
+    return tuple(offsets)
+
+
+def _method_reproduces_actual_geometry(before_script,after_script,
+                                        before_glb,after_glb):
+    """Replay a source-only affine correction on ALL original triangle faces."""
+    identity=_safe_origin_formula(before_script)
+    delta=_safe_origin_formula(after_script)
+    if identity!=(0.0,0.0,0.0) or delta is None or not any(delta):
+        return False
+    try:
+        from c07_p6_collision_semantics import _triangles
+        before=_triangles(before_glb)
+        after=_triangles(after_glb)
+        if not before or len(before)!=len(after):
+            return False
+        def oriented(tri,shift):
+            pts=[tuple(round(float(p[i])-shift[i],6) for i in range(3))
+                 for p in tri]
+            if not all(math.isfinite(x) for p in pts for x in p):
+                return None
+            # Preserve front-face winding and duplicate triangle multiplicity.
+            return min(tuple(pts[n:]+pts[:n]) for n in range(3))
+        predicted=sorted(oriented(t,delta) for t in before)
+        measured=sorted(oriented(t,(0.0,0.0,0.0)) for t in after)
+        return predicted==measured
+    except (ValueError,KeyError,TypeError,IndexError,OverflowError):
+        return False
+
+
 def inspect(context, rule_id):
     require(type(context) is dict and set(context)=={
         'inventory','plan','controller','asset','step','work','source_loader'}
@@ -229,17 +317,17 @@ def inspect(context, rule_id):
                 before_script!=after_script and method.get('before_sha256')==
                 sha(before_script) and method.get('after_sha256')==
                 sha(after_script))
-            parsed=False
-            if changed:
-                try:
-                    before_ast=ast.parse(before_script.decode('utf-8'))
-                    after_ast=ast.parse(after_script.decode('utf-8'))
-                    parsed=bool(ast.dump(before_ast)!=ast.dump(after_ast))
-                except (SyntaxError,UnicodeDecodeError,ValueError):
-                    pass
+            parsed=bool(changed and _safe_origin_formula(before_script)==
+                        (0.0,0.0,0.0) and
+                        _safe_origin_formula(after_script) not in
+                        (None,(0.0,0.0,0.0)))
+            genuine_effect=bool(parsed and before is not None and
+                    export is not None and _method_reproduces_actual_geometry(
+                        before_script,after_script,before,export))
             vals=(changed and parsed,
-                  bool(fixed and method.get('root_cause')=='ORIGIN_DEVIATION'),
-                  bool(fixed and parsed and
+                  bool(fixed and genuine_effect and
+                       method.get('root_cause')=='ORIGIN_DEVIATION'),
+                  bool(fixed and genuine_effect and
                        method.get('verification_method')==
                        'independent_bbox_origin_measurement'))
     checks=dict(zip(RULES[rule_id],map(bool,vals)))
