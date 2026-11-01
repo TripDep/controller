@@ -1,4 +1,4 @@
-"""Adversarial source-byte tests for twenty original-source native per-rule replayers.
+"""Adversarial source-byte tests for twenty-one original-source native per-rule replayers.
 
 Synthetic fixtures prove the consumer recomputes actual original bytes and
 cannot turn UNKNOWN individual MG0 into a production PASS.
@@ -29,6 +29,8 @@ CASES = (
     (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (TextureFixture, 'AAA-200-M-124', 'test_six_original_pixel_oracles_observed_not_approved'),
     (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
+    (FinalFixture, 'AAA-200-S-188',
+     'test_ten_distinct_original_scoped_observations_not_full_review'),
     (FinalFixture, 'AAA-200-S-189', 'test_ten_distinct_original_scoped_observations_not_full_review'),
     (ClosureFixture, 'AAA-200-T-196', 'test_five_scoped_observations_and_final_rule_unknown'),
     (ClosureFixture, 'AAA-200-T-197', 'test_five_scoped_observations_and_final_rule_unknown'),
@@ -102,9 +104,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_twenty_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 20)
-        self.assertEqual(len(set(x[1] for x in CASES)), 20)
+    def test_twenty_one_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 21)
+        self.assertEqual(len(set(x[1] for x in CASES)), 21)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -198,6 +200,13 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-P-152')['rule']['result'], 'FAIL')
         self.assertEqual(build_packet(ctx, 'AAA-200-P-153')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(FinalFixture,
+            'test_ten_distinct_original_scoped_observations_not_full_review')
+        test.docs['P8_TEST_MATRIX']['tests'][2]['status'] = 'RUN'
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-S-188')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(ClosureFixture,
             'test_five_scoped_observations_and_final_rule_unknown')
