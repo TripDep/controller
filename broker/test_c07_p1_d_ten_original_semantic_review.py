@@ -165,7 +165,8 @@ class P1DDesignOriginalTests(unittest.TestCase):
                 t.rebuild()
                 negative=evaluate(self.context(t))['rows'][rid]['checks']
                 self.assertNotEqual(positive,negative,(n,negative))
-                self.assertFalse(negative[CRITERIA[n][2]],(n,negative))
+                self.assertFalse(negative[CRITERIA[n][1 if n==34 else 2]],
+                                 (n,negative))
                 self.assertEqual(evaluate(self.context(t))['rows'][rid][
                     'full_rule_semantics'],'UNKNOWN')
 
