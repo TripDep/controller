@@ -15,10 +15,19 @@ from c07_native_source_rule_replayers import (
 from c07_native_replayer_dispatch import replay
 from test_c07_p3_geometry_semantics import Tests as GeometryFixture, glb, TRI, UP
 from test_c07_p1_thirty_native_domain import P1Thirty
+from test_c07_p3_uv_semantics import Tests as UVFixture
+from test_c07_p4_texture_semantics import Tests as TextureFixture
+from test_c07_p8_final_qa_semantics import Tests as FinalFixture
+from test_c07_p8_closure_semantics import Tests as ClosureFixture
 from test_c07_p5_budget_semantics import Tests as BudgetFixture, BUDGET
 from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
 
 CASES = (
+    (P1Thirty, 'AAA-200-E-044', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
+    (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
+    (FinalFixture, 'AAA-200-S-189', 'test_ten_distinct_original_scoped_observations_not_full_review'),
+    (ClosureFixture, 'AAA-200-T-196', 'test_five_scoped_observations_and_final_rule_unknown'),
     (P1Thirty, 'AAA-200-E-042', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (P1Thirty, 'AAA-200-E-047', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (P1Thirty, 'AAA-200-F-052', 'test_exact_30_individual_P1_and_90_unique_predicates'),
@@ -52,6 +61,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
             'canonical_master_sha256'] = j.evidence.sha256(master) if hasattr(
                 j.evidence, 'sha256') else __import__('hashlib').sha256(master).hexdigest()
         f.rebuild()
+        if isinstance(test, FinalFixture):
+            test.add_critical()
         return test, {
             'inventory': f.inv, 'plan': f.plan,
             'controller': f.controller, 'asset': f.asset,
@@ -67,9 +78,9 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'source_ref': '1'*40,
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
-    def test_eight_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 8)
-        self.assertEqual(len(set(x[1] for x in CASES)), 8)
+    def test_thirteen_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 13)
+        self.assertEqual(len(set(x[1] for x in CASES)), 13)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
@@ -112,7 +123,15 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                     native_rule_readback(None, packet, expected, spec)
                 # Tampering the registered original bytes without an audit
                 # update must fail even when the producer packet is unchanged.
-                if rid.startswith('AAA-200-E') or rid.startswith('AAA-200-F'):
+                if rid == 'AAA-200-L-117':
+                    p = ctx['controller'].root / 'uv_policy.json'
+                elif rid == 'AAA-200-M-128':
+                    p = ctx['controller'].root / 'p4_policy.json'
+                elif rid == 'AAA-200-S-189':
+                    p = ctx['controller'].root / 'scene.glb'
+                elif rid == 'AAA-200-T-196':
+                    p = ctx['controller'].root / 'p8_test_matrix.json'
+                elif rid.startswith('AAA-200-E') or rid.startswith('AAA-200-F'):
                     p = ctx['controller'].root / 'p1_scene.json'
                 elif rid.startswith('AAA-200-L'):
                     p = ctx['controller'].root / 'scene.glb'
