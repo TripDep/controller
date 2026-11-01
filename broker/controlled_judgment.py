@@ -1498,6 +1498,37 @@ class ControlledJudgment:
                        and checked200['individual_mg0_passes']==0
                        and checked200['advancement_authorized'] is False,
                        'CONTROLLED_R127_FALSE_FULL_RULE_OR_MG0_PASS')
+                # R151: every UTF-8 source line in the frozen 200 and all 72
+                # composite requirements is accounted for. If a pre-registered
+                # line-evidence manifest exists, reopen ORIGINAL artifact bytes
+                # and reject replay/tampering; YES remains UNKNOWN without an
+                # independent source-specific semantic reviewer and real MG0.
+                from c07_r151_original_clause_proofs import inspect as inspect_r151
+                line200 = inspect_r151(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(line200['source_rule_count'] == 200
+                       and line200['all_composite_source_rules'] == 72
+                       and line200['full_rule_semantic_passes'] == 0
+                       and line200['individual_mg0_passes'] == 0
+                       and line200['advancement_authorized'] is False,
+                       'CONTROLLED_R151_FALSE_FULL_SEMANTIC_OR_MG0_PASS')
+                j.need(line200['result'] != 'FAIL',
+                       'CONTROLLED_R151_ADMITTED_SOURCE_LINE_FAILURE')
+                if line200['manifest_present']:
+                    self.append('SUPERVISOR_C07_R151_ORIGINAL_LINE_PROOF',
+                        step=step, attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        source_rule_count=200, composite_source_rules=72,
+                        original_proof_packets_reopened=line200[
+                            'original_proof_packets_reopened'],
+                        missing_source_line_witnesses=line200[
+                            'missing_source_line_witnesses'],
+                        report_sha256=line200['report_sha256'],
+                        result='UNKNOWN_NEEDS_INDEPENDENT_FULL_RULE_AND_MG0',
+                        advancement_authorized=False)
                 self.append('SUPERVISOR_C07_R127_UNIFIED200_ORIGINAL_MG0',
                     step=step, attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
