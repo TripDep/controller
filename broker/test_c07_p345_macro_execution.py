@@ -166,6 +166,29 @@ class MacroFortyOriginalTests(unittest.TestCase):
                 'C07_P345_MACRO_LITERAL_OR_IMPLEMENTATION_DRIFT'):
             run(ctx)
 
+    def test_entire_forty_rule_cohort_rejects_120_canonical_tampers(self):
+        _,ctx=self.context('P5')
+        for rid in IDS:
+            row=ctx['inventory']['rules'][rid]
+            for field,bad in (
+                ('requirement',row['requirement']+' FORGED'),
+                ('source_sha256','f'*64),
+                ('catalog_phase','P2'),
+            ):
+                original=row[field]
+                with self.subTest(rule=rid,field=field):
+                    row[field]=bad
+                    try:
+                        with self.assertRaisesRegex(
+                                MacroExecutionBlocked,
+                                'C07_P345_MACRO_LITERAL_OR_IMPLEMENTATION_DRIFT'):
+                            run(ctx)
+                    finally:
+                        row[field]=original
+        report=run(ctx)
+        self.assertEqual(set(report['rows']),set(IDS))
+        self.assertFalse(report['advancement_authorized'])
+
     def test_wrong_attempt_phase_blocks_without_reporting_any_pass(self):
         _,ctx=self.context('P5')
         ctx['work']['phase']='P3'
