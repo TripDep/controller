@@ -1623,6 +1623,43 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Six additional literal P8 maintenance, disclosure,
+                # recurrent-defect and closure oracles. Registered JSON
+                # remains insufficient for final owner/MG0/runtime PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_closure_semantics import (
+                        IDS as P8_CLOSURE_IDS, inspect as inspect_p8_closure)
+                    p8_closure = inspect_p8_closure(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_closure['source_rule_count'] == 6
+                           and set(p8_closure['rules']) == set(P8_CLOSURE_IDS)
+                           and p8_closure['full_rule_semantic_passes'] == 0
+                           and p8_closure['individual_mg0_passes'] == 0
+                           and p8_closure['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p8_closure['rules'].values())
+                           and p8_closure['rules']['AAA-200-T-200'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT',
+                           'CONTROLLED_P8_FAKE_COMPLETION_OR_MG0_PASS')
+                    if p8_closure['metrics']['guide_bound']:
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_CLOSURE_EVIDENCE',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_closure['original_audit_sha256'],
+                            original_audit_tail=p8_closure['original_audit_tail'],
+                            source_rule_ids=list(P8_CLOSURE_IDS),
+                            original_closure_metrics=p8_closure['metrics'],
+                            original_rule_machine_checks=p8_closure['rules'],
+                            machine_positive_obligations=p8_closure[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # Ten literal P7 RAGE preflight predicates on original
                 # CodeWalker XML, pinned GLB vertex attributes, resource
                 # manifest, placement and image bytes. Source-labelled
