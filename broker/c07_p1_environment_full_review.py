@@ -155,7 +155,9 @@ def inspect(source_context, rule_id):
             bool(declared and scene_raw is not None and placement_raw is not None),
             measured, separated)))
         complete = bool(declared and native_raw is not None and
-                        placement_raw is not None and measured)
+                        placement_raw is not None and
+                        all(original(role, '.glb') is not None
+                            for role in existing_roles))
     elif rule_id == LOCK:
         baseline_raw = original('BASELINE_SNAPSHOT', '.glb')
         placement_raw = original('P1_WORLD_PLACEMENTS', '.json')

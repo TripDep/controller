@@ -82,7 +82,7 @@ class EnvironmentFullReviewTests(unittest.TestCase):
         test, ctx = self.context()
         from test_c07_native_output_oracle import two_triangles
         native = bytearray(two_triangles())
-        native[-4:] = b'\\x00\\x00\\x00\\x00'
+        native[-4:] = bytes(4)
         test.put('NATIVE_EXPORT', 'scene.glb', bytes(native))
         test.rebuild()
         ctx['controller'] = test.f.controller
