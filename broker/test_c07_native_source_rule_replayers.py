@@ -64,6 +64,16 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         f.rebuild()
         if isinstance(test, FinalFixture):
             test.add_critical()
+            finding = f.records[-1]
+            finding['attempt_id'] = f.work['attempt_id']
+            finding['operation_sha256'] = f.work['operation_sha256']
+            finding['record_hash'] = original_fixture.sha(
+                original_fixture.canonical({k: v for k, v in finding.items()
+                                            if k != 'record_hash'}))
+            f.controller.audit_path(f.asset).write_bytes(b''.join(
+                original_fixture.canonical(row) + b'\\n'
+                for row in f.records))
+            f.controller._state['last_audit_hash'] = finding['record_hash']
         return test, {
             'inventory': f.inv, 'plan': f.plan,
             'controller': f.controller, 'asset': f.asset,
@@ -171,6 +181,17 @@ class NativeOriginalReplayerTests(unittest.TestCase):
         test.put(archive=package(plan(), wrong_version=True))
         ctx['controller'] = test.f.controller
         self.assertEqual(build_packet(ctx, 'AAA-200-T-194')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(FinalFixture,
+            'test_ten_distinct_original_scoped_observations_not_full_review')
+        finding = test.f.records[-1]
+        finding['attempt_id'] = 'f'*64
+        finding['record_hash'] = original_fixture.sha(original_fixture.canonical(
+            {k: v for k, v in finding.items() if k != 'record_hash'}))
+        test.f.controller.audit_path(test.f.asset).write_bytes(b''.join(
+            original_fixture.canonical(row) + b'\\n' for row in test.f.records))
+        test.f.controller._state['last_audit_hash'] = finding['record_hash']
+        self.assertEqual(build_packet(ctx, 'AAA-200-S-189')['rule']['result'], 'FAIL')
 
         test, ctx = self.context(ClosureFixture,
             'test_five_scoped_observations_and_final_rule_unknown')
