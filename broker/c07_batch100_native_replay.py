@@ -178,10 +178,11 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         run as run_p345_macro,
         require_source_execution as certify_p345_source_execution,
     )
-    p345_macro=run_p345_macro({
+    p345_source_context={
         'inventory':inventory,'plan':plan,'controller':controller,
         'asset':asset,'step':step,'work':work,
-        'source_loader':source_loader})
+        'source_loader':source_loader}
+    p345_macro=run_p345_macro(p345_source_context)
     need(p345_macro.get('canonical_rule_count')==40 and
          p345_macro.get('due_count')==40 and
          p345_macro.get('visited_due_count')==40 and
@@ -195,7 +196,8 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
          'C07_BATCH100_P345_MACRO_NOT_EXECUTED_OR_UNTRUSTED')
     # A 40/40 visit count can include 40 BLOCKED readers: it is NOT a
     # successful execution until every original reader actually finished.
-    p345_execution_certificate=certify_p345_source_execution(p345_macro)
+    p345_execution_certificate=certify_p345_source_execution(
+        p345_macro, source_context=p345_source_context)
     # The P6-P8 thirty-rule family also has four genuinely rule-specific
     # original-byte readers (collision 4, walkability 6, RAGE 10, final QA 10).
     # They must all execute on the SAME original Controller attempt and audit.
