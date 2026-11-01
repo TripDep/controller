@@ -56,12 +56,13 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These five literals have independently decidable original-byte acceptance
-# conditions. The other eight source readers are diagnostic CANDIDATES only;
+# These nine literals have independently decidable original-byte acceptance
+# conditions. The other four source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-L-112', 'AAA-200-M-128', 'AAA-200-O-142',
-    'AAA-200-O-148', 'AAA-200-T-194',
+    'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
+    'AAA-200-L-117', 'AAA-200-M-128', 'AAA-200-O-142',
+    'AAA-200-O-148', 'AAA-200-S-189', 'AAA-200-T-194',
 ))
 REVIEWED_RULES = {rid: NATIVE_RULES[rid] for rid in FULL_LITERAL_REVIEWED}
 REVIEWED_VALIDATORS = {rid: VALIDATORS[rid] for rid in FULL_LITERAL_REVIEWED}
