@@ -96,6 +96,11 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                     for i in range(3)) for t in coll_tris for p in t))
     walk_surfaces=(walk_ok and coll_tris is not None
         and all(triangles_in_region(coll_tris,z) for z in walk))
+    player_width=policy.get("min_player_width_m")
+    walk_clearance=bool(walk_ok and finite(player_width)
+        and 0.4<=player_width<=2.0
+        and all(min(z["max_xyz"][i]-z["min_xyz"][i]
+                    for i in (0,1))>=player_width for z in walk))
     # Compare original collision and original terrain Z at coincident XY
     # triangle centroids. This is a source geometry proxy, NOT a game test.
     max_gap=policy.get("terrain_contact_max_gap_m")
@@ -103,6 +108,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     # exact 5 cm XY tolerance with adjacent-cell probes and avoids O(N*M)
     # scans of large collision/terrain exports.
     contact_ok=False
+    contact_regions_verified=False
     if (coll_tris is not None and terrain_tris is not None
             and finite(max_gap) and 0<=max_gap<=0.5):
         def center(tri):
@@ -113,6 +119,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         for tri in terrain_tris:
             p=center(tri)
             terrain_grid.setdefault(cell(p),[]).append(p)
+        matched=[]
         for tri in coll_tris:
             p=center(tri)
             x,y=cell(p)
@@ -121,10 +128,20 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                    abs(p[2]-q[2])<=max_gap
                    for dx in (-1,0,1) for dy in (-1,0,1)
                    for q in terrain_grid.get((x+dx,y+dy),())):
-                contact_ok=True
-                break
+                matched.append(p)
+        contact_ok=bool(matched)
+        regions=policy.get("terrain_contact_regions")
+        contact_regions_verified=bool(valid_zones(regions) and
+            all(any(all(lo<=p[i]<=hi for i,(lo,hi) in enumerate(
+                    zip(zone["min_xyz"],zone["max_xyz"])))
+                    for p in matched) for zone in regions))
     vehicle_clear=(vehicle_ok and coll_tris is not None
         and all(not any(_aabb_intersects(t,_box(z)) for t in coll_tris)
+                for z in vehicle))
+    vehicle_height=policy.get("min_vehicle_height_m")
+    vehicle_vertical_clearance=bool(vehicle_ok and finite(vehicle_height)
+        and 1.5<=vehicle_height<=5.0
+        and all(z["max_xyz"][2]-z["min_xyz"][2]>=vehicle_height
                 for z in vehicle))
     widths=(vehicle_ok and finite(policy.get("min_vehicle_width_m"))
         and 1.5<=policy["min_vehicle_width_m"]<=15
@@ -143,14 +160,20 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                bool(collision_inside_visual)},
       157:{"original_walkable_region_boxes_valid":bool(walk_ok),
            "each_walkable_region_has_original_collision_surface":
-               bool(walk_surfaces)},
+               bool(walk_surfaces),
+           "every_walkable_region_has_source_pinned_player_width_clearance":
+               walk_clearance},
       158:{"original_collision_and_terrain_triangles_reopened":
                bool(coll_tris and terrain_tris),
            "original_terrain_collision_contact_centroids_measured":
-               bool(contact_ok)},
+               bool(contact_ok),
+           "every_pre_d_contact_region_has_independently_matched_source_geometry":
+               contact_regions_verified},
       159:{"original_vehicle_corridor_widths_measured":bool(widths),
            "actual_collision_faces_clear_of_vehicle_corridors":
-               bool(vehicle_clear)},
+               bool(vehicle_clear),
+           "every_vehicle_corridor_has_source_pinned_vertical_clearance":
+               vehicle_vertical_clearance},
       160:{"original_fivem_runtime_log_registered":
                runtime is not None,
            "independent_fivem_runtime_walkability_attested":
@@ -159,8 +182,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     result={}
     for n,rid in zip(NUMBERS,IDS):
         c=checks[n]
-        need(len(c)==2 and all(type(v) is bool for v in c.values()),
-             "C07_P6_WALKABILITY_TWO_CHECKS:"+rid)
+        need(len(c)==(3 if n in (157,158,159) else 2)
+             and all(type(v) is bool for v in c.values()),
+             "C07_P6_WALKABILITY_EXACT_RULE_CHECKS:"+rid)
         result[rid]={
             "requirement_sha256":inventory["rules"][rid]["requirement_sha256"],
             "source_sha256":catalog,"exact_attempt_id":work["attempt_id"],
