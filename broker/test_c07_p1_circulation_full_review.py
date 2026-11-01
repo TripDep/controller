@@ -124,14 +124,13 @@ class FullEntranceExitSemantics(unittest.TestCase):
         with self.assertRaises((ValueError,OSError,AssertionError)):
             build_packet(self.ctx,RULE)
 
-    def test_missing_pinned_original_is_unknown_not_positive(self):
+    def test_removing_pre_d_pin_after_operation_is_rejected_by_original_audit(self):
         self.t.f.plan['p1_evidence_contract']['original_artifact_sha256'].pop(
             'P1_VISUAL_METRICS_POLICY')
         self.t.f.rebuild()
-        row=inspect_circulation(self.ctx,RULE)
-        self.assertFalse(row['evidence_complete'])
-        self.assertFalse(any(row['checks'].values()))
-        self.assertEqual(build_packet(self.ctx,RULE)['rule']['result'],'UNKNOWN')
+        with self.assertRaisesRegex(ValueError,
+                                    'R144_MASTER_OR_CURRENT_ORIGINAL_AUDIT_CHANGED'):
+            build_packet(self.ctx,RULE)
 
     def test_cross_attempt_producer_packet_not_accepted(self):
         packet=build_packet(self.ctx,RULE)
