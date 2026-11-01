@@ -219,8 +219,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     result={}
     for n,rid in zip(NUMBERS,IDS):
         c=checks[n]
-        need(len(c)==2 and all(type(v) is bool for v in c.values()),
-             "C07_P8_FINAL_TWO_CHECKS:"+rid)
+        need(len(c)==(3 if n==188 else 2)
+             and all(type(v) is bool for v in c.values()),
+             "C07_P8_FINAL_EXACT_RULE_CHECKS:"+rid)
         result[rid]={
             "requirement_sha256":inventory["rules"][rid]["requirement_sha256"],
             "source_sha256":catalog,"exact_attempt_id":work["attempt_id"],
