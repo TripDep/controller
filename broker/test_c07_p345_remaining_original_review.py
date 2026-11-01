@@ -16,7 +16,8 @@ from test_c07_p5_optimization_semantics import rewrite_glb
 from test_c07_p3_geometry_semantics import glb
 from test_c07_p5_budget_semantics import QUAD, NORMALS
 from test_c07_p4_texture_semantics import png, solid, gradient
-from c07_p345_remaining_original_review import RULES, CRITERIA, inspect, baked_normal_channels_valid
+from c07_p345_remaining_original_review import (
+    RULES, CRITERIA, inspect, baked_normal_channels_valid, triangle_counts)
 from c07_p345_forty_native_evidence import IDS as P345_IDS
 from c07_native_source_rule_replayers import (
     NATIVE_RULES, FULL_LITERAL_REVIEWED, build_packet)
@@ -45,6 +46,19 @@ def tangent_normals():
 def decorated(doc):
     doc['materials'][0]['normalTexture']={'index':0}
     doc['materials'][0]['pbrMetallicRoughness']['metallicFactor']=0.85
+
+def reversed_winding_native():
+    # Same triangle coordinates, count, materials and UV, but reversed
+    # front-face winding. This can make the approved mesh render differently.
+    source=with_embedded_texture(uv_glb(
+        faces=[(0,2,1),(0,3,2)],with_texture=False),
+        png(tangent_normals()))
+    source=rewrite_glb(source,material)
+    native=rewrite_glb(source,decorated)
+    def second(doc):
+        doc['meshes'][0]['primitives'].append(
+            copy.deepcopy(doc['meshes'][0]['primitives'][0]))
+    return rewrite_glb(native,second)
 
 class RemainingP345Tests(unittest.TestCase):
     def context(self):
@@ -248,6 +262,36 @@ class RemainingP345Tests(unittest.TestCase):
         checks=build_packet(ctx,rid)['rule']['checks']
         self.assertTrue(checks[CRITERIA[118][1]])
         self.assertFalse(checks[CRITERIA[118][2]])
+
+    def test_original_triangle_winding_and_duplicate_multiplicity_are_real_semantics(self):
+        original=glb(QUAD,[(0,1,2),(0,2,3)],NORMALS)
+        rotated=glb(QUAD,[(1,2,0),(2,3,0)],NORMALS)
+        reversed_face=glb(QUAD,[(0,2,1),(0,2,3)],NORMALS)
+        extra_duplicate=glb(QUAD,[(0,1,2),(0,2,3),(0,1,2)],NORMALS)
+        self.assertEqual(triangle_counts(original),triangle_counts(rotated))
+        self.assertNotEqual(triangle_counts(original),
+                            triangle_counts(reversed_face))
+        self.assertNotEqual(triangle_counts(original),
+                            triangle_counts(extra_duplicate))
+
+    def test_original_atlas_and_approved_export_reject_reversed_front_faces(self):
+        for n,role in ((118,'P3_ATLAS_BASELINE'),
+                       (120,'P3_APPROVED_EXPORT')):
+            with self.subTest(rule=n):
+                test,ctx=self.context()
+                rid='AAA-200-'+('L')+'-%03d'%n
+                before=build_packet(ctx,rid)['rule']['checks']
+                self.assertTrue(before[CRITERIA[n][2 if n==118 else 1]])
+                reversed_glb=reversed_winding_native()
+                if n==118:
+                    reversed_glb=two_material_bindings(reversed_glb)
+                test.add(role,role.lower()+'.glb',reversed_glb)
+                test.sync()
+                ctx['controller']=test.f.controller
+                after=build_packet(ctx,rid)['rule']['checks']
+                self.assertFalse(after[CRITERIA[n][2 if n==118 else 1]])
+                self.assertEqual(build_packet(ctx,rid)['rule']['result'],
+                                 'UNKNOWN')
 
     def test_approved_export_same_bbox_and_count_but_different_faces_fails(self):
         test,ctx=self.context()
