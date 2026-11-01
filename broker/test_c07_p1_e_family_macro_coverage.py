@@ -23,17 +23,17 @@ class FullOriginalP1FamilySemantics(unittest.TestCase):
                   for n in range(41,51)}
         self.assertTrue(expected.issubset(set(REVIEWED_RULES)))
         self.assertEqual(family['operational_mg0'],'UNVERIFIED')
-        self.assertFalse(p1['code_macro_ready'])  # D and F remain incomplete
+        self.assertFalse(p1['code_macro_ready'])  # D remains incomplete
         self.assertFalse(result['c07_finished'])
 
-    def test_f_family_has_only_its_actual_remaining_f056_gap(self):
+    def test_f_family_is_whole_ten_rule_original_code_review(self):
         result=cohort.macro_snapshot()
         fam=next(f for f in result['macros'][0]['families']
                  if f['family']=='F')
         self.assertEqual(fam['rule_count'],10)
-        self.assertEqual(fam['code_reviewed'],9)
-        self.assertEqual(fam['missing_ids'],['AAA-200-F-056'])
-        self.assertFalse(fam['code_family_ready'])
+        self.assertEqual(fam['code_reviewed'],10)
+        self.assertEqual(fam['missing_ids'],[])
+        self.assertTrue(fam['code_family_ready'])
         self.assertEqual(fam['operational_mg0'],'UNVERIFIED')
 
     def test_forged_nine_rule_e_family_cannot_be_complete(self):
