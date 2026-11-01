@@ -44,7 +44,7 @@ NATIVE_RULES = {
         'original_pre_d_entrance_exit_view_policy_and_native_source_sha_pinned',
         'both_real_path_endpoints_connected_and_inside_original_accessible_zone',
         'original_camera_faces_both_access_points_with_unobstructed_native_triangle_sightlines')),
-    'AAA-200-L-118': ('p345_remaining_scoped', (
+    'AAA-200-L-118': ('p345_five_macro_full', (
         'pre_d_original_atlas_and_baseline_contract_sha_bound',
         'actual_native_and_baseline_material_texture_bindings_recomputed',
         'measured_original_atlas_binding_reduction_and_texture_quality_retained')),
@@ -80,7 +80,7 @@ NATIVE_RULES = {
         'pre_d_original_separate_presentation_and_technical_qa_sha_bound',
         'actual_distinct_original_visual_capture_and_machine_report_recomputed',
         'trusted_independent_artistic_vs_technical_review_confirmed')),
-    'AAA-200-O-143': ('p345_remaining_scoped', (
+    'AAA-200-O-143': ('p345_five_macro_full', (
         'pre_d_original_hidden_face_policy_and_baseline_sha_bound',
         'actual_before_after_native_triangle_counts_and_bounds_recomputed',
         'original_hidden_face_intent_and_nonessential_geometry_proven')),
@@ -96,7 +96,7 @@ NATIVE_RULES = {
         'pre_d_original_platform_scene_benchmark_contract_sha_bound',
         'actual_registered_frame_samples_and_source_scene_bytes_recomputed',
         'trusted_real_fivem_runtime_capture_provenance_confirmed')),
-    'AAA-200-M-121': ('p4_material_macro_full', (
+    'AAA-200-M-121': ('p345_five_macro_full', (
         'pre_d_original_physical_material_classification_sha_pinned',
         'every_actual_exported_primitive_material_has_canonical_class',
         'all_actual_original_roughness_and_metallic_values_in_physical_class_ranges')),
@@ -104,7 +104,7 @@ NATIVE_RULES = {
         'pre_d_light_response_and_pbr_factor_contract_sha_pinned',
         'all_original_exported_material_roughness_and_reflectance_measured',
         'real_original_direct_neutral_shadow_pixels_follow_source_bounds')),
-    'AAA-200-M-125': ('p4_material_macro_full', (
+    'AAA-200-M-125': ('p345_five_macro_full', (
         'pre_d_original_surface_variation_limits_sha_pinned',
         'actual_original_embedded_texture_quadrants_recomputed',
         'all_real_texture_variation_exceeds_original_local_contrast_limit')),
@@ -112,7 +112,7 @@ NATIVE_RULES = {
         'pre_d_five_physical_material_class_ranges_and_original_export_sha_pinned',
         'all_five_wood_stone_metal_glass_plaster_materials_bound_to_original_primitives',
         'five_original_materials_have_distinct_physical_pbr_and_alpha_properties')),
-    'AAA-200-M-127': ('p4_material_macro_full', (
+    'AAA-200-M-127': ('p345_five_macro_full', (
         'pre_d_weathering_purpose_and_original_reference_sha_pinned',
         'original_exported_texture_and_weathering_reference_pixels_recomputed',
         'actual_weathering_distribution_within_pre_d_motivated_limits')),
@@ -342,6 +342,8 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-L-118', 'AAA-200-M-121', 'AAA-200-M-125',
+    'AAA-200-M-127', 'AAA-200-O-143',
     # T198/T199 root-cause and corrective method are independently
     # measured across distinct current operation audit findings, before/after
     # original GLBs and a safe source-only method transformation replay.
@@ -461,6 +463,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
     elif domain == 'p4_material_macro_full':
         from c07_p4_material_macro_full_review import inspect as inspect_p4_material
+    elif domain == 'p345_five_macro_full':
+        from c07_p345_five_macro_full_review import inspect as inspect_five_macro
     elif domain == 'p345_remaining_scoped':
         from c07_p345_remaining_original_review import inspect as inspect_remaining
     elif domain == 'p8_delivery_macro_full':
@@ -507,6 +511,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                      if domain == 'p4_pbr_maps_full' else None)
     p4_material_review = (inspect_p4_material(source_context, rule_id)
                           if domain == 'p4_material_macro_full' else None)
+    p345_five_macro_review = (inspect_five_macro(source_context, rule_id)
+                             if domain == 'p345_five_macro_full' else None)
     p345_remaining_review = (inspect_remaining(source_context, rule_id)
                              if domain == 'p345_remaining_scoped' else None)
     p8_delivery_review = (inspect_t_delivery(source_context, rule_id)
@@ -524,7 +530,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_circulation_review, p1_composition_review, p1_five_view_review, p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p4_material_review,
-                         p345_remaining_review, p8_delivery_review, p8_intersection_review,
+                         p345_remaining_review, p345_five_macro_review, p8_delivery_review, p8_intersection_review,
                          p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
@@ -640,6 +646,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_pbr_review'] = p4_pbr_review
     if p4_material_review is not None:
         proof['original_p4_material_macro_review'] = p4_material_review
+    if p345_five_macro_review is not None:
+        proof['original_p345_five_macro_review'] = p345_five_macro_review
     if p345_remaining_review is not None:
         proof['original_p345_remaining_scoped_review'] = p345_remaining_review
     if p8_delivery_review is not None:
