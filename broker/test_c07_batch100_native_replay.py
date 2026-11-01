@@ -152,7 +152,11 @@ class Tests(unittest.TestCase):
             for reader in (p1,p345,p678):
                 reader.assert_called_once()
             self.assertEqual(mg0.call_args.kwargs['operation_sha256'],OPERATION)
-            macro.assert_called_once()
+            # The execution certificate independently replays the same
+            # immutable original Controller context, not the producer report.
+            self.assertEqual(macro.call_count,2)
+            self.assertEqual(macro.call_args_list[0].args[0],
+                             macro.call_args_list[1].args[0])
             design.assert_called_once()
             for reader in (col,walk,rage,qa):
                 reader.assert_called_once()
