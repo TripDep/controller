@@ -101,6 +101,11 @@ def spatial(original):
         and finite(angle) and 0<angle<=10
         and type(align) is list and 1<=len(align)<=128
         and type(ratios) is list and 1<=len(ratios)<=128)
+    # Apply the pre-D native-to-world basis to actual original vertices.
+    # Merely validating the matrix shape would silently miss axis swaps.
+    def oriented(point):
+        return [sum(axis[i][j]*point[j] for j in range(3))
+                for i in range(3)]
     points={};actual={};axis_ok={}
     if declared:
         for role in roles:
@@ -110,8 +115,8 @@ def spatial(original):
             local={tuple(p) for tri in tris for p in tri}
             pair=anchors[role]
             if not all(tuple(p) in local for p in pair):break
-            worldpoints=[world(p,poses[role]) for tri in tris for p in tri]
-            a,b=[world(p,poses[role]) for p in pair]
+            worldpoints=[world(oriented(p),poses[role]) for tri in tris for p in tri]
+            a,b=[world(oriented(p),poses[role]) for p in pair]
             delta=[b[i]-a[i] for i in range(3)]
             length=math.dist(a,b)
             if length<=1e-9:break
@@ -139,8 +144,8 @@ def spatial(original):
                 or not 0<item['max_gap_m']<=0.25):
                 aligned=False;break
             used_a.update((a,b))
-            aligned=(math.dist(world(item['a_vertex_xyz'],poses[a]),
-                               world(item['b_vertex_xyz'],poses[b]))
+            aligned=(math.dist(world(oriented(item['a_vertex_xyz']),poses[a]),
+                               world(oriented(item['b_vertex_xyz']),poses[b]))
                      <=item['max_gap_m'])
             if not aligned:break
     proportional=bool(reopened)
