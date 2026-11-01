@@ -70,7 +70,10 @@ class TerrainFullReviewTests(unittest.TestCase):
 
     def test_terrain_original_floating_native_vertices_fail(self):
         test, ctx = self.context()
+        import struct
         elevated = bytearray(two_triangles())
+        for index in (2, 5, 8, 11, 14, 17):
+            struct.pack_into('<f', elevated, len(elevated)-72+4*index, 0.2)
         test.put('NATIVE_EXPORT', 'scene.glb', bytes(elevated))
         test.rebuild()
         ctx['controller'] = test.f.controller
