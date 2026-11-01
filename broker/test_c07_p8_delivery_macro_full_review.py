@@ -230,7 +230,7 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
                 self.assertFalse(blender_blocks(forged))
 
     def test_t198_producer_claim_does_not_override_missing_method_fix(self):
-        self.after_script=b'def correct_origin(vertices):\\n    return vertices\\n'
+        self.after_script=b'def correct_origin(vertices):\n    return vertices\n'
         self.fixture.docs['P8_METHOD_CHANGE']['after_sha256']=sha(self.after_script)
         self.refresh()
         row=self.row('AAA-200-T-198')
