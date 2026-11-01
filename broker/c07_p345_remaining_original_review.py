@@ -18,6 +18,7 @@ from c07_p5_optimization_semantics import _mesh, _references
 from c07_p5_full_review import material_bindings
 from c07_p4_texture_semantics import rgba, _embedded
 from c07_p6_collision_semantics import _triangles
+from visual_content_metrics import decode_grid, VisualContentBlocked
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -126,6 +127,28 @@ def actual_primitive_texture_reuse(doc):
                 usage[source]=usage.get(source,0)+1
     return usage
 
+def baked_normal_channels_valid(raw):
+    """Reopen the actual PNG channels, not merely its SHA or color variance.
+
+    Tangent-space normal maps encode a mostly outward-facing unit vector.
+    A grayscale photograph renamed normal.png is not valid baked normals.
+    """
+    if raw is None:
+        return False
+    try:
+        width,height,pixels=decode_grid(raw,step=1)
+    except (ValueError,TypeError,VisualContentBlocked):
+        return False
+    if width<4 or height<4 or not pixels:
+        return False
+    good=0
+    for red,green,blue in pixels:
+        x,y,z=(red/127.5-1,green/127.5-1,blue/127.5-1)
+        length=math.sqrt(x*x+y*y+z*z)
+        if z>=0.3 and 0.8<=length<=1.2:
+            good+=1
+    return good>=math.ceil(0.95*len(pixels))
+
 def bindings(raw):
     if raw is None:return None
     try:return material_bindings(raw)
@@ -229,7 +252,8 @@ def inspect(source_context,rule_id):
                 bool(baked and matching and
                      all('TEXCOORD_0' in p.get('attributes',{}) for p in prims)),
                 bool(matching and baked['variance']>1 and
-                     baked['unique_rgb']>=4))
+                     baked['unique_rgb']>=4 and
+                     baked_normal_channels_valid(baked_raw)))
     elif n==120:
         approved_raw=original('P3_APPROVED_EXPORT','.glb')
         approved=_mesh(approved_raw) if approved_raw else None
