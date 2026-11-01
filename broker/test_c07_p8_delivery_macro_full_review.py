@@ -85,6 +85,8 @@ class DeliveryFamilyFiveOriginalTests(unittest.TestCase):
             'schema':'c07-p8-origin-defect-pre-d-v1',
             'asset':self.f.asset,'target_bbox_min':[0,0,0],
             'max_origin_error_m':0.05}
+        self.f.work.update(work_item_sha256='e'*64,
+                           attempt_number=1,previous_attempt_id=None)
         self.refresh()
 
     def refresh(self):
