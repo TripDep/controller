@@ -1563,6 +1563,14 @@ class ControlledJudgment:
                         j.need(p8_delivery['original_delivery_metrics'][
                                    'source_export_bytes_match'] is True,
                                'CONTROLLED_P8_ORIGINAL_PACKAGE_SOURCE_EXPORT_MISMATCH')
+                        j.need(p8_delivery['rules']['AAA-200-T-194'][
+                                   'original_machine_checks'][
+                                   'original_manifest_asset_version_and_hashes_match'] is True,
+                               'CONTROLLED_P8_ORIGINAL_VERSION_OR_SHA_MISMATCH')
+                        j.need(p8_delivery['rules']['AAA-200-T-192'][
+                                   'original_machine_checks'][
+                                   'all_original_required_members_present'] is True,
+                               'CONTROLLED_P8_ORIGINAL_REQUIRED_MEMBER_MISSING')
                         self.append('SUPERVISOR_C07_P8_ORIGINAL_DELIVERY_SEMANTICS',
                             step=step, attempt_id=reserved_work['attempt_id'],
                             operation_sha256=reserved_work['operation_sha256'],
