@@ -1100,6 +1100,42 @@ class ControlledJudgment:
                     source_rules_examined=2,
                     full_work_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # Nine B-011/B-013..B-020 literal P0 planning oracles.
+                # Original JSON is parsed semantically; reused source files
+                # are reopened under the Controller root and SHA-verified.
+                # Missing planning evidence remains UNKNOWN, never PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P0','P1','P2','P3','P4','P5','P6','P7','P8'):
+                    from c07_p0_planning_semantics import (
+                        IDS as P0_PLANNING_IDS, inspect as inspect_p0_planning)
+                    p0_planning = inspect_p0_planning(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p0_planning['source_rule_count'] == 9
+                           and set(p0_planning['rules']) == set(P0_PLANNING_IDS)
+                           and p0_planning['full_rule_semantic_passes'] == 0
+                           and p0_planning['individual_mg0_passes'] == 0
+                           and p0_planning['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p0_planning['rules'].values()),
+                           'CONTROLLED_P0_ORIGINAL_PLANNING_FALSE_PASS')
+                    if p0_planning['original_registered_planning_documents']:
+                        self.append('SUPERVISOR_C07_P0_NINE_ORIGINAL_PLANNING_ORACLES',
+                            step=step,attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p0_planning['original_audit_sha256'],
+                            original_audit_tail=p0_planning['original_audit_tail'],
+                            source_rule_ids=list(P0_PLANNING_IDS),
+                            source_original_roles=p0_planning[
+                                'original_registered_planning_documents'],
+                            original_rule_machine_checks=p0_planning['rules'],
+                            machine_positive_obligations=p0_planning[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
