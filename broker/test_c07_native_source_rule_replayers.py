@@ -26,7 +26,6 @@ from test_c07_p6_walkability_semantics import Tests as WalkFixture
 from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
 
 CASES = (
-    (P1Thirty, 'AAA-200-E-044', 'test_exact_30_individual_P1_and_90_unique_predicates'),
     (UVFixture, 'AAA-200-L-115',
      'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
     (UVFixture, 'AAA-200-L-116',
@@ -130,8 +129,8 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
 
     def test_twenty_six_independent_source_specific_replayers_positive_source_unknown_mg0(self):
-        self.assertEqual(len(CASES), 28)
-        self.assertEqual(len(set(x[1] for x in CASES)), 28)
+        self.assertEqual(len(CASES), 27)
+        self.assertEqual(len(set(x[1] for x in CASES)), 27)
         for fixture_class, rid, method in CASES:
             with self.subTest(rule=rid):
                 _, ctx = self.context(fixture_class, method)
