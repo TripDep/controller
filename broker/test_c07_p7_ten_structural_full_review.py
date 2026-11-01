@@ -15,6 +15,8 @@ from c07_native_source_rule_replayers import (
     build_packet, native_rule_readback, NativeRuleEvidenceBlocked)
 from c07_native_replayer_dispatch import REPLAYERS
 from supervisor_judgment import binding
+from c07_mg0_individual import TRIGGERS
+from test_c07_positive_native_process import sha
 
 class P7TenFullStructuralTests(unittest.TestCase):
     def setUp(self):
@@ -24,9 +26,18 @@ class P7TenFullStructuralTests(unittest.TestCase):
         # The source-only P7 fixture intentionally lacks the canonical
         # consuming-side binding fields. Supply them BEFORE rebuilding its
         # immutable operation audit; do not fake any MG0 event or PASS.
-        self.q.f.work.update(work_item_sha256='e'*64,
-                             attempt_number=1,previous_attempt_id=None)
-        self.q.f.rebuild()
+        f=self.q.f
+        master=('## MG0 — PROCESS FALSIFICATION\n' +
+                ''.join('- '+trigger+'\n' for trigger in TRIGGERS) +
+                'The response is not limited to fixing the asset.\n' +
+                'invalidate affected states and reapply the corrected process\n').encode()
+        f.master=master
+        f.controller.master.write_bytes(master)
+        f.work.update(work_item_sha256='e'*64,
+                      attempt_number=1,previous_attempt_id=None)
+        f.work['master_sha256']=f.plan['master_sha256']=(
+            f.inv['canonical_master_sha256'])=sha(master)
+        f.rebuild()
 
     def ctx(self):
         f=self.q.f
