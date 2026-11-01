@@ -171,6 +171,12 @@ def require_source_execution(report):
              set(row['source_checks'])==set(NATIVE_RULES[rid][1]) and
              all(type(v) is bool for v in row['source_checks'].values()),
              'C07_P345_CERTIFICATE_ORIGINAL_CHECKS_MISSING:'+rid)
+        # The first rule-specific original-byte criterion is the required
+        # pre-D source/contract pin. An UNKNOWN with empty or false pin must
+        # NOT become a successful source-execution certificate.
+        pin_criterion=NATIVE_RULES[rid][1][0]
+        need(row['source_checks'].get(pin_criterion) is True,
+             'C07_P345_CERTIFICATE_PRE_D_PIN_NOT_VERIFIED:'+rid)
         need(not (row['machine_result']=='PASS' and
                   (rid not in FULL_LITERAL_REVIEWED or
                    not all(row['source_checks'].values()))),
