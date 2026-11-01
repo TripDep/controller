@@ -432,8 +432,12 @@ def inspect(source_context,rule_id):
         # Compare actual triangle coordinates, not merely triangle count/bbox.
         before_surface=triangle_counts(baseline_raw) if baseline_raw else None
         after_surface=triangle_counts(raw) if raw else None
+        # An atlas may merge duplicate primitives, but must not introduce
+        # a new oriented surface or additional duplicate geometry.
         same_geometry=bool(before_surface and after_surface and
-                           before_surface==after_surface)
+                           set(before_surface)==set(after_surface) and
+                           all(before_surface[k]>=after_surface[k]
+                               for k in after_surface))
         measured=bool(before is not None and after is not None and
                       before>after>=1 and type(target) is int and target>=1
                       and before-after>=target and atlas_images and
