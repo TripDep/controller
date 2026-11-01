@@ -287,6 +287,68 @@ def atlas_surface_fidelity(before,after,limit):
             return False
     return True
 
+def lod_surface_coherence(near_raw,far_raw,tolerance):
+    """Measure bidirectional 3D surface distance, not just LOD bbox/triangle ratio.
+
+    A far LOD that drops half a wall can preserve all six bbox extrema while
+    remaining visibly incomplete. The original triangle surfaces must cover
+    each other to a pre-D geometric tolerance in both directions.
+    """
+    if (type(tolerance) not in (int,float) or
+            not math.isfinite(tolerance) or not 0<tolerance<=0.1 or
+            near_raw is None or far_raw is None):
+        return False
+    near=_triangles(near_raw)
+    far=_triangles(far_raw)
+    if not near or not far or len(near)>10000 or len(far)>10000:
+        return False
+    def sub(a,b):
+        return tuple(a[i]-b[i] for i in range(3))
+    def dot(a,b):
+        return sum(a[i]*b[i] for i in range(3))
+    def cross(a,b):
+        return (a[1]*b[2]-a[2]*b[1],
+                a[2]*b[0]-a[0]*b[2],
+                a[0]*b[1]-a[1]*b[0])
+    def seg_dist(p,a,b):
+        d=sub(b,a)
+        denom=dot(d,d)
+        t=max(0,min(1,dot(sub(p,a),d)/denom)) if denom>1e-18 else 0
+        q=tuple(a[i]+t*d[i] for i in range(3))
+        v=sub(p,q)
+        return dot(v,v)
+    def dist(p,tri):
+        a,b,c=tri
+        ab,ac=sub(b,a),sub(c,a)
+        normal=cross(ab,ac)
+        denom=dot(normal,normal)
+        if denom<=1e-18:
+            return float('inf')
+        ap=sub(p,a)
+        scale=dot(ap,normal)/denom
+        projected=tuple(p[i]-scale*normal[i] for i in range(3))
+        v=sub(projected,a)
+        d00,d01,d11=dot(ab,ab),dot(ab,ac),dot(ac,ac)
+        det=d00*d11-d01*d01
+        if det>1e-18:
+            u=(d11*dot(v,ab)-d01*dot(v,ac))/det
+            w=(d00*dot(v,ac)-d01*dot(v,ab))/det
+            if u>=-1e-8 and w>=-1e-8 and u+w<=1+1e-8:
+                return dot(ap,normal)**2/denom
+        return min(seg_dist(p,a,b),seg_dist(p,b,c),seg_dist(p,c,a))
+    def sampled(tris):
+        unique=list({tuple(sorted(tuple(p) for p in tri)) for tri in tris})
+        if len(unique)>256:
+            unique=[unique[i*len(unique)//256] for i in range(256)]
+        return [tuple(sum(v[k] for v in tri)/3 for k in range(3))
+                for tri in unique]
+    limit=tolerance*tolerance
+    for source,target in ((near,far),(far,near)):
+        for point in sampled(source):
+            if min(dist(point,tri) for tri in target)>limit:
+                return False
+    return True
+
 def bindings(raw):
     if raw is None:return None
     try:return material_bindings(raw)
@@ -491,7 +553,9 @@ def inspect(source_context,rule_id):
                      and lod['triangles']/native['triangles']<=ratio
                      and near and far and rgb_different(near,far)
                      and boxes_close(native,lod,budget.get(
-                         'lod_bounds_tolerance_m',0.01))),False)
+                         'lod_bounds_tolerance_m',0.01))
+                     and lod_surface_coherence(raw,lod_raw,
+                         budget.get('lod_surface_deviation_m'))),False)
     elif n==147:
         budget=policy('P5_PERF_BUDGET')
         min_shared=budget.get('min_shared_texture_bindings')
