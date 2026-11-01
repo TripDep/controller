@@ -246,17 +246,43 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
         if native is None:
             return False
         try:
-            mesh_doc, _ = _glb_parts(native)
+            from c07_p4_texture_semantics import _embedded
+            mesh_doc, blob = _glb_parts(native)
             materials = mesh_doc.get("materials", [])
             textures = mesh_doc.get("textures", [])
             images = mesh_doc.get("images", [])
             primitives = [p for mesh in mesh_doc["meshes"]
                           for p in mesh["primitives"]]
-            return bool(materials and textures and images and primitives and
-                all(type(p.get("material")) is int and
-                    0 <= p["material"] < len(materials) for p in primitives) and
-                all(type(t.get("source")) is int and
-                    0 <= t["source"] < len(images) for t in textures))
+            # Referenced texture table entries alone do not prove that the
+            # actual exported material image exists or is decodable. Reopen
+            # every embedded PNG from original GLB binary bufferViews.
+            decoded = _embedded(mesh_doc, blob)
+            if not (materials and textures and images and primitives and
+                    decoded and len(decoded)==len(images)):
+                return False
+            used=set()
+            for prim in primitives:
+                idx=prim.get("material")
+                if type(idx) is not int or not 0<=idx<len(materials):
+                    return False
+                material=materials[idx]
+                pbr=material.get("pbrMetallicRoughness")
+                if type(pbr) is not dict:
+                    return False
+                binding=pbr.get("baseColorTexture")
+                if type(binding) is not dict or type(binding.get("index")) is not int:
+                    return False
+                tid=binding["index"]
+                if not 0<=tid<len(textures):
+                    return False
+                source=textures[tid].get("source")
+                if type(source) is not int or not 0<=source<len(decoded):
+                    return False
+                used.add(source)
+            return bool(used and all(
+                decoded[i]["width"]>=2 and decoded[i]["height"]>=2 and
+                decoded[i]["unique_rgba"]>=1
+                for i in used))
         except (ValueError, TypeError, KeyError, IndexError):
             return False
     original_open = next((i for i, row in enumerate(audit)
