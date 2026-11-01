@@ -16,6 +16,7 @@ POSE={'translation_xyz':[0,0,0],'yaw_deg':0,'scale_xyz':[1,1,1]}
 OTHER={'translation_xyz':[3,0,0],'yaw_deg':0,'scale_xyz':[1,1,1]}
 POLICY={'component_roles':['NATIVE_EXPORT','SECONDARY_EXPORT'],
         'min_clearance_m':0.1,
+        'max_pairwise_triangle_tests':100000,
         'unintended_overlap_forbidden':True,
         'allowed_contact_pairs':[]}
 
@@ -73,6 +74,15 @@ class IntersectionFullReviewTests(unittest.TestCase):
         test.add('P8_COMPONENT_PLACEMENTS','p8_component_placements.json',
                  encode({'placements':{'NATIVE_EXPORT':POSE,
                                        'SECONDARY_EXPORT':near}}))
+        test.sync()
+        ctx['controller']=test.f.controller
+        packet,_,_=self.packet(ctx)
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
+
+    def test_pairwise_budget_prevents_unbounded_geometry_work(self):
+        test,ctx=self.context()
+        test.add('P8_INTERSECTION_POLICY','p8_intersection_policy.json',
+                 encode(dict(POLICY,max_pairwise_triangle_tests=1)))
         test.sync()
         ctx['controller']=test.f.controller
         packet,_,_=self.packet(ctx)

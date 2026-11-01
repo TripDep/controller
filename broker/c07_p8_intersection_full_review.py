@@ -69,6 +69,7 @@ def inspect(source_context,rule_id):
     roles=policy.get('component_roles')
     poses=placement.get('placements')
     clearance=policy.get('min_clearance_m')
+    pair_budget=policy.get('max_pairwise_triangle_tests')
     declared=bool(type(roles) is list and
         2<=len(roles)<=64 and len(set(roles))==len(roles) and
         all(type(r) is str and r for r in roles) and
@@ -76,6 +77,7 @@ def inspect(source_context,rule_id):
         all(pose(p) for p in poses.values()) and
         type(clearance) in (int,float) and math.isfinite(clearance) and
         0<clearance<=10 and
+        type(pair_budget) is int and 1<=pair_budget<=1000000 and
         policy.get('unintended_overlap_forbidden') is True and
         policy.get('allowed_contact_pairs')==[])
     triangles={}
@@ -95,7 +97,10 @@ def inspect(source_context,rule_id):
     # For every pair of original components, use conservative AABB separation
     # for positive; only exact shared triangle geometry is a certain negative.
     states=[]
-    if all_reopened:
+    pair_work=(sum(len(triangles[a])*len(triangles[b])
+                   for a,b in combinations(roles,2))
+               if all_reopened else 0)
+    if all_reopened and pair_work<=pair_budget:
         for a,b in combinations(roles,2):
             if all(separation(bounds([ta],{'translation_xyz':[0,0,0],
                  'yaw_deg':0,'scale_xyz':[1,1,1]}),
