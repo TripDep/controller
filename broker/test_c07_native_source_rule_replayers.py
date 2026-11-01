@@ -226,6 +226,42 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                 self.assertEqual(packet['rule']['result'], expected)
                 self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
 
+    def test_original_topology_split_index_nonmanifold_is_not_hidden(self):
+        from test_c07_p3_geometry_semantics import glb
+        test, ctx = self.context(GeometryFixture,
+            'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+        points = [(0,0,0),(1,0,0),(0,1,0),
+                  (1,0,0),(0,0,0),(0,-1,0),
+                  (0,0,0),(1,0,0),(0,0,1)]
+        test.put(glb(points, [(0,1,2),(3,4,5),(6,7,8)],
+                     [(0,0,1)]*9))
+        ctx['plan']['p345_evidence_contract'][
+            'original_artifact_sha256']['NATIVE_EXPORT'] = (
+                test.f.items['NATIVE_EXPORT']['sha256'])
+        test.f.rebuild()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-111')[
+            'rule']['result'], 'FAIL')
+
+    def test_original_topology_reference_winding_and_geometry_forgery_fail(self):
+        from test_c07_p3_geometry_semantics import TRI, UP, glb
+        for rid, reference in (
+            ('AAA-200-L-113', glb([(0,0,0),(2,0,0),(0,1,0)],
+                                  [(0,1,2)], UP)),
+            ('AAA-200-L-114', glb(TRI, [(0,2,1)], UP)),
+        ):
+            with self.subTest(rule=rid):
+                test, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                test.f.add_item('P3_APPROVED_REFERENCE',
+                                'approved_reference.glb', reference)
+                ctx['plan']['p345_evidence_contract'][
+                    'original_artifact_sha256']['P3_APPROVED_REFERENCE'] = (
+                        test.f.items['P3_APPROVED_REFERENCE']['sha256'])
+                test.f.rebuild()
+                ctx['controller'] = test.f.controller
+                self.assertEqual(build_packet(ctx, rid)['rule']['result'], 'FAIL')
+
     def test_original_topology_missing_reference_pin_is_unknown(self):
         test, ctx = self.context(GeometryFixture,
             'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
