@@ -87,7 +87,7 @@ def triangle_counts(raw):
     A reversed triangle has the same three vertices and bounds but may be
     culled in the rendered asset. Cyclic index rotations preserve winding;
     reversed order does not. Atlas/approved-export comparisons must also
-    preserve duplicate triangle multiplicity, not just the set of surfaces.
+    inspect duplicate triangle multiplicity, not just the set of surfaces.
     """
     if raw is None:
         return None
