@@ -46,13 +46,71 @@ def require(ok,code):
 def sha(raw):return hashlib.sha256(raw).hexdigest()
 def finite(v):return type(v) in (int,float) and math.isfinite(v)
 
-def blender_blocks(raw):
-    """Validate the Blender file-block envelope, not an unverifiable label.
+def _blender_sdna(raw,byte_order):
+    """Independently bound the DNA1 type/field arrays of a Blender source.
 
-    This does not replace opening the file in Blender and never claims that
-    arbitrary blend data is artistically valid or FiveM-compatible.
+    This is a structural byte parser, NOT an assertion Blender opened the file.
     """
-    if not isinstance(raw,bytes) or len(raw)<36 or raw[:7]!=b'BLENDER':
+    if type(raw) is not bytes or not 40<=len(raw)<=20_000_000 or raw[:4]!=b'SDNA':
+        return False
+    index=4
+    def count(tag):
+        nonlocal index
+        if index+8>len(raw) or raw[index:index+4]!=tag:
+            return None
+        n=int.from_bytes(raw[index+4:index+8],byte_order)
+        index+=8
+        return n if 1<=n<=100000 else None
+    def strings(tag):
+        nonlocal index
+        n=count(tag)
+        if n is None:return None
+        values=[]
+        for _ in range(n):
+            if index>=len(raw):return None
+            end=raw.find(b'\\x00',index,min(len(raw),index+512))
+            if end<=index:return None
+            values.append(raw[index:end])
+            index=end+1
+        index=(index+3)&~3
+        return values if len(set(values))==len(values) else None
+    names=strings(b'NAME')
+    if names is None:return False
+    types=strings(b'TYPE')
+    if types is None:return False
+    if index+4>len(raw) or raw[index:index+4]!=b'TLEN':
+        return False
+    index+=4
+    if index+2*len(types)>len(raw):return False
+    lengths=[int.from_bytes(raw[index+i*2:index+i*2+2],byte_order)
+             for i in range(len(types))]
+    if any(v<=0 for v in lengths):return False
+    index=(index+2*len(types)+3)&~3
+    structures=count(b'STRC')
+    if structures is None or structures>10000:return False
+    for _ in range(structures):
+        if index+4>len(raw):return False
+        type_id=int.from_bytes(raw[index:index+2],byte_order)
+        fields=int.from_bytes(raw[index+2:index+4],byte_order)
+        index+=4
+        if type_id>=len(types) or fields>10000 or index+4*fields>len(raw):
+            return False
+        for _ in range(fields):
+            child=int.from_bytes(raw[index:index+2],byte_order)
+            name=int.from_bytes(raw[index+2:index+4],byte_order)
+            if child>=len(types) or name>=len(names):return False
+            index+=4
+    return index==len(raw)
+
+
+def blender_blocks(raw):
+    """Validate a real BHead/DNA1/ENDB layout; do not merely trust 'BLENDER'.
+
+    Recognizes real-world two-letter Blender block IDs padded with NUL, and
+    verifies the original DNA1 metadata. Still NOT a Blender-open success;
+    opening and compatibility with a target build require external evidence.
+    """
+    if type(raw) is not bytes or not 48<=len(raw)<=250_000_000 or raw[:7]!=b'BLENDER':
         return False
     pointer=raw[7:8];endian=raw[8:9];version=raw[9:12]
     if pointer not in (b'_',b'-') or endian not in (b'v',b'V') or not (
@@ -62,6 +120,8 @@ def blender_blocks(raw):
     size=4+4+ptr_size+4+4
     offset=12
     seen=0
+    seen_dna=False
+    seen_data=False
     byte_order='little' if endian==b'v' else 'big'
     while offset+size<=len(raw) and seen<100000:
         tag=raw[offset:offset+4]
@@ -69,11 +129,22 @@ def blender_blocks(raw):
         if length>len(raw) or offset+size+length>len(raw):
             return False
         if tag==b'ENDB':
-            return length==0 and offset+size==len(raw) and seen>0
-        if not all(32<=x<=126 for x in tag):
+            return (length==0 and offset+size==len(raw) and
+                    seen_data and seen_dna)
+        if seen_dna or not (
+            65<=tag[0]<=90 and 65<=tag[1]<=90 and
+            all(x==0 or 48<=x<=90 for x in tag[2:])):
             return False
+        if tag==b'DNA1':
+            if not _blender_sdna(raw[offset+size:offset+size+length],
+                                 byte_order):
+                return False
+            seen_dna=True
+        else:
+            seen_data=True
         offset+=size+length;seen+=1
     return False
+
 
 def _origin_error(bounds,target):
     if not (type(target) is list and len(target)==3 and
