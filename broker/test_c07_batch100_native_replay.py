@@ -194,6 +194,11 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(set(batch.COHORT)),100)
         result=self.run_batch()
         self.assertEqual(result['rule_count'],100)
+        families=result['whole_family_macro_code_review']
+        self.assertEqual([m['rule_count'] for m in families['macros']],
+                         [30,40,30])
+        self.assertFalse(families['advancement_authorized'])
+        self.assertFalse(families['c07_finished'])
         self.assertEqual(set(result['rules']),set(batch.COHORT))
         self.assertEqual(result['original_source_predicates_observed'],100)
         self.assertEqual(result['full_reviewed_new'],0)
