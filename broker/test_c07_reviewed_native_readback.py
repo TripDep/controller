@@ -41,7 +41,7 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         return binding, packet, spec, offer, log
 
     def test_each_approved_validator_requires_independent_readback(self):
-        self.assertEqual(len(approved.REVIEWED),23)
+        self.assertEqual(len(approved.REVIEWED),28)
         self.assertEqual(len(NATIVE_RULES),11)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
