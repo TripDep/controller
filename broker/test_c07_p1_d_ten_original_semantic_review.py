@@ -16,6 +16,16 @@ class P1DDesignOriginalTests(unittest.TestCase):
         t=P1Thirty('test_exact_30_individual_P1_and_90_unique_predicates')
         t.setUp()
         self.addCleanup(t.doCleanups)
+        # Genuine synthetic P1 void polygon (not a descriptive label) and
+        # bounded repetition criterion: both must be measured from GLB bytes.
+        scene=json.loads(t.contents['P1_SCENE_CONTRACT'][1])
+        scene['void_zones']=[[[0.4,0.4],[0.6,0.4],
+                              [0.6,0.6],[0.4,0.6]]]
+        scene['min_void_fraction']=0.01
+        scene['max_void_fraction']=0.1
+        scene['max_repeated_signature_ratio']=1
+        t.put('P1_SCENE_CONTRACT','p1_scene.json',encode(scene))
+        t.rebuild()
         return t
     def context(self,t):
         f=t.f
