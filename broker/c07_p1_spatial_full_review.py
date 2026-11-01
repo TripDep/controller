@@ -11,12 +11,21 @@ import math
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p1_thirty_native_domain import inspect as p1_inspect, jbytes
 from c07_native_output_oracle import read_mesh_geometry
+from c07_p6_collision_semantics import _triangles
 
 RULE = 'AAA-200-E-043'
+ALIGNMENT_RULE = 'AAA-200-F-054'
+RULES = frozenset((RULE, ALIGNMENT_RULE))
 CRITERIA = (
     'pre_d_two_building_world_placements_and_ratio_targets_sha_pinned',
     'actual_original_world_space_building_extents_independently_measured',
     'real_building_clearance_footprint_and_height_ratios_meet_pre_d_limits',
+)
+
+ALIGNMENT_CRITERIA = (
+    'pre_d_complete_module_alignment_pair_contract_sha_pinned',
+    'every_alignment_anchor_recomputed_from_actual_original_mesh_vertices',
+    'all_actual_world_space_module_anchor_gaps_within_original_tolerance',
 )
 
 class P1SpatialReviewBlocked(ValueError):
@@ -68,7 +77,7 @@ def world_bounds(local, pose):
                  for k in range(3))
 
 def inspect(source_context, rule_id):
-    require(rule_id == RULE and type(source_context) is dict,
+    require(rule_id in RULES and type(source_context) is dict,
             'C07_E043_UNREVIEWED_RULE')
     inv = source_context['inventory']
     plan = source_context['plan']
@@ -111,6 +120,46 @@ def inspect(source_context, rule_id):
                   and all(placement(v) for v in poses.values())
                   and positive(clearance) and ratio_range(area_range)
                   and ratio_range(height_range))
+    if rule_id == ALIGNMENT_RULE:
+        pairs = scene.get('module_alignment_pairs')
+        alignment_policy = bool(
+            type(poses) is dict and set(poses) == {'primary', 'secondary'}
+            and all(placement(v) for v in poses.values())
+            and type(pairs) is list and 0 < len(pairs) <= 128
+            and all(type(row) is dict and set(row) == {
+                'primary_vertex_xyz', 'secondary_vertex_xyz', 'max_gap_m'}
+                and all(type(row[key]) is list and len(row[key]) == 3
+                        and all(numeric(x) for x in row[key])
+                        for key in ('primary_vertex_xyz', 'secondary_vertex_xyz'))
+                and positive(row['max_gap_m']) and row['max_gap_m'] <= 0.25
+                for row in pairs))
+        tris_a = _triangles(raw_a) if raw_a is not None else None
+        tris_b = _triangles(raw_b) if raw_b is not None else None
+        verts_a = set(tuple(p) for tri in tris_a for p in tri) if tris_a else set()
+        verts_b = set(tuple(p) for tri in tris_b for p in tri) if tris_b else set()
+        anchors = bool(alignment_policy and verts_a and verts_b and all(
+            tuple(row['primary_vertex_xyz']) in verts_a and
+            tuple(row['secondary_vertex_xyz']) in verts_b for row in pairs))
+        def world_point(point, pose):
+            theta = math.radians(pose['yaw_deg'])
+            co, si = math.cos(theta), math.sin(theta)
+            x, y, z = [point[k]*pose['scale_xyz'][k] for k in range(3)]
+            return (x*co-y*si+pose['translation_xyz'][0],
+                    x*si+y*co+pose['translation_xyz'][1],
+                    z+pose['translation_xyz'][2])
+        aligned = bool(anchors and all(
+            math.dist(world_point(row['primary_vertex_xyz'], poses['primary']),
+                      world_point(row['secondary_vertex_xyz'], poses['secondary']))
+            <= row['max_gap_m'] for row in pairs))
+        checks = dict(zip(ALIGNMENT_CRITERIA,
+                          (bool(alignment_policy), bool(anchors), bool(aligned))))
+        return {'rule_id': rule_id, 'checks': checks,
+                'evidence_complete': bool(scene_raw and raw_a and raw_b),
+                'original_audit_sha256': audit_sha,
+                'original_audit_tail': tail,
+                'attempt_id': work['attempt_id'],
+                'operation_sha256': work['operation_sha256'],
+                'individual_mg0': 'UNKNOWN', 'advancement_authorized': False}
     a = read_mesh_geometry(raw_a) if raw_a is not None else None
     b = read_mesh_geometry(raw_b) if raw_b is not None else None
     measured = bool(policy and a and b and a['triangles'] > 0
