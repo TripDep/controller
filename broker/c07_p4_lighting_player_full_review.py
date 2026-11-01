@@ -11,6 +11,8 @@ from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json
 from c07_native_output_oracle import read_mesh_geometry
 from visual_content_metrics import decode_grid, VisualContentBlocked
+from c07_p345_light_pixel_replay import (neutral_pixel_qa, pixel_light_response,
+                                         player_camera_horizontal_alignment)
 
 NEUTRAL = 'AAA-200-N-131'
 SEPARATE = 'AAA-200-N-132'
@@ -122,7 +124,8 @@ def inspect(source_context, rule_id):
     cinematic_event=capture('LIGHT_CAPTURED','LIGHT_CINEMATIC_VIEW','cinematic')
     if rule_id==NEUTRAL:
         balanced=bool(neutral_pixels and
-            max(neutral_pixels['mean'])-min(neutral_pixels['mean'])<=5)
+            max(neutral_pixels['mean'])-min(neutral_pixels['mean'])<=5 and
+            neutral_pixel_qa(neutral_raw))
         checks=dict(zip(CRITERIA[rule_id],(
             bool(light_policy and neutral_event and policy_raw is not None),
             balanced,
@@ -132,7 +135,9 @@ def inspect(source_context, rule_id):
         different=bool(neutral_pixels and cinematic_pixels and
             neutral_pixels['pixel_sha256']!=cinematic_pixels['pixel_sha256'])
         separated=bool(different and
-            abs(neutral_pixels['luma']-cinematic_pixels['luma'])>=20)
+            abs(neutral_pixels['luma']-cinematic_pixels['luma'])>=20 and
+            pixel_light_response(neutral_raw,cinematic_raw,direction=0,
+                                 minimum_delta=20))
         checks=dict(zip(CRITERIA[rule_id],(
             bool(light_policy and neutral_event and cinematic_event),
             different, separated)))
@@ -156,7 +161,8 @@ def inspect(source_context, rule_id):
             abs(position[2]-native['bbox_min'][2]-eye)<=0.05 and
             position[1]<native['bbox_min'][1]-0.5 and
             abs(forward[0])<0.01 and forward[1]>0.999 and
-            abs(forward[2])<0.01)
+            abs(forward[2])<0.01 and
+            player_camera_horizontal_alignment(position,forward,native))
         checks=dict(zip(CRITERIA[rule_id],(
             bool(camera_policy and camera_event and policy_raw is not None),
             bool(native and player_pixels),
