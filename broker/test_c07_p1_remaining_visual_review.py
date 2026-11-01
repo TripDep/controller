@@ -93,8 +93,14 @@ class P1ResidualFamilyTests(unittest.TestCase):
                 self.assertEqual(r['full_rule_semantics'],'UNKNOWN')
                 self.assertEqual(r['individual_mg0'],'UNKNOWN')
                 self.assertFalse(r['advancement_authorized'])
-                self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
-                self.assertNotIn(rid,REPLAYERS)
+                # E046 has its separate full original-geometry consumer;
+                # these 13 residual metrics remain diagnostics, not MG0.
+                if rid=='AAA-200-E-046':
+                    self.assertIn(rid,FULL_LITERAL_REVIEWED)
+                    self.assertIn(rid,REPLAYERS)
+                else:
+                    self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+                    self.assertNotIn(rid,REPLAYERS)
 
     def test_all_thirteen_literal_specific_adversarial_original_changes(self):
         for rid in IDS:
