@@ -209,11 +209,12 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # These twenty-two literals have independently decidable original-byte acceptance
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
+# Camera-angle labels and lighting-mode declarations are producer metadata.
+# Their original pixels and audit rows are useful SCOPED observations, but
+# cannot independently establish actual camera/lighting setup or full QA.
+# Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
-    'AAA-200-S-181',
     'AAA-200-M-123',
-    'AAA-200-N-131', 'AAA-200-N-132', 'AAA-200-N-137',
-    'AAA-200-F-056', 'AAA-200-N-138',
     'AAA-200-E-048', 'AAA-200-F-055',
     'AAA-200-E-049', 'AAA-200-E-050', 'AAA-200-F-053',
     'AAA-200-E-041', 'AAA-200-E-042',

@@ -63,12 +63,12 @@ class P4LightingPlayerFullReviewTests(unittest.TestCase):
             with self.subTest(rule=rid):
                 _,ctx=self.context()
                 packet,expected,spec=self.packet(ctx,rid)
-                self.assertIn(rid,FULL_LITERAL_REVIEWED)
-                self.assertEqual(packet['rule']['result'],'PASS')
+                self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+                self.assertEqual(packet['rule']['result'],'UNKNOWN')
                 self.assertTrue(all(packet['rule']['checks'].values()))
                 self.assertEqual(packet['mg0']['result'],'UNKNOWN')
-                self.assertEqual(replay(None,packet,expected,spec,
-                    source_context=lambda _:ctx)['documentary_result'],'PASS')
+                with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
+                    replay(None,packet,expected,spec,source_context=lambda _:ctx)
                 self.assertEqual(semantic_packet(packet,expected,spec)['result'],
                                  'UNKNOWN')
 
@@ -77,7 +77,7 @@ class P4LightingPlayerFullReviewTests(unittest.TestCase):
         test.add('LIGHT_NEUTRAL_VIEW','light_neutral_view.png',png(20))
         self.refresh(test,ctx)
         packet,_,_=self.packet(ctx,NEUTRAL)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[NEUTRAL][1][2]])
 
     def test_identical_original_pixels_not_two_lighting_modes(self):
@@ -85,7 +85,7 @@ class P4LightingPlayerFullReviewTests(unittest.TestCase):
         test.add('LIGHT_CINEMATIC_VIEW','light_cinematic_view.png',png(100))
         self.refresh(test,ctx)
         packet,_,_=self.packet(ctx,SEPARATE)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[SEPARATE][1][1]])
 
     def test_player_camera_wrong_height_and_direction_fails(self):
@@ -95,7 +95,7 @@ class P4LightingPlayerFullReviewTests(unittest.TestCase):
                           'forward_xyz':[0,-1,0]}))
         self.refresh(test,ctx)
         packet,_,_=self.packet(ctx,PLAYER)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[PLAYER][1][2]])
 
     def test_missing_original_camera_pin_never_positive(self):

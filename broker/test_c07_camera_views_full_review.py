@@ -89,12 +89,13 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                 test, ctx = self.context(rid)
                 self.refresh(test, ctx, rid)
                 packet, expected, spec = self.packet(ctx, rid)
-                self.assertIn(rid, FULL_LITERAL_REVIEWED)
-                self.assertEqual(packet['rule']['result'], 'PASS')
+                self.assertNotIn(rid, FULL_LITERAL_REVIEWED)
+                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
                 self.assertTrue(all(packet['rule']['checks'].values()))
                 self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
-                self.assertEqual(replay(None, packet, expected, spec,
-                    source_context=lambda _:ctx)['documentary_result'], 'PASS')
+                with self.assertRaisesRegex(ValueError, 'NOT_WHITELISTED'):
+                    replay(None, packet, expected, spec,
+                           source_context=lambda _:ctx)
                 self.assertEqual(semantic_packet(packet, expected, spec)['result'],
                                  'UNKNOWN')
 
@@ -112,7 +113,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                     test.add(roles[1], roles[1].lower()+'.png', duplicated)
                 self.refresh(test, ctx, rid)
                 packet, _, _ = self.packet(ctx, rid)
-                self.assertEqual(packet['rule']['result'], 'FAIL')
+                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
                 self.assertFalse(packet['rule']['checks'][
                     'four_distinct_original_png_pixel_arrays_and_native_geometry_reopened'])
 
@@ -123,7 +124,7 @@ class CameraViewsFullReviewTests(unittest.TestCase):
                 self.refresh(test, ctx, rid, alter={
                     'VISUAL_VIEW_TOP':{'forward_xyz':[0,0,1]}})
                 packet, _, _ = self.packet(ctx, rid)
-                self.assertEqual(packet['rule']['result'], 'FAIL')
+                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
                 self.assertFalse(packet['rule']['checks'][NATIVE_RULES[rid][1][2]])
 
     def test_missing_source_pin_never_grants_reviewed_positive(self):

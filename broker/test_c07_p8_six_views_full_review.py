@@ -78,12 +78,12 @@ class P8SixViewsTests(unittest.TestCase):
     def test_six_original_views_qa_and_controller_events_positive_unknown_mg0(self):
         _,ctx=self.context()
         packet,expected,spec=self.packet(ctx)
-        self.assertIn(P8,FULL_LITERAL_REVIEWED)
-        self.assertEqual(packet['rule']['result'],'PASS')
+        self.assertNotIn(P8,FULL_LITERAL_REVIEWED)
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertTrue(all(packet['rule']['checks'].values()))
         self.assertEqual(packet['mg0']['result'],'UNKNOWN')
-        self.assertEqual(replay(None,packet,expected,spec,
-            source_context=lambda _:ctx)['documentary_result'],'PASS')
+        with self.assertRaisesRegex(ValueError,'NOT_WHITELISTED'):
+            replay(None,packet,expected,spec,source_context=lambda _:ctx)
         self.assertEqual(semantic_packet(packet,expected,spec)['result'],
                          'UNKNOWN')
 
@@ -91,14 +91,14 @@ class P8SixViewsTests(unittest.TestCase):
         test,ctx=self.context()
         self.refresh(test,ctx,missing_qa='VISUAL_VIEW_TOP')
         packet,_,_=self.packet(ctx)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[P8][1][2]])
 
     def test_top_camera_reversed_is_not_multiview_pass(self):
         test,ctx=self.context()
         self.refresh(test,ctx,top_override=[0,0,1])
         packet,_,_=self.packet(ctx)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[P8][1][2]])
 
     def test_duplicate_original_view_pixels_rejected(self):
@@ -108,7 +108,7 @@ class P8SixViewsTests(unittest.TestCase):
         test.add('VISUAL_VIEW_REAR','visual_view_rear.png',raw)
         self.refresh(test,ctx)
         packet,_,_=self.packet(ctx)
-        self.assertEqual(packet['rule']['result'],'FAIL')
+        self.assertEqual(packet['rule']['result'],'UNKNOWN')
         self.assertFalse(packet['rule']['checks'][NATIVE_RULES[P8][1][1]])
 
     def test_producer_packet_tamper_cannot_replace_original_replay(self):
