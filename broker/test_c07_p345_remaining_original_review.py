@@ -79,11 +79,12 @@ class RemainingP345Tests(unittest.TestCase):
         test.add('P5_HIDDEN_GEOMETRY_POLICY','hidden_policy.json',
                  encoded({'min_removed_triangles':2}))
         test.add('LOD_EXPORT','far.glb',
-                 glb(QUAD,[(0,1,2)],NORMALS))
+                 glb(QUAD,[(0,1,2),(0,2,3)],NORMALS))
         budget={'max_triangles':200,'material_count_budget':8,
             'shared_material_ids':['metal'], 'max_texture_mb':100,
             'target_frame_ms':16.7,'lod_max_triangle_ratio':0.6,
             'lod_bounds_tolerance_m':0.01,
+            'lod_surface_deviation_m':0.01,
             'min_shared_texture_bindings':2,
             'min_reused_texture_variance':5}
         test.add('P5_PERF_BUDGET','perf.json',encoded(budget))
@@ -274,6 +275,21 @@ class RemainingP345Tests(unittest.TestCase):
         ctx['controller']=test.f.controller
         result=build_packet(ctx,rid)['rule']['checks']
         self.assertFalse(result[CRITERIA[143][1]])
+
+    def test_lod_missing_half_surface_rejected_despite_same_bbox(self):
+        test,ctx=self.context()
+        rid='AAA-200-O-145'
+        self.assertTrue(build_packet(ctx,rid)['rule']['checks'][
+            CRITERIA[145][1]])
+        # One diagonal half of the same square retains the full bounding box
+        # and satisfies the reduction ratio, but loses half the visible face.
+        test.add('LOD_EXPORT','far.glb',
+                 glb(QUAD,[(0,1,2)],NORMALS))
+        test.sync()
+        ctx['controller']=test.f.controller
+        checks=build_packet(ctx,rid)['rule']['checks']
+        self.assertTrue(checks[CRITERIA[145][0]])
+        self.assertFalse(checks[CRITERIA[145][1]])
 
     def test_reuse_requires_distinct_native_primitives_not_shader_slots(self):
         test,ctx=self.context()
