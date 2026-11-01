@@ -220,6 +220,7 @@ def inspect_family(source_context):
             'source_sha256':inv['rules'][rid]['source_sha256'],
             'requirement_sha256':inv['rules'][rid]['requirement_sha256'],
             'checks':dict(zip(names,checks)),
+            'source_observed':all(checks),
             'metrics':{'void_triangle_fraction':void_ratio if n==34 else None,
                        'palette_max_rgb_error':palette_error if n==33 else None,
                        'silhouette_iou':mask_overlap(front,reference) if n==35 else None,
