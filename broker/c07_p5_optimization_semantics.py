@@ -37,16 +37,16 @@ def _mesh(raw):
     doc, binary = _glb_parts(raw)
     coords = []
     primitive_materials = []
-    for mesh in doc["meshes"]:
-        for primitive in mesh["primitives"]:
+    triangle_index = {(row["mesh_index"], row["primitive_index"]):
+                      row["triangles"] for row in metrics}
+    for mesh_index, mesh in enumerate(doc["meshes"]):
+        for primitive_index, primitive in enumerate(mesh["primitives"]):
             vertices = _read_accessor(doc, binary,
                                       primitive["attributes"]["POSITION"])
             coords.extend(vertices)
             primitive_materials.append((
                 primitive.get("material"),
-                next(row["triangles"] for row in metrics
-                     if row["mesh_index"] == doc["meshes"].index(mesh)
-                     and row["primitive_index"] == mesh["primitives"].index(primitive))))
+                triangle_index[(mesh_index, primitive_index)]))
     need(bool(coords), "C07_P5_EMPTY_VERTEX_SET")
     bounds = [[min(v[i] for v in coords) for i in range(3)],
               [max(v[i] for v in coords) for i in range(3)]]
