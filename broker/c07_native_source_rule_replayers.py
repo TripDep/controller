@@ -1,4 +1,4 @@
-"""Twenty-two source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Twenty-three source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -31,6 +31,10 @@ NATIVE_RULES = {
     'AAA-200-P-153': ('collision', (
         'original_collision_triangle_budget_explicit',
         'actual_collision_complexity_within_original_limits')),
+    'AAA-200-L-116': ('uv', (
+        'actual_embedded_png_and_uv_texel_density_measured',
+        'real_texel_density_within_original_target',
+        'distinct_original_related_asset_density_matches_pre_d_tolerance')),
     'AAA-200-L-117': ('uv', (
         'all_original_uv_triangle_pairs_compared',
         'no_positive_area_overlap_under_original_policy')),
@@ -85,12 +89,12 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These eighteen literals have independently decidable original-byte acceptance
+# These nineteen literals have independently decidable original-byte acceptance
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-E-047', 'AAA-200-F-052', 'AAA-200-L-112',
-    'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
+    'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
     'AAA-200-O-148', 'AAA-200-S-188', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
