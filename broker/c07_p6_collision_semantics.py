@@ -122,6 +122,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     solids_covered=(solid_boxes and collision is not None
                     and all(any(_centroid_in(tri,_box(x)) for tri in collision)
                             for x in solid))
+    solids_in_visual=(solid_boxes and visual is not None
+                      and all(any(_aabb_intersects(tri,_box(x)) for tri in visual)
+                              for x in solid))
     free_openings=(opening_boxes and collision is not None
                    and all(not any(_aabb_intersects(tri,_box(x))
                                    for tri in collision)
@@ -136,6 +139,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                 bool(solid_boxes),
             "each_original_solid_region_has_real_collision_faces":
                 bool(solids_covered),
+            "each_declared_solid_region_exists_in_original_visual_geometry":
+                bool(solids_in_visual),
         },
         152:{
             "original_visual_and_collision_exports_distinct":
@@ -143,6 +148,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                 and sha(collision_raw)!=sha(visual_raw),
             "separate_actual_triangle_sets_independently_read":
                 c_count>0 and v_count>0,
+            "collision_and_visual_triangle_geometry_independently_distinct":
+                c_count>0 and v_count>0 and collision != visual,
         },
         153:{
             "original_collision_triangle_budget_explicit":
