@@ -12,6 +12,18 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-E-049': ('p1_environment_full', (
+        'pre_d_complete_existing_asset_placement_and_clearance_policy_sha_pinned',
+        'original_native_and_every_existing_asset_world_bounds_independently_recomputed',
+        'all_actual_world_aabbs_separated_by_source_required_clearance')),
+    'AAA-200-E-050': ('p1_environment_full', (
+        'pre_d_entire_asset_lock_and_original_baseline_sha_pinned',
+        'current_native_and_baseline_original_export_bytes_identical',
+        'current_and_baseline_original_world_placements_identical')),
+    'AAA-200-F-053': ('p1_environment_full', (
+        'pre_d_world_forward_and_original_native_anchor_contract_sha_pinned',
+        'both_original_forward_anchor_points_present_in_actual_native_mesh',
+        'measured_native_world_forward_and_up_match_source_target')),
     'AAA-200-E-041': ('p1_site_full', (
         'pre_d_site_survey_boundary_and_metric_dimensions_sha_pinned',
         'original_survey_polygon_area_and_extents_independently_measured',
@@ -162,6 +174,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-E-049', 'AAA-200-E-050', 'AAA-200-F-053',
     'AAA-200-E-041', 'AAA-200-E-042',
     'AAA-200-E-043', 'AAA-200-E-044', 'AAA-200-E-045', 'AAA-200-E-047',
     'AAA-200-F-052', 'AAA-200-F-054', 'AAA-200-F-058',
@@ -244,6 +257,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p1_paths_access_full_review import inspect as inspect_p1_paths
     elif domain == 'p1_site_full':
         from c07_p1_site_contract_full_review import inspect as inspect_site
+    elif domain == 'p1_environment_full':
+        from c07_p1_environment_full_review import inspect as inspect_environment
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -260,13 +275,15 @@ def build_packet(source_context, rule_id, *, expected=None):
                        if domain == 'p1_paths_full' else None)
     p1_site_review = (inspect_site(source_context, rule_id)
                       if domain == 'p1_site_full' else None)
+    p1_environment_review = (inspect_environment(source_context, rule_id)
+                             if domain == 'p1_environment_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
                            if domain == 'p6_invisible_full' else None)
     full_review = next((review for review in
                         (p5_review, p1_spatial_review, p1_paths_review,
-                         p1_site_review, p6_invisible_review,
+                         p1_site_review, p1_environment_review, p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
     if full_review is not None:
@@ -358,6 +375,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p1_paths_access_review'] = p1_paths_review
     if p1_site_review is not None:
         proof['original_p1_site_contract_review'] = p1_site_review
+    if p1_environment_review is not None:
+        proof['original_p1_environment_review'] = p1_environment_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
