@@ -12,6 +12,14 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-S-182': ('p8_final_process_full', (
+        'pre_d_complete_original_component_alignment_proportion_and_axis_policy_sha_pinned',
+        'every_original_world_component_bounds_and_forward_axis_independently_measured',
+        'all_original_anchor_alignments_and_dimension_ratios_meet_pre_d_limits')),
+    'AAA-200-S-187': ('p8_final_process_full', (
+        'pre_d_full_significant_correction_and_required_recheck_scope_sha_pinned',
+        'every_current_audit_correction_bound_to_distinct_original_before_after_meshes',
+        'all_required_after_correction_geometry_checks_replayed_and_audited_in_order')),
     'AAA-200-S-183': ('p8_intersection_full', (
         'pre_d_complete_component_roles_placement_and_intersection_policy_sha_pinned',
         'every_current_original_component_world_triangle_independently_recomputed',
@@ -218,6 +226,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-S-182', 'AAA-200-S-187',
     'AAA-200-S-183',
     'AAA-200-M-123',
     'AAA-200-E-048', 'AAA-200-F-055',
@@ -316,6 +325,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p4_pbr_maps_full_review import inspect as inspect_pbr_maps
     elif domain == 'p8_intersection_full':
         from c07_p8_intersection_full_review import inspect as inspect_intersections
+    elif domain == 'p8_final_process_full':
+        from c07_p8_final_process_full_review import inspect as inspect_final_process
     elif domain == 'p6_access_full':
         from c07_p6_access_full_review import inspect as inspect_access
     elif domain == 'p6_invisible_full':
@@ -344,6 +355,8 @@ def build_packet(source_context, rule_id, *, expected=None):
                      if domain == 'p4_pbr_maps_full' else None)
     p8_intersection_review = (inspect_intersections(source_context, rule_id)
                               if domain == 'p8_intersection_full' else None)
+    p8_final_process_review = (inspect_final_process(source_context, rule_id)
+                               if domain == 'p8_final_process_full' else None)
     p6_access_review = (inspect_access(source_context, rule_id)
                         if domain == 'p6_access_full' else None)
     p6_invisible_review = (inspect_invisible(source_context, rule_id)
@@ -353,6 +366,7 @@ def build_packet(source_context, rule_id, *, expected=None):
                          p1_site_review, p1_environment_review, p1_terrain_review,
                          camera_views_review, p4_lighting_review,
                          p4_pbr_review, p8_intersection_review,
+                         p8_final_process_review,
                          p6_invisible_review,
                          p6_access_review, p1_blockout_review)
                         if review is not None), None)
@@ -457,6 +471,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         proof['original_p4_pbr_review'] = p4_pbr_review
     if p8_intersection_review is not None:
         proof['original_p8_intersection_review'] = p8_intersection_review
+    if p8_final_process_review is not None:
+        proof['original_p8_final_process_review'] = p8_final_process_review
     if p6_invisible_review is not None:
         proof['original_p6_invisible_collision_review'] = p6_invisible_review
     if p6_access_review is not None:
