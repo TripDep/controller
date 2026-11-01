@@ -291,8 +291,7 @@ def inspect(context, rule_id):
                 i['root_cause']=='ORIGIN_DEVIATION' and
                 type(i['corrective_action']) is str and
                 i['corrective_action'] and
-                before is not None and export is not None and
-                i['before_sha256']==sha(before) and
+                export is not None and
                 i['after_sha256']==sha(export) for i in issues)
             and len(set(i['id'] for i in issues))==len(issues))
         center=policy.get('target_bbox_min')
@@ -305,13 +304,37 @@ def inspect(context, rule_id):
             all(finite(x) for x in center))
         prior_error=_origin_error(baseline,center) if baseline and original_policy else None
         after_error=_origin_error(native,center) if native and original_policy else None
-        was_bad=bool(recurring and original_policy and
+        # Two text rows pointing at one 'before' GLB are not recurrence.
+        # Each original case is a different hash-pinned, independently decoded
+        # mesh with a measured pre-correction origin defect.
+        independently_bad=[]
+        if recurring and original_policy:
+            for issue in issues:
+                case_id=issue['id']
+                if type(case_id) is not str or not re.fullmatch(r'case-[A-Z]',case_id):
+                    independently_bad=[];break
+                role='P8_DEFECT_CASE_'+case_id[-1]
+                case_raw=original(role,'.glb')
+                if case_raw is None or sha(case_raw)!=issue['before_sha256']:
+                    independently_bad=[];break
+                try:
+                    measured=read_mesh_geometry(case_raw)
+                    deviation=_origin_error(measured,center)
+                except (ValueError,TypeError,KeyError,IndexError,OverflowError):
+                    independently_bad=[];break
+                if deviation is None or deviation<=threshold:
+                    independently_bad=[];break
+                independently_bad.append((sha(case_raw),deviation))
+        separate_cases=bool(recurring and len(independently_bad)==len(issues)
+            and len({h for h,_ in independently_bad})==len(issues))
+        was_bad=bool(separate_cases and original_policy and
              prior_error is not None and prior_error>threshold)
         fixed=bool(was_bad and after_error is not None and
              after_error<=threshold and after_error<prior_error and
-             sha(before)!=sha(export))
+             all(after_error<error for _,error in independently_bad) and
+             before is not None and sha(before)!=sha(export))
         if rule_id=='AAA-200-T-198':
-            vals=(recurring,was_bad,fixed)
+            vals=(separate_cases,was_bad,fixed)
         else:
             changed=bool(before_script and after_script and
                 before_script!=after_script and method.get('before_sha256')==
