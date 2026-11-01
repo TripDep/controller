@@ -1,4 +1,4 @@
-"""Real consuming-side NativeRuleBackend integration for three new literal rules."""
+"""Real consuming-side NativeRuleBackend integration for four new literal rules."""
 import copy
 import json
 import unittest
@@ -12,9 +12,11 @@ from test_c07_p5_full_review import P5FullNativeReviewTests
 class ThreeNewBackendTests(unittest.TestCase):
     def test_three_original_byte_replayers_are_not_producer_self_certifications(self):
         p1 = P1SpatialNativeTests.context(self)[1]
+        alignment = P1SpatialNativeTests.alignment_context(self)[1]
         p5 = P5FullNativeReviewTests.context(self)[1]
         for rid, ctx in (
             ('AAA-200-E-043', p1),
+            ('AAA-200-F-054', alignment),
             ('AAA-200-O-144', p5),
             ('AAA-200-O-146', p5),
         ):
