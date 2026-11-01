@@ -1522,6 +1522,43 @@ class ControlledJudgment:
                             full_rule_semantic_passes=0,
                             individual_mg0_passes=0,
                             advancement_authorized=False)
+                # Four literal P8 delivery requirements: original source,
+                # exported GLB, complete ZIP members and exact version/SHA.
+                # CRC and parseable bytes never certify in-game usability.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_delivery_semantics import (
+                        IDS as P8_DELIVERY_IDS, inspect as inspect_p8_delivery)
+                    p8_delivery = inspect_p8_delivery(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_delivery['source_rule_count'] == 4
+                           and set(p8_delivery['rules']) == set(P8_DELIVERY_IDS)
+                           and p8_delivery['full_rule_semantic_passes'] == 0
+                           and p8_delivery['individual_mg0_passes'] == 0
+                           and p8_delivery['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p8_delivery['rules'].values()),
+                           'CONTROLLED_P8_ORIGINAL_DELIVERY_FALSE_MG0_PASS')
+                    if p8_delivery['original_delivery_metrics'][
+                            'archive_member_count'] > 0:
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_DELIVERY_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_delivery['original_audit_sha256'],
+                            original_audit_tail=p8_delivery['original_audit_tail'],
+                            source_rule_ids=list(P8_DELIVERY_IDS),
+                            original_delivery_metrics=p8_delivery[
+                                'original_delivery_metrics'],
+                            original_rule_machine_checks=p8_delivery['rules'],
+                            machine_positive_obligations=p8_delivery[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
