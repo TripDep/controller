@@ -216,6 +216,93 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       190:{"internal_qa_report_binds_export_and_six_rasters":bool(internal_bound),
            "internal_report_does_not_self_certify_owner":bool(no_self_approval)},
     }
+    # Ten extra ORIGINAL-source semantic predicates, one per canonical P8
+    # obligation. These are measured facts, not subjective quality, independent
+    # owner approval, MG0 or engine certification. In particular, a historical
+    # critical finding cannot establish a current-attempt delivery firewall.
+    def unit_normals():
+        if native is None:
+            return False
+        try:
+            mesh_doc, blob = _glb_parts(native)
+            primitives = [p for mesh in mesh_doc["meshes"]
+                          for p in mesh["primitives"]]
+            if not primitives:
+                return False
+            for prim in primitives:
+                normals_idx = prim.get("attributes", {}).get("NORMAL")
+                if type(normals_idx) is not int:
+                    return False
+                vectors = _read_accessor(mesh_doc, blob, normals_idx)
+                if not vectors or any(
+                    len(v) != 3 or not all(finite(x) for x in v) or
+                    not 0.99 <= math.sqrt(sum(x*x for x in v)) <= 1.01
+                    for v in vectors):
+                    return False
+            return True
+        except (ValueError, TypeError, KeyError, IndexError):
+            return False
+    def valid_material_binding():
+        if native is None:
+            return False
+        try:
+            mesh_doc, _ = _glb_parts(native)
+            materials = mesh_doc.get("materials", [])
+            textures = mesh_doc.get("textures", [])
+            images = mesh_doc.get("images", [])
+            primitives = [p for mesh in mesh_doc["meshes"]
+                          for p in mesh["primitives"]]
+            return bool(materials and textures and images and primitives and
+                all(type(p.get("material")) is int and
+                    0 <= p["material"] < len(materials) for p in primitives) and
+                all(type(t.get("source")) is int and
+                    0 <= t["source"] < len(images) for t in textures))
+        except (ValueError, TypeError, KeyError, IndexError):
+            return False
+    original_open = next((i for i, row in enumerate(audit)
+        if row.get("event") == "SUPERVISOR_OPERATION_OPENED" and
+           row.get("step") == step), -1)
+    current_critical = [row for i,row in enumerate(audit)
+        if i > original_open >= 0 and row.get("step") == step and
+           row.get("event") == "QUALITY_FINDING" and
+           row.get("severity") == "CRITICAL" and
+           row.get("status") in ("OPEN", "FAIL", "UNKNOWN") and
+           row.get("attempt_id") == work["attempt_id"] and
+           row.get("operation_sha256") == work["operation_sha256"]]
+    regression_ids = regression.get("checks")
+    regression_rechecks = bool(regression_bound and
+        type(regression_ids) is list and
+        len({x["id"] for x in regression_ids}) == len(regression_ids) and
+        any(x["status"] == "RUN" for x in regression_ids))
+    deep = {
+      181: ("original_six_views_and_machine_test_matrix_same_operation",
+            bool(unique and categories_separated)),
+      182: ("original_measured_horizontal_extents_nonzero_and_origin_pinned",
+            bool(measured and origin_ok and
+                 bbox[1][0] > bbox[0][0] and bbox[1][1] > bbox[0][1])),
+      183: ("original_non_degenerate_mesh_outside_every_forbidden_region",
+            bool(top_ok and forbidden_clear)),
+      184: ("original_native_normals_are_unit_vectors_and_report_sha_bound",
+            bool(normal_report and normal_ok and unit_normals())),
+      185: ("original_export_primitives_bind_real_materials_and_textures",
+            bool(material is not None and valid_material_binding())),
+      186: ("original_area_context_and_front_have_matching_raster_dimensions",
+            bool(context and views["FRONT"] and
+                 context["width"] == views["FRONT"]["width"] and
+                 context["height"] == views["FRONT"]["height"] and
+                 context["pixel_sha256"] != views["FRONT"]["pixel_sha256"])),
+      187: ("original_correction_rechecks_have_distinct_ids_and_run_result",
+            regression_rechecks),
+      188: ("original_machine_visual_engine_categories_and_native_sha_consistent",
+            bool(categories_separated and machine_bound)),
+      189: ("current_attempt_critical_blocks_original_controller_delivery",
+            bool(current_critical and blocked)),
+      190: ("independent_no_customer_defect_triage_attestation", False),
+    }
+    need(set(deep) == set(NUMBERS) and
+         len({name for name, _ in deep.values()}) == 10 and
+         all(type(v) is bool for _, v in deep.values()),
+         "C07_P8_TEN_DISTINCT_ORIGINAL_SEMANTIC_PREDICATES")
     result={}
     for n,rid in zip(NUMBERS,IDS):
         c=checks[n]
@@ -227,6 +314,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
             "source_sha256":catalog,"exact_attempt_id":work["attempt_id"],
             "operation_sha256":work["operation_sha256"],
             "original_machine_checks":c,
+            "original_cross_source_semantic": {deep[n][0]: deep[n][1]},
             "machine_scope":"OBSERVED_SCOPE_PASS" if all(c.values())
                             else "UNKNOWN_OR_DEFECT",
             "full_rule_semantics":"UNKNOWN","individual_mg0":"UNKNOWN",
@@ -241,5 +329,7 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
                        "critical_open_audit_findings":len(critical)},
             "machine_positive_obligations":sum(
                 v["machine_scope"]=="OBSERVED_SCOPE_PASS" for v in result.values()),
+            "original_cross_source_positive_obligations":sum(
+                value for _,value in deep.values()),
             "full_rule_semantic_passes":0,"individual_mg0_passes":0,
             "advancement_authorized":False}
