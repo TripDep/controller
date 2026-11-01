@@ -54,9 +54,9 @@ XML = {
     "P7_YMAP_XML": b'<CMapData><entities><Item type="CEntityDef"><archetypeName>scene_arch</archetypeName><position x="1" y="2" z="3"/></Item></entities></CMapData>',
     "P7_YBN_XML": b'<BoundsFile><Bounds type="Composite"><Children><Item type="Box"/></Children></Bounds></BoundsFile>',
 }
-MANIFEST = (b"fx_version 'cerulean'\\ngame 'gta5'\\n"
-            b"this_is_a_map 'yes'\\nfiles {'stream/scene.ytyp'}\\n"
-            b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\\n")
+MANIFEST = (b"fx_version 'cerulean'\ngame 'gta5'\n"
+            b"this_is_a_map 'yes'\nfiles {'stream/scene.ytyp'}\n"
+            b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\n")
 
 class Tests(unittest.TestCase):
     def setUp(self):
@@ -250,13 +250,13 @@ class Tests(unittest.TestCase):
                 MANIFEST.replace(b"files {'stream/scene.ytyp'}",
                                  b"-- files {'stream/scene.ytyp'}"),
             "duplicate_active_file":
-                MANIFEST + b"files {'stream/scene.ytyp'}\\n",
+                MANIFEST + b"files {'stream/scene.ytyp'}\n",
             "block_comment_spoof":
                 MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'",
                                  b"--[[data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp']]"),
             "string_spoof":
                 MANIFEST.replace(b"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'",
-                                 b"print(\\\"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\\\")"),
+                                 b"print(\"data_file 'DLC_ITYP_REQUEST' 'stream/scene.ytyp'\")"),
         }
         for name, raw in spoofs.items():
             with self.subTest(spoof=name):
@@ -275,7 +275,7 @@ class Tests(unittest.TestCase):
     def test_manifest_quoted_comment_markers_are_not_comments(self):
         from c07_p7_manifest_source_semantics import parse
         self.assertTrue(parse(MANIFEST)["valid"])
-        raw = MANIFEST + b"author 'literal -- is inside string'\\n"
+        raw = MANIFEST + b"author 'literal -- is inside string'\n"
         self.assertTrue(parse(raw)["valid"])
         self.assertFalse(parse(MANIFEST + b"--[[unclosed")["valid"])
         self.assertFalse(parse(MANIFEST.replace(
