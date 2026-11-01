@@ -1,0 +1,114 @@
+"""Macro C07 P3/P4/P5: all forty literal oracles, three stage cutoffs.
+
+No fixture can certify MG0, FiveM, user approval or source provenance of a
+renderer. Verify full source set, exact due phases, contamination and UNKNOWNs.
+"""
+import unittest
+
+from test_c07_native_source_rule_replayers import NativeOriginalReplayerTests
+from test_c07_p345_forty_native_evidence import P345Forty
+from c07_p345_forty_native_evidence import TEXT, IDS
+from c07_p345_macro_execution import run, MacroExecutionBlocked
+from c07_native_source_rule_replayers import (
+    NATIVE_RULES, FULL_LITERAL_REVIEWED)
+
+class MacroFortyOriginalTests(unittest.TestCase):
+    def context(self, phase):
+        test,ctx=NativeOriginalReplayerTests.context(
+            self, P345Forty, 'test_p4_30_due_and_p5_40_due')
+        test.f.work['phase']=test.f.plan['phase']=phase
+        test.sync()
+        ctx['controller']=test.f.controller
+        return test,ctx
+
+    def test_all_40_original_literals_replayed_in_one_source_operation(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        self.assertEqual(result['canonical_rule_count'],40)
+        self.assertEqual(result['due_count'],40)
+        self.assertEqual(result['visited_due_count'],40)
+        self.assertEqual(len(result['rows']),40)
+        self.assertEqual(set(result['rows']),set(IDS))
+        self.assertEqual(set(result['result_counts']),
+                         {'PASS','FAIL','UNKNOWN','BLOCKED','NOT_DUE'})
+        self.assertEqual(result['result_counts']['NOT_DUE'],0)
+        self.assertGreaterEqual(sum(
+            bool(row['source_checks']) for row in result['rows'].values()),25)
+        self.assertEqual(result['reviewed_literal_implementation_count'],
+                         len(set(IDS)&set(FULL_LITERAL_REVIEWED)))
+        self.assertEqual(result['candidate_count'],
+                         40-result['reviewed_literal_implementation_count'])
+        self.assertFalse(result['full_semantic_coverage'])
+        self.assertFalse(result['advancement_authorized'])
+        self.assertFalse(result['individual_mg0_independently_approved'])
+        self.assertFalse(result['fivem_runtime_approved'])
+        for rid,row in result['rows'].items():
+            with self.subTest(rule=rid):
+                self.assertEqual(row['canonical_literal'],
+                                 TEXT[str(int(rid[-3:]))][0])
+                self.assertEqual(row['phase'],
+                                 TEXT[str(int(rid[-3:]))][1])
+                if row['source_checks']:
+                    self.assertEqual(set(row['source_checks']),
+                                     set(NATIVE_RULES[rid][1]))
+                if rid not in FULL_LITERAL_REVIEWED:
+                    self.assertNotEqual(row['machine_result'],'PASS')
+                if row['machine_result']=='PASS':
+                    self.assertTrue(row['evidence_proven'])
+                    self.assertIn(rid,FULL_LITERAL_REVIEWED)
+
+    def test_P3_P4_P5_phase_scoping_never_claims_future_rules(self):
+        for phase,count in (('P3',10),('P4',30),('P5',40)):
+            with self.subTest(phase=phase):
+                _,ctx=self.context(phase)
+                result=run(ctx)
+                self.assertEqual(result['due_count'],count)
+                self.assertEqual(result['visited_due_count'],count)
+                self.assertEqual(result['result_counts']['NOT_DUE'],
+                                 40-count)
+                self.assertFalse(result['advancement_authorized'])
+                for rid in IDS[count:]:
+                    self.assertEqual(result['rows'][rid]['machine_result'],
+                                     'NOT_DUE')
+                    self.assertEqual(result['rows'][rid]['mg0'],'NOT_DUE')
+
+    def test_canonical_requirement_change_blocks_entire_macro(self):
+        _,ctx=self.context('P5')
+        rid='AAA-200-N-135'
+        ctx['inventory']['rules'][rid]['requirement']='producer forged text'
+        with self.assertRaisesRegex(
+                MacroExecutionBlocked,
+                'C07_P345_MACRO_LITERAL_OR_IMPLEMENTATION_DRIFT'):
+            run(ctx)
+
+    def test_wrong_attempt_phase_blocks_without_reporting_any_pass(self):
+        _,ctx=self.context('P5')
+        ctx['work']['phase']='P3'
+        with self.assertRaisesRegex(
+                MacroExecutionBlocked,'C07_P345_MACRO_763_PHASE'):
+            run(ctx)
+
+    def test_corrupt_original_is_not_a_positive_or_authorized(self):
+        test,ctx=self.context('P5')
+        (test.f.root/'scene.glb').write_bytes(b'forged original bytes')
+        result=run(ctx)
+        self.assertEqual(result['canonical_rule_count'],40)
+        self.assertFalse(result['advancement_authorized'])
+        self.assertEqual(result['result_counts']['PASS'],0)
+        self.assertGreater(result['result_counts']['BLOCKED'],0)
+
+    def test_no_unenrolled_source_candidate_can_be_positive(self):
+        _,ctx=self.context('P5')
+        result=run(ctx)
+        for rid in IDS:
+            if rid not in FULL_LITERAL_REVIEWED:
+                with self.subTest(rule=rid):
+                    item=result['rows'][rid]
+                    self.assertIn(item['machine_result'],
+                                  ('UNKNOWN','BLOCKED','FAIL'))
+                    self.assertEqual(item['source_scope'],
+                                     'ORIGINAL_SCOPED_CANDIDATE')
+                    self.assertFalse(item['evidence_proven'])
+
+if __name__=='__main__':
+    unittest.main()
