@@ -151,10 +151,10 @@ class Tests(unittest.TestCase):
         # Material and texture table indices remain valid, but the actual
         # original GLB bufferView contains an invalid PNG signature. A table-
         # only source reader would incorrectly call the material verified.
-        self.assertIn(b"\\x89PNG\\r\\n\\x1a\\n",self.native)
+        self.assertIn(b"\x89PNG\r\n\x1a\n",self.native)
         self.native=self.native.replace(
-            b"\\x89PNG\\r\\n\\x1a\\n",
-            b"\\x89PNX\\r\\n\\x1a\\n",1)
+            b"\x89PNG\r\n\x1a\n",
+            b"\x89PNX\r\n\x1a\n",1)
         self.put()
         self.add_critical()
         row=self.examine()["rules"]["AAA-200-S-185"]
