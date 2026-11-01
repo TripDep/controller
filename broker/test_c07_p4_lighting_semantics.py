@@ -127,6 +127,11 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(OriginalLightingBlocked,
                                     "LIGHTING_LITERAL_CHANGED"):
             self.examine()
+    def test_unhashable_original_mode_is_unknown_not_crash(self):
+        self.policy["modes"]=[{"untrusted":"object"},"CINEMATIC"]
+        self.put()
+        self.assertEqual(self.examine()["rules"][IDS[1]]["machine_scope"],
+                         "UNKNOWN_OR_DEFECT")
     def test_duplicate_original_policy_json_key_blocked(self):
         self.f.add_item("P4_LIGHTING_POLICY","p4_lighting_policy.json",
                         b'{"min_neutral_luma":1,"min_neutral_luma":200}')
