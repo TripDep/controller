@@ -130,8 +130,29 @@ def build_packet(source_context, rule_id, *, expected=None):
     report = inspect(inv, plan, controller, asset, step, work,
                      source_loader=loader)
     source = report['rules'][rule_id]
-    checks = (source['original_native_measured_criteria'] if domain == 'p1'
-              else source['original_machine_checks'])
+    checks = dict(source['original_native_measured_criteria'] if domain == 'p1'
+                  else source['original_machine_checks'])
+    if rule_id == 'AAA-200-S-189':
+        # A critical from another attempt, operation, or a closed historical
+        # step cannot establish the current delivery firewall. Re-read the
+        # original hash chain and bind the critical to THIS operation window.
+        from c07_positive_native_process import _original_attempt
+        rows, tail, state, _ = _original_attempt(
+            inv, plan, controller, asset, step, work)
+        opens = [i for i, event in enumerate(rows)
+                 if event.get('event') == 'SUPERVISOR_OPERATION_OPENED'
+                 and event.get('step') == step]
+        need(len(opens) == 1, 'C07_S189_EXACT_OPERATION_OPEN_REQUIRED')
+        current_critical = [event for event in rows[opens[0]+1:]
+            if event.get('event') == 'QUALITY_FINDING'
+            and event.get('step') == step
+            and event.get('attempt_id') == work['attempt_id']
+            and event.get('operation_sha256') == work['operation_sha256']
+            and event.get('severity') == 'CRITICAL'
+            and event.get('status') in ('OPEN', 'FAIL', 'UNKNOWN')]
+        checks['original_critical_finding_present'] = bool(current_critical)
+        checks['critical_finding_keeps_controller_delivery_blocked'] = bool(
+            current_critical and state.get('delivery_status') != 'DELIVERABLE')
     need(type(checks) is dict and set(checks) == set(criteria) and
          all(type(v) is bool for v in checks.values()) and
          source['requirement_sha256'] == row['requirement_sha256'] and
