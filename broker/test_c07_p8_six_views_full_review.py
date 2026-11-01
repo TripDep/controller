@@ -117,7 +117,7 @@ class P8SixViewsTests(unittest.TestCase):
         forged=copy.deepcopy(packet)
         forged['rule']['proof_digest']='f'*64
         with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
-                                    'PRODUCER_PACKET_NOT_RECOMPUTED'):
+                                    'UNREVIEWED_OR_WRONG_LITERAL'):
             native_rule_readback(None,forged,expected,spec,
                                  source_context=lambda _:ctx)
 
