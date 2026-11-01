@@ -238,6 +238,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
             "uv_edge_anisotropy_within_pre_d_bound":
                 bool(anis) and complete and _positive(max_ratio)
                 and 1<=max_ratio<=50 and max(anis)<=max_ratio,
+            "original_uv_pairs_have_no_unjustified_overlap":
+                complete and bool(anis) and no_overlap
+                and policy.get("uv_overlap_policy")=="NO_UNINTENDED_OVERLAPS",
         },
         116:{
             "actual_embedded_png_and_uv_texel_density_measured":
