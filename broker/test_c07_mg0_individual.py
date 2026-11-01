@@ -201,7 +201,7 @@ class Tests(unittest.TestCase):
         self.add('USER_REVIEW',True,result='FAIL',detected_by='OWNER',
                  owner_evidence_sha256='e'*64,assistant_preflight_passed=True,
                  operation_sha256=op_b)
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         a=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
                            operation_sha256=op_a)
         b=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
@@ -224,7 +224,7 @@ class Tests(unittest.TestCase):
                  owner_evidence_sha256='e'*64,
                  assistant_preflight_passed=False,
                  operation_sha256=op_b)
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         report=mg.inspect_batch(MASTER,raw,ASSET,sha(MASTER),[RULE],ATTEMPT,
                                 operation_sha256=op_b)
         self.assertEqual(report['counts']['FAIL'],0)
@@ -232,7 +232,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(report['individual_mg0_passes'],0)
 
     def test_mg0_bound_batch_rejects_untrusted_operation_identifier(self):
-        raw=b'\\n'.join(canonical(r) for r in self.rows)+b'\\n'
+        raw=b'\n'.join(canonical(r) for r in self.rows)+b'\n'
         for operation in ('main','F'*64,'f'*63,123):
             with self.subTest(operation=operation):
                 with self.assertRaisesRegex(IntakeBlocked,'BATCH_EXACT_OPERATION_SHA'):
