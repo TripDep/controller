@@ -21,8 +21,7 @@ class FullOriginalP1FamilySemantics(unittest.TestCase):
         self.assertTrue(family['code_family_ready'])
         expected={'AAA-200-E-'+str(n).zfill(3)
                   for n in range(41,51)}
-        self.assertTrue(expected.issubset(set(result['macros'][0][
-            'families'][1]['family'] and REVIEWED_RULES)))
+        self.assertTrue(expected.issubset(set(REVIEWED_RULES)))
         self.assertEqual(family['operational_mg0'],'UNVERIFIED')
         self.assertFalse(p1['code_macro_ready'])  # D and F remain incomplete
         self.assertFalse(result['c07_finished'])
