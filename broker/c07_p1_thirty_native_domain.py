@@ -297,6 +297,25 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'native_scope':'SOURCE_SCOPE_OBSERVED' if all(criteria.values()) else 'UNKNOWN',
           'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
           'artistic_approval':'UNKNOWN','advancement_authorized':False}
+    # Reopen the same original Controller operation independently for all
+    # ten D design literals; measured source facts remain UNKNOWN for artistic
+    # acceptance until a genuine independent reviewer has approved them.
+    from c07_p1_d_ten_original_semantic_review import evaluate as inspect_d_ten
+    design=inspect_d_ten({
+        'inventory':inventory,'plan':plan,'controller':controller,
+        'asset':asset,'step':step,'work':work,'source_loader':source_loader})
+    need(design['rule_count']==10 and
+         design['original_audit_sha256']==audit_sha and
+         design['attempt_id']==work['attempt_id'] and
+         design['operation_sha256']==work['operation_sha256'] and
+         design['full_semantic_passes']==0 and
+         design['mg0_passes']==0 and
+         design['advancement_authorized'] is False,
+         'R144_D_TEN_ORIGINAL_REPLAY_UNTRUSTED')
+    for rid,row in design['rows'].items():
+        need(rid in outcomes and row['full_rule_semantics']=='UNKNOWN',
+             'R144_D_TEN_NOT_FULL_REVIEWED')
+        outcomes[rid]['original_design_semantic_measures']=row['checks']
     return {'schema':SCHEMA,'source_rules_examined':30,'native_domain_criteria':90,
        'original_catalog_sha256':source,
        'asset':asset,'step':step,'master_sha256':work['master_sha256'],
