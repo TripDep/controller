@@ -288,7 +288,7 @@ class Tests(unittest.TestCase):
         row['requirement_sha256']='d'*64
         self.p1_design['original_audit_sha256']='a'*64
         with self.assertRaisesRegex(batch.NativeBatchBlocked,
-                                     'ORIGINAL_FAMILY_CONTEXT'):
+                                     'P1_DESIGN_THIRTEEN_ORIGINAL_RULES_UNTRUSTED'):
             self.run_batch()
 
     def test_p678_twenty_six_extra_original_semantics_required(self):
