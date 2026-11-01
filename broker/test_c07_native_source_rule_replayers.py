@@ -219,9 +219,7 @@ class NativeOriginalReplayerTests(unittest.TestCase):
                     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
                 test.put(native)
                 ctx['plan']['p345_evidence_contract'][
-                    'original_artifact_sha256']['NATIVE_EXPORT'] = (
-                        ctx['controller']._state['artifacts'][-1]['sha256']
-                        if False else test.f.items['NATIVE_EXPORT']['sha256'])
+                    'original_artifact_sha256']['NATIVE_EXPORT'] = test.f.items['NATIVE_EXPORT']['sha256']
                 test.f.rebuild()
                 ctx['controller'] = test.f.controller
                 packet = build_packet(ctx, rid)
