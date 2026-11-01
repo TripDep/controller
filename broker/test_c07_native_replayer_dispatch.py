@@ -188,7 +188,7 @@ class Tests(unittest.TestCase):
                  'expected_packet_sha256': judgment.digest(packet)}
         signed = '2026-11-01T05:00:00Z ' + judgment.PREFIX + json.dumps(packet)
         backend = judgment.NativeRuleBackend(object(), {R173: spec})
-        with patch.object(judgment.evidence, 'native', return_value=signed), \\
+        with patch.object(judgment.evidence, 'native', return_value=signed), \
              patch('r173_rule_semantics.native_rule_readback',
                    return_value=result(R173)) as source:
             observed = backend.rule(R173, expected, offer)
@@ -206,7 +206,7 @@ class Tests(unittest.TestCase):
         backend = judgment.NativeRuleBackend(object(), {R173: spec})
         wrong = copy.deepcopy(expected)
         wrong['operation_sha256'] = '9'*64
-        with patch.object(judgment.evidence, 'native', return_value=signed), \\
+        with patch.object(judgment.evidence, 'native', return_value=signed), \
              patch('r173_rule_semantics.native_rule_readback') as source:
             observed = backend.rule(R173, wrong, offer)
             self.assertEqual(observed['result'], 'UNKNOWN')
