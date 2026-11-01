@@ -30,9 +30,9 @@ CRITERIA = {
 125: ('pre_d_original_surface_variation_limits_sha_pinned',
       'actual_original_embedded_texture_quadrants_recomputed',
       'all_real_texture_variation_exceeds_original_local_contrast_limit'),
-126: ('pre_d_original_weathering_reference_and_limits_sha_pinned',
-      'original_texture_and_reference_pixel_distributions_independently_reopened',
-      'real_original_texture_weathering_mean_and_local_spread_within_limits'),
+126: ('pre_d_five_physical_material_class_ranges_and_original_export_sha_pinned',
+      'all_five_wood_stone_metal_glass_plaster_materials_bound_to_original_primitives',
+      'five_original_materials_have_distinct_physical_pbr_and_alpha_properties'),
 127: ('pre_d_original_pixel_diversity_and_variance_limits_sha_pinned',
       'all_original_embedded_rgba_channels_recomputed_from_png_bytes',
       'real_original_colors_and_variance_within_pre_d_material_ranges'),
@@ -147,6 +147,44 @@ def inspect(source_context, rule_id):
             classes[name_classes[m['name']]]['metallic'][1]
         for m in materials))
 
+    # M126 is NOT a weathering test. It requires five actual material
+    # classes, not five labels in a producer's QA JSON. Each must be used by
+    # an original GLB primitive and exhibit a distinct physical PBR profile.
+    five = {'wood','stone','metal','glass','plaster'}
+    five_policy = bool(classes_valid and set(classes) == five and
+                       classification and set(name_classes.values()) == five)
+    bound_names = ({materials[i]['name'] for i in primitive_mats}
+                   if mapped else set())
+    all_five_used = bool(five_policy and
+                         {name_classes[n] for n in bound_names} == five)
+    five_profiles = []
+    five_real = bool(all_five_used and pbr_match)
+    if five_real:
+        for cls in sorted(five):
+            matching = [m for m in materials if name_classes[m['name']] == cls]
+            if not matching:
+                five_real = False
+                break
+            for m in matching:
+                p = m['pbrMetallicRoughness']
+                color = p.get('baseColorFactor')
+                mode = m.get('alphaMode','OPAQUE')
+                if not (type(color) is list and len(color)==4 and
+                        all(bound(v,0,1) for v in color) and
+                        (mode in ('BLEND','MASK') if cls=='glass'
+                         else mode=='OPAQUE')):
+                    five_real = False
+                    break
+                five_profiles.append((cls,round(p['roughnessFactor'],6),
+                    round(p['metallicFactor'],6),
+                    tuple(round(v,6) for v in color[:3])))
+        # Different named materials with identical actual PBR are not
+        # physically distinct merely because the policy calls them distinct.
+        signatures = {(r,m,c) for _,r,m,c in five_profiles}
+        five_real = bool(five_real and len(five_profiles)>=5 and
+                         len(signatures)==len(five_profiles) and
+                         len({x[0] for x in five_profiles})==5)
+
     variation = policy.get('surface_variation', {})
     var_policy = bool(type(variation) is dict and
         type(variation.get('min_distinct_rgb')) is int and
@@ -206,8 +244,8 @@ def inspect(source_context, rule_id):
               pbr and classification, luminance),
         125: (bool(raw_contract and raw_glb and var_policy),
               local, contrast),
-        126: (bool(raw_contract and raw_glb and raw_ref and wp),
-              comparable, spread),
+        126: (bool(raw_contract and raw_glb and five_policy),
+              all_five_used, five_real),
         127: (bool(raw_contract and raw_glb and var_policy),
               pixels, variance),
         # This source reader deliberately cannot certify RAGE shader support
