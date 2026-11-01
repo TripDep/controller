@@ -196,7 +196,7 @@ class FiftyP2(unittest.TestCase):
             ev['record_hash']=original_sha(canonical(ev))
             f.records.append(ev)
             f.controller.audit_path(f.asset).write_bytes(
-                b''.join(canonical(row)+b'\\n' for row in f.records))
+                b''.join(canonical(row)+b'\n' for row in f.records))
             f.controller._state['last_audit_hash']=ev['record_hash']
 
         rid='AAA-200-G-065'
