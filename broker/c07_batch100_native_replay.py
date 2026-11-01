@@ -282,6 +282,17 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     need(code_registry['cohort_count'] == 100 and
          code_registry['registry_inconsistent_ids'] == [],
          'C07_BATCH100_REVIEWED_NATIVE_DISPATCH_INCONSISTENT')
+    # Macros are recomputed from the same reviewed native registry; a family
+    # cannot be advertised as complete because one small predicate passed.
+    from c07_cohort_completion_gate import macro_snapshot
+    family_macros=macro_snapshot()
+    need(family_macros['cohort_count']==100 and
+         family_macros['macro_count']==3 and
+         family_macros['family_count']==10 and
+         family_macros['code_reviewed']==code_registry['code_reviewed_count'] and
+         family_macros['code_missing']==code_registry['code_missing_count'] and
+         family_macros['advancement_authorized'] is False,
+         'C07_BATCH100_WHOLE_FAMILY_MACRO_RECOUNT_UNTRUSTED')
     return {
         'p678_thirty_rule_specific_original': family_reports,
         'p1_thirteen_original_design': p1_design,
@@ -289,6 +300,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         'p345_forty_source_macro': p345_macro,
         'p345_execution_only_certificate': p345_execution_certificate,
         'native_semantic_code_review': code_registry,
+        'whole_family_macro_code_review': family_macros,
         'schema': 'gg-c07-exact100-original-native-replay-v1',
         'rule_count': 100, 'rule_ids': sorted(COHORT),
         'master_sha256': work['master_sha256'],
