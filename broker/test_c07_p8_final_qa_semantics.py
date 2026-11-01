@@ -66,6 +66,15 @@ class Tests(unittest.TestCase):
              "checks":[{"id":"geometry","status":"RUN"}]},
           "P8_MACHINE_REPORT":{"native_sha256":fixture.sha(self.native),
              "checks":[{"id":"original_mesh","status":"RUN"}]},
+          "P8_TEST_MATRIX":{"tests":[
+              {"id":"AUTOMATED_NATIVE","category":"AUTOMATED","status":"RUN",
+               "evidence_role":"NATIVE_EXPORT",
+               "evidence_sha256":fixture.sha(self.native)},
+              {"id":"VISUAL_SIX","category":"VISUAL","status":"RUN",
+               "view_sha256":{"VISUAL_VIEW_"+v:fixture.sha(raw)
+                              for v,raw in self.views.items()}},
+              {"id":"FIVEM_RUNTIME","category":"ENGINE","status":"NOT_RUN",
+               "evidence_role":None,"evidence_sha256":None}]},
           "P8_INTERNAL_QA":{"owner_approved":False,
              "original_sha256":{"NATIVE_EXPORT":fixture.sha(self.native),
                  **{"VISUAL_VIEW_"+v:fixture.sha(raw)
@@ -158,6 +167,25 @@ class Tests(unittest.TestCase):
                 if kind!="state":
                     self.put()
                     self.add_critical()
+
+    def test_forged_in_game_test_or_swapped_visual_categories_never_pass(self):
+        for fake in ("engine_run","swapped_category"):
+            with self.subTest(fake=fake):
+                original=copy.deepcopy(self.docs["P8_TEST_MATRIX"])
+                rows=self.docs["P8_TEST_MATRIX"]["tests"]
+                if fake=="engine_run":
+                    rows[2]["status"]="RUN"
+                else:
+                    rows[1]["category"]="AUTOMATED"
+                self.put()
+                self.add_critical()
+                report=self.examine()
+                self.assertFalse(report["rules"]["AAA-200-S-188"][
+                    "original_machine_checks"][
+                    "original_test_categories_and_unattested_engine_separated"])
+                self.docs["P8_TEST_MATRIX"]=original
+                self.put()
+                self.add_critical()
 
     def test_identical_pixels_with_different_png_encoding_not_six_views(self):
         original=self.views["FRONT"]
