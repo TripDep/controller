@@ -1,4 +1,4 @@
-"""Twenty-three source-specific native semantic replayers on ORIGINAL Controller bytes.
+"""Twenty-six source-specific native semantic replayers on ORIGINAL Controller bytes.
 
 This module is a consuming-side implementation, not a batch observation gate.
 Every result is reconstructed from the Controller's hash-chained current audit,
@@ -31,6 +31,18 @@ NATIVE_RULES = {
     'AAA-200-P-153': ('collision', (
         'original_collision_triangle_budget_explicit',
         'actual_collision_complexity_within_original_limits')),
+    'AAA-200-P-157': ('walkability', (
+        'original_walkable_region_boxes_valid',
+        'each_walkable_region_has_original_collision_surface',
+        'every_walkable_region_has_source_pinned_player_width_clearance')),
+    'AAA-200-P-158': ('walkability', (
+        'original_collision_and_terrain_triangles_reopened',
+        'original_terrain_collision_contact_centroids_measured',
+        'every_pre_d_contact_region_has_independently_matched_source_geometry')),
+    'AAA-200-P-159': ('walkability', (
+        'original_vehicle_corridor_widths_measured',
+        'actual_collision_faces_clear_of_vehicle_corridors',
+        'every_vehicle_corridor_has_source_pinned_vertical_clearance')),
     'AAA-200-L-116': ('uv', (
         'actual_embedded_png_and_uv_texel_density_measured',
         'real_texel_density_within_original_target',
@@ -89,7 +101,7 @@ NATIVE_RULES = {
 }
 VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v1'
               for rid in NATIVE_RULES}
-# These nineteen literals have independently decidable original-byte acceptance
+# These twenty-two literals have independently decidable original-byte acceptance
 # conditions. The other three source readers are diagnostic CANDIDATES only;
 # never enroll or dispatch them as full positive semantic validators.
 FULL_LITERAL_REVIEWED = frozenset((
@@ -97,6 +109,7 @@ FULL_LITERAL_REVIEWED = frozenset((
     'AAA-200-L-116', 'AAA-200-L-117', 'AAA-200-M-124', 'AAA-200-M-128',
     'AAA-200-O-141', 'AAA-200-O-142',
     'AAA-200-P-151', 'AAA-200-P-152', 'AAA-200-P-153',
+    'AAA-200-P-157', 'AAA-200-P-158', 'AAA-200-P-159',
     'AAA-200-O-148', 'AAA-200-S-188', 'AAA-200-S-189', 'AAA-200-T-192', 'AAA-200-T-194',
     'AAA-200-T-196', 'AAA-200-T-197',
 ))
@@ -148,6 +161,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         from c07_p5_budget_semantics import inspect
     elif domain == 'collision':
         from c07_p6_collision_semantics import inspect
+    elif domain == 'walkability':
+        from c07_p6_walkability_semantics import inspect
     elif domain == 'delivery':
         from c07_p8_delivery_semantics import inspect
     elif domain == 'uv':
