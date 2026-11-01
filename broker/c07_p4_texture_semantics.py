@@ -98,6 +98,7 @@ def rgba(raw):
             "unique_rgb":len(set(x[:3] for x in colors)),
             "unique_rgba":len(set(colors)),
             "quadrants":quadrants,"sha256":sha(raw),
+            "pixel_sha256":sha(b"".join(rows)),
             "compressed_bytes":len(raw)}
 
 def _embedded(doc, binary):
