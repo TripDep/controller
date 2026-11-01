@@ -92,6 +92,21 @@ class Tests(unittest.TestCase):
                 'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
                 'advancement_authorized':False} for rid in QUANT_IDS},
         }
+        from c07_p1_native_raster_projection import IDS as RASTER_IDS
+        self.p1_raster={
+            'family_rule_count':30,'rule_count':11,
+            'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+            'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
+            'advancement_authorized':False,'full_semantic_passes':0,
+            'individual_mg0_passes':0,
+            'rules':{rid:{
+                'checks':{rid+'_pre_d_original':False,
+                          rid+'_native_projection':False,
+                          rid+'_cross_source':False},
+                'source_sha256':'c'*64,'requirement_sha256':'d'*64,
+                'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
+                'advancement_authorized':False} for rid in RASTER_IDS},
+        }
         import c07_p6_collision_semantics as c6
         import c07_p6_walkability_semantics as w6
         import c07_p7_rage_semantics as r7
@@ -154,6 +169,8 @@ class Tests(unittest.TestCase):
                     return_value=self.p1_design) as design,
               patch('c07_p1_remaining_visual_review.inspect_family',
                     return_value=self.p1_quant) as quantitative,
+              patch('c07_p1_native_raster_projection.inspect_family',
+                    return_value=self.p1_raster) as raster,
               patch('c07_p6_collision_semantics.inspect',
                     return_value=self.p678_specific['P6_COLLISION']) as col,
               patch('c07_p6_walkability_semantics.inspect',
@@ -174,6 +191,10 @@ class Tests(unittest.TestCase):
                              macro.call_args_list[1].args[0])
             design.assert_called_once()
             quantitative.assert_called_once()
+            raster.assert_called_once()
+            self.assertEqual(raster.call_args.args[0]['work'],self.work)
+            self.assertEqual(result['p1_eleven_original_native_raster'],
+                             self.p1_raster)
             self.assertEqual(quantitative.call_args.args[0]['work'],self.work)
             self.assertEqual(result['p1_thirteen_original_quantitative'],
                              self.p1_quant)
