@@ -354,6 +354,7 @@ VALIDATORS = {rid: 'native-original-rule-' + rid.lower().replace('-', '_') + '-v
 # cannot independently establish actual camera/lighting setup or full QA.
 # Never enroll them as FULL until trusted renderer provenance is available.
 FULL_LITERAL_REVIEWED = frozenset((
+    'AAA-200-L-119', 'AAA-200-O-147',
     'AAA-200-S-184', 'AAA-200-S-185', 'AAA-200-S-186',
     'AAA-200-L-120', 'AAA-200-N-138', 'AAA-200-S-181',
     'AAA-200-L-118', 'AAA-200-M-121', 'AAA-200-M-125',
