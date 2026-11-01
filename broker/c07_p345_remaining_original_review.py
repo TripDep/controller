@@ -18,6 +18,7 @@ from c07_p5_optimization_semantics import _mesh, _references
 from c07_p5_full_review import material_bindings
 from c07_p4_texture_semantics import rgba, _embedded
 from c07_p6_collision_semantics import _triangles
+from c07_p3_geometry_semantics import _read_accessor
 from visual_content_metrics import decode_grid, VisualContentBlocked
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
@@ -149,6 +150,110 @@ def baked_normal_channels_valid(raw):
             good+=1
     return good>=math.ceil(0.95*len(pixels))
 
+def sampled_native_surface_colors(raw):
+    """Independently sample original embedded base-color pixels at real UVs.
+
+    Triangle geometry is the key, so an atlas can remap UVs without falsely
+    failing a faithful bake. Duplicate baseline material bindings must agree
+    on their visible surface colors; a deleted texture is not proof of fidelity.
+    """
+    if raw is None:
+        return None
+    doc,binary=_glb_parts(raw)
+    textures=doc.get('textures')
+    images=doc.get('images')
+    materials=doc.get('materials')
+    views=doc.get('bufferViews')
+    if not all(type(v) is list for v in (textures,images,materials,views)):
+        return None
+    decoded={}
+    result={}
+    count=0
+    for mesh in doc.get('meshes',[]):
+        for prim in mesh.get('primitives',[]):
+            attrs=prim.get('attributes',{})
+            if not all(k in attrs for k in ('POSITION','TEXCOORD_0')):
+                return None
+            material_id=prim.get('material')
+            if type(material_id) is not int or not 0<=material_id<len(materials):
+                return None
+            pbr=materials[material_id].get('pbrMetallicRoughness',{})
+            color=pbr.get('baseColorTexture') if type(pbr) is dict else None
+            if type(color) is not dict or color.get('texCoord',0)!=0:
+                return None
+            index=color.get('index')
+            if type(index) is not int or not 0<=index<len(textures):
+                return None
+            tex=textures[index]
+            if type(tex) is not dict or type(tex.get('source')) is not int:
+                return None
+            source=tex['source']
+            if not 0<=source<len(images):
+                return None
+            if source not in decoded:
+                img=images[source]
+                if type(img) is not dict or img.get('mimeType')!='image/png':
+                    return None
+                vi=img.get('bufferView')
+                if type(vi) is not int or not 0<=vi<len(views):
+                    return None
+                view=views[vi]
+                offset=view.get('byteOffset',0)
+                length=view.get('byteLength')
+                if (type(offset) is not int or type(length) is not int
+                        or offset<0 or length<=0 or offset+length>len(binary)):
+                    return None
+                try:
+                    decoded[source]=decode_grid(binary[offset:offset+length],step=1)
+                except (ValueError,TypeError,VisualContentBlocked):
+                    return None
+            width,height,pixels=decoded[source]
+            xyz=_read_accessor(doc,binary,attrs['POSITION'])
+            uv=_read_accessor(doc,binary,attrs['TEXCOORD_0'])
+            if len(xyz)!=len(uv):
+                return None
+            indices=(_read_accessor(doc,binary,prim['indices'],scalar=True)
+                     if 'indices' in prim else list(range(len(xyz))))
+            if len(indices)%3:
+                return None
+            for offset in range(0,len(indices),3):
+                ids=indices[offset:offset+3]
+                triangle=tuple(sorted(tuple(float(v) for v in xyz[i])
+                                      for i in ids))
+                # Four distinct barycentric samples catch changed atlas tiles
+                # that share an average color at the triangle center.
+                samples=[]
+                for weights in ((1/3,1/3,1/3),(.6,.2,.2),(.2,.6,.2),(.2,.2,.6)):
+                    u=sum(uv[i][0]*w for i,w in zip(ids,weights))%1
+                    v=sum(uv[i][1]*w for i,w in zip(ids,weights))%1
+                    x=min(width-1,int(u*width))
+                    y=min(height-1,int(v*height))
+                    samples.append(tuple(pixels[y*width+x]))
+                result.setdefault(triangle,[]).append(tuple(samples))
+                count+=1
+                if count>500000:
+                    return None
+    return result if result else None
+
+def atlas_surface_fidelity(before,after,limit):
+    if type(limit) not in (int,float) or not math.isfinite(limit) or not 0<=limit<=16:
+        return False
+    first=sampled_native_surface_colors(before)
+    second=sampled_native_surface_colors(after)
+    if not first or not second or set(first)!=set(second):
+        return False
+    for triangle in first:
+        def close(a,b):
+            return all(max(abs(c-d) for c,d in zip(px,py))<=limit
+                       for px,py in zip(a,b))
+        if not all(any(close(a,b) for b in second[triangle])
+                   for a in first[triangle]):
+            return False
+        if not all(any(close(b,a) for a in first[triangle])
+                   for b in second[triangle]):
+            return False
+    return True
+
 def bindings(raw):
     if raw is None:return None
     try:return material_bindings(raw)
@@ -229,7 +334,10 @@ def inspect(source_context,rule_id):
         measured=bool(before is not None and after is not None and
                       before>after>=1 and type(target) is int and target>=1
                       and before-after>=target and atlas_images and
-                      boxes_close(native,baseline,0.01) and same_geometry)
+                      boxes_close(native,baseline,0.01) and same_geometry
+                      and atlas_surface_fidelity(
+                          baseline_raw,raw,
+                          atlas_policy.get('max_atlas_sample_rgb_delta')))
         checks=(bool(baseline_raw and original('P3_ATLAS_POLICY','.json')
                      and raw),before is not None and after is not None,measured)
     elif n==119:
