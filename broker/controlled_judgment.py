@@ -1202,6 +1202,27 @@ class ControlledJudgment:
                     exact_source_specific_native_evidence=mq50['rules'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                from c07_cohort200_native import inspect as inspect_cohort200
+                cohort200 = inspect_cohort200(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(cohort200['source_rules_examined'] == 200
+                       and cohort200['original_source_evidence_checks'] == 1200
+                       and cohort200['individual_mg0_passes'] == 0
+                       and not cohort200['advancement_authorized'],
+                       'C07_NEW200_INCOMPLETE_OR_UNPROVEN')
+                self.append('SUPERVISOR_C07_NEW200_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=cohort200['original_audit_sha256'],
+                    original_audit_tail=cohort200['original_audit_tail'],
+                    source_rules_examined=200,
+                    native_checks_evaluated=1200,
+                    original_source_evidence=cohort200['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # C07: 100 further original source obligations:
                 # AAA-200 A001-010/L111-120/S181-190/T191-200 (40),
                 # BEHAVIOR 051-110 (60). Machine observations must not
