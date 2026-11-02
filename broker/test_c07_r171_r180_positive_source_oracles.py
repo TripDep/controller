@@ -116,6 +116,11 @@ class R171R180NativePositiveTests(unittest.TestCase):
         records=[
             {"event":"CHECKPOINT_CREATED","result":"PASS",
              "attempt_id":PREVIOUS,"checkpoint_sha256":SHA(content)},
+            {"event":"ARTIFACT_RECORDED","step":"STEP_HISTORIC","result":"PASS",
+             "evidence_operation":{"role":"CHECKPOINT_SOURCE",
+                                   "path":"/vault/preexisting.blend",
+                                   "size_bytes":len(content),
+                                   "sha256":SHA(content)}},
             {"event":"ARTIFACT_RECORDED","step":STEP,"result":"PASS",
              "evidence_operation":{"role":"CHECKPOINT_RESTORED_SOURCE",
                                    "sha256":SHA(content)}},
@@ -127,26 +132,60 @@ class R171R180NativePositiveTests(unittest.TestCase):
     def test_checkpoint_source_original_and_current_lineage_replayed(self):
         rows,roles,work=self.checkpoint()
         self.assertTrue(real_checkpoint_restored_without_duplicate(
-            rows,roles,work,STEP))
+            rows,roles,work,STEP,
+            source_loader=lambda _:b"original valid retained checkpoint bytes"))
 
     def test_historic_checkpoint_changed_sha_blocks(self):
         rows,roles,work=self.checkpoint()
         rows[0]["checkpoint_sha256"]="0"*64
         self.assertFalse(real_checkpoint_restored_without_duplicate(
-            rows,roles,work,STEP))
+            rows,roles,work,STEP,
+            source_loader=lambda _:b"original valid retained checkpoint bytes"))
 
     def test_checkpoint_current_step_or_attempt_changed_blocks(self):
         rows,roles,work=self.checkpoint()
         rows[2]["step"]="ANOTHER_STEP"
         self.assertFalse(real_checkpoint_restored_without_duplicate(
-            rows,roles,work,STEP))
+            rows,roles,work,STEP,
+            source_loader=lambda _:b"original valid retained checkpoint bytes"))
 
     def test_checkpoint_duplicate_reservation_blocks(self):
         rows,roles,work=self.checkpoint()
         rows.append({"event":"SUPERVISOR_OPERATION_RESERVED",
                      "attempt_id":CURRENT,"step":"OLD"})
         self.assertFalse(real_checkpoint_restored_without_duplicate(
+            rows,roles,work,STEP,
+            source_loader=lambda _:b"original valid retained checkpoint bytes"))
+
+    def test_prior_checkpoint_record_without_source_reader_not_positive(self):
+        rows,roles,work=self.checkpoint()
+        self.assertFalse(real_checkpoint_restored_without_duplicate(
             rows,roles,work,STEP))
+
+    def test_changed_old_checkpoint_binary_not_positive_despite_correct_recorded_sha(self):
+        rows,roles,work=self.checkpoint()
+        self.assertFalse(real_checkpoint_restored_without_duplicate(
+            rows,roles,work,STEP,source_loader=lambda _:b"historical source overwritten"))
+
+    def test_same_triangle_count_but_changed_vertices_fails_r176(self):
+        raw=synthetic_glb()
+        moved=synthetic_glb(triangles=[
+             (0.,0.,0.),(2.,0.,0.),(0.,1.,0.)])
+        plan={"outcome_contract":{"acceptance_criteria":[
+            {"name":"triangles_examined","operator":"gte","expected":1},
+            {"name":"degenerate_triangles","operator":"eq","expected":0}]}}
+        roles={"NATIVE_EXPORT":[asset("/vault/out.glb",raw)],
+               "NATIVE_REIMPORT":[asset("/vault/reimport.glb",moved)]}
+        self.assertFalse(native_script_output_matches_oracle(plan,roles))
+
+    def test_reimport_reordered_equivalent_scene_not_claimed_same_without_independent_oracle(self):
+        raw=synthetic_glb()
+        moved=synthetic_glb(child_translation=[1.,0.,0.])
+        plan={"outcome_contract":{"acceptance_criteria":[
+            {"name":"triangles_examined","operator":"gte","expected":1}]}}
+        roles={"NATIVE_EXPORT":[asset("/vault/out.glb",raw)],
+               "NATIVE_REIMPORT":[asset("/vault/reimport.glb",moved)]}
+        self.assertFalse(native_script_output_matches_oracle(plan,roles))
 
     def test_original_ten_rule_native_integration(self):
         code=Path(__file__).with_name("c07_r171_r180_source_native.py").read_text()
