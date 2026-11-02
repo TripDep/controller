@@ -54,15 +54,8 @@ def acquire(inventory, plan, controller, asset, step, work):
     require(persisted.get('assets', {}).get(asset) == state, 'persisted asset state differs')
     artifacts = _registered_artifacts(records, state, step,
                                      lambda path: Path(path).read_bytes(), work)
-    packets = [a for a in artifacts if a[0] == 'C07_DOMAIN_OBSERVATIONS']
-    require(len(packets) == 1, 'exactly one current registered domain-observation packet required')
-    document = strict_json(packets[0][3])
-    require(type(document) is dict and set(document) == {'schema', 'binding', 'observations'},
-            'domain-observation packet schema')
-    require(document['schema'] == 'gg-c07-controller-domain-observations-v1', 'domain-observation version')
     expected = {k: work[k] for k in ('attempt_id', 'operation_sha256', 'master_sha256')}
     expected.update(asset=asset, step=step)
-    require(document['binding'] == expected, 'domain observations belong to different transaction')
     blobs = {digest: raw for _, _, digest, raw in artifacts}
     blobs[sha(master_raw)] = master_raw
     blobs[sha(state_raw)] = state_raw
@@ -71,10 +64,28 @@ def acquire(inventory, plan, controller, asset, step, work):
     blobs[audit_sha] = audit_raw
     require(controller.state_path.read_bytes() == state_raw and
             controller.master.read_bytes() == master_raw, 'Controller changed during acquisition')
-    report = inspect_candidate(inventory, document['observations'], blobs)
+    # Only facts read from the Controller itself enter the evaluator. Artifact
+    # registration does not establish the truth of arbitrary JSON observations.
+    # In particular the former observation packet is never parsed or evaluated.
+    observations = original_observations(records, state, master_raw, controller.master)
+    report = inspect_candidate(inventory, observations, blobs)
     report['acquisition'] = {'binding': expected, 'audit_sha256': audit_sha,
                              'audit_tail': tail, 'state_sha256': sha(state_raw),
-                             'observation_packet_sha256': packets[0][2],
                              'registered_artifact_count': len(artifacts),
+                             'observation_origin': 'ORIGINAL_CONTROLLER_RECORDS_ONLY',
                              'documentary_truth_authenticated': False}
     return report
+
+
+def original_observations(records, state, master_raw, master_path):
+    """Project original records without manufacturing absent domain evidence.
+
+    A master_check proves the recorded file identity, not that its contents
+    were completely read. A PASS close is not owner acceptance, a deployment,
+    a functional test, a photographic origin or a license. Those lanes stay
+    absent until an actual reader for their original source exists.
+    """
+    current = {'sha256': sha(master_raw), 'path': str(master_path),
+               'version': state.get('master_version', 'UNKNOWN')}
+    return {'master': current, 'controller_records': records,
+            'controller_asset_state': state}
