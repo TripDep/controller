@@ -52,6 +52,14 @@ class Behavior50Tests(unittest.TestCase):
                 self.assertEqual(result["rules"][rid]["individual_mg0"], "UNKNOWN")
                 self.assertEqual(result["certified_count"], 0)
 
+    def test_recorded_violation_blocks_controller_operation(self):
+        # Controller must not only audit a violation but prevent continuation.
+        from pathlib import Path
+        controller_source = Path(__file__).with_name("controlled_judgment.py").read_text()
+        self.assertIn("behavior50['negative_findings'] == 0", controller_source)
+        self.assertIn("CONTROLLED_C07_BEHAVIOR50_RECORDED_VIOLATION", controller_source)
+        self.assertIn("behavior50_inspect(", controller_source)
+
     def test_wrong_attempt_cannot_replay_fail(self):
         inv = inventory()
         rid = "BEHAVIOR-001"
