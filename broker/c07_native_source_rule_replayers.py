@@ -289,6 +289,11 @@ NATIVE_RULES = {
     'AAA-200-T-197': ('closure', (
         'original_candidate_not_self_labelled_approved',
         'source_bound_candidate_and_export_exist')),
+    # T200 remains a SOURCE CANDIDATE. Its second, independent acceptance
+    # criterion is deliberately false until external owner/MG0/FiveM proof.
+    'AAA-200-T-200': ('closure', (
+        'source_and_export_bytes_reopened_in_current_attempt',
+        'independent_full_acceptance_mg0_and_fivem_proven')),
     'AAA-200-E-042': ('p1_site_full', (
         'pre_d_metric_axis_contract_and_native_source_sha_pinned',
         'right_handed_axis_basis_origin_orientation_and_scale_verified',
