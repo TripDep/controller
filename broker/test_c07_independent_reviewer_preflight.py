@@ -91,5 +91,20 @@ class ReviewerPreflightTests(unittest.TestCase):
         with self.assertRaisesRegex(ReviewerNotEnrolled, "VALID_ED25519"):
             self.inspect(digest)
 
+    def test_live_controller_requires_owner_pinned_key_before_macro25(self):
+        # Structural integration regression: test-only keys cannot be
+        # enrolled by the producer in the live Controller close path.
+        controller = Path(__file__).with_name("controlled_judgment.py").read_text()
+        for marker in (
+            "from c07_independent_reviewer_preflight import (",
+            "check as verify_authorized_reviewer",
+            "C07_OWNER_APPROVED_REVIEWER_KEY_SHA256",
+            "C07_OWNER_APPROVED_REVIEWER_ID",
+            "owner_authorized_sha256=owner_fingerprint",
+            "CONTROLLED_MACRO25_OWNER_AUTHORIZED_REVIEWER_MISMATCH",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker, controller)
+
 if __name__ == "__main__":
     unittest.main()
