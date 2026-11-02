@@ -23,14 +23,12 @@ class PilotBlocked(ValueError):pass
 def need(ok,message):
     if not ok:raise PilotBlocked(message)
 
-def measure(inv,plan,controller,asset,step,work,*,source_loader,
-            native10=None, native_decision=None):
+def measure(inv,plan,controller,asset,step,work,*,source_loader):
     """Use original audited work; inputs cannot be positive self-attestations.
 
-    The caller must evaluate native10 directly through inspect10 in this same
-    Controller lock, and native_decision through independently replayed Git.
-    For post-open measurements the earlier begin decision is not itself
-    approval of output created later.
+    The source-specific inspector is always called directly from within this
+    locked Controller context. For post-open measurements an earlier begin
+    decision is not approval of output created later.
     """
     need(type(inv) is dict and inv.get("rule_count")==763 and
          inv.get("schema")=="gg-effective-family-inventory-v1" and
@@ -41,14 +39,8 @@ def measure(inv,plan,controller,asset,step,work,*,source_loader,
          "PILOT10_ORIGINAL_763_CANONICAL_SCOPE_REQUIRED")
     start_utc=datetime.datetime.now(datetime.timezone.utc)
     p0=time.perf_counter_ns()
-    if native10 is None:
-        r10=inspect10(inv,plan,controller,asset,step,work,
-                       source_loader=source_loader)
-    else:
-        # Production should use the direct inspect10 call, *not* an injected
-        # result. Explicit injection is only for test diagnostic convenience
-        # and still never grants certification.
-        r10=native10
+    r10=inspect10(inv,plan,controller,asset,step,work,
+                   source_loader=source_loader)
     p1=time.perf_counter_ns()
     raw_master=controller.master.read_bytes()
     raw_audit=controller.audit_path(asset).read_bytes()
@@ -107,7 +99,7 @@ def measure(inv,plan,controller,asset,step,work,*,source_loader,
         }
     need(sum(counts.values())==10 and counts["CERTIFIED"]==0,
          "PILOT10_FALSE_MG0_OR_FULL_SEMANTIC_CERTIFICATION")
-    return {
+    report={
         "schema":SCHEMA,
         "source_rules":10,"ids":list(IDS),
         "attempt_id":work["attempt_id"],
@@ -131,3 +123,4 @@ def measure(inv,plan,controller,asset,step,work,*,source_loader,
         "advancement_authorized":False,
         "rules":results,
     }
+    return report,r10
