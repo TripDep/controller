@@ -829,6 +829,28 @@ def build_packet(source_context, rule_id, *, expected=None):
                  and d_ten_review['rows'][r]['advancement_authorized'] is False
                  for r in d_ids),
              'C07_P1_D_TEN_MACRO_ORIGINAL_SOURCE_REPLAY_DRIFT')
+    mot_nine_review = None
+    if rule_id in (
+        'AAA-200-M-122','AAA-200-M-129','AAA-200-M-130',
+        'AAA-200-O-145','AAA-200-O-150',
+        'AAA-200-T-191','AAA-200-T-193','AAA-200-T-195',
+        'AAA-200-T-200'):
+        from c07_mot_nine_crossfamily_source_macro import (
+            inspect as inspect_mot_nine, IDS as mot_ids,
+            CRITERIA as mot_criteria)
+        mot_nine_review = inspect_mot_nine(source_context,rule_id)
+        need(rule_id in mot_ids and
+             mot_nine_review['rule_id']==rule_id and
+             set(mot_nine_review['checks'])==set(mot_criteria[int(rule_id[-3:])])
+             and mot_nine_review['original_audit_sha256']==
+                report['original_audit_sha256'] and
+             mot_nine_review['attempt_id']==work['attempt_id'] and
+             mot_nine_review['operation_sha256']==work['operation_sha256'] and
+             mot_nine_review['full_rule_semantics']=='UNKNOWN' and
+             mot_nine_review['individual_mg0']=='UNKNOWN' and
+             mot_nine_review['advancement_authorized'] is False and
+             list(mot_nine_review['checks'].values())[-1] is False,
+             'C07_MOT_NINE_CROSS_FAMILY_SOURCE_ONLY_GUARD')
     p678_three_review = None
     if rule_id in ('AAA-200-P-155','AAA-200-P-160',
                    'AAA-200-S-190'):
@@ -906,6 +928,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if mot_nine_review is not None:
+        proof['original_mot_nine_crossfamily_source_macro'] = mot_nine_review
     if p678_three_review is not None:
         proof['original_p678_three_residual_crosschecks'] = p678_three_review
     if d_ten_review is not None:
