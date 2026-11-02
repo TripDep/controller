@@ -25,12 +25,14 @@ class NineMOTCrossFamilyTests(unittest.TestCase):
             t=P4MaterialMacroTests(
                 'test_all_seven_literal_rules_are_distinct_and_source_bound')
             self.addCleanup(t.doCleanups)
-            _,ctx=t.context()
+            test,ctx=t.context()
+            t.source_test=test
         elif family=='O':
             t=RemainingP345Tests(
                 'test_positive_source_benefits_measured_not_promoted_to_full')
             self.addCleanup(t.doCleanups)
-            _,ctx=t.context()
+            test,ctx=t.context()
+            t.source_test=test
         else:
             t=DeliveryFamilyFiveOriginalTests(
                 'test_five_source_literal_oracles_and_no_false_operational_pass')
@@ -73,17 +75,22 @@ class NineMOTCrossFamilyTests(unittest.TestCase):
         # Even three convincing PNGs do NOT prove real renderer execution.
         policy=copy.deepcopy(POLICY)
         policy['light_response']['min_direct_neutral_delta']=240
-        _,fx=t.context()  # independent fixture, not mutation of prior audit
-        fx['plan']['phase']='P4'
-        self.assertFalse(self.row(ctx,rid)['checks'][CRITERIA[122][2]])
+        t.source_test.add('P4_MATERIAL_CONFORMANCE',
+                          'p4_material_conformance.json',encoded(policy))
+        t.source_test.sync()
+        ctx['controller']=t.source_test.f.controller
+        self.assertFalse(self.row(ctx,rid)['checks'][CRITERIA[122][1]])
 
     def test_p4_rgb_response_rejects_byte_identical_synthetic_views(self):
         rid='AAA-200-M-130'
         t,ctx=self.context(rid)
         # No changes to original sources without fresh audit.
         self.assertTrue(self.row(ctx,rid)['checks'][CRITERIA[130][1]])
-        test=t._test if hasattr(t,'_test') else None
-        self.assertIsNone(test)
+        t.source_test.add('P4_VIEW_DIRECT','p4_view_direct.png',
+                          png(solid(90)))
+        t.source_test.sync()
+        ctx['controller']=t.source_test.f.controller
+        self.assertFalse(self.row(ctx,rid)['checks'][CRITERIA[130][1]])
 
     def test_original_lod_requires_complete_near_far_evidence(self):
         rid='AAA-200-O-145'
@@ -101,6 +108,23 @@ class NineMOTCrossFamilyTests(unittest.TestCase):
         self.assertTrue(row['checks'][CRITERIA[150][0]])
         self.assertTrue(row['checks'][CRITERIA[150][1]])
         self.assertFalse(row['checks'][CRITERIA[150][2]])
+
+    def test_runtime_source_samples_over_budget_cannot_be_p95_pass(self):
+        rid='AAA-200-O-150'
+        t,ctx=self.context(rid)
+        t.source_test.add('P5_RUNTIME_CAPTURE','runtime_capture.json',
+                          encoded({'frame_ms_samples':[50]*20}))
+        t.source_test.sync()
+        ctx['controller']=t.source_test.f.controller
+        self.assertTrue(self.row(ctx,rid)['checks'][CRITERIA[150][0]])
+        self.assertFalse(self.row(ctx,rid)['checks'][CRITERIA[150][1]])
+
+    def test_guide_with_five_m_claim_cannot_earn_useful_documentation(self):
+        rid='AAA-200-T-195'
+        t,ctx=self.context(rid)
+        t.fixture.docs['P8_MAINTENANCE_GUIDE']['fivem_verified']=True
+        t.refresh()
+        self.assertFalse(self.row(t.context(),rid)['checks'][CRITERIA[195][1]])
 
     def test_all_four_delivery_preflights_preserve_owner_gate(self):
         for n in (191,193,195,200):
