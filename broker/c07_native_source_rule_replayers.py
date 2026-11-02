@@ -12,6 +12,206 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-G-061': ('p2_fifty_asset_source', (
+        'native_original_hardsurface_triangle_bytes_reparsed',
+        'original_target_reference_raster_decoded',
+    )),
+    'AAA-200-G-062': ('p2_fifty_asset_source', (
+        'actual_original_model_local_envelope_read',
+        'front_reference_and_actual_front_rasters_decoded',
+    )),
+    'AAA-200-G-063': ('p2_fifty_asset_source', (
+        'original_explicit_bevel_radius_mm_in_arch_contract',
+        'original_native_geometry_read_for_edge_inspection',
+    )),
+    'AAA-200-G-064': ('p2_fifty_asset_source', (
+        'source_original_edge_policy_named',
+        'original_closeup_front_image_decoded',
+    )),
+    'AAA-200-G-065': ('p2_fifty_asset_source', (
+        'real_GLTF_vertex_position_data_parsed',
+        'native_original_normals_QA_receipt_available',
+    )),
+    'AAA-200-G-066': ('p2_fifty_asset_source', (
+        'original_baseline_geometry_bytes_reparsed',
+        'original_duplicate_mesh_QA_receipt_read',
+    )),
+    'AAA-200-G-067': ('p2_fifty_asset_source', (
+        'real_glb_mesh_geometry_and_extent_reparsed',
+        'original_intersection_report_sha_bound',
+    )),
+    'AAA-200-G-068': ('p2_fifty_asset_source', (
+        'original_local_AABB_numeric_from_source',
+        'native_pivot_transform_proof_file_reopened',
+    )),
+    'AAA-200-G-069': ('p2_fifty_asset_source', (
+        'original_user_1to1_architecture_policy_recorded',
+        'real_editable_source_file_preserved',
+    )),
+    'AAA-200-G-070': ('p2_fifty_asset_source', (
+        'original_editable_source_binary_reopened',
+        'original_current_native_geometry_byte_comparison_possible',
+    )),
+    'AAA-200-H-071': ('p2_fifty_asset_source', (
+        'original_assembly_source_drawing_file_reopened',
+        'architectural_component_hierarchy_listed',
+    )),
+    'AAA-200-H-072': ('p2_fifty_asset_source', (
+        'beam_and_column_names_original_pre_D',
+        'actual_native_GLTF_mesh_geometry_present',
+    )),
+    'AAA-200-H-073': ('p2_fifty_asset_source', (
+        'source_connection_pairs_defined_before_D',
+        'native_original_connection_QA_receipt_present',
+    )),
+    'AAA-200-H-074': ('p2_fifty_asset_source', (
+        'original_design_symmetry_axis_named',
+        'original_two_opposite_view_source_files',
+    )),
+    'AAA-200-H-075': ('p2_fifty_asset_source', (
+        'original_planned_asymmetry_ids_present',
+        'original_geometry_export_present_for_comparison',
+    )),
+    'AAA-200-H-076': ('p2_fifty_asset_source', (
+        'original_roof_slope_degree_bounded',
+        'original_reference_and_top_views_decoded',
+    )),
+    'AAA-200-H-077': ('p2_fifty_asset_source', (
+        'original_roof_wall_support_join_ids',
+        'original_understructure_raster_decoded',
+    )),
+    'AAA-200-H-078': ('p2_fifty_asset_source', (
+        'original_real_connection_cross_section_file_read',
+        'actual_underside_and_front_rasters_read',
+    )),
+    'AAA-200-H-079': ('p2_fifty_asset_source', (
+        'original_element_height_schedule_numeric',
+        'native_actual_local_height_span_measured',
+    )),
+    'AAA-200-H-080': ('p2_fifty_asset_source', (
+        'native_original_structure_GLTF_local_envelope_read',
+        'original_source_area_context_reference_image_read',
+    )),
+    'AAA-200-I-081': ('p2_fifty_asset_source', (
+        'organic_original_natural_reference_raster_decoded',
+        'organic_species_or_material_named_in_contract',
+    )),
+    'AAA-200-I-082': ('p2_fifty_asset_source', (
+        'original_organic_primary_volume_glb_parsed',
+        'original_organic_target_extent_numeric',
+    )),
+    'AAA-200-I-083': ('p2_fifty_asset_source', (
+        'native_editable_original_bytes_preserved',
+        'organic_original_sculpt_method_declared',
+    )),
+    'AAA-200-I-084': ('p2_fifty_asset_source', (
+        'organic_original_placement_seed_source_recorded',
+        'original_natural_placement_reference_decoded',
+    )),
+    'AAA-200-I-085': ('p2_fifty_asset_source', (
+        'native_original_organic_bbox_present',
+        'two_distinct_original_organic_qa_views_decoded',
+    )),
+    'AAA-200-I-086': ('p2_fifty_asset_source', (
+        'source_erosion_material_category_declared',
+        'original_erosion_detail_raster_decoded',
+    )),
+    'AAA-200-I-087': ('p2_fifty_asset_source', (
+        'original_baseline_organic_model_bytes_reopened',
+        'original_nonidentical_organic_after_output',
+    )),
+    'AAA-200-I-088': ('p2_fifty_asset_source', (
+        'original_terrain_contact_survey_file_read',
+        'native_original_organic_local_zmin_recorded',
+    )),
+    'AAA-200-I-089': ('p2_fifty_asset_source', (
+        'original_org_poly_budget_numeric',
+        'actual_original_GLTF_triangles_within_budget',
+    )),
+    'AAA-200-I-090': ('p2_fifty_asset_source', (
+        'real_panorama_and_closeup_image_bytes_decoded',
+        'original_organic_group_count_declared',
+    )),
+    'AAA-200-J-091': ('p2_fifty_asset_source', (
+        'original_species_name_and_location_recorded',
+        'actual_original_species_photo_image_decoded',
+    )),
+    'AAA-200-J-092': ('p2_fifty_asset_source', (
+        'original_botanical_height_target_numeric',
+        'real_GLTF_local_plant_height_reparsed',
+    )),
+    'AAA-200-J-093': ('p2_fifty_asset_source', (
+        'original_branch_hierarchy_defined',
+        'native_original_GLTF_geometry_read',
+    )),
+    'AAA-200-J-094': ('p2_fifty_asset_source', (
+        'original_branch_growth_direction_rules_defined',
+        'actual_original_three_view_images_decoded',
+    )),
+    'AAA-200-J-095': ('p2_fifty_asset_source', (
+        'original_leaf_card_R_G_B_A_PNG_bytes_decoded',
+        'original_alpha_foliage_method_defined',
+    )),
+    'AAA-200-J-096': ('p2_fifty_asset_source', (
+        'actual_original_leaf_texture_alpha_channels_present',
+        'original_transparency_target_declared',
+    )),
+    'AAA-200-J-097': ('p2_fifty_asset_source', (
+        'real_front_side_botanical_views_nonidentical',
+        'original_botanical_reference_photo_present',
+    )),
+    'AAA-200-J-098': ('p2_fifty_asset_source', (
+        'original_variation_asset_ids_listed',
+        'real_editable_vegetation_source_preserved',
+    )),
+    'AAA-200-J-099': ('p2_fifty_asset_source', (
+        'original_LOD_distance_thresholds_numeric',
+        'second_original_LOD_native_GLTF_reopened',
+    )),
+    'AAA-200-J-100': ('p2_fifty_asset_source', (
+        'native_original_fivem_wind_test_receipt_present',
+        'original_gameplay_vegetation_reference_image_decoded',
+    )),
+    'AAA-200-K-101': ('p2_fifty_asset_source', (
+        'original_survey_file_SHA_and_bytes_authenticated',
+        'original_four_numeric_world_points_checked',
+    )),
+    'AAA-200-K-102': ('p2_fifty_asset_source', (
+        'original_survey_elevation_samples_available',
+        'missing_water_height_is_not_silently_approximated',
+    )),
+    'AAA-200-K-103': ('p2_fifty_asset_source', (
+        'source_terrain_material_classes_named',
+        'water_level_from_original_numeric_source',
+    )),
+    'AAA-200-K-104': ('p2_fifty_asset_source', (
+        'original_source_contours_uploaded_as_bytes',
+        'actual_original_GLTF_terrain_extent_parsed',
+    )),
+    'AAA-200-K-105': ('p2_fifty_asset_source', (
+        'original_plan_path_geometry_file_reopened',
+        'terrain_reference_camera_aerial_decoded',
+    )),
+    'AAA-200-K-106': ('p2_fifty_asset_source', (
+        'original_landings_and_bridge_anchors_declared',
+        'real_original_path_GLTF_extent_parsed',
+    )),
+    'AAA-200-K-107': ('p2_fifty_asset_source', (
+        'original_waterline_quay_reference_photo_decoded',
+        'original_terrain_source_has_waterline_number',
+    )),
+    'AAA-200-K-108': ('p2_fifty_asset_source', (
+        'original_water_terrain_boulder_contact_ids',
+        'original_terrain_survey_elevations_verified',
+    )),
+    'AAA-200-K-109': ('p2_fifty_asset_source', (
+        'original_bridge_world_anchor_names_recorded',
+        'water_surface_local_height_contract_present',
+    )),
+    'AAA-200-K-110': ('p2_fifty_asset_source', (
+        'original_water_visual_runtime_scene_image_decoded',
+        'original_water_position_numeric_contract_read',
+    )),
     'AAA-200-B-011': ('b_nine_source', (
         'original_asset_purpose_matches_work',
         'intended_game_use_and_output_named',
@@ -749,7 +949,9 @@ def build_packet(source_context, rule_id, *, expected=None):
     domain, criteria = NATIVE_RULES[rule_id]
     # Import domain readers only after reviewed enrollment has initialized;
     # the existing evidence modules import approved_validators indirectly.
-    if domain == 'b_nine_source':
+    if domain == 'p2_fifty_asset_source':
+        from c07_p2_fifty_asset_type_domain import inspect
+    elif domain == 'b_nine_source':
         from c07_p0_planning_semantics import inspect
     elif domain == 'ac_twenty_source':
         from c07_a10_c10_original_evidence import inspect
@@ -917,11 +1119,41 @@ def build_packet(source_context, rule_id, *, expected=None):
         report = inspect(inv, plan, controller, asset, step, work,
                          source_loader=loader)
     source = report['rules'][rule_id]
-    checks = dict(source['native_original_file_criteria'] if domain == 'ac_twenty_source'
+    checks = dict(source['original_native_domain_predicates'] if domain == 'p2_fifty_asset_source'
+                  else source['native_original_file_criteria'] if domain == 'ac_twenty_source'
                   else source['original_native_measured_criteria'] if domain == 'p1'
                   else source['original_machine_checks'])
     # A/C: all 60 rule-specific original-source observations are replayed in
     # one canonical P0 report, with no artistic/license/owner/MG0 promotion.
+    p2_fifty_review = report if domain == 'p2_fifty_asset_source' else None
+    if p2_fifty_review is not None:
+        from c07_p2_fifty_asset_type_domain import IDS as p2_ids
+        need(set(p2_fifty_review['rules'])==set(p2_ids) and
+             p2_fifty_review['canonical_source_rule_count']==50 and
+             p2_fifty_review['named_domain_probes']==100 and
+             p2_fifty_review['full_semantic_passes']==0 and
+             p2_fifty_review['individual_mg0_passes']==0 and
+             p2_fifty_review['advancement_authorized'] is False and
+             p2_fifty_review['asset_type']==work['asset_type'] and
+             p2_fifty_review['actual_due_rules']==
+               (20 if work['asset_type']=='architecture' else 10) and
+             p2_fifty_review['other_asset_type_rules']==
+               (30 if work['asset_type']=='architecture' else 40) and
+             source['applicability']=='DUE' and
+             source['current_asset_type']==work['asset_type'] and
+             source['full_rule_semantics']=='UNKNOWN' and
+             source['individual_mg0']=='UNKNOWN' and
+             source['advancement_authorized'] is False and
+             all(v['full_rule_semantics']==
+                 ('UNKNOWN' if v['applicability']=='DUE' else 'NOT_DUE')
+                 and v['individual_mg0']==
+                 ('UNKNOWN' if v['applicability']=='DUE' else 'NOT_DUE')
+                 and v['advancement_authorized'] is False and
+                 (bool(v['original_native_domain_predicates']) if
+                  v['applicability']=='DUE' else
+                  not v['original_native_domain_predicates'])
+                 for v in p2_fifty_review['rules'].values()),
+             'C07_P2_FIFTY_NO_NOT_APPLICABLE_OR_FULL_PROMOTION')
     b_nine_review = report if domain == 'b_nine_source' else None
     if b_nine_review is not None:
         from c07_p0_planning_semantics import IDS as b_ids
@@ -1103,6 +1335,9 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if p2_fifty_review is not None:
+        proof['original_p2_fifty_asset_type_source_rule'] = p2_fifty_review['rules'][rule_id]
+        proof['original_p2_fifty_asset_type_macro_sha256'] = judgment.digest(p2_fifty_review)
     if b_nine_review is not None:
         proof['original_b_nine_planning_source_rule'] = b_nine_review['rules'][rule_id]
         proof['original_b_nine_planning_source_digest'] = judgment.digest(b_nine_review)
