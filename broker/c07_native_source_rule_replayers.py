@@ -936,9 +936,6 @@ def build_packet(source_context, rule_id, *, expected=None):
                  for v in b_nine_review['rules'].values()),
              'C07_B_NINE_PLANNING_SOURCE_ONLY_ORIGINAL_REPLAY_GUARD')
     ac_twenty_review = report if domain == 'ac_twenty_source' else None
-    if b_nine_review is not None:
-        proof['original_b_nine_planning_source_rule'] = b_nine_review['rules'][rule_id]
-        proof['original_b_nine_planning_source_digest'] = judgment.digest(b_nine_review)
     if ac_twenty_review is not None:
         from c07_a10_c10_original_evidence import IDS as ac_ids
         need(set(ac_twenty_review['rules'])==set(ac_ids) and
@@ -1106,6 +1103,9 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if b_nine_review is not None:
+        proof['original_b_nine_planning_source_rule'] = b_nine_review['rules'][rule_id]
+        proof['original_b_nine_planning_source_digest'] = judgment.digest(b_nine_review)
     if ac_twenty_review is not None:
         proof['original_ac_twenty_macro_rule'] = ac_twenty_review['rules'][rule_id]
         proof['original_ac_twenty_macro_digest'] = judgment.digest(ac_twenty_review)
