@@ -132,6 +132,13 @@ class NativeRuleBackend:
                 from c07_r171_r180_more_reviewed_native import native_rule_readback
                 native_rule_readback(self.api, packet, expected, spec,
                                      self.local_source_context)
+            elif rule in (
+                    'AAA-200-R-173','AAA-200-R-175','AAA-200-R-177'):
+                need(type(self.local_source_context) is dict,
+                     'JUDGMENT_R173_R175_R177_ORIGINAL_CONTEXT_REQUIRED')
+                from c07_r173_r175_r177_reviewed_native import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec,
+                                     self.local_source_context)
             elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
                 from r173_rule_semantics import native_rule_readback
                 native_rule_readback(self.api, packet, expected, spec)
