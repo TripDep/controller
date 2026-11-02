@@ -774,6 +774,22 @@ def build_packet(source_context, rule_id, *, expected=None):
     source = report['rules'][rule_id]
     checks = dict(source['original_native_measured_criteria'] if domain == 'p1'
                   else source['original_machine_checks'])
+    # Six original P4 lighting/visual obligations are evaluated as one
+    # independent source macro; their source-only results do NOT promote any
+    # untrusted renderer/owner claims to FULL or MG0.
+    p4_n_six_review = None
+    if rule_id in (
+        'AAA-200-N-133', 'AAA-200-N-134', 'AAA-200-N-135',
+        'AAA-200-N-136', 'AAA-200-N-139', 'AAA-200-N-140'):
+        from c07_p4_n_six_original_light_macro import inspect as review_n_six
+        p4_n_six_review = review_n_six(source_context, rule_id)
+        need(p4_n_six_review['rule_id']==rule_id and
+             p4_n_six_review['original_audit_sha256']==
+                report['original_audit_sha256'] and
+             p4_n_six_review['attempt_id']==work['attempt_id'] and
+             p4_n_six_review['operation_sha256']==work['operation_sha256'] and
+             p4_n_six_review['advancement_authorized'] is False,
+             'C07_N_SIX_SOURCE_REPLAY_BINDING_INVALID')
     topology_review = None
     if domain == 'topology' and rule_id in (
             'AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
@@ -833,6 +849,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if p4_n_six_review is not None:
+        proof['original_p4_n_six_lighting_qa_macro'] = p4_n_six_review
     if topology_review is not None:
         proof['original_topology_review'] = topology_review
     if p5_review is not None:
