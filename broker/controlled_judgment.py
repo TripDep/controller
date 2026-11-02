@@ -107,8 +107,13 @@ class ControlledJudgment:
             active = st.get('active_step')
             j.need(st.get('d_authorized') and active and active['category'] == 'STATUS',
                    'CONTROLLED_PLAN_REQUIRES_AUTHORIZED_STATUS')
-            j.need(set(plan) in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
+            from c07_plan_evidence_contracts import (
+                ALL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
+            )
+            base_keys = set(plan) - ALL_EVIDENCE_CONTEXT
+            j.need(base_keys in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
                    set(plan['operation']) == OP_KEYS, 'CONTROLLED_PLAN_SCHEMA')
+            validate_pre_d_evidence(plan, self.inventory)
             self.verify_question_context(plan)
             j.need(plan['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
             j.need(plan['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
@@ -146,6 +151,14 @@ class ControlledJudgment:
         j.need(len(closed) == 1 and closed[0]['result'] == 'PASS', 'CONTROLLED_PLAN_NOT_APPROVED')
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
+        from c07_plan_evidence_contracts import (
+            ALL_EVIDENCE_CONTEXT, validate as validate_pre_d_evidence,
+        )
+        base_keys = set(row['plan']) - ALL_EVIDENCE_CONTEXT
+        j.need(base_keys in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
+               set(row['plan']['operation']) == OP_KEYS,
+               'CONTROLLED_ENROLLED_PLAN_SCHEMA')
+        validate_pre_d_evidence(row['plan'], self.inventory)
         self.verify_question_context(row['plan'])
         from approved_validators import validate as validate_reviewed
         validate_reviewed(row['plan']['enrolled'],self.inventory)
@@ -172,6 +185,43 @@ class ControlledJudgment:
         j.need(full.resolve().is_relative_to(self.c.root) and full.is_file() and
                not any(x.is_symlink() for x in (full, *full.parents)), 'CONTROLLED_DEPENDENCY_PATH')
         return full
+
+    def native_source_context(self, expected, work, plan):
+        """Read-only original-byte source context, supplied by the consumer.
+
+        A Git workflow does not acquire this context by asserting a path or
+        a PASS. The current Controller's locked state and original files are
+        mandatory; missing Library-mounted originals leave the rule UNKNOWN.
+        """
+        j.need(type(expected) is dict and type(work) is dict and
+               type(plan) is dict and expected.get('rule_id') in
+               self.inventory['rules'] and
+               j.binding(work, self.inventory['rules'][expected['rule_id']],
+                         expected['rule_id']) == expected and
+               plan['phase'] == work['phase'] and
+               plan['master_sha256'] == work['master_sha256'] and
+               self.c.master_identity()['sha256'] == work['master_sha256'],
+               'CONTROLLED_NATIVE_ORIGINAL_CONTEXT_CHANGED')
+        state = self.c.asset_state(self.asset)
+        active = state.get('active_step')
+        j.need(type(active) is dict and type(active.get('step')) is str and
+               self.c.verify_audit_chain(self.asset)['ok'],
+               'CONTROLLED_NATIVE_CURRENT_AUDIT_OR_STEP_MISSING')
+        root = self.c.root.resolve()
+        def source_loader(path):
+            j.need(type(path) is str and path and Path(path).is_absolute(),
+                   'CONTROLLED_NATIVE_ORIGINAL_PATH')
+            p = Path(path)
+            j.need(p.resolve().is_relative_to(root) and p.is_file() and
+                   not p.is_symlink() and
+                   not any(parent.is_symlink() for parent in p.parents
+                           if parent != root and parent.is_relative_to(root)),
+                   'CONTROLLED_NATIVE_ORIGINAL_PATH_OUTSIDE_ROOT')
+            return p.read_bytes()
+        return {'inventory': self.inventory, 'plan': plan,
+                'controller': self.c, 'asset': self.asset,
+                'step': active['step'], 'work': work,
+                'source_loader': source_loader}
 
     def contexts(self):
         return {role: context.validate(json.loads(self.local_file(path).read_text()))
@@ -568,7 +618,9 @@ class ControlledJudgment:
                        mg0_batch['failed_rule_ids'][0])
             current = self.contexts()
             decision = j.native_decision(self.api, origin, plan['issuer'])
-            backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+            backend = j.NativeRuleBackend(self.api, plan['enrolled'],
+                source_context=lambda expected: self.native_source_context(
+                    expected, work, plan))
             fresh = j.judge(self.inventory, work, offers, backend, current_contexts=current,
                             previous_contexts=previous['contexts'] if previous else None,
                             previous_decision=prior_decision)
@@ -1087,6 +1139,51 @@ class ControlledJudgment:
                     source_rules_examined=2,
                     full_work_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # Nine B-011/B-013..B-020 literal P0 planning oracles.
+                # Original JSON is parsed semantically; reused source files
+                # are reopened under the Controller root and SHA-verified.
+                # Missing planning evidence remains UNKNOWN, never PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P0','P1','P2','P3','P4','P5','P6','P7','P8'):
+                    from c07_p0_planning_semantics import (
+                        IDS as P0_PLANNING_IDS, inspect as inspect_p0_planning)
+                    p0_planning = inspect_p0_planning(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p0_planning['source_rule_count'] == 9
+                           and set(p0_planning['rules']) == set(P0_PLANNING_IDS)
+                           and p0_planning['full_rule_semantic_passes'] == 0
+                           and p0_planning['individual_mg0_passes'] == 0
+                           and p0_planning['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p0_planning['rules'].values()),
+                           'CONTROLLED_P0_ORIGINAL_PLANNING_FALSE_PASS')
+                    if p0_planning['original_registered_planning_documents']:
+                        # A registered ORIGINAL project brief with a different
+                        # asset is a concrete cross-asset source contradiction.
+                        # Absence of a brief remains UNKNOWN, not invented FAIL.
+                        if 'P0_PROJECT_BRIEF' in p0_planning[
+                                'original_registered_planning_documents']:
+                            j.need(p0_planning['rules']['AAA-200-B-011'][
+                                'original_machine_checks'][
+                                'original_asset_purpose_matches_work'] is True,
+                                'CONTROLLED_P0_ORIGINAL_PROJECT_BRIEF_WRONG_ASSET')
+                        self.append('SUPERVISOR_C07_P0_NINE_ORIGINAL_PLANNING_ORACLES',
+                            step=step,attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p0_planning['original_audit_sha256'],
+                            original_audit_tail=p0_planning['original_audit_tail'],
+                            source_rule_ids=list(P0_PLANNING_IDS),
+                            source_original_roles=p0_planning[
+                                'original_registered_planning_documents'],
+                            original_rule_machine_checks=p0_planning['rules'],
+                            machine_positive_obligations=p0_planning[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
@@ -1294,6 +1391,531 @@ class ControlledJudgment:
                         future_phase_rules=native_p345['future_phase_rule_count'],
                         full_rule_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                # Source-specific P3 triangle semantics: parse actual original
+                # registered vertices, faces and normals. A receipt, a claimed
+                # topology QA PASS or an exit code cannot substitute this scan.
+                # Its four machine observations are not full rule or MG0 PASS.
+                if plans[0]['plan'].get('phase') in R146_PHASES:
+                    from c07_p3_geometry_semantics import (
+                        IDS as P3_TRIANGLE_IDS, inspect as inspect_p3_triangles)
+                    p3_triangles = inspect_p3_triangles(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p3_triangles['source_rule_count'] == 4
+                           and set(p3_triangles['rules']) == set(P3_TRIANGLE_IDS)
+                           and p3_triangles['full_rule_semantic_passes'] == 0
+                           and p3_triangles['individual_mg0_passes'] == 0
+                           and p3_triangles['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p3_triangles['rules'].values()),
+                           'CONTROLLED_P3_ORIGINAL_TRIANGLE_FALSE_MG0_PASS')
+                    if p3_triangles['original_mesh_metrics'] is not None:
+                        self.append('SUPERVISOR_C07_P3_ORIGINAL_TRIANGLE_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p3_triangles['original_audit_sha256'],
+                            original_audit_tail=p3_triangles['original_audit_tail'],
+                            source_rule_ids=list(P3_TRIANGLE_IDS),
+                            original_mesh_metrics=p3_triangles['original_mesh_metrics'],
+                            machine_positive_obligations=p3_triangles[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                        j.need(p3_triangles['totals']['degenerate_triangles'] == 0,
+                               'CONTROLLED_P3_REAL_DEGENERATE_TRIANGLES_FOUND')
+                        # A geometrically identical source face appears twice
+                        # in the actual GLB; this is a measurable duplicate,
+                        # not a visual opinion or self-reported QA outcome.
+                        j.need(p3_triangles['totals']['duplicate_geometric_faces'] == 0,
+                               'CONTROLLED_P3_ORIGINAL_DUPLICATE_FACES_FOUND')
+                # Three literal P3 UV rules: independent distortion,
+                # actual embedded texture texel density and UV pair overlap.
+                # Registered original bytes and pre-D pins are mandatory.
+                if plans[0]['plan'].get('phase') in R146_PHASES:
+                    from c07_p3_uv_semantics import (
+                        IDS as P3_UV_IDS, inspect as inspect_p3_uv)
+                    p3_uv = inspect_p3_uv(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p3_uv['source_rule_count'] == 3
+                           and set(p3_uv['rules']) == set(P3_UV_IDS)
+                           and p3_uv['full_rule_semantic_passes'] == 0
+                           and p3_uv['individual_mg0_passes'] == 0
+                           and p3_uv['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p3_uv['rules'].values()),
+                           'CONTROLLED_P3_ORIGINAL_UV_FALSE_MG0_PASS')
+                    if p3_uv['original_uv_metrics']['triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P3_ORIGINAL_UV_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p3_uv['original_audit_sha256'],
+                            original_audit_tail=p3_uv['original_audit_tail'],
+                            source_rule_ids=list(P3_UV_IDS),
+                            original_uv_metrics=p3_uv['original_uv_metrics'],
+                            original_rule_machine_checks=p3_uv['rules'],
+                            machine_positive_obligations=p3_uv[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Three additional literal P3 atlas, normal-bake source
+                # and geometry-vs-reference oracles. Owner approval of a
+                # reference cannot be inferred from a file name or hash.
+                if plans[0]['plan'].get('phase') in R146_PHASES:
+                    from c07_p3_finalization_semantics import (
+                        IDS as P3_FINAL_IDS, inspect as inspect_p3_final)
+                    p3_final = inspect_p3_final(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p3_final['source_rule_count'] == 3
+                           and set(p3_final['rules']) == set(P3_FINAL_IDS)
+                           and p3_final['full_rule_semantic_passes'] == 0
+                           and p3_final['individual_mg0_passes'] == 0
+                           and p3_final['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p3_final['rules'].values()),
+                           'CONTROLLED_P3_FINALIZATION_FALSE_OWNER_PASS')
+                    if p3_final['metrics']['native_triangles']:
+                        self.append('SUPERVISOR_C07_P3_ORIGINAL_FINALIZATION',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p3_final['original_audit_sha256'],
+                            original_audit_tail=p3_final['original_audit_tail'],
+                            source_rule_ids=list(P3_FINAL_IDS),
+                            original_finalization_metrics=p3_final['metrics'],
+                            original_rule_machine_checks=p3_final['rules'],
+                            machine_positive_obligations=p3_final[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Four literal P4 material predicates: actual exported
+                # PBR factors, physical class assignments and PNG map links.
+                # Source-bound observations never grant owner/MG0 approval.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_material_semantics import (
+                        IDS as P4_MATERIAL_IDS, inspect as inspect_p4_material)
+                    p4_material = inspect_p4_material(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_material['source_rule_count'] == 4
+                           and set(p4_material['rules']) == set(P4_MATERIAL_IDS)
+                           and p4_material['full_rule_semantic_passes'] == 0
+                           and p4_material['individual_mg0_passes'] == 0
+                           and p4_material['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p4_material['rules'].values()),
+                           'CONTROLLED_P4_ORIGINAL_MATERIAL_FALSE_PASS')
+                    if p4_material['original_material_metrics'][
+                            'exported_materials'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_PBR_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_material['original_audit_sha256'],
+                            original_audit_tail=p4_material['original_audit_tail'],
+                            source_rule_ids=list(P4_MATERIAL_IDS),
+                            original_material_metrics=p4_material[
+                                'original_material_metrics'],
+                            original_rule_machine_checks=p4_material['rules'],
+                            machine_positive_obligations=p4_material[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Six literal P4 texture and lighting source oracles:
+                # reconstruct original embedded PNG pixels, measure real
+                # variance and compare independently registered light views.
+                # Pixel variation never implies artistic/RAGE/owner MG0 PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_texture_semantics import (
+                        IDS as P4_PIXEL_IDS, inspect as inspect_p4_pixels)
+                    p4_pixels = inspect_p4_pixels(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_pixels['source_rule_count'] == 6
+                           and set(p4_pixels['rules']) == set(P4_PIXEL_IDS)
+                           and p4_pixels['full_rule_semantic_passes'] == 0
+                           and p4_pixels['individual_mg0_passes'] == 0
+                           and p4_pixels['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p4_pixels['rules'].values()),
+                           'CONTROLLED_P4_PIXEL_FALSE_FULL_PASS')
+                    if p4_pixels['metrics']['decoded_original_textures'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_PIXEL_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_pixels['original_audit_sha256'],
+                            original_audit_tail=p4_pixels['original_audit_tail'],
+                            source_rule_ids=list(P4_PIXEL_IDS),
+                            original_pixel_metrics=p4_pixels['metrics'],
+                            original_rule_machine_checks=p4_pixels['rules'],
+                            machine_positive_obligations=p4_pixels[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # N-131..140 original pixel lighting, camera-view and
+                # technical QA observations; no owner/FiveM/MG0 certification.
+                if plans[0]['plan'].get('phase') in (
+                        'P4','P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p4_lighting_semantics import (
+                        IDS as P4_LIGHT_IDS, inspect as inspect_p4_light)
+                    p4_light = inspect_p4_light(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p4_light['source_rule_count'] == 10
+                           and set(p4_light['rules']) == set(P4_LIGHT_IDS)
+                           and p4_light['full_rule_semantic_passes'] == 0
+                           and p4_light['individual_mg0_passes'] == 0
+                           and p4_light['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p4_light['rules'].values()),
+                           'CONTROLLED_P4_LIGHTING_FALSE_MG0_PASS')
+                    if p4_light['metrics']['decoded_view_count'] > 0:
+                        self.append('SUPERVISOR_C07_P4_ORIGINAL_LIGHTING_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p4_light['original_audit_sha256'],
+                            original_audit_tail=p4_light['original_audit_tail'],
+                            source_rule_ids=list(P4_LIGHT_IDS),
+                            original_light_metrics=p4_light['metrics'],
+                            original_rule_machine_checks=p4_light['rules'],
+                            machine_positive_obligations=p4_light[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Five additional literal P5 quantitative oracles on original
+                # GLB, LOD, PNG bytes and pre-D SHA-pinned performance budget.
+                # This is read-only machine evidence, never full MG0 or QA.
+                if plans[0]['plan'].get('phase') in (
+                        'P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p5_budget_semantics import (
+                        IDS as P5_BUDGET_IDS, inspect as inspect_p5_budget)
+                    p5_budget = inspect_p5_budget(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p5_budget['source_rule_count'] == 5
+                           and set(p5_budget['rules']) == set(P5_BUDGET_IDS)
+                           and p5_budget['full_rule_semantic_passes'] == 0
+                           and p5_budget['individual_mg0_passes'] == 0
+                           and p5_budget['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p5_budget['rules'].values()),
+                           'CONTROLLED_P5_ORIGINAL_BUDGET_FALSE_PASS')
+                    if p5_budget['metrics']['triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P5_ORIGINAL_BUDGET_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p5_budget['original_audit_sha256'],
+                            original_audit_tail=p5_budget['original_audit_tail'],
+                            source_rule_ids=list(P5_BUDGET_IDS),
+                            measured_original_metrics=p5_budget['metrics'],
+                            original_rule_machine_checks=p5_budget['rules'],
+                            machine_positive_obligations=p5_budget[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Five additional P5 optimization observations on exact
+                # registered GLB/LOD/material bytes. Fake FPS samples never
+                # become independent FiveM evidence or individual MG0 PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P5','P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p5_optimization_semantics import (
+                        IDS as P5_OPTIMIZATION_IDS,
+                        inspect as inspect_p5_optimization)
+                    p5_optimization = inspect_p5_optimization(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p5_optimization['source_rule_count'] == 5
+                           and set(p5_optimization['rules']) ==
+                               set(P5_OPTIMIZATION_IDS)
+                           and p5_optimization['full_rule_semantic_passes'] == 0
+                           and p5_optimization['individual_mg0_passes'] == 0
+                           and p5_optimization['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p5_optimization['rules'].values()),
+                           'CONTROLLED_P5_OPTIMIZATION_FALSE_FULL_PASS')
+                    if p5_optimization['metrics']['native_triangles']:
+                        self.append('SUPERVISOR_C07_P5_ORIGINAL_OPTIMIZATION',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p5_optimization['original_audit_sha256'],
+                            original_audit_tail=p5_optimization['original_audit_tail'],
+                            source_rule_ids=list(P5_OPTIMIZATION_IDS),
+                            original_optimization_metrics=p5_optimization['metrics'],
+                            original_rule_machine_checks=p5_optimization['rules'],
+                            machine_positive_obligations=p5_optimization[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Four literal P6 collision rules: independent visual and
+                # collision GLB triangles, source-locked surface regions,
+                # measured complexity and conservative passage clearances.
+                # No gameplay collision, walkability or MG0 PASS is inferred.
+                if plans[0]['plan'].get('phase') in (
+                        'P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p6_collision_semantics import (
+                        IDS as P6_COLLISION_IDS, inspect as inspect_p6_collision)
+                    p6_collision = inspect_p6_collision(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p6_collision['source_rule_count'] == 4
+                           and set(p6_collision['rules']) == set(P6_COLLISION_IDS)
+                           and p6_collision['full_rule_semantic_passes'] == 0
+                           and p6_collision['individual_mg0_passes'] == 0
+                           and p6_collision['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p6_collision['rules'].values()),
+                           'CONTROLLED_P6_ORIGINAL_COLLISION_FALSE_MG0_PASS')
+                    if p6_collision['original_collision_metrics'][
+                            'collision_triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P6_ORIGINAL_COLLISION_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p6_collision['original_audit_sha256'],
+                            original_audit_tail=p6_collision['original_audit_tail'],
+                            source_rule_ids=list(P6_COLLISION_IDS),
+                            original_collision_metrics=p6_collision[
+                                'original_collision_metrics'],
+                            original_rule_machine_checks=p6_collision['rules'],
+                            machine_positive_obligations=p6_collision[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Original P-155..160 geometry, terrain, walkability, vehicle;
+                # untrusted runtime logs never attest FiveM or MG0.
+                if plans[0]['plan'].get('phase') in (
+                        'P6','P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p6_walkability_semantics import (
+                        IDS as P6_WALK_IDS, inspect as inspect_p6_walk)
+                    p6_walk = inspect_p6_walk(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p6_walk['source_rule_count'] == 6
+                           and set(p6_walk['rules']) == set(P6_WALK_IDS)
+                           and p6_walk['full_rule_semantic_passes'] == 0
+                           and p6_walk['individual_mg0_passes'] == 0
+                           and p6_walk['advancement_authorized'] is False
+                           and p6_walk['rules']['AAA-200-P-160'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT'
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p6_walk['rules'].values()),
+                           'CONTROLLED_P6_WALKABILITY_FALSE_GAME_MG0_PASS')
+                    if p6_walk['metrics']['collision_triangles'] > 0:
+                        self.append('SUPERVISOR_C07_P6_ORIGINAL_WALKABILITY_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p6_walk['original_audit_sha256'],
+                            original_audit_tail=p6_walk['original_audit_tail'],
+                            source_rule_ids=list(P6_WALK_IDS),
+                            original_geometry_metrics=p6_walk['metrics'],
+                            original_rule_machine_checks=p6_walk['rules'],
+                            machine_positive_obligations=p6_walk[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Four literal P8 delivery requirements: original source,
+                # exported GLB, complete ZIP members and exact version/SHA.
+                # CRC and parseable bytes never certify in-game usability.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_delivery_semantics import (
+                        IDS as P8_DELIVERY_IDS, inspect as inspect_p8_delivery)
+                    p8_delivery = inspect_p8_delivery(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_delivery['source_rule_count'] == 4
+                           and set(p8_delivery['rules']) == set(P8_DELIVERY_IDS)
+                           and p8_delivery['full_rule_semantic_passes'] == 0
+                           and p8_delivery['individual_mg0_passes'] == 0
+                           and p8_delivery['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in p8_delivery['rules'].values()),
+                           'CONTROLLED_P8_ORIGINAL_DELIVERY_FALSE_MG0_PASS')
+                    if p8_delivery['original_delivery_metrics'][
+                            'archive_member_count'] > 0:
+                        # Actual package bytes exist: a mismatched source or
+                        # export is a proven defect, not missing QA metadata.
+                        j.need(p8_delivery['original_delivery_metrics'][
+                                   'source_export_bytes_match'] is True,
+                               'CONTROLLED_P8_ORIGINAL_PACKAGE_SOURCE_EXPORT_MISMATCH')
+                        j.need(p8_delivery['rules']['AAA-200-T-194'][
+                                   'original_machine_checks'][
+                                   'original_manifest_asset_version_and_hashes_match'] is True,
+                               'CONTROLLED_P8_ORIGINAL_VERSION_OR_SHA_MISMATCH')
+                        j.need(p8_delivery['rules']['AAA-200-T-192'][
+                                   'original_machine_checks'][
+                                   'all_original_required_members_present'] is True,
+                               'CONTROLLED_P8_ORIGINAL_REQUIRED_MEMBER_MISSING')
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_DELIVERY_SEMANTICS',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_delivery['original_audit_sha256'],
+                            original_audit_tail=p8_delivery['original_audit_tail'],
+                            source_rule_ids=list(P8_DELIVERY_IDS),
+                            original_delivery_metrics=p8_delivery[
+                                'original_delivery_metrics'],
+                            original_rule_machine_checks=p8_delivery['rules'],
+                            machine_positive_obligations=p8_delivery[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Six additional literal P8 maintenance, disclosure,
+                # recurrent-defect and closure oracles. Registered JSON
+                # remains insufficient for final owner/MG0/runtime PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_closure_semantics import (
+                        IDS as P8_CLOSURE_IDS, inspect as inspect_p8_closure)
+                    p8_closure = inspect_p8_closure(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_closure['source_rule_count'] == 6
+                           and set(p8_closure['rules']) == set(P8_CLOSURE_IDS)
+                           and p8_closure['full_rule_semantic_passes'] == 0
+                           and p8_closure['individual_mg0_passes'] == 0
+                           and p8_closure['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p8_closure['rules'].values())
+                           and p8_closure['rules']['AAA-200-T-200'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT',
+                           'CONTROLLED_P8_FAKE_COMPLETION_OR_MG0_PASS')
+                    if p8_closure['metrics']['guide_bound']:
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_CLOSURE_EVIDENCE',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_closure['original_audit_sha256'],
+                            original_audit_tail=p8_closure['original_audit_tail'],
+                            source_rule_ids=list(P8_CLOSURE_IDS),
+                            original_closure_metrics=p8_closure['metrics'],
+                            original_rule_machine_checks=p8_closure['rules'],
+                            machine_positive_obligations=p8_closure[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Original S-181..190 six-view PNG, GLB and final QA facts.
+                # Producer reports cannot authorize MG0, runtime or owner PASS.
+                if plans[0]['plan'].get('phase') in (
+                        'P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p8_final_qa_semantics import (
+                        IDS as P8_FINAL_IDS, inspect as inspect_p8_final)
+                    p8_final = inspect_p8_final(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p8_final['source_rule_count'] == 10
+                           and set(p8_final['rules']) == set(P8_FINAL_IDS)
+                           and p8_final['full_rule_semantic_passes'] == 0
+                           and p8_final['individual_mg0_passes'] == 0
+                           and p8_final['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p8_final['rules'].values()),
+                           'CONTROLLED_P8_FINAL_QA_FALSE_MG0_PASS')
+                    if p8_final['metrics']['decoded_views'] > 0:
+                        self.append('SUPERVISOR_C07_P8_ORIGINAL_FINAL_QA_PROBES',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p8_final['original_audit_sha256'],
+                            original_audit_tail=p8_final['original_audit_tail'],
+                            source_rule_ids=list(P8_FINAL_IDS),
+                            original_qa_metrics=p8_final['metrics'],
+                            original_rule_machine_checks=p8_final['rules'],
+                            machine_positive_obligations=p8_final[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0,
+                            individual_mg0_passes=0,
+                            advancement_authorized=False)
+                # Ten literal P7 RAGE preflight predicates on original
+                # CodeWalker XML, pinned GLB vertex attributes, resource
+                # manifest, placement and image bytes. Source-labelled
+                # Sollumz/FiveM logs remain UNATTESTED and cannot pass MG0.
+                if plans[0]['plan'].get('phase') in (
+                        'P7','P8','VERIFY','G2','G3','G4','DELIVERY'):
+                    from c07_p7_rage_semantics import (
+                        IDS as P7_RAGE_IDS, inspect as inspect_p7_rage)
+                    p7_rage = inspect_p7_rage(
+                        self.inventory, plans[0]['plan'], self.c, self.asset,
+                        step, reserved_work,
+                        source_loader=lambda absolute: Path(absolute).read_bytes())
+                    j.need(p7_rage['source_rule_count'] == 10
+                           and set(p7_rage['rules']) == set(P7_RAGE_IDS)
+                           and p7_rage['full_rule_semantic_passes'] == 0
+                           and p7_rage['individual_mg0_passes'] == 0
+                           and p7_rage['advancement_authorized'] is False
+                           and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in p7_rage['rules'].values())
+                           and p7_rage['rules']['AAA-200-Q-170'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT'
+                           and p7_rage['rules']['AAA-200-Q-167'][
+                               'machine_scope'] == 'UNKNOWN_OR_DEFECT',
+                           'CONTROLLED_P7_FAKE_RAGE_FIVEM_OR_MG0_PASS')
+                    if p7_rage['metrics']['archetypes'] > 0:
+                        self.append('SUPERVISOR_C07_P7_ORIGINAL_RAGE_PREFLIGHT',
+                            step=step, attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=p7_rage['original_audit_sha256'],
+                            original_audit_tail=p7_rage['original_audit_tail'],
+                            source_rule_ids=list(P7_RAGE_IDS),
+                            original_rage_preflight_metrics=p7_rage['metrics'],
+                            original_rule_machine_checks=p7_rage['rules'],
+                            machine_positive_obligations=p7_rage[
+                                'machine_positive_obligations'],
+                            full_rule_semantic_passes=0, individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
@@ -1813,7 +2435,9 @@ class ControlledJudgment:
                             'action': 'STOP_CORRECT_RESUBMIT',
                             'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
                 post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
-                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'],
+                source_context=lambda expected: self.native_source_context(
+                    expected, work, plan))
                 fresh = j.judge(self.inventory, work, post_offers, post_backend,
                                 current_contexts=self.contexts(), previous_contexts=prior_context,
                                 previous_decision=prior_decision)

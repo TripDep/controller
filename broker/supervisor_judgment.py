@@ -65,7 +65,9 @@ def semantic_packet(packet,expected,spec):
     return {'result':result,'mg0':mg['result'],'semantic_scope':SEMANTIC_SCOPE,'proof_digest':digest(packet)}
 class NativeRuleBackend:
     synthetic=False
-    def __init__(self,api,enrolled):self.api=api;self.enrolled=enrolled;self.cache={}
+    def __init__(self,api,enrolled,*,source_context=None):
+        self.api=api;self.enrolled=enrolled;self.cache={}
+        self.source_context=source_context
     def rule(self,rule,expected,offer):
         spec=self.enrolled.get(rule)
         if spec is None:
@@ -110,13 +112,9 @@ class NativeRuleBackend:
             # No fall-through to a generic semantic_packet verifier. Every
             # reviewed ID must replay the underlying immutable source through
             # its own independent consuming-side implementation.
-            if rule == 'AAA-200-B-012':
-                from planning_semantics import native_rule_readback
-            elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
-                from r173_rule_semantics import native_rule_readback
-            else:
-                need(False, 'JUDGMENT_NO_NATIVE_SOURCE_REPLAYER_FOR_RULE')
-            native_rule_readback(self.api, packet, expected, spec)
+            from c07_native_replayer_dispatch import replay as replay_original_source
+            replay_original_source(self.api, packet, expected, spec,
+                                   source_context=self.source_context)
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):

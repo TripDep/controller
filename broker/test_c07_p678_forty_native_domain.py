@@ -147,4 +147,21 @@ class P678Forty(unittest.TestCase):
         x=self.review()
         self.assertEqual(x['rules']['AAA-200-T-200']['individual_mg0'],'UNKNOWN')
         self.assertEqual(x['rules']['AAA-200-S-190']['owner_acceptance'],'UNKNOWN')
+
+    def test_p678_original_json_rejects_duplicate_and_nonfinite_qa(self):
+        from c07_p678_forty_native_domain import obj
+        for raw in (
+            b'{"result":"FAIL","result":"PASS"}',
+            b'{"report":{"owner_approved":false,"owner_approved":true}}',
+            b'{"measurement":NaN}',
+            b'{"measurement":Infinity}',
+            b'{"measurement":-Infinity}',
+            b'{"measurement":1e999}',
+            b'{"measurement":-1e999}',
+            b'\xff',
+        ):
+            with self.subTest(raw=raw):
+                self.assertEqual(obj(raw),{})
+        self.assertEqual(obj(b'{"report":{"result":"FAIL"},"x":1.5}'),
+                         {'report':{'result':'FAIL'},'x':1.5})
 if __name__=='__main__':unittest.main()

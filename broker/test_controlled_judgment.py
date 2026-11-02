@@ -705,6 +705,37 @@ class Tests(unittest.TestCase):
             fcntl.flock(lock, fcntl.LOCK_EX)
             with self.assertRaisesRegex(j.Blocked, 'CONTROLLED_BUSY'): self.s.expected_work()
 
+    def test_source_specific_pre_d_contract_survives_real_status_enrollment(self):
+        # A genuine Controller STATUS record, not a fabricated plan fixture.
+        # Optional pre-D evidence is stored in the append-only plan and
+        # reopened after STATUS closes; it grants no independent rule/MG0 PASS.
+        self.plan['timebox_seconds'] = 3600
+        opened = self.c.begin('TEST', 'Enroll source evidence contract',
+                              'STATUS', [], [], 'unit', [])
+        record_hash = self.s.enroll_plan(self.plan)
+        self.assertEqual(len(record_hash), 64)
+        self.c.close('TEST', opened['step'], opened['token'],
+                     'PASS', 'unit', 'unit', [], True)
+        enrolled = self.s.plan()['plan']
+        self.assertEqual(enrolled['timebox_seconds'], 3600)
+        self.assertEqual(enrolled['operation']['category'], 'STATUS')
+        self.assertNotIn('mg0_pass', enrolled)
+
+    def test_malformed_pre_d_contract_denied_before_status_audit_append(self):
+        self.plan['p1_evidence_contract'] = {
+            'original_artifact_sha256': {'NATIVE_EXPORT': 'YES'}}
+        opened = self.c.begin('TEST', 'Attempt bad source contract',
+                              'STATUS', [], [], 'unit', [])
+        before = len(self.s.records())
+        from c07_plan_evidence_contracts import EvidenceContractBlocked
+        with self.assertRaisesRegex(EvidenceContractBlocked,
+                                    'ARTIFACT_PIN_SCHEMA'):
+            self.s.enroll_plan(self.plan)
+        self.assertEqual(len(self.s.records()), before)
+        self.c.close('TEST', opened['step'], opened['token'],
+                     'FAIL', 'rejected malformed original proof',
+                     'unit', [], True)
+
     def test_plan_cannot_be_enrolled_outside_governance_step(self):
         with self.assertRaisesRegex(j.Blocked, 'AUTHORIZED_STATUS'): self.s.enroll_plan(self.plan)
 

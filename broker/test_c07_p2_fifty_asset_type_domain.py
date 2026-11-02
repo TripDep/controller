@@ -178,6 +178,75 @@ class FiftyP2(unittest.TestCase):
         d=self.run_check()
         self.assertEqual(d['rules']['AAA-200-J-100']['full_rule_semantics'],'UNKNOWN')
         self.assertEqual(d['rules']['AAA-200-J-095']['individual_mg0'],'UNKNOWN')
+    def test_previous_attempt_qa_receipt_cannot_authorize_50_rule_batch(self):
+        # Original chain is valid and retains multiple attempts. A machine
+        # event name on the same step is not a current-attempt observation.
+        from test_c07_positive_native_process import canonical
+        from test_c07_positive_native_process import sha as original_sha
+
+        f=self.f
+        def append(event, *, attempt_id, operation_sha256, master_sha256):
+            ev={
+                'asset':f.asset,'event':event,
+                'prev_hash':f.records[-1]['record_hash'],
+                'step':f.step,'attempt_id':attempt_id,
+                'operation_sha256':operation_sha256,
+                'master_sha256':master_sha256,
+            }
+            ev['record_hash']=original_sha(canonical(ev))
+            f.records.append(ev)
+            f.controller.audit_path(f.asset).write_bytes(
+                b''.join(canonical(row)+b'\n' for row in f.records))
+            f.controller._state['last_audit_hash']=ev['record_hash']
+
+        rid='AAA-200-G-065'
+        key='native_original_normals_QA_receipt_available'
+        self.assertFalse(self.run_check()['rules'][rid][
+            'original_native_domain_predicates'][key])
+        append('NORMALS_WINDING_QA',attempt_id='f'*64,
+               operation_sha256=f.work['operation_sha256'],
+               master_sha256=f.work['master_sha256'])
+        self.assertFalse(self.run_check()['rules'][rid][
+            'original_native_domain_predicates'][key])
+        append('NORMALS_WINDING_QA',attempt_id=f.work['attempt_id'],
+               operation_sha256='f'*64,
+               master_sha256=f.work['master_sha256'])
+        self.assertFalse(self.run_check()['rules'][rid][
+            'original_native_domain_predicates'][key])
+        append('NORMALS_WINDING_QA',attempt_id=f.work['attempt_id'],
+               operation_sha256=f.work['operation_sha256'],
+               master_sha256='f'*64)
+        self.assertFalse(self.run_check()['rules'][rid][
+            'original_native_domain_predicates'][key])
+        append('NORMALS_WINDING_QA',attempt_id=f.work['attempt_id'],
+               operation_sha256=f.work['operation_sha256'],
+               master_sha256=f.work['master_sha256'])
+        proof=self.run_check()['rules'][rid]
+        self.assertTrue(proof['original_native_domain_predicates'][key])
+        self.assertEqual(proof['full_rule_semantics'],'UNKNOWN')
+        self.assertEqual(proof['individual_mg0'],'UNKNOWN')
+
+    def test_original_p2_source_json_rejects_duplicate_keys_and_nan(self):
+        from c07_p2_fifty_asset_type_domain import binary_json
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":5,"bevel_radius_mm":0}'),{})
+        self.assertEqual(binary_json(b'{"nested":{"z":1,"z":2}}'),{})
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":NaN}'),{})
+        self.assertEqual(binary_json(b'{"slope":-Infinity}'),{})
+        self.assertEqual(binary_json(b'{"bevel_radius_mm":5}'),
+                         {"bevel_radius_mm":5})
+        prior=self.run_check()
+        rid='AAA-200-G-063'
+        self.assertTrue(prior['rules'][rid]['original_native_domain_predicates'][
+            'original_explicit_bevel_radius_mm_in_arch_contract'])
+        self.add('P2_ARCH_CONTRACT','architecture.json',
+                 b'{"bevel_radius_mm":5,"bevel_radius_mm":5}')
+        self.rebuild()
+        tested=self.run_check()
+        self.assertFalse(tested['rules'][rid]['original_native_domain_predicates'][
+            'original_explicit_bevel_radius_mm_in_arch_contract'])
+        self.assertEqual(tested['rules'][rid]['full_rule_semantics'],'UNKNOWN')
+        self.assertEqual(tested['individual_mg0_passes'],0)
+
     def test_cross_attempt_replay_rejected(self):
         self.f.work=copy.deepcopy(self.f.work)
         self.f.work['attempt_id']='f'*64

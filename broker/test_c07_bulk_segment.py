@@ -45,7 +45,8 @@ class Tests(unittest.TestCase):
         got=sut.inspect(self.inv,self.plan,segment=2)
         self.assertEqual(got['counts']['DUE'],50)
         self.assertEqual(got['independent_current_asset_pass_count'],0)
-        self.assertEqual(got['counts']['MISSING_REVIEWED_POSITIVE_VERIFIER'],50)
+        self.assertEqual(got['counts']['MISSING_REVIEWED_POSITIVE_VERIFIER'],
+                         sum(rid not in sut.REVIEWED for rid in self.due))
         self.assertEqual(got['rules']['APPEND_ONLY_AUDIT']['machine_process_observation'],'UNOBSERVED')
     def test_missing_or_duplicate_canonical_ids_stop(self):
         self.inv['families']['EVERY'][-1]=self.inv['families']['EVERY'][0]

@@ -1,0 +1,431 @@
+"""Adversarial source-byte tests for twenty-five original-source native per-rule replayers.
+
+Synthetic fixtures prove the consumer recomputes actual original bytes and
+cannot turn UNKNOWN individual MG0 into a production PASS.
+"""
+import copy
+import unittest
+from pathlib import Path
+import test_c07_positive_native_process as original_fixture
+
+import supervisor_judgment as j
+import c07_mg0_individual as mg0
+from c07_native_source_rule_replayers import (
+    NATIVE_RULES, FULL_LITERAL_REVIEWED, VALIDATORS, build_packet, native_rule_readback,
+    NativeRuleEvidenceBlocked)
+from c07_native_replayer_dispatch import replay
+from test_c07_p3_geometry_semantics import Tests as GeometryFixture, glb, TRI, UP
+from test_c07_p1_thirty_native_domain import P1Thirty
+from test_c07_p3_uv_semantics import Tests as UVFixture
+from test_c07_p4_texture_semantics import Tests as TextureFixture
+from test_c07_p8_final_qa_semantics import Tests as FinalFixture
+from test_c07_p8_closure_semantics import Tests as ClosureFixture
+from test_c07_p5_budget_semantics import Tests as BudgetFixture, BUDGET
+from test_c07_p6_collision_semantics import Tests as CollisionFixture, POLICY, VISUAL
+from test_c07_p6_walkability_semantics import Tests as WalkFixture
+from test_c07_p8_delivery_semantics import Tests as DeliveryFixture, plan, package
+
+CASES = (
+    (UVFixture, 'AAA-200-L-115',
+     'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
+    (UVFixture, 'AAA-200-L-116',
+     'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
+    (UVFixture, 'AAA-200-L-117', 'test_three_actual_uv_oracles_are_not_full_rule_or_mg0'),
+    (TextureFixture, 'AAA-200-M-124', 'test_six_original_pixel_oracles_observed_not_approved'),
+    (TextureFixture, 'AAA-200-M-128', 'test_six_original_pixel_oracles_observed_not_approved'),
+    (FinalFixture, 'AAA-200-S-188',
+     'test_ten_distinct_original_scoped_observations_not_full_review'),
+    (FinalFixture, 'AAA-200-S-189', 'test_ten_distinct_original_scoped_observations_not_full_review'),
+    (ClosureFixture, 'AAA-200-T-196', 'test_five_scoped_observations_and_final_rule_unknown'),
+    (ClosureFixture, 'AAA-200-T-197', 'test_five_scoped_observations_and_final_rule_unknown'),
+    (P1Thirty, 'AAA-200-E-042', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (P1Thirty, 'AAA-200-E-047', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (P1Thirty, 'AAA-200-F-052', 'test_exact_30_individual_P1_and_90_unique_predicates'),
+    (GeometryFixture, 'AAA-200-L-111',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (GeometryFixture, 'AAA-200-L-113',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (GeometryFixture, 'AAA-200-L-114',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (GeometryFixture, 'AAA-200-L-112',
+     'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass'),
+    (BudgetFixture, 'AAA-200-O-141',
+     'test_five_original_quantitative_oracles_no_mg0'),
+    (CollisionFixture, 'AAA-200-P-151',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (CollisionFixture, 'AAA-200-P-152',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (CollisionFixture, 'AAA-200-P-153',
+     'test_four_real_collision_oracles_not_fivem_or_mg0'),
+    (WalkFixture, 'AAA-200-P-157',
+     'test_five_source_geometry_observations_runtime_unattested'),
+    (WalkFixture, 'AAA-200-P-158',
+     'test_five_source_geometry_observations_runtime_unattested'),
+    (WalkFixture, 'AAA-200-P-159',
+     'test_five_source_geometry_observations_runtime_unattested'),
+    (BudgetFixture, 'AAA-200-O-142',
+     'test_five_original_quantitative_oracles_no_mg0'),
+    (BudgetFixture, 'AAA-200-O-148',
+     'test_five_original_quantitative_oracles_no_mg0'),
+    (DeliveryFixture, 'AAA-200-T-192',
+     'test_four_original_delivery_oracles_no_false_fivem_pass'),
+    (DeliveryFixture, 'AAA-200-T-194',
+     'test_four_original_delivery_oracles_no_false_fivem_pass'),
+)
+
+def _complete_positive_coordinate_fixture(test, ctx, rid):
+    """Existing generic P1 fixture precedes E042's explicit metric-axis contract."""
+    if rid != 'AAA-200-E-042':
+        return
+    import json
+    from test_c07_p1_thirty_native_domain import encode
+    scene=json.loads(test.contents['P1_SCENE_CONTRACT'][1])
+    scene.update(meters_per_unit=1,
+                 native_to_world_axis_matrix=[[1,0,0],[0,1,0],[0,0,1]])
+    test.put('P1_SCENE_CONTRACT','p1_scene.json',encode(scene))
+    test.rebuild()
+    ctx['controller']=test.f.controller
+
+
+class NativeOriginalReplayerTests(unittest.TestCase):
+    def context(self, fixture_class, method):
+        test = fixture_class(method)
+        test.setUp()
+        self.addCleanup(test.doCleanups)
+        f = test.f
+        if isinstance(test, GeometryFixture):
+            # The original pre-D comparison target is an independently
+            # registered immutable GLB, never a producer verdict.
+            original = (f.root / 'scene.glb').read_bytes()
+            f.add_item('P3_APPROVED_REFERENCE', 'approved_reference.glb',
+                       original)
+            f.plan['p345_evidence_contract'] = {
+                'original_artifact_sha256': {
+                    role: f.items[role]['sha256']
+                    for role in ('NATIVE_EXPORT', 'P3_APPROVED_REFERENCE')}}
+        master = ('## MG0 — PROCESS FALSIFICATION\n' +
+            ''.join('- ' + trigger + '\n' for trigger in mg0.TRIGGERS) +
+            'The response is not limited to fixing the asset.\n' +
+            'invalidate affected states and reapply the corrected process\n').encode()
+        f.master = master
+        f.controller.master.write_bytes(master)
+        f.work.update(work_item_sha256='e'*64, attempt_number=1,
+                      previous_attempt_id=None)
+        f.work['master_sha256'] = f.plan['master_sha256'] = f.inv[
+            'canonical_master_sha256'] = j.evidence.sha256(master) if hasattr(
+                j.evidence, 'sha256') else __import__('hashlib').sha256(master).hexdigest()
+        f.rebuild()
+        if isinstance(test, FinalFixture):
+            test.add_critical()
+            finding = f.records[-1]
+            finding['attempt_id'] = f.work['attempt_id']
+            finding['operation_sha256'] = f.work['operation_sha256']
+            finding['record_hash'] = original_fixture.sha(
+                original_fixture.canonical({k: v for k, v in finding.items()
+                                            if k != 'record_hash'}))
+            f.controller.audit_path(f.asset).write_bytes(b''.join(
+                original_fixture.canonical(row) + b'\n'
+                for row in f.records))
+            f.controller._state['last_audit_hash'] = finding['record_hash']
+        return test, {
+            'inventory': f.inv, 'plan': f.plan,
+            'controller': f.controller, 'asset': f.asset,
+            'step': f.step, 'work': f.work,
+            'source_loader': lambda path: Path(path).read_bytes(),
+        }
+
+    def spec(self, ctx, rid):
+        row = ctx['inventory']['rules'][rid]
+        return {'validator_id': VALIDATORS[rid],
+                'criteria': list(NATIVE_RULES[rid][1]),
+                'requirement_sha256': row['requirement_sha256'],
+                'source_ref': '1'*40,
+                'issuer': {'workflow_blob': 'a'*40, 'public_sha': 'b'*40}}
+
+    def test_twenty_six_independent_source_specific_replayers_positive_source_unknown_mg0(self):
+        self.assertEqual(len(CASES), 27)
+        self.assertEqual(len(set(x[1] for x in CASES)), 27)
+        for fixture_class, rid, method in CASES:
+            with self.subTest(rule=rid):
+                test, ctx = self.context(fixture_class, method)
+                _complete_positive_coordinate_fixture(test, ctx, rid)
+                expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
+                packet = build_packet(ctx, rid, expected=expected)
+                self.assertEqual(packet['rule']['result'],
+                                 'PASS' if rid in FULL_LITERAL_REVIEWED else 'UNKNOWN')
+                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
+                self.assertEqual(packet['mg0']['triggered'], None)
+                self.assertEqual(set(packet['rule']['checks']),
+                                 set(NATIVE_RULES[rid][1]))
+                spec = self.spec(ctx, rid)
+                if rid in FULL_LITERAL_REVIEWED:
+                    result = replay(None, packet, expected, spec,
+                                    source_context=lambda binding: ctx)
+                    self.assertEqual(result['documentary_result'], 'PASS')
+                    self.assertEqual(result['individual_rule_mg0'], 'UNKNOWN')
+                    self.assertFalse(result['advancement_authorized'])
+                else:
+                    with self.assertRaisesRegex(ValueError, 'NOT_WHITELISTED'):
+                        replay(None, packet, expected, spec,
+                               source_context=lambda binding: ctx)
+                self.assertEqual(j.semantic_packet(packet, expected, spec)['result'],
+                                 'UNKNOWN')
+
+    def test_per_rule_adversarial_mutation_cannot_become_positive(self):
+        for fixture_class, rid, method in CASES:
+            with self.subTest(rule=rid):
+                test, ctx = self.context(fixture_class, method)
+                _complete_positive_coordinate_fixture(test, ctx, rid)
+                expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
+                packet = build_packet(ctx, rid, expected=expected)
+                spec = self.spec(ctx, rid)
+                forged = copy.deepcopy(packet)
+                forged['rule']['proof_digest'] = 'f'*64
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'PRODUCER_PACKET_NOT_RECOMPUTED'):
+                        native_rule_readback(None, forged, expected, spec,
+                                             source_context=lambda _: ctx)
+                wrong = dict(expected, attempt_id='f'*64)
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'ATTEMPT_OPERATION_SOURCE_MISMATCH'):
+                        native_rule_readback(None, packet, wrong, spec,
+                                             source_context=lambda _: ctx)
+                if rid in FULL_LITERAL_REVIEWED:
+                    with self.assertRaisesRegex(NativeRuleEvidenceBlocked,
+                                                'NO_INDEPENDENT_ORIGINAL_SOURCE_READER'):
+                        native_rule_readback(None, packet, expected, spec)
+                # Tampering the registered original bytes without an audit
+                # update must fail even when the producer packet is unchanged.
+                if rid == 'AAA-200-L-117':
+                    p = ctx['controller'].root / 'uv_policy.json'
+                elif rid == 'AAA-200-M-128':
+                    p = ctx['controller'].root / 'p4_policy.json'
+                elif rid == 'AAA-200-S-189':
+                    p = ctx['controller'].root / 'scene.glb'
+                elif rid == 'AAA-200-T-196':
+                    p = ctx['controller'].root / 'p8_test_matrix.json'
+                elif rid.startswith('AAA-200-E') or rid.startswith('AAA-200-F'):
+                    p = ctx['controller'].root / 'p1_scene.json'
+                elif rid.startswith('AAA-200-L'):
+                    p = ctx['controller'].root / 'scene.glb'
+                elif rid.startswith('AAA-200-O'):
+                    p = ctx['controller'].root / 'budget.json'
+                elif rid.startswith('AAA-200-P'):
+                    p = ctx['controller'].root / 'collision_policy.json'
+                else:
+                    p = ctx['controller'].root / 'scene.zip'
+                p.write_bytes(p.read_bytes() + b'forged')
+                with self.assertRaises(ValueError):
+                    build_packet(ctx, rid, expected=expected)
+
+    def test_three_topology_replayers_in_real_backend_independent_readback(self):
+        import json
+        from unittest.mock import patch
+        for rid in ('AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
+            with self.subTest(rule=rid):
+                _, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                expected = j.binding(ctx['work'], ctx['inventory']['rules'][rid], rid)
+                packet = build_packet(ctx, rid, expected=expected)
+                spec = self.spec(ctx, rid)
+                origin = {'run_id': 41, 'job_id': 42, 'run_attempt': 1,
+                          'head_sha': '8'*40}
+                def attempt(p):
+                    offer = {'native_origin': origin,
+                             'expected_packet_sha256': j.digest(p)}
+                    signed = ('2026-11-01T06:00:00Z ' + j.PREFIX +
+                              json.dumps(p, separators=(',', ':')))
+                    backend = j.NativeRuleBackend(
+                        object(), {rid: spec}, source_context=lambda _: ctx)
+                    with patch.object(j.evidence, 'native', return_value=signed):
+                        return backend.rule(rid, expected, offer)
+                observed = attempt(packet)
+                self.assertEqual(observed['result'], 'UNKNOWN')
+                self.assertEqual(observed['mg0'], 'UNKNOWN')
+                forged = copy.deepcopy(packet)
+                forged['rule']['proof_digest'] = 'f'*64
+                self.assertEqual(attempt(forged)['result'], 'UNKNOWN')
+                self.assertEqual(attempt(forged)['reason'],
+                                 'C07_REPLAYER_PRODUCER_PACKET_NOT_RECOMPUTED')
+
+    def test_original_topology_full_literals_reject_measured_defects(self):
+        from test_c07_p3_geometry_semantics import TRI, UP, glb
+        for rid, native, expected in (
+            ('AAA-200-L-111', glb(TRI, [(0,1,2),(2,1,0)], UP), 'FAIL'),
+            ('AAA-200-L-113', glb([(0,0,0),(1,0,0),(2,0,0)],
+                                   [(0,1,2)], UP), 'FAIL'),
+            ('AAA-200-L-114', glb(TRI, [(0,1,2)], [(0,0,-1)]*3),
+                                   'FAIL'),
+        ):
+            with self.subTest(rule=rid):
+                test, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                test.put(native)
+                ctx['plan']['p345_evidence_contract'][
+                    'original_artifact_sha256']['NATIVE_EXPORT'] = test.f.items['NATIVE_EXPORT']['sha256']
+                test.f.rebuild()
+                ctx['controller'] = test.f.controller
+                packet = build_packet(ctx, rid)
+                self.assertEqual(packet['rule']['result'], expected)
+                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
+
+    def test_original_topology_split_index_nonmanifold_is_not_hidden(self):
+        from test_c07_p3_geometry_semantics import glb
+        test, ctx = self.context(GeometryFixture,
+            'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+        points = [(0,0,0),(1,0,0),(0,1,0),
+                  (1,0,0),(0,0,0),(0,-1,0),
+                  (0,0,0),(1,0,0),(0,0,1)]
+        test.put(glb(points, [(0,1,2),(3,4,5),(6,7,8)],
+                     [(0,0,1)]*9))
+        ctx['plan']['p345_evidence_contract'][
+            'original_artifact_sha256']['NATIVE_EXPORT'] = (
+                test.f.items['NATIVE_EXPORT']['sha256'])
+        test.f.rebuild()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-111')[
+            'rule']['result'], 'FAIL')
+
+    def test_original_topology_reference_winding_and_geometry_forgery_fail(self):
+        from test_c07_p3_geometry_semantics import TRI, UP, glb
+        for rid, reference in (
+            ('AAA-200-L-113', glb([(0,0,0),(2,0,0),(0,1,0)],
+                                  [(0,1,2)], UP)),
+            ('AAA-200-L-114', glb(TRI, [(0,2,1)], UP)),
+        ):
+            with self.subTest(rule=rid):
+                test, ctx = self.context(GeometryFixture,
+                    'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+                test.f.add_item('P3_APPROVED_REFERENCE',
+                                'approved_reference.glb', reference)
+                ctx['plan']['p345_evidence_contract'][
+                    'original_artifact_sha256']['P3_APPROVED_REFERENCE'] = (
+                        test.f.items['P3_APPROVED_REFERENCE']['sha256'])
+                test.f.rebuild()
+                ctx['controller'] = test.f.controller
+                self.assertEqual(build_packet(ctx, rid)['rule']['result'], 'FAIL')
+
+    def test_original_topology_missing_reference_pin_is_unknown(self):
+        test, ctx = self.context(GeometryFixture,
+            'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+        ctx['plan']['p345_evidence_contract'][
+            'original_artifact_sha256'].pop('P3_APPROVED_REFERENCE')
+        test.f.rebuild()
+        ctx['controller'] = test.f.controller
+        for rid in ('AAA-200-L-113', 'AAA-200-L-114'):
+            with self.subTest(rule=rid):
+                packet = build_packet(ctx, rid)
+                self.assertEqual(packet['rule']['result'], 'UNKNOWN')
+                self.assertEqual(packet['mg0']['result'], 'UNKNOWN')
+
+    def test_native_rule_negative_originals_not_reinterpreted_as_pass(self):
+        test, ctx = self.context(GeometryFixture,
+            'test_four_real_per_rule_triangle_oracles_without_mg0_or_owner_pass')
+        test.put(glb(TRI, [(0,1,2), (2,1,0)], UP))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-112')['rule']['result'], 'FAIL')
+
+        for rid, key, bad in (
+            ('AAA-200-P-157', 'min_player_width_m', 2.0),
+            ('AAA-200-P-158', 'terrain_contact_regions', [
+                {'name':'remote','min_xyz':[8,8,8],'max_xyz':[9,9,9]}]),
+            ('AAA-200-P-159', 'min_vehicle_height_m', 4.0),
+        ):
+            test, ctx = self.context(WalkFixture,
+                'test_five_source_geometry_observations_runtime_unattested')
+            test.policy[key] = bad
+            test.put()
+            ctx['controller'] = test.f.controller
+            self.assertEqual(build_packet(ctx, rid)['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(UVFixture,
+            'test_three_actual_uv_oracles_are_not_full_rule_or_mg0')
+        from test_c07_p3_uv_semantics import uv_glb, QUAD
+        test.put(related=uv_glb(points=[(x+3,y,z) for x,y,z in QUAD],
+            uv=[(0,0),(2,0),(2,2),(0,2)]))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-116')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(UVFixture,
+            'test_three_actual_uv_oracles_are_not_full_rule_or_mg0')
+        from test_c07_p3_uv_semantics import uv_glb
+        test.put(native=uv_glb(uv=[(0,0),(1,0),(1,0.1),(0,0.1)]))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-L-115')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(CollisionFixture,
+            'test_four_real_collision_oracles_not_fivem_or_mg0')
+        test.put(policy=dict(POLICY,solid_surfaces=[{'name':'distant',
+            'min_xyz':[4,4,-1], 'max_xyz':[5,5,1]}]))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-151')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(CollisionFixture,
+            'test_four_real_collision_oracles_not_fivem_or_mg0')
+        test.put(collision=VISUAL)
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-152')['rule']['result'], 'FAIL')
+        self.assertEqual(build_packet(ctx, 'AAA-200-P-153')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(FinalFixture,
+            'test_ten_distinct_original_scoped_observations_not_full_review')
+        test.docs['P8_TEST_MATRIX']['tests'][2]['status'] = 'RUN'
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-S-188')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(ClosureFixture,
+            'test_five_scoped_observations_and_final_rule_unknown')
+        test.docs['P8_TEST_MATRIX']['tests'][0]['id'] = 'FAKE_TEST'
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-196')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(DeliveryFixture,
+            'test_four_original_delivery_oracles_no_false_fivem_pass')
+        test.put(archive=package(plan(), missing='scene.blend'))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-192')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(BudgetFixture,
+            'test_five_original_quantitative_oracles_no_mg0')
+        test.put(budget=dict(BUDGET, max_triangles=1))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-O-142')['rule']['result'], 'FAIL')
+        self.assertEqual(build_packet(ctx, 'AAA-200-O-141')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(TextureFixture,
+            'test_six_original_pixel_oracles_observed_not_approved')
+        test.policy['min_distinct_rgb'] = 1000
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-M-124')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(DeliveryFixture,
+            'test_four_original_delivery_oracles_no_false_fivem_pass')
+        test.put(archive=package(plan(), wrong_version=True))
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-194')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(FinalFixture,
+            'test_ten_distinct_original_scoped_observations_not_full_review')
+        finding = test.f.records[-1]
+        finding['attempt_id'] = 'f'*64
+        finding['record_hash'] = original_fixture.sha(original_fixture.canonical(
+            {k: v for k, v in finding.items() if k != 'record_hash'}))
+        test.f.controller.audit_path(test.f.asset).write_bytes(b''.join(
+            original_fixture.canonical(row) + b'\n' for row in test.f.records))
+        test.f.controller._state['last_audit_hash'] = finding['record_hash']
+        self.assertEqual(build_packet(ctx, 'AAA-200-S-189')['rule']['result'], 'FAIL')
+
+        test, ctx = self.context(ClosureFixture,
+            'test_five_scoped_observations_and_final_rule_unknown')
+        test.docs['P8_MAINTENANCE_GUIDE']['owner_approved'] = True
+        test.put()
+        ctx['controller'] = test.f.controller
+        self.assertEqual(build_packet(ctx, 'AAA-200-T-197')['rule']['result'], 'FAIL')
+
+if __name__ == '__main__':
+    unittest.main()

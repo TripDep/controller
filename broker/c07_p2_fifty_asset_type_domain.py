@@ -230,9 +230,19 @@ def npos(x):return type(x) in (int,float) and math.isfinite(x) and x>0
 def dict_nonempty(x):return type(x) is dict and bool(x)
 def aabb(g):return type(g) is dict and all(k in g for k in ('bbox_min','bbox_max','triangles'))
 def binary_json(raw):
+    # Duplicate JSON keys and NaN/Infinity are not authenticated numeric
+    # source evidence; avoid Python's permissive last-key-wins behavior.
     if type(raw) is not bytes or len(raw)>2_000_000:return {}
+    def strict_pairs(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise ValueError('C07_P2_DUPLICATE_SOURCE_JSON_KEY')
+            out[key]=value
+        return out
     try:
-        x=json.loads(raw)
+        x=json.loads(raw,object_pairs_hook=strict_pairs,
+                     parse_constant=lambda token: (_ for _ in ()).throw(
+                         ValueError('C07_P2_NONFINITE_SOURCE_JSON')))
         return x if type(x) is dict else {}
     except (UnicodeError,ValueError,TypeError):return {}
 
@@ -302,7 +312,12 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     above=im('VISUAL_VIEW_TOP')
     below=im('VISUAL_VIEW_UNDERSIDE')
     leaf=im('P2_LEAF_CARD_PNG')
-    current=[r for r in rows if r.get('step')==step]
+    # A hash-valid Controller audit can contain several attempts of the
+    # same step. Never reuse a previous attempt's QA receipt as current work.
+    current=[r for r in rows if r.get('step')==step and
+             r.get('attempt_id')==work['attempt_id'] and
+             r.get('operation_sha256')==work['operation_sha256'] and
+             r.get('master_sha256')==work['master_sha256']]
     event=lambda name:any(r.get('event')==name for r in current)
     nonzero=aabb(geom) and geom['triangles']>0
     zspan=(geom['bbox_max'][2]-geom['bbox_min'][2]) if nonzero else None

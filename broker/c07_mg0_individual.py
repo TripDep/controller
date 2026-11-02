@@ -40,16 +40,24 @@ def _verify_master(master_raw, master_sha256):
             'C07_MG0_CORRECTION_SOURCE_MISSING')
 
 def _inspect_checked(rows, tail, audit_sha256, asset, master_sha256,
-                     rule_id, attempt_id, scoped=None):
+                     rule_id, attempt_id, scoped=None, operation_sha256=None):
     """One rule over a validated shared audit; NEVER independently callable as proof."""
     require(isinstance(rule_id,str) and rule_id.strip() and
             isinstance(attempt_id,str) and len(attempt_id)==64 and
             all(c in '0123456789abcdef' for c in attempt_id),
             'C07_MG0_CURRENT_RULE_ATTEMPT')
-    # Scope strictly to the exact rule and attempt; no historical ticket replay.
+    # Scope to the exact rule, attempt AND (when provided) operation.
+    # An unrelated operation on the same attempt must never supply an MG0 event.
     scope = (scoped if scoped is not None else
              [r for r in rows if r.get('rule_id') == rule_id and
-              r.get('attempt_id') == attempt_id])
+              r.get('attempt_id') == attempt_id and
+              (operation_sha256 is None or
+               r.get('operation_sha256') == operation_sha256)])
+    require(all(r.get('rule_id') == rule_id and
+                r.get('attempt_id') == attempt_id and
+                (operation_sha256 is None or
+                 r.get('operation_sha256') == operation_sha256)
+                for r in scope), 'C07_MG0_CROSS_OPERATION_SCOPED_EVENT')
     require(all(r.get('event') in EVENTS for r in scope),
             'C07_MG0_UNKNOWN_SCOPED_EVENT')
     completed = [r for r in scope if r.get('event') == 'STEP_CLOSE'
@@ -58,7 +66,11 @@ def _inspect_checked(rows, tail, audit_sha256, asset, master_sha256,
     # review therefore references that real step through a scoped annotation,
     # rather than inventing a second close for the same step.
     prior_passes = {r['record_hash']:r for r in rows if
-                    r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS'}
+                    r.get('event')=='STEP_CLOSE' and r.get('result')=='PASS'
+                    and r.get('rule_id') == rule_id
+                    and r.get('attempt_id') == attempt_id
+                    and (operation_sha256 is None or
+                         r.get('operation_sha256') == operation_sha256)}
     for evidence in scope:
         if evidence.get('event') != 'MG0_BASELINE_PASS':
             continue
@@ -135,7 +147,8 @@ def inspect(master_raw, audit_raw, asset, master_sha256, rule_id, attempt_id):
                             rule_id, attempt_id)
 
 
-def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt_id):
+def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt_id,
+                  *, operation_sha256=None):
     """One real audit readback for ALL DUE IDs, retaining independent judgments.
 
     A full batch is the MG0 *falsification* layer, not a proof of absence of
@@ -149,6 +162,10 @@ def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt
     require(type(attempt_id) is str and len(attempt_id) == 64 and
             all(c in '0123456789abcdef' for c in attempt_id),
             'C07_MG0_BATCH_EXACT_ATTEMPT')
+    if operation_sha256 is not None:
+        require(type(operation_sha256) is str and len(operation_sha256) == 64 and
+                all(c in '0123456789abcdef' for c in operation_sha256),
+                'C07_MG0_BATCH_EXACT_OPERATION_SHA')
     _verify_master(master_raw, master_sha256)
     rows, tail = audit_check(audit_raw, asset)
     audit_hash = sha(audit_raw)
@@ -158,7 +175,9 @@ def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt
     # validation in the same pre-verified set of rows.
     grouped = defaultdict(list)
     for row in rows:
-        if row.get('attempt_id') == attempt_id and row.get('rule_id') in due:
+        if (row.get('attempt_id') == attempt_id and row.get('rule_id') in due
+                and (operation_sha256 is None or
+                     row.get('operation_sha256') == operation_sha256)):
             event=row.get('event')
             # R127: the real Controller may append a source-bound R178 rule
             # observation with the same rule_id/attempt_id. That is not an
@@ -172,7 +191,8 @@ def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt
     counts = {'FAIL': 0, 'UNKNOWN': 0, 'PASS': 0}
     for rule_id in rule_ids:
         observed = _inspect_checked(rows, tail, audit_hash, asset, master_sha256,
-                                    rule_id, attempt_id, grouped.get(rule_id, []))
+                                    rule_id, attempt_id, grouped.get(rule_id, []),
+                                    operation_sha256=operation_sha256)
         verdict = observed['individual_rule_mg0']
         require(verdict in ('FAIL', 'UNKNOWN') and
                 observed['advancement_authorized'] is False and
@@ -196,13 +216,17 @@ def inspect_batch(master_raw, audit_raw, asset, master_sha256, rule_ids, attempt
         'asset': asset, 'master_sha256': master_sha256,
         'audit_sha256': audit_hash, 'audit_tail_sha256': tail,
         'audit_events_verified_once': len(rows),
-        'attempt_id': attempt_id, 'rule_count': len(rule_ids),
+        'attempt_id': attempt_id, 'operation_sha256': operation_sha256,
+        'operation_bound': operation_sha256 is not None,
+        'rule_count': len(rule_ids),
         'rule_ids_sha256': sha(json.dumps(list(rule_ids),
             separators=(',', ':')).encode('utf-8')),
         'counts': counts, 'failed_rule_ids': failed,
         'rules': results,
         'individual_mg0_passes': 0,
-        'readback_scope': 'REAL_HASH_CHAINED_AUDIT_ONE_PASS',
+        'readback_scope': ('REAL_HASH_CHAINED_AUDIT_ONE_PASS_OPERATION_BOUND'
+                           if operation_sha256 is not None else
+                           'REAL_HASH_CHAINED_AUDIT_ONE_PASS'),
         'missing_independent_evidence_never_passes': True,
         'advancement_authorized': False,
     }

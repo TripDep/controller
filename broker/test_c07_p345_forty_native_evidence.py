@@ -141,4 +141,35 @@ class P345Forty(unittest.TestCase):
         r=self.report()['rules']['AAA-200-O-150']
         self.assertFalse(r['machine_observations']['original_native_runtime_benchmark_log_source_read'])
         self.assertEqual(r['full_rule_semantics'],'UNKNOWN')
+
+    def test_original_p345_json_cannot_override_nested_qa_or_accept_nonfinite(self):
+        from c07_p345_forty_native_evidence import binary_json
+        self.assertEqual(binary_json(b'{"qa":{"status":"FAIL","status":"PASS"}}'),{})
+        self.assertEqual(binary_json(b'{"status":"FAIL","status":"PASS"}'),{})
+        self.assertEqual(binary_json(b'{"x":NaN}'),{})
+        self.assertEqual(binary_json(b'{"x":Infinity}'),{})
+        self.assertEqual(binary_json(b'{"x":1e999}'),{})
+        self.assertEqual(binary_json(b'{"x":-1e999}'),{})
+        self.assertEqual(binary_json(b'\xff'),{})
+        self.assertEqual(binary_json(b'{"x":1.25}'),{'x':1.25})
+
+    def test_native_glb_metadata_rejects_duplicate_or_nonfinite_values(self):
+        import struct
+        from c07_p345_forty_native_evidence import native_doc
+        def glb(text):
+            raw=text.encode('utf-8')
+            raw+=b' ' * ((-len(raw))%4)
+            size=20+len(raw)
+            return struct.pack('<4sII',b'glTF',2,size)+struct.pack('<I4s',len(raw),b'JSON')+raw
+        good=glb('{"asset":{"version":"2.0"},"materials":[]}')
+        self.assertEqual(native_doc(good)['asset']['version'],'2.0')
+        for forged in (
+            '{"asset":{"version":"1.0"},"asset":{"version":"2.0"}}',
+            '{"asset":{"version":"2.0","version":"2.0"}}',
+            '{"asset":{"version":"2.0"},"extras":{"x":NaN}}',
+            '{"asset":{"version":"2.0"},"extras":{"x":1e999}}',
+            '{"asset":"2.0"}',
+        ):
+            with self.subTest(forged=forged):
+                self.assertEqual(native_doc(glb(forged)),{})
 if __name__=='__main__':unittest.main()

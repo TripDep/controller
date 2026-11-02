@@ -62,9 +62,19 @@ def valid_sha(v):return type(v) is str and bool(re.fullmatch(r'[a-f0-9]{64}',v))
 def pairs(v):return type(v) is list and len(v)>=2 and all(
     type(x) is list and len(x)>=2 and all(type(c) in (float,int) and math.isfinite(c) for c in x[:2]) for x in v)
 def jbytes(raw):
+    # Reject ambiguous original evidence: duplicate keys or non-finite JSON
+    # must never silently resolve to a producer-chosen positive predicate.
     if type(raw) is not bytes or len(raw)>2_000_000:return {}
+    def strict_pairs(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise ValueError('C07_P1_DUPLICATE_SOURCE_JSON_KEY')
+            out[key]=value
+        return out
     try:
-        out=json.loads(raw)
+        out=json.loads(raw,object_pairs_hook=strict_pairs,
+                       parse_constant=lambda token: (_ for _ in ()).throw(
+                           ValueError('C07_P1_NONFINITE_SOURCE_JSON')))
         return out if type(out) is dict else {}
     except (TypeError,ValueError,UnicodeDecodeError):return {}
 
@@ -132,8 +142,6 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     renderer={'FRONT':photo('VISUAL_VIEW_FRONT'),'LEFT':photo('VISUAL_VIEW_LEFT'),
        'RIGHT':photo('VISUAL_VIEW_RIGHT'),'TOP':photo('VISUAL_VIEW_TOP')}
     multiple_views=all(renderer.values()) and len({x['sha256'] for x in renderer.values()})==4
-    current=[r for r in rows if r.get('step')==step]
-    audit=lambda kind:any(r.get('event')==kind for r in current)
     geo=c_paths.get('features')
     path_lines=type(geo) is list and bool(geo) and all(
        type(e) is dict and type(e.get('geometry')) is dict and
@@ -289,6 +297,25 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
           'native_scope':'SOURCE_SCOPE_OBSERVED' if all(criteria.values()) else 'UNKNOWN',
           'full_rule_semantics':'UNKNOWN','individual_mg0':'UNKNOWN',
           'artistic_approval':'UNKNOWN','advancement_authorized':False}
+    # Reopen the same original Controller operation independently for all
+    # ten D design literals; measured source facts remain UNKNOWN for artistic
+    # acceptance until a genuine independent reviewer has approved them.
+    from c07_p1_d_ten_original_semantic_review import evaluate as inspect_d_ten
+    design=inspect_d_ten({
+        'inventory':inventory,'plan':plan,'controller':controller,
+        'asset':asset,'step':step,'work':work,'source_loader':source_loader})
+    need(design['rule_count']==10 and
+         design['original_audit_sha256']==audit_sha and
+         design['attempt_id']==work['attempt_id'] and
+         design['operation_sha256']==work['operation_sha256'] and
+         design['full_semantic_passes']==0 and
+         design['mg0_passes']==0 and
+         design['advancement_authorized'] is False,
+         'R144_D_TEN_ORIGINAL_REPLAY_UNTRUSTED')
+    for rid,row in design['rows'].items():
+        need(rid in outcomes and row['full_rule_semantics']=='UNKNOWN',
+             'R144_D_TEN_NOT_FULL_REVIEWED')
+        outcomes[rid]['original_design_semantic_measures']=row['checks']
     return {'schema':SCHEMA,'source_rules_examined':30,'native_domain_criteria':90,
        'original_catalog_sha256':source,
        'asset':asset,'step':step,'master_sha256':work['master_sha256'],

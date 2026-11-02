@@ -190,12 +190,26 @@ def npos(x):return type(x) in (int,float) and math.isfinite(x) and x>0
 def text(x):return type(x) is str and bool(x.strip())
 def labels(x):return type(x) is list and bool(x) and all(text(k) for k in x)
 def nonempty(x):return type(x) is dict and bool(x)
-def binary_json(b):
-    if type(b) is not bytes or len(b)>2_000_000:return {}
+def binary_json(b, *, max_size=2_000_000):
+    """Parse original source bytes without duplicate-key or nonfinite overrides."""
+    if type(b) is not bytes or not b or len(b)>max_size:return {}
+    def unique(pairs):
+        out={}
+        for key,value in pairs:
+            if key in out:raise ValueError('R146_DUPLICATE_ORIGINAL_JSON_KEY')
+            out[key]=value
+        return out
+    def finite_float(token):
+        value=float(token)
+        if not math.isfinite(value):raise ValueError('R146_NONFINITE_ORIGINAL_JSON')
+        return value
+    def no_constant(token):
+        raise ValueError('R146_NONSTANDARD_ORIGINAL_JSON')
     try:
-        obj=json.loads(b)
+        obj=json.loads(b.decode('utf-8'),object_pairs_hook=unique,
+                       parse_float=finite_float,parse_constant=no_constant)
         return obj if type(obj) is dict else {}
-    except (ValueError,TypeError,UnicodeError):return {}
+    except (ValueError,TypeError,UnicodeError,OverflowError):return {}
 
 def native_doc(b):
     if type(b) is not bytes or len(b)<28 or b[:4]!=b'glTF':return {}
@@ -204,8 +218,8 @@ def native_doc(b):
         size,typ=struct.unpack_from('<I4s',b,12)
         if version!=2 or length!=len(b) or size%4 or not 2<=size<=8_000_000 or typ!=b'JSON' or 20+size>len(b):
             return {}
-        obj=json.loads(b[20:20+size])
-        return obj if type(obj) is dict and obj.get('asset',{}).get('version')=='2.0' else {}
+        obj=binary_json(b[20:20+size],max_size=8_000_000)
+        return obj if type(obj.get('asset')) is dict and obj['asset'].get('version')=='2.0' else {}
     except (ValueError,IndexError,TypeError,struct.error,UnicodeError):
         return {}
 
