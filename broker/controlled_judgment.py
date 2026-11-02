@@ -1856,6 +1856,40 @@ class ControlledJudgment:
                     report_sha256=positive200['report_sha256'],
                     result='UNKNOWN_NEEDS_NATIVE_POSITIVE_AND_INDEPENDENT_MG0',
                     advancement_authorized=False)
+                # C07: ONE consolidated same-attempt semantic ledger for
+                # the frozen 200. 110 prevention meanings, 25 independently
+                # measured EXEC outcomes, 65 original governance/AAA clauses.
+                # Partial positives never become full semantic or MG0 PASS.
+                from c07_frozen200_semantic_matrix import inspect as inspect_semantic_matrix
+                semantic_matrix200 = inspect_semantic_matrix(
+                    self.inventory, plans[0]['plan'], self.c,
+                    self.asset, step, reserved_work,
+                    semantic200=semantic200, exec25=exec25_positive,
+                    behavior_first50=beh50, behavior_last60=batch100,
+                    positive200=positive200)
+                j.need(semantic_matrix200['source_rule_count'] == 200
+                       and semantic_matrix200['source_groups'] == {
+                           'BEHAVIOR':110,'EXEC':25,'OTHER':65}
+                       and semantic_matrix200['current_failures'] +
+                           semantic_matrix200['current_unknowns'] == 200
+                       and semantic_matrix200['full_semantic_passes'] == 0
+                       and semantic_matrix200['individual_mg0_passes'] == 0
+                       and semantic_matrix200['advancement_authorized'] is False
+                       and len(semantic_matrix200['rules']) == 200,
+                       'CONTROLLED_C07_MACRO200_SEMANTIC_SOURCE_MATRIX_INCOMPLETE')
+                self.append('SUPERVISOR_C07_FROZEN200_CONSOLIDATED_SEMANTIC_EVIDENCE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=semantic_matrix200['original_audit_sha256'],
+                    original_audit_tail=semantic_matrix200['original_audit_tail'],
+                    source_rule_count=200,
+                    source_groups=semantic_matrix200['source_groups'],
+                    original_positive_components_observed=semantic_matrix200[
+                        'source_specific_positive_components_observed'],
+                    per_rule_original_semantic_evidence=semantic_matrix200['rules'],
+                    full_semantic_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 from c07_positive200_evidence import reconcile_current200
                 checked200 = reconcile_current200(
                     self.inventory, plans[0]['plan'], self.c, self.asset,
