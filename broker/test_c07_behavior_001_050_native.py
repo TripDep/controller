@@ -90,6 +90,7 @@ class BehaviorFiftyNativeTests(unittest.TestCase):
 
     def test_fake_guardian_event_of_different_attempt_is_not_current(self):
         ctrl=Mock()
+        ctrl.master.read_bytes.return_value=MASTER
         row={"event":"GUARDIAN_CHECK","step":STEP,
              "attempt_id":"0"*64,"operation_sha256":WORK["operation_sha256"]}
         out=scoped_original_features([row],ARTIFACTS,STATE,PLAN,WORK,
@@ -98,6 +99,7 @@ class BehaviorFiftyNativeTests(unittest.TestCase):
 
     def test_malformed_untrusted_timestamps_not_counted(self):
         ctrl=Mock()
+        ctrl.master.read_bytes.return_value=MASTER
         rows=[
             {"event":"RUN_STARTED","step":STEP,"attempt_id":WORK["attempt_id"],
              "operation_sha256":WORK["operation_sha256"],"timestamp_utc":"not-time"},
