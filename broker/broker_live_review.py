@@ -136,6 +136,28 @@ def event_pr_numbers(event, repo):
         raise auto.Blocked('UPSTREAM_PR_NUMBER_INVALID')
     return [number]
 
+def verify_source_pins(snapshot, policy, supervisor):
+    """Exact immutable private snapshot + both public metadata pins.
+
+    This is a read-only integrity check, not a claim of live Library access.
+    In particular, updating public JSON alone must NEVER hide a stale
+    private MASTER: every byte is checked against the same source SHA.
+    """
+    if not isinstance(snapshot, bytes) or not isinstance(policy, dict) or not isinstance(supervisor, dict):
+        raise auto.Blocked('PINNED_MASTER_OR_POLICY_INVALID')
+    left=policy.get('master_sha256')
+    right=supervisor.get('canonical_master_sha256')
+    if not (isinstance(left,str) and isinstance(right,str)
+            and re.fullmatch(r'[0-9a-f]{64}',left)
+            and re.fullmatch(r'[0-9a-f]{64}',right)):
+        raise auto.Blocked('PINNED_MASTER_METADATA_SHA_INVALID')
+    if left != right:
+        raise auto.Blocked('PUBLIC_BROKER_SUPERVISOR_POLICY_SHA_DRIFT')
+    if hashlib.sha256(snapshot).hexdigest() != left:
+        raise auto.Blocked('PRIVATE_PINNED_MASTER_NOT_CANONICAL')
+    return left
+
+
 def review(private_api, public_api, number, public_sha):
     policy=alignment.strict_json(decode_file(public_api.call('GET','/contents/broker/broker_policy.json?ref='+public_sha),'broker/broker_policy.json'))
     supervisor=alignment.strict_json(decode_file(public_api.call('GET','/contents/supervisor/policy.json?ref='+public_sha),'supervisor/policy.json'))
@@ -144,8 +166,7 @@ def review(private_api, public_api, number, public_sha):
     if not isinstance(base_sha,str) or not HEX40.fullmatch(base_sha):
         raise auto.Blocked('PRIVATE_BASE_SHA_INVALID')
     snapshot=decode_file(private_api.call('GET','/contents/'+MASTER+'?ref='+base_sha),MASTER)
-    if hashlib.sha256(snapshot).hexdigest()!=policy['master_sha256'] or policy['master_sha256']!=supervisor['canonical_master_sha256']:
-        raise auto.Blocked('LIBRARY_PINNED_SNAPSHOT_DRIFT')
+    verify_source_pins(snapshot, policy, supervisor)
     source=decode_file(private_api.call('GET','/contents/'+WORKFLOW+'?ref='+base_sha),WORKFLOW)
     attestation=alignment.strict_json(Path(__file__).with_name('public_ruleset_attestation.json').read_bytes())
     rules=verified_ruleset_view(public_api.call('GET','/rulesets/'+str(RULESET)),attestation)
