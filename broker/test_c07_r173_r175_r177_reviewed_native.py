@@ -242,6 +242,7 @@ class FurtherThreeOriginalReviewers(unittest.TestCase):
         self.prepare_177()
         rid="AAA-200-R-177";packet=self.packet(rid)
         packet["mg0"]["result"]="PASS"
+        self.git_content["d"*40]=b"not canonical catalog"
         with patch("broker_live_review.decode_file",
                    return_value=b"not canonical catalog"):
             with self.assertRaises(RemainderBlocked):
