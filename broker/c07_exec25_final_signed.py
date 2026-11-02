@@ -77,17 +77,27 @@ def checked_evidence(evidence_b64, rid, context, row):
          "EXEC25_INDEPENDENT_FIVE_MG0_TRIGGER_FINDINGS_REQUIRED:" + rid)
     referenced={v["evidence_sha256"] for v in findings+triggers}
     need(type(refs) is list and len(refs)>=1 and len(refs)<=100 and
-         all(type(v) is dict and set(v)=={"sha256","source","verified"}
+         all(type(v) is dict and set(v)=={
+             "sha256","source","verified","content_base64"}
              and SHA.fullmatch(str(v["sha256"])) and
              type(v["source"]) is str and bool(v["source"].strip()) and
-             v["verified"] is True for v in refs) and
+             v["verified"] is True and type(v["content_base64"]) is str
+             for v in refs) and
          referenced.issubset({v["sha256"] for v in refs}) and
          type(data["independent_review_method"]) is str and
          len(data["independent_review_method"].strip())>=20,
          "EXEC25_INDEPENDENT_REFERENCED_PROOFS_REQUIRED:" + rid)
-    # The signer attests having actually inspected these evidence references.
-    # A digest or document title alone is not a software-verifiable file read;
-    # the signature never pretends to independently replay inaccessible files.
+    # Every review-evidence reference MUST carry actual bytes, not only a
+    # self-asserted SHA or a producer's "verified": true. This still does not
+    # convert a signature into a machine guarantee of artistic quality.
+    for v in refs:
+        try:
+            proof = base64.b64decode(v["content_base64"], validate=True)
+        except (ValueError, binascii.Error) as exc:
+            raise FinalCertificationBlocked(
+                "EXEC25_REFERENCED_EVIDENCE_INVALID_BYTES:" + rid) from exc
+        need(0 < len(proof) <= 32768 and sha(proof)==v["sha256"],
+             "EXEC25_REFERENCED_EVIDENCE_BYTES_SHA_MISMATCH:" + rid)
     return sha(raw)
 
 def certify(context, reviews, owner_public_key, owner_reviewer_id):
