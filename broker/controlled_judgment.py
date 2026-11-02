@@ -1128,6 +1128,44 @@ class ControlledJudgment:
                     native_conditions_observed=ten_process['native_conditions_observed'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 M-121..Q-170: FIFTY original source-specific rules.
+                # Authenticate canonical clauses, audit chain and registered
+                # bytes; each material/lighting/geometry/collision/FiveM
+                # diagnostic is computed from the real original GLB/native
+                # evidence instead of trusting a producer PASS dictionary.
+                from c07_m121_q170_fifty_native import inspect as inspect_mq50
+                mq50 = inspect_mq50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(mq50['source_rules_examined'] == 50
+                       and set(mq50['rules']) == {
+                           'AAA-200-' + 'MNOPQ'[(i - 121)//10] +
+                           '-' + str(i).zfill(3)
+                           for i in range(121, 171)}
+                       and mq50['native_predicates_evaluated'] >= 150
+                       and mq50['full_rule_passes'] == 0
+                       and mq50['individual_mg0_passes'] == 0
+                       and mq50['advancement_authorized'] is False
+                       and all(row['full_rule_semantics'] == 'UNKNOWN'
+                               and row['individual_mg0'] == 'UNKNOWN'
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in mq50['rules'].values()),
+                       'CONTROLLED_C07_MQ50_FALSE_RULE_OR_MG0_CERTIFICATION')
+                self.append('SUPERVISOR_C07_M121_Q170_FIFTY_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=mq50['original_audit_sha256'],
+                    original_audit_tail=mq50['original_audit_tail'],
+                    source_rule_count=50,
+                    native_conditions_evaluated=mq50['native_predicates_evaluated'],
+                    native_conditions_observed=mq50['native_predicates_observed'],
+                    native_glb_sha256=mq50['native_glb_sha256'],
+                    exact_source_specific_native_evidence=mq50['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
