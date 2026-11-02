@@ -975,7 +975,8 @@ class ControlledJudgment:
                 semantic200 = semantic200_inspect(
                     self.inventory, plans[0]['plan'], self.c, self.asset,
                     step, reserved_work,
-                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                    source_loader=lambda absolute: Path(absolute).read_bytes(),
+                    literal_process=process_exact)
                 j.need(semantic200['source_rules_evaluated'] == 200
                        and len(semantic200['rules']) == 200
                        and semantic200['behavior_prevention_obligations'] == 110
