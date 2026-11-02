@@ -55,7 +55,8 @@ class ThreeMacroTests(unittest.TestCase):
         method=('test_ten_distinct_original_scoped_observations_not_full_review'
                 if issubclass(klass,Final) else
                 'test_five_source_geometry_observations_runtime_unattested')
-        return NativeOriginalReplayerTests.context(self,klass,method)[1]
+        self._last_fixture,ctx=NativeOriginalReplayerTests.context(self,klass,method)
+        return ctx
 
     def read(self,klass,rid):
         context=self.context(klass)
@@ -97,6 +98,7 @@ class ThreeMacroTests(unittest.TestCase):
         context=self.context(Telemetry)
         context['plan']['p678_evidence_contract'][
            'original_artifact_sha256'].pop('FIVEM_COLLISION_RUNTIME_LOG')
+        self._last_fixture.f.rebuild()
         row=inspect(context,P160)
         self.assertFalse(row['evidence_complete'])
         self.assertFalse(row['checks'][PREDICATES[P160][0]])
@@ -107,6 +109,12 @@ class ThreeMacroTests(unittest.TestCase):
         context['work']=dict(context['work'],attempt_id='0'*64)
         with self.assertRaises(ValueError):
             inspect(context,P155)
+
+def load_tests(loader,tests,pattern):
+    # The modified temporary source fixtures deliberately override setup,
+    # so their inherited baseline tests must NOT be collected separately.
+    # The six adversarial macro tests exercise those variants explicitly.
+    return loader.loadTestsFromTestCase(ThreeMacroTests)
 
 if __name__=='__main__':
     unittest.main()
