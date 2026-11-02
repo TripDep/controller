@@ -968,6 +968,41 @@ class ControlledJudgment:
                     results_sha256=positive['result_sha256'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # First frozen 200: source-specific semantic counterexamples
+                # and original error/prevention obligations from actual bytes.
+                # This cannot manufacture source reviewer or MG0 PASS.
+                from c07_frozen200_semantic_verdicts import inspect as semantic200_inspect
+                semantic200 = semantic200_inspect(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(semantic200['source_rules_evaluated'] == 200
+                       and len(semantic200['rules']) == 200
+                       and semantic200['behavior_prevention_obligations'] == 110
+                       and semantic200['exec_obligations'] == 25
+                       and semantic200['semantic_failures'] +
+                           semantic200['semantic_unknowns'] == 200
+                       and semantic200['semantic_positive_passes'] == 0
+                       and semantic200['individual_mg0_passes'] == 0
+                       and semantic200['advancement_authorized'] is False
+                       and all(row['semantic_result'] in ('FAIL','UNKNOWN')
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in semantic200['rules'].values()),
+                       'CONTROLLED_C07_FIRST200_FALSE_SEMANTIC_PASS')
+                self.append('SUPERVISOR_C07_FIRST200_ORIGINAL_SEMANTIC_VERDICTS',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=semantic200['original_audit_sha256'],
+                    original_audit_tail=semantic200['original_audit_tail'],
+                    rule_count=200,
+                    semantic_failures=semantic200['semantic_failures'],
+                    semantic_unknowns=semantic200['semantic_unknowns'],
+                    per_rule_semantic_meaning_and_evidence=semantic200['rules'],
+                    individual_mg0_passes=0,advancement_authorized=False)
+                j.need(semantic200['semantic_failures'] == 0,
+                       'CONTROLLED_C07_ORIGINAL_RULE_FAILURE_STOP')
                 # R123: actual original-byte semantic evaluation of two
                 # literal process rules in one shared engine. This checks
                 # distinct editable/export/delivery bytes and manifest links,
