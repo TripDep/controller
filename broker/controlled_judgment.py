@@ -666,7 +666,7 @@ class ControlledJudgment:
             return active
 
     def close(self, step, token, result, evidence, regression, sections_after, critical=True,
-              post_origin=None, post_offers=None):
+              post_origin=None, post_offers=None, signed_macro25=None):
         # C07 macro-certification cannot be smuggled into an ordinary close.
         # This negative gate does not alter regular asset work/phase PASS.
         if isinstance(result, str) and result.upper().startswith(('C07_MACRO100_COMPLETE', 'C07_100_CERTIFIED', 'C07_100_FULL')):
@@ -2336,6 +2336,34 @@ class ControlledJudgment:
                            and native_final763['owner_approval_inferred'] is False
                            and native_final763['advancement_authorized'] is False,
                            'CONTROLLED_C07_FINAL_CERTIFICATION_SOURCE_DRIFT')
+                    if signed_macro25 is not None:
+                        # C07 positive MG0: an externally controlled review key
+                        # must exist at this FIXED trust location. Never import
+                        # keys from the producer's signed review packet.
+                        j.need(type(signed_macro25) is dict and
+                               set(signed_macro25)=={'rule_ids','reviews'},
+                               'CONTROLLED_MACRO25_SIGNED_REVIEW_SCHEMA')
+                        from c07_mg0_signed25 import certify_25
+                        reviewer_public_key = self.local_file(
+                            'governance/trust/independent_review_ed25519.pub.pem'
+                        ).read_bytes()
+                        signed_completion = certify_25(
+                            self.c.master.read_bytes(),
+                            self.c.audit_path(self.asset).read_bytes(),
+                            self.asset, work['master_sha256'],
+                            signed_macro25['rule_ids'], work['attempt_id'],
+                            self.inventory, plan, work, fresh,
+                            signed_macro25['reviews'], reviewer_public_key)
+                        j.need(signed_completion['full_semantic_passes']==25 and
+                               signed_completion['independent_mg0_passes']==25 and
+                               signed_completion['advancement_authorized'] is False,
+                               'CONTROLLED_MACRO25_NOT_FULLY_SIGNED')
+                        self.append('SUPERVISOR_C07_MACRO25_FINAL_SIGNED_MG0',
+                            step=step, attempt_id=work['attempt_id'],
+                            operation_sha256=work['operation_sha256'],
+                            source_decision_sha256=fresh['decision_sha256'],
+                            signed_macro25=signed_completion,
+                            advancement_authorized=False)
                     self.append('SUPERVISOR_C07_FINAL_763_SEMANTIC_MG0_CERTIFICATION',
                         step=step,
                         attempt_id=work['attempt_id'],
