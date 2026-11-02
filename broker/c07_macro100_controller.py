@@ -127,3 +127,41 @@ def acquire_registered_copies(snapshot, copies):
         results.append(row)
     return {'registrations': results, 'original_bytes': originals,
             'mg0': 'NOT_RUN', 'advancement_authorized': False}
+
+
+def read_original_telemetry(path):
+    """Read actual run records without promoting self-reports to provider facts.
+
+    Wall elapsed is recomputed from timestamp pairs. Productive time and final
+    provider events remain unavailable unless acquired independently; the log's
+    prose, completion labels and EXECUTION_BUDGET are retained as claims only.
+    """
+    from c07_macro100_domain import instant
+    path = Path(path)
+    require(path.is_file() and not path.is_symlink(), 'original telemetry unavailable')
+    raw = path.read_bytes()
+    require(len(raw) <= 40_000_000, 'telemetry exceeds source bound')
+    rows = []
+    for line_number, line in enumerate(raw.splitlines(), 1):
+        require(bool(line.strip()), 'blank telemetry record')
+        record = strict_json(line)
+        require(type(record) is dict, 'telemetry record must be object')
+        starts = [record[k] for k in ('run_started_at', 'run_started_at_utc', 'run_start_utc')
+                  if record.get(k) is not None]
+        require(len(starts) <= 1, 'ambiguous telemetry start timestamp')
+        finish = record.get('run_finished_at')
+        elapsed = None
+        if starts and finish is not None:
+            elapsed = instant(finish)-instant(starts[0])
+            require(elapsed >= 0, 'telemetry timestamps reversed')
+        rows.append({'line': line_number, 'record_sha256': sha(line),
+                     'run_id': record.get('run_id', record.get('run_number')),
+                     'wall_elapsed_recomputed_seconds': elapsed,
+                     'productive_seconds': None,
+                     'provider_termination_cause': 'UNKNOWN',
+                     'original_claims': record})
+    require(bool(rows) and path.read_bytes() == raw, 'empty or changing telemetry source')
+    return {'schema': 'gg-c07-original-telemetry-readback-v1',
+            'source_sha256': sha(raw), 'records': rows,
+            'productive_time_verified': False, 'provider_final_event_verified': False,
+            'mg0': 'NOT_RUN', 'advancement_authorized': False}
