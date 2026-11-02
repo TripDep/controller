@@ -1128,6 +1128,42 @@ class ControlledJudgment:
                     native_conditions_observed=ten_process['native_conditions_observed'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 G-061..K-110: fifty exact original P2 obligations.
+                # Source-specific immutable catalog, original Controller audit,
+                # registered native GLB, winding, and source PNG readbacks.
+                # Asset-type and future phase never become false MG0 PASS.
+                from c07_g061_k110_fifty_native import inspect as inspect_gk50
+                gk50 = inspect_gk50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(gk50['source_rules_examined'] == 50
+                       and gk50['native_conditions_evaluated'] >= 150
+                       and set(gk50['rules']) == {
+                           'AAA-200-' + 'GHIJK'[(i-61)//10] +
+                           '-' + str(i).zfill(3) for i in range(61,111)}
+                       and gk50['full_rule_passes'] == 0
+                       and gk50['individual_mg0_passes'] == 0
+                       and gk50['advancement_authorized'] is False
+                       and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['owner_approval'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in gk50['rules'].values()),
+                       'CONTROLLED_C07_GK50_FABRICATED_SEMANTICS_OR_MG0')
+                self.append('SUPERVISOR_C07_G061_K110_FIFTY_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=gk50['original_audit_sha256'],
+                    original_audit_tail=gk50['original_audit_tail'],
+                    source_rule_count=50,
+                    native_conditions_evaluated=gk50['native_conditions_evaluated'],
+                    native_conditions_observed=gk50['native_conditions_observed'],
+                    original_native_glb_sha256=gk50['native_glb_sha256'],
+                    individual_source_rule_evidence=gk50['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # C07 M-121..Q-170: FIFTY original source-specific rules.
                 # Authenticate canonical clauses, audit chain and registered
                 # bytes; each material/lighting/geometry/collision/FiveM
