@@ -69,7 +69,10 @@ class Tests(unittest.TestCase):
 
     def test_source_bound_documentary_failures_not_upgraded_to_asset_passes(self):
         details={}
-        for rule in list(REVIEWED)[:11]:
+        # This is the original R173 documentary 11-rule fixture, not the
+        # first 11 entries of an expanding reviewed native registry.
+        from approved_validators import R173_CRITERIA
+        for rule in R173_CRITERIA:
             if rule not in self.inv['families']['GROUP']:
                 continue
             details[rule]={'documentary_result':'FAIL' if rule=='AAA-200-B-013' else 'PASS',
