@@ -2378,9 +2378,27 @@ class ControlledJudgment:
                                set(signed_macro25)=={'rule_ids','reviews'},
                                'CONTROLLED_MACRO25_SIGNED_REVIEW_SCHEMA')
                         from c07_mg0_signed25 import certify_25
+                        from c07_independent_reviewer_preflight import (
+                            check as verify_authorized_reviewer)
+                        # Owner-controlled immutable out-of-band values.
+                        # Both missing values fail closed. The producer cannot
+                        # set a new key as trusted just by including its hash
+                        # inside the signed payload or the repository.
+                        owner_fingerprint=os.environ.get(
+                            'C07_OWNER_APPROVED_REVIEWER_KEY_SHA256')
+                        owner_reviewer_id=os.environ.get(
+                            'C07_OWNER_APPROVED_REVIEWER_ID')
+                        trust=verify_authorized_reviewer(
+                            self.c.root,reviewer_identity=owner_reviewer_id,
+                            owner_authorized_sha256=owner_fingerprint)
                         reviewer_public_key = self.local_file(
-                            'governance/trust/independent_review_ed25519.pub.pem'
+                            trust['trusted_public_key_path']
                         ).read_bytes()
+                        j.need(all(type(v) is dict and
+                                   type(v.get('payload')) is dict and
+                                   v['payload'].get('reviewer_id')==owner_reviewer_id
+                                   for v in signed_macro25['reviews'].values()),
+                               'CONTROLLED_MACRO25_OWNER_AUTHORIZED_REVIEWER_MISMATCH')
                         signed_completion = certify_25(
                             self.c.master.read_bytes(),
                             self.c.audit_path(self.asset).read_bytes(),
