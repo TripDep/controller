@@ -12,6 +12,42 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-B-011': ('b_nine_source', (
+        'original_asset_purpose_matches_work',
+        'intended_game_use_and_output_named',
+    )),
+    'AAA-200-B-013': ('b_nine_source', (
+        'target_engine_and_native_format_explicit',
+        'actual_scale_units_world_origin_finite',
+    )),
+    'AAA-200-B-014': ('b_nine_source', (
+        'original_reuse_inventory_lists_real_candidates',
+        'all_candidate_sources_independently_reopened',
+    )),
+    'AAA-200-B-015': ('b_nine_source', (
+        'approved_and_mutable_names_are_disjoint',
+        'approved_original_source_sha_pinned',
+    )),
+    'AAA-200-B-016': ('b_nine_source', (
+        'original_dependency_nodes_are_verified',
+        'original_dependency_edges_refer_to_nodes_and_are_acyclic',
+    )),
+    'AAA-200-B-017': ('b_nine_source', (
+        'original_deliverables_distinct_from_studies',
+        'delivery_plan_names_original_source_and_export',
+    )),
+    'AAA-200-B-018': ('b_nine_source', (
+        'real_original_risks_have_triggers_and_mitigations',
+        'risk_severity_is_explicit_and_unique',
+    )),
+    'AAA-200-B-019': ('b_nine_source', (
+        'time_estimate_uses_measured_task_hours',
+        'estimate_total_independently_recomputed',
+    )),
+    'AAA-200-B-020': ('b_nine_source', (
+        'objective_measurable_criteria_present',
+        'every_criterion_names_independent_measurement_source',
+    )),
     'AAA-200-A-001': ('ac_twenty_source', (
         'goal_text_in_original_pre_d_record',
         'real_work_scope_matches_original_goal',
@@ -713,7 +749,9 @@ def build_packet(source_context, rule_id, *, expected=None):
     domain, criteria = NATIVE_RULES[rule_id]
     # Import domain readers only after reviewed enrollment has initialized;
     # the existing evidence modules import approved_validators indirectly.
-    if domain == 'ac_twenty_source':
+    if domain == 'b_nine_source':
+        from c07_p0_planning_semantics import inspect
+    elif domain == 'ac_twenty_source':
         from c07_a10_c10_original_evidence import inspect
     elif domain == 'p1':
         from c07_p1_thirty_native_domain import inspect
@@ -884,7 +922,23 @@ def build_packet(source_context, rule_id, *, expected=None):
                   else source['original_machine_checks'])
     # A/C: all 60 rule-specific original-source observations are replayed in
     # one canonical P0 report, with no artistic/license/owner/MG0 promotion.
+    b_nine_review = report if domain == 'b_nine_source' else None
+    if b_nine_review is not None:
+        from c07_p0_planning_semantics import IDS as b_ids
+        need(set(b_nine_review['rules'])==set(b_ids) and
+             b_nine_review['source_rule_count']==9 and
+             b_nine_review['full_rule_semantic_passes']==0 and
+             b_nine_review['individual_mg0_passes']==0 and
+             b_nine_review['advancement_authorized'] is False and
+             all(v['full_rule_semantics']=='UNKNOWN' and
+                 v['individual_mg0']=='UNKNOWN' and
+                 v['advancement_authorized'] is False
+                 for v in b_nine_review['rules'].values()),
+             'C07_B_NINE_PLANNING_SOURCE_ONLY_ORIGINAL_REPLAY_GUARD')
     ac_twenty_review = report if domain == 'ac_twenty_source' else None
+    if b_nine_review is not None:
+        proof['original_b_nine_planning_source_rule'] = b_nine_review['rules'][rule_id]
+        proof['original_b_nine_planning_source_digest'] = judgment.digest(b_nine_review)
     if ac_twenty_review is not None:
         from c07_a10_c10_original_evidence import IDS as ac_ids
         need(set(ac_twenty_review['rules'])==set(ac_ids) and
