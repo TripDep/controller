@@ -8,6 +8,8 @@ independent RAGE/FiveM provenance. No fixture is an MG0 or owner approval.
 """
 import unittest
 import copy
+import struct
+import zlib
 
 from test_c07_p3_uv_semantics import uv_glb
 from test_c07_p5_budget_semantics import with_embedded_texture
@@ -141,6 +143,26 @@ class P345PendingCaptureMacroTests(unittest.TestCase):
         self.assertEqual(runtime['full_rule_semantics'],'UNKNOWN')
         self.assertEqual(runtime['fivem_runtime'],'UNKNOWN')
         self.assertFalse(runtime['advancement_authorized'])
+
+    def test_rgb_colorkey_transparency_and_animated_png_cannot_spoof_pixels(self):
+        def chunk(kind,data):
+            return (struct.pack('>I',len(data))+kind+data+
+                    struct.pack('>I',zlib.crc32(kind+data)&0xffffffff))
+        signature=b'\x89PNG\r\n\x1a\n'
+        ihdr=chunk(b'IHDR',struct.pack('>IIBBBBB',4,4,8,2,0,0,0))
+        scan=b''.join(b'\x00'+bytes((120,120,120))*4 for _ in range(4))
+        pixels=chunk(b'IDAT',zlib.compress(scan))
+        end=chunk(b'IEND',b'')
+        normal=signature+ihdr+pixels+end
+        transparent=signature+ihdr+chunk(
+            b'tRNS',struct.pack('>HHH',120,120,120))+pixels+end
+        animated=signature+ihdr+chunk(
+            b'acTL',struct.pack('>II',2,0))+pixels+end
+        self.assertTrue(opaque_capture_png(normal))
+        for forged in (transparent,animated):
+            with self.subTest(kind=forged[37:41]):
+                self.assertFalse(opaque_capture_png(forged))
+                self.assertIsNone(original_pixels(forged))
 
     def test_original_atlas_and_reuse_compare_alpha_at_actual_uv_samples(self):
         """L118/O147 cannot PASS when RGBA becomes invisible but RGB matches."""
