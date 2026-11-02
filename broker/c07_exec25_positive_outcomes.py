@@ -12,6 +12,8 @@ from pathlib import Path
 from c07_exec25_native_observation import inspect as original25, IDS
 from c07_positive_native_process import _original_attempt,_registered_artifacts,sha
 from glb_machine_qa import audit_bytes,GLBError,MAX_BYTES
+from c07_exec25_true_measurements import (criteria_well_formed, measured_original_glb,
+    real_rollback_restored, measured_timebox)
 
 SCHEMA="gg-c07-exec25-native-positive-outcome-v1"
 class NativeExecBlocked(ValueError):pass
@@ -104,10 +106,9 @@ def inspect(inv,plan,controller,asset,step,work,*,source_loader):
         r["evidence_operation"].get("artifact_sha256") in
             {a[1] for a in artifacts} for r in event(name))
     def criteria():
-        c=plan.get("acceptance_criteria")
-        return type(c) is list and bool(c) and all(
-            type(x) is dict and type(x.get("name")) is str and
-            type(x.get("expected")) in (str,int,float,bool) for x in c)
+        return criteria_well_formed(plan)
+    def measured():
+        return measured_original_glb(plan,glb)
     graph=all_transitive_dependencies(plan,work,controller,source_loader)
     has_raw=bool(export and type(export[2]) is bytes)
     changed=bool(has_raw and base_snapshot and
@@ -136,22 +137,22 @@ def inspect(inv,plan,controller,asset,step,work,*,source_loader):
     # rule into a full positive; the third obligation remains UNKNOWN.
     specs={
       1:("measurable_acceptance_defined",criteria(),
-         "actual_verified_outcome",valid_event("ACCEPTANCE_MEASURED")),
+         "actual_verified_outcome",measured()),
       2:("historic_pass_corrections_replayed",valid_event("VERIFIED_STATES_INVALIDATED"),
          "affected_states_retested",valid_event("AFFECTED_STATES_RETESTED")),
       3:("all_transitive_dependency_bytes_read",graph,
          "all_original_direct_bytes_verified",base["dependency_bytes_verified"]>0),
       4:("fixed_acceptance_criteria_pre_enrolled",criteria(),
-         "independent_acceptance_result_replayed",valid_event("ACCEPTANCE_MEASURED")),
+         "independent_acceptance_result_replayed",measured()),
       5:("native_glb_geometry_tested",geometry,
          "independent_qa_triads_registered",certificate(qa_roles[5])),
       6:("open_mandatory_issues_retested",valid_event("MANDATORY_ISSUES_RETESTED"),
          "optional_work_after_mandatory",valid_event("PRIORITY_SEQUENCE_VERIFIED")),
       7:("time_budget_explicit",type(plan.get("timebox_seconds")) is int and
          plan["timebox_seconds"]>0,
-         "actual_budget_comparison_verifiable",valid_event("TIMEBOX_EXAMINED")),
+         "actual_budget_comparison_verifiable",measured_timebox(plan,current)),
       8:("original_rollback_snapshot_verified",bool(base_snapshot),
-         "independent_rollback_rehearsal",valid_event("ROLLBACK_READBACK")),
+         "independent_rollback_rehearsal",real_rollback_restored(originals,current)),
       9:("actual_original_issue_sources_present",bool(event("QUALITY_FINDING")),
          "independent_issue_discovery_review",certificate(qa_roles[9])),
       10:("entire_transitive_source_graph_verified",graph,
@@ -177,7 +178,7 @@ def inspect(inv,plan,controller,asset,step,work,*,source_loader):
       20:("original_export_has_real_geometry",finish,
           "intention_blind_fivem_review",certificate(qa_roles[20])),
       21:("original_pre_d_numeric_criteria",criteria(),
-          "measured_acceptance_independently",valid_event("ACCEPTANCE_MEASURED")),
+          "measured_acceptance_independently",measured()),
       22:("real_native_output_geometry",geometry,
           "view_angle_distance_scale_checks",certificate(qa_roles[22])),
       23:("transitive_source_geometry_deps",graph,
