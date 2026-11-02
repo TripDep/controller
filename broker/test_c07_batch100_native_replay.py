@@ -166,6 +166,24 @@ class Tests(unittest.TestCase):
                                   enumerate(NATIVE_RULES[rid][1])}}
                     for rid in batch.p345.IDS},
         }
+        from c07_p345_remaining_crosssource_family import IDS as REMAINING_IDS
+        self.p345_remaining={
+            'schema':'c07-p345-remaining14-original-crosssource-v1',
+            'rule_count':14,
+            'master_sha256':M_SHA,
+            'attempt_id':ATTEMPT,'operation_sha256':OPERATION,
+            'original_audit_sha256':A_SHA,'original_audit_tail':TAIL,
+            'full_semantic_passes':0,'individual_mg0_passes':0,
+            'advancement_authorized':False,'original_measured_count':0,
+            'rules':{rid:{
+                'source_pins_complete':False,
+                'original_literal_measurement':False,
+                'source_sha256':'c'*64,'requirement_sha256':'d'*64,
+                'external_provenance':'UNKNOWN','individual_mg0':'UNKNOWN',
+                'owner_acceptance':'UNKNOWN','fivem_runtime':'UNKNOWN',
+                'advancement_authorized':False}
+                for rid in REMAINING_IDS},
+        }
         self.mg0={
             'rule_count':100,'operation_bound':True,
             'operation_sha256':OPERATION,'attempt_id':ATTEMPT,
@@ -181,6 +199,8 @@ class Tests(unittest.TestCase):
               patch.object(batch.mg0,'inspect_batch',return_value=self.mg0) as mg0,
               patch('c07_p345_macro_execution.run',
                     return_value=self.p345_macro) as macro,
+              patch('c07_p345_remaining_crosssource_family.inspect_family',
+                    return_value=self.p345_remaining) as remaining,
               patch('c07_p1_design_source_review.inspect',
                     return_value=self.p1_design) as design,
               patch('c07_p1_remaining_visual_review.inspect_family',
@@ -223,6 +243,10 @@ class Tests(unittest.TestCase):
             self.assertEqual(result['p1_thirteen_original_design'],self.p1_design)
             self.assertEqual(macro.call_args.args[0]['work'],self.work)
             self.assertEqual(result['p345_forty_source_macro'],self.p345_macro)
+            remaining.assert_called_once()
+            self.assertEqual(remaining.call_args.args[0]['work'],self.work)
+            self.assertEqual(result['p345_remaining_fourteen_original_crosssource'],
+                             self.p345_remaining)
             self.assertEqual(mg0.call_args.args[4],sorted(batch.COHORT))
             return result
 

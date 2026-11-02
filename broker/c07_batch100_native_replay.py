@@ -336,6 +336,42 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     # successful execution until every original reader actually finished.
     p345_execution_certificate=certify_p345_source_execution(
         p345_macro, source_context=p345_source_context)
+    # Reopen the SAME original Controller attempt for the entire remaining
+    # fourteen-rule P3-P5 family. This measures native bytes, NOT an external
+    # renderer or game execution, and never upgrades REVIEWED/MG0.
+    from c07_p345_remaining_crosssource_family import (
+        inspect_family as inspect_remaining_p345, IDS as REMAINING_P345_IDS)
+    remaining_p345=inspect_remaining_p345(p345_source_context)
+    need(type(remaining_p345) is dict and
+         remaining_p345.get('schema')=='c07-p345-remaining14-original-crosssource-v1' and
+         remaining_p345.get('rule_count')==14 and
+         set(remaining_p345.get('rules',{}))==set(REMAINING_P345_IDS) and
+         remaining_p345.get('attempt_id')==work['attempt_id'] and
+         remaining_p345.get('operation_sha256')==work['operation_sha256'] and
+         remaining_p345.get('master_sha256')==work['master_sha256'] and
+         remaining_p345.get('original_audit_sha256')==audit['audit_sha256'] and
+         remaining_p345.get('original_audit_tail')==audit['audit_tail_sha256'] and
+         remaining_p345.get('full_semantic_passes')==0 and
+         remaining_p345.get('individual_mg0_passes')==0 and
+         remaining_p345.get('advancement_authorized') is False and
+         remaining_p345.get('original_measured_count')==sum(
+             row.get('original_literal_measurement') is True
+             for row in remaining_p345['rules'].values()),
+         'C07_BATCH100_P345_REMAINING_FAMILY_UNTRUSTED')
+    for rid,row in remaining_p345['rules'].items():
+        need(type(row) is dict and
+             type(row.get('source_pins_complete')) is bool and
+             type(row.get('original_literal_measurement')) is bool and
+             (not row['original_literal_measurement'] or
+              row['source_pins_complete']) and
+             row.get('source_sha256')==inventory['rules'][rid]['source_sha256'] and
+             row.get('requirement_sha256')==inventory['rules'][rid]['requirement_sha256'] and
+             row.get('external_provenance')=='UNKNOWN' and
+             row.get('individual_mg0')=='UNKNOWN' and
+             row.get('owner_acceptance')=='UNKNOWN' and
+             row.get('fivem_runtime')=='UNKNOWN' and
+             row.get('advancement_authorized') is False,
+             'C07_BATCH100_P345_REMAINING_PER_LITERAL_UNTRUSTED:'+rid)
     # The P6-P8 thirty-rule family also has four genuinely rule-specific
     # original-byte readers (collision 4, walkability 6, RAGE 10, final QA 10).
     # They must all execute on the SAME original Controller attempt and audit.
@@ -427,6 +463,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
         'p1_eleven_original_native_raster': p1_raster,
         'p345_forty_source_macro': p345_macro,
         'p345_execution_only_certificate': p345_execution_certificate,
+        'p345_remaining_fourteen_original_crosssource': remaining_p345,
         'native_semantic_code_review': code_registry,
         'whole_family_macro_code_review': family_macros,
         'schema': 'gg-c07-exact100-original-native-replay-v1',
