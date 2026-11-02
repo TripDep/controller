@@ -238,7 +238,13 @@ def inspect(ctx,rid):
             paths=guide_doc.get('install_paths')
             steps=guide_doc.get('maintenance_steps')
             instruction=bool(structurally_valid and
-              type(paths) is list and set(paths)=={source_name,export_name}
+              type(guide_doc) is dict and set(guide_doc)=={
+                'asset','source_sha256','export_sha256','install_paths',
+                'maintenance_steps','status','owner_approved'}
+              and guide_doc.get('asset')==asset
+              and guide_doc.get('source_sha256')==sha(source)
+              and guide_doc.get('export_sha256')==sha(export)
+              and type(paths) is list and set(paths)=={source_name,export_name}
               and len(paths)==2 and
               type(steps) is list and len(steps)==3 and
               all(type(x) is str and 5<=len(x)<=300 for x in steps)
