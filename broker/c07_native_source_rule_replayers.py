@@ -12,6 +12,106 @@ import supervisor_judgment as judgment
 
 # Explicit original literal / rule / criterion contracts, no dynamic fallback.
 NATIVE_RULES = {
+    'AAA-200-A-001': ('ac_twenty_source', (
+        'goal_text_in_original_pre_d_record',
+        'real_work_scope_matches_original_goal',
+        'planned_output_types_explicit',
+    )),
+    'AAA-200-A-002': ('ac_twenty_source', (
+        'actual_deliverable_list_precedes_work',
+        'action_steps_distinct_from_deliverables',
+        'original_controller_action_matches_plan',
+    )),
+    'AAA-200-A-003': ('ac_twenty_source', (
+        'current_original_nonreport_bytes_recorded',
+        'original_baseline_export_byte_delta_observed',
+        'no_report_count_used_as_completion_metric',
+    )),
+    'AAA-200-A-004': ('ac_twenty_source', (
+        'constraints_predeclared_in_original_note',
+        'exact_source_deps_present',
+        'all_known_lock_names_explicit',
+    )),
+    'AAA-200-A-005': ('ac_twenty_source', (
+        'current_asset_matches_original_scope',
+        'intended_action_not_switched',
+        'documented_authorized_change_if_any',
+    )),
+    'AAA-200-A-006': ('ac_twenty_source', (
+        'original_technical_qa_file_reread',
+        'registered_actual_binary_output_present',
+        'qa_names_testable_failure_modes',
+    )),
+    'AAA-200-A-007': ('ac_twenty_source', (
+        'original_pre_delivery_defect_categories_present',
+        'defect_reproduction_evidence_original_bytes',
+        'self_review_not_called_independent',
+    )),
+    'AAA-200-A-008': ('ac_twenty_source', (
+        'factual_claims_are_pinned_original_digests',
+        'inferences_distinct_from_facts',
+        'unknown_assumptions_explicit',
+    )),
+    'AAA-200-A-009': ('ac_twenty_source', (
+        'actual_delivery_status_not_from_producer_flag',
+        'known_open_test_failures_not_declared_pass',
+        'explicit_full_completion_test_not_forged',
+    )),
+    'AAA-200-A-010': ('ac_twenty_source', (
+        'pre_d_deliverables_have_specific_names',
+        'alternative_costs_predeclared_in_source_note',
+        'selected_method_defined_before_execution',
+    )),
+    'AAA-200-C-021': ('ac_twenty_source', (
+        'original_photo_front_is_valid_png_bytes',
+        'reference_photo_has_provenance_url_recorded',
+        'photo_sha_bound_pre_d',
+    )),
+    'AAA-200-C-022': ('ac_twenty_source', (
+        'original_plan_pdf_bytes_present',
+        'original_section_pdf_bytes_present',
+        'availability_statement_in_original_index',
+    )),
+    'AAA-200-C-023': ('ac_twenty_source', (
+        'measured_real_world_dimensions_recorded',
+        'measured_aspect_ratio_consistent',
+        'source_drawing_bytes_present',
+    )),
+    'AAA-200-C-024': ('ac_twenty_source', (
+        'original_construction_drawing_opened',
+        'structural_member_inventory_not_empty',
+        'assembly_connection_hierarchy_recorded',
+    )),
+    'AAA-200-C-025': ('ac_twenty_source', (
+        'original_material_closeup_image_validated',
+        'physical_material_classes_identified',
+        'material_reference_original_digest_linked',
+    )),
+    'AAA-200-C-026': ('ac_twenty_source', (
+        'three_distinct_angular_original_images',
+        'front_and_side_and_rear_dimensions_decoded',
+        'photo_shas_explicit_in_pre_d_contract',
+    )),
+    'AAA-200-C-027': ('ac_twenty_source', (
+        'structural_and_aesthetic_categories_explicit',
+        'categories_have_no_overlap',
+        'both_categories_reference_actual_original_bytes',
+    )),
+    'AAA-200-C-028': ('ac_twenty_source', (
+        'historical_period_or_year_in_source_note',
+        'place_and_culture_named',
+        'architectural_identity_supported_by_original_reference',
+    )),
+    'AAA-200-C-029': ('ac_twenty_source', (
+        'actual_original_license_note_present',
+        'license_scope_and_author_identified',
+        'specific_original_reference_sha_listed',
+    )),
+    'AAA-200-C-030': ('ac_twenty_source', (
+        'single_original_reference_index_present',
+        'source_index_sha_matches_original_artifact_bytes',
+        'index_before_D_in_enrolled_operation',
+    )),
     'AAA-200-S-184': ('p8_three_final_quality_macro', (
         'pre_d_original_normals_defect_policy_and_six_view_audit_sha_pinned',
         'original_face_winding_unit_normals_and_non_degenerate_surfaces_recomputed',
@@ -613,7 +713,9 @@ def build_packet(source_context, rule_id, *, expected=None):
     domain, criteria = NATIVE_RULES[rule_id]
     # Import domain readers only after reviewed enrollment has initialized;
     # the existing evidence modules import approved_validators indirectly.
-    if domain == 'p1':
+    if domain == 'ac_twenty_source':
+        from c07_a10_c10_original_evidence import inspect
+    elif domain == 'p1':
         from c07_p1_thirty_native_domain import inspect
     elif domain == 'topology':
         from c07_p3_geometry_semantics import inspect
@@ -777,8 +879,25 @@ def build_packet(source_context, rule_id, *, expected=None):
         report = inspect(inv, plan, controller, asset, step, work,
                          source_loader=loader)
     source = report['rules'][rule_id]
-    checks = dict(source['original_native_measured_criteria'] if domain == 'p1'
+    checks = dict(source['native_original_file_criteria'] if domain == 'ac_twenty_source'
+                  else source['original_native_measured_criteria'] if domain == 'p1'
                   else source['original_machine_checks'])
+    # A/C: all 60 rule-specific original-source observations are replayed in
+    # one canonical P0 report, with no artistic/license/owner/MG0 promotion.
+    ac_twenty_review = report if domain == 'ac_twenty_source' else None
+    if ac_twenty_review is not None:
+        from c07_a10_c10_original_evidence import IDS as ac_ids
+        need(set(ac_twenty_review['rules'])==set(ac_ids) and
+             ac_twenty_review['source_rules_examined']==20 and
+             ac_twenty_review['native_conditions_evaluated']==60 and
+             ac_twenty_review['full_rule_passes']==0 and
+             ac_twenty_review['individual_mg0_passes']==0 and
+             ac_twenty_review['advancement_authorized'] is False and
+             all(r['full_rule_pass'] is False and
+                 r['individual_mg0']=='UNKNOWN' and
+                 r['advancement_authorized'] is False
+                 for r in ac_twenty_review['rules'].values()),
+             'C07_AC_TWENTY_ORIGINAL_REPLAY_NOT_SOURCE_ONLY')
     # Six original P4 lighting/visual obligations are evaluated as one
     # independent source macro; their source-only results do NOT promote any
     # untrusted renderer/owner claims to FULL or MG0.
@@ -933,6 +1052,9 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if ac_twenty_review is not None:
+        proof['original_ac_twenty_macro_rule'] = ac_twenty_review['rules'][rule_id]
+        proof['original_ac_twenty_macro_digest'] = judgment.digest(ac_twenty_review)
     if mot_nine_review is not None:
         proof['original_mot_nine_crossfamily_source_macro'] = mot_nine_review
     if p678_three_review is not None:
