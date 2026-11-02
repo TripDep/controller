@@ -891,8 +891,7 @@ def build_packet(source_context, rule_id, *, expected=None):
     if d_ten_review is not None:
         proof['original_p1_d_ten_design_and_geometry_macro'] = (
             d_ten_review['rows'][rule_id])
-        proof['original_p1_d_ten_all_ids_sha256'] = digest(
-            judgment.canonical_bytes(d_ten_review))
+        proof['original_p1_d_ten_all_ids_sha256'] = judgment.digest(d_ten_review)
     if q_four_review is not None:
         proof['original_p7_q_four_crossformat_source_macro'] = q_four_review
     if p4_n_six_review is not None:
