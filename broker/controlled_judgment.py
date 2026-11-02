@@ -2312,6 +2312,42 @@ class ControlledJudgment:
                        fresh.get('action') == 'READY_FOR_EXACT_OPERATION' and
                        fresh.get('operation_sha256') == work['operation_sha256'],
                        'CONTROLLED_POST_NATIVE_RULES_MG0_NOT_VERIFIED')
+                # C07 FINAL: derive truthful post-operation individual FULL
+                # semantic+MG0 certifications from the independently verified
+                # Git-native decision (never from initial-source observations,
+                # green CI, incomplete positive subsets or missing evidence).
+                if self.inventory.get('rule_count') == 763:
+                    from c07_763_post_certification import inspect as certify763
+                    native_final763 = certify763(self.inventory,plan,work,fresh)
+                    j.need(native_final763['canonical_rule_count']==763
+                           and native_final763['frozen200_rule_count']==200
+                           and sum(native_final763['counts'].values())==763
+                           and sum(native_final763['first_200_counts'].values())==200
+                           and native_final763['native_decision_sha256']==
+                               post_decision['decision_sha256']
+                           and native_final763['owner_approval_inferred'] is False
+                           and native_final763['advancement_authorized'] is False,
+                           'CONTROLLED_C07_FINAL_CERTIFICATION_SOURCE_DRIFT')
+                    self.append('SUPERVISOR_C07_FINAL_763_SEMANTIC_MG0_CERTIFICATION',
+                        step=step,
+                        attempt_id=work['attempt_id'],
+                        operation_sha256=work['operation_sha256'],
+                        master_sha256=work['master_sha256'],
+                        independent_post_native_decision_sha256=post_decision[
+                            'decision_sha256'],
+                        canonical_rule_count=763,
+                        frozen200_rule_count=200,
+                        individual_full_semantic_mg0_certifications=native_final763[
+                            'individual_native_and_mg0_certifications'],
+                        frozen200_certifications=native_final763[
+                            'first_200_certifications'],
+                        full_763_complete=native_final763['all_763_approved'],
+                        family_counts=native_final763['family_counts'],
+                        rule_statuses=native_final763['rules'],
+                        result_counts=native_final763['counts'],
+                        original_frozen200_sha256=native_final763[
+                            'original_frozen200_cohort_sha256'],
+                        advancement_authorized=False)
                 self.append('SUPERVISOR_POST_OPERATION_VERIFIED',
                             reservation_hash=rows[0]['reservation_hash'],
                             operation_sha256=work['operation_sha256'],
