@@ -39,8 +39,8 @@ def all_transitive_dependencies(plan,work,controller,source_loader):
         if key in active or key not in graph:return False
         active.add(key)
         links=graph[key]
-        if type(links) is not list or len(links)!=len(set(links)) or
-            any(type(n) is not str or n not in graph for n in links):
+        if (type(links) is not list or len(links)!=len(set(links)) or
+            any(type(n) is not str or n not in graph for n in links)):
             return False
         for other in links:
             if not visit(other):return False
@@ -55,8 +55,8 @@ def all_transitive_dependencies(plan,work,controller,source_loader):
             ".." in Path(path).parts or
             "\\" in path):return False
         p=root/path
-        if not p.resolve().is_relative_to(root.resolve()) or
-           p.is_symlink() or not p.is_file():
+        if (not p.resolve().is_relative_to(root.resolve()) or
+            p.is_symlink() or not p.is_file()):
             return False
         raw=source_loader(str(p))
         if type(raw) is not bytes or sha(raw)!=original[key]:return False
