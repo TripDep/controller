@@ -1,0 +1,30 @@
+name: C07 macro100 certification guard
+on:
+  pull_request:
+    paths:
+      - 'broker/c07_macro100_evidence_gate.py'
+      - 'broker/test_c07_macro100_evidence_gate.py'
+      - 'broker/controlled_judgment.py'
+      - '.github/workflows/c07-macro100-certification.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'broker/c07_macro100_evidence_gate.py'
+      - 'broker/test_c07_macro100_evidence_gate.py'
+      - 'broker/controlled_judgment.py'
+      - '.github/workflows/c07-macro100-certification.yml'
+permissions:
+  contents: read
+jobs:
+  macro100-negative-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run actual C07 negative gate regression tests
+        working-directory: broker
+        run: python -m unittest -v test_c07_macro100_evidence_gate
+      - name: Syntax-check Controller entrypoint
+        run: python -m py_compile broker/controlled_judgment.py broker/c07_macro100_evidence_gate.py

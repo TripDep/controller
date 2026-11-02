@@ -594,6 +594,11 @@ class ControlledJudgment:
 
     def close(self, step, token, result, evidence, regression, sections_after, critical=True,
               post_origin=None, post_offers=None):
+        # C07 macro-certification cannot be smuggled into an ordinary close.
+        # This negative gate does not alter regular asset work/phase PASS.
+        if isinstance(result, str) and result.upper().startswith(('C07_MACRO100_COMPLETE', 'C07_100_CERTIFIED', 'C07_100_FULL')):
+            from c07_macro100_evidence_gate import Macro100Blocked
+            raise Macro100Blocked('CONTROLLED_C07_MACRO100_INDEPENDENT_CERTIFICATION_REQUIRED')
         with self.locked():
             active = self.c.asset_state(self.asset).get('active_step')
             j.need(active and active['step'] == step and active['token'] == token, 'CONTROLLED_STEP_TOKEN')
