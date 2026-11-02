@@ -118,5 +118,16 @@ class RealMeasuredOutcomesTests(unittest.TestCase):
             with self.subTest(events=events):
                 self.assertFalse(measured_timebox(plan,events))
 
+    def test_malformed_metric_name_or_operator_returns_false(self):
+        for bad in (
+          {"name":[],"operator":"eq","expected":1},
+          {"name":"triangles_examined","operator":[],"expected":1},
+          {"name":"triangles_examined","operator":"gte","expected":{}},
+        ):
+            with self.subTest(bad=str(bad)):
+                p={"outcome_contract":{"acceptance_criteria":[bad]}}
+                self.assertFalse(criteria_well_formed(p))
+                self.assertFalse(measured_original_glb(p,self.technical))
+
 if __name__=="__main__":
     unittest.main()
