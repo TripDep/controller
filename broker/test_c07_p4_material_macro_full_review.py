@@ -232,6 +232,34 @@ class P4MaterialMacroTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.packet(ctx,'AAA-200-M-122')
 
+    def test_m129_original_codewalker_shader_matches_real_used_primitives(self):
+        test,ctx=self.context()
+        policy=copy.deepcopy(POLICY)
+        policy['material_shader_map']={name:'normal_spec.sps' for name in
+            ('wood','stone','metal','glass','plaster')}
+        xml=(b'<Drawable><ShaderGroup><Shaders><Item><Name>'
+             b'normal_spec.sps</Name></Item></Shaders></ShaderGroup></Drawable>')
+        rid='AAA-200-M-129'
+        for source,bindings,expected in (
+            (xml,policy,[True,True,True]),
+            (b'<Drawable><Shaders><Item><Name>wrong.sps</Name></Item>'
+             b'</Shaders></Drawable>',policy,[True,True,False]),
+            (xml,{**policy,'material_shader_map':{'wood':'normal_spec.sps'}},
+             [True,True,False]),
+            (b'<!DOCTYPE x><Drawable><Shaders><Item><Name>normal_spec.sps'
+             b'</Name></Item></Shaders></Drawable>',policy,[True,False,False])):
+            with self.subTest(expected=expected):
+                test.add('P4_NATIVE_DRAWABLE_XML','native_drawable.ydr.xml',source)
+                test.add('P4_MATERIAL_CONFORMANCE',
+                         'p4_material_conformance.json',encoded(bindings))
+                test.sync()
+                ctx['controller']=test.f.controller
+                packet,_,_=self.packet(ctx,rid)
+                self.assertEqual(list(packet['rule']['checks'].values()),
+                                 expected)
+                self.assertEqual(packet['rule']['result'],'UNKNOWN')
+                self.assertNotIn(rid,FULL_LITERAL_REVIEWED)
+
     def test_shader_and_renderer_claims_remain_unknown_even_with_policy(self):
         _,ctx=self.context()
         for rid in ('AAA-200-M-129','AAA-200-M-130'):
