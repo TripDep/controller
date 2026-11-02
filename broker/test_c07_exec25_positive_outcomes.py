@@ -132,5 +132,14 @@ class Exec25MacroPositiveTests(unittest.TestCase):
         self.assertIn("SUPERVISOR_C07_EXEC25_ORIGINAL_POSITIVE_OUTCOMES",code)
         self.assertIn("native_positive_outcome_conditions_evaluated'] == 50",code)
 
+    def test_unhashable_indirect_edge_returns_false_safely(self):
+        c=Mock()
+        key="a"*64
+        p={"dependency_files":{key:"geometry.glb"},
+           "outcome_contract":{"dependency_graph":{key:[{}]}}}
+        w={"work_dependencies":{key:"c"*64}}
+        self.assertFalse(all_transitive_dependencies(
+            p,w,c,lambda _:b"actual"))
+
 if __name__=="__main__":
     unittest.main()
