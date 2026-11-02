@@ -63,7 +63,7 @@ def _semantic_source(row,rid):
        "semantic_target":text,
     }
 
-def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
+def inspect(inventory,plan,controller,asset,step,work,*,source_loader,literal_process=None):
     need(callable(source_loader),"SEM200_ORIGINAL_FILE_READER_REQUIRED")
     cohort=R122_FROZEN_IDS
     need(len(cohort)==len(set(cohort))==200
@@ -125,6 +125,34 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
          and mg0.get("individual_mg0_passes")==0
          and mg0.get("advancement_authorized") is False,
          "SEM200_ORIGINAL_INDEPENDENT_MG0_READBACK_REQUIRED")
+    # Reuse the two independently verified R136 process semantics already
+    # computed by this SAME controlled Controller operation. A literal
+    # semantic PASS is NOT full work, owner acceptance, or MG0 certification.
+    literal={}
+    if literal_process is not None:
+        need(type(literal_process) is dict and
+             literal_process.get("schema")==
+                  "gg-c07-native-2-exact-process-semantics-v1" and
+             literal_process.get("source_rule_count")==2 and
+             literal_process.get("attempt_id")==work["attempt_id"] and
+             literal_process.get("operation_sha256")==work["operation_sha256"] and
+             literal_process.get("individual_mg0_passes")==0 and
+             literal_process.get("full_work_rule_passes")==0 and
+             literal_process.get("advancement_authorized") is False and
+             set(literal_process.get("rules",{}))=={
+                 "AAA-200-R-172","AAA-200-R-178"} and
+             literal_process.get("original_audit_tail") in
+                 {r.get("record_hash") for r in records},
+             "SEM200_LITERAL_SOURCE_REPLAYER_NOT_CURRENT")
+        for rid,verdict in literal_process["rules"].items():
+            need(verdict.get("rule_id")==rid and
+                 verdict.get("source_sha256")==inventory["rules"][rid]["source_sha256"]
+                 and verdict.get("requirement_sha256")==inventory["rules"][rid]["requirement_sha256"]
+                 and verdict.get("literal_process_semantics") in ("PASS","UNKNOWN")
+                 and verdict.get("individual_mg0")=="UNKNOWN"
+                 and verdict.get("full_work_rule_pass") is False,
+                 "SEM200_LITERAL_SOURCE_CLAIM_NOT_AUTHENTIC:"+rid)
+            literal[rid]=verdict["literal_process_semantics"]
     statuses={}
     for rid in cohort:
         original=inventory["rules"][rid]
@@ -153,7 +181,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
               "FULL_PREVENTION_AND_INDEPENDENT_PROOF_NOT_YET_ESTABLISHED"),
           "required_to_certify":(
               "INDEPENDENT_SOURCE_SPECIFIC_NATIVE_VERIFIER_AND_INDIVIDUAL_MG0"),
-          "independent_positive_semantics":"UNKNOWN",
+          "independent_positive_semantics":(
+              "SOURCE_LITERAL_PASS" if literal.get(rid)=="PASS" and
+                status!="FAIL" else "UNKNOWN"),
           "owner_approval":"UNKNOWN",
           "advancement_authorized":False,
         }
@@ -179,6 +209,9 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
       "semantic_failures":sum(x["semantic_result"]=="FAIL" for x in statuses.values()),
       "semantic_unknowns":sum(x["semantic_result"]=="UNKNOWN" for x in statuses.values()),
       "semantic_positive_passes":0,
+      "source_literal_process_passes":sum(
+           x["independent_positive_semantics"]=="SOURCE_LITERAL_PASS"
+           for x in statuses.values()),
       "individual_mg0_passes":0,
       "advancement_authorized":False,
       "rules":statuses,
