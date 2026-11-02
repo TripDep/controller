@@ -80,7 +80,7 @@ def _event(rows, name, work, step):
             r.get("operation_sha256") == work["operation_sha256"]]
 
 def evidence_checks(inventory, plan, records, state, artifacts, work, step,
-                    native):
+                    native, source_loader=None):
     """Ten independent per-clause observations; no producer-selected PASS map."""
     by_role = _artifact_map(artifacts)
     editable = _one(by_role, "SOURCE_EDITABLE")
@@ -204,7 +204,7 @@ def evidence_checks(inventory, plan, records, state, artifacts, work, step,
             old_steps and
             work.get("previous_attempt_id") and
             work["previous_attempt_id"] != work["attempt_id"]),
-        "checkpoint_bytes_and_no_duplicate_work_independently_replayed": real_checkpoint_restored_without_duplicate(records,by_role,work,step),
+        "checkpoint_bytes_and_no_duplicate_work_independently_replayed": real_checkpoint_restored_without_duplicate(records,by_role,work,step,source_loader),
       },
       180: {
         "current_original_model_export_exists": bool(exported),
@@ -235,7 +235,7 @@ def inspect(inventory, plan, controller, asset, step, work, *, source_loader):
     native = native_process(inventory, plan, controller, asset, step, work,
                             source_loader=source_loader)
     checks = evidence_checks(inventory, plan, records, state, artifacts,
-                             work, step, native)
+                             work, step, native, source_loader=source_loader)
     result = {}
     for n, clause in CLAUSES.items():
         rid = "AAA-200-R-%03d" % n
