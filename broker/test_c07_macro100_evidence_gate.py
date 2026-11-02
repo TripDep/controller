@@ -55,6 +55,24 @@ class Macro100GateTests(unittest.TestCase):
         with self.assertRaisesRegex(gate.Macro100Blocked, "NOT_ALL_ONE_HUNDRED"):
             gate.require_complete(r, x)
 
+    def test_missing_independent_backend_is_blocked(self):
+        x = fixture()
+        report = gate.inspect(x, {}, {})
+        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_VERIFIER_MISSING"):
+            gate.require_complete(report, x)
+
+    def test_fake_independent_backend_without_approved_reviewers_is_blocked(self):
+        x = fixture()
+        report = gate.inspect(x, {}, {})
+        fake = lambda rid, row: {
+            "rule_id": rid, "requirement_sha256": row["requirement_sha256"],
+            "source_sha256": row["source_sha256"], "validator_id": "fake",
+            "semantic_verdict": "PASS", "mg0_verdict": "PASS",
+            "independent": True, "source_attestation_sha256": "a" * 64}
+        with patch.dict(gate.REVIEWED, {}, clear=True):
+            with self.assertRaisesRegex(gate.Macro100Blocked, "NO_APPROVED_SEMANTIC_REVIEWER"):
+                gate.require_complete(report, x, independent_verifier=fake)
+
     def test_source_tampering_is_hard_blocked(self):
         x = fixture()
         rid = gate.BATCH_IDS[0]
