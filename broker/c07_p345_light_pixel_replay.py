@@ -17,8 +17,8 @@ def original_alpha_grid(raw):
     zero alpha can therefore fabricate any apparent neutral/direct/shadow
     response using completely invisible RGB values. Validate the original
     CRC-checked bytes, then reconstruct each RGBA alpha scanline (all five
-    PNG filters). This applies to QA screenshots, never to asset textures
-    where transparency is intentional. Source evidence is NOT renderer proof.
+    PNG filters). Preserve alpha for material UV-fidelity comparisons; only
+    the QA-capture wrapper requires full opacity. Not renderer proof.
     """
     if type(raw) is not bytes:
         return None
@@ -27,17 +27,22 @@ def original_alpha_grid(raw):
         if len(pixels) != width * height or raw[12:16] != b'IHDR':
             return None
         color = raw[25]
-        if color == 2:
-            return width, height, [255] * (width * height)
-        if color != 6:
+        if color not in (2, 6):
             return None
         offset, parts = 8, []
         while offset < len(raw):
             length = int.from_bytes(raw[offset:offset+4], 'big')
             kind = raw[offset+4:offset+8]
+            # RGB PNG may have tRNS color-key transparency. APNG animation
+            # can hide later frames. The shared RGB decoder ignores both,
+            # so neither may establish a visible QA or texture witness.
+            if kind in (b'tRNS', b'acTL', b'fcTL', b'fdAT'):
+                return None
             if kind == b'IDAT':
                 parts.append(raw[offset+8:offset+8+length])
             offset += length + 12
+        if color == 2:
+            return width, height, [255] * (width * height)
         expected = height * (width * 4 + 1)
         decoder = zlib.decompressobj()
         expanded = bytearray()
