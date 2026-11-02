@@ -41,8 +41,9 @@ def all_transitive_dependencies(plan,work,controller,source_loader):
         if key in active or key not in graph:return False
         active.add(key)
         links=graph[key]
-        if (type(links) is not list or len(links)!=len(set(links)) or
-            any(type(n) is not str or n not in graph for n in links)):
+        if (type(links) is not list or
+            any(type(n) is not str or n not in graph for n in links) or
+            len(links)!=len(set(links))):
             return False
         for other in links:
             if not visit(other):return False
