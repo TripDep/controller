@@ -12,6 +12,10 @@ from pathlib import Path
 from c07_positive_native_process import (
     _original_attempt, _registered_artifacts, inspect as native_process, sha,
 )
+from c07_r171_r180_positive_source_oracles import (
+    native_script_output_matches_oracle, automation_preserved_approved_bytes,
+    real_checkpoint_restored_without_duplicate,
+)
 
 SCHEMA = "gg-c07-r171-r180-original-process-semantics-v1"
 CATALOG_SHA = "f9e7e0d11398c26095f5b3a83a2cf1e8a14ea459bc47dc09c4dfad891664fcf9"
@@ -179,13 +183,13 @@ def evidence_checks(inventory, plan, records, state, artifacts, work, step,
         "original_export_output_bytes_sha_verified": bool(exported),
         "current_script_result_checked_against_binary_reimport": qa_bytes_exist,
         "original_native_qa_event_recorded": bool(native_qa),
-        "expected_result_oracle_independently_verified": False,
+        "expected_result_oracle_independently_verified": native_script_output_matches_oracle(plan,by_role),
       },
       177: {
         "existing_approved_copy_reopened": bool(baseline),
         "copy_sha_does_not_equal_changed_current_output": output_differs,
         "original_approved_bytes_rechecked": bool(old_approved),
-        "independent_pre_and_post_approved_copy_hashes_equal": False,
+        "independent_pre_and_post_approved_copy_hashes_equal": automation_preserved_approved_bytes(records,by_role,work,step),
       },
       178: {
         "exact_original_operation_dependency_sources": deps_exact,
@@ -200,7 +204,7 @@ def evidence_checks(inventory, plan, records, state, artifacts, work, step,
             old_steps and
             work.get("previous_attempt_id") and
             work["previous_attempt_id"] != work["attempt_id"]),
-        "checkpoint_bytes_and_no_duplicate_work_independently_replayed": False,
+        "checkpoint_bytes_and_no_duplicate_work_independently_replayed": real_checkpoint_restored_without_duplicate(records,by_role,work,step),
       },
       180: {
         "current_original_model_export_exists": bool(exported),
