@@ -1202,6 +1202,51 @@ class ControlledJudgment:
                     exact_source_specific_native_evidence=mq50['rules'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07: 100 further original source obligations:
+                # AAA-200 A001-010/L111-120/S181-190/T191-200 (40),
+                # BEHAVIOR 051-110 (60). Machine observations must not
+                # self-certify qualitative results, owner consent, or MG0.
+                from c07_batch100_native import inspect as inspect_batch100
+                batch100 = inspect_batch100(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(batch100['source_rules_examined'] == 100
+                       and batch100['aaa_rules_examined'] == 40
+                       and batch100['behavior_rules_examined'] == 60
+                       and batch100['native_conditions_evaluated'] == 340
+                       and set(batch100['rules']) == (
+                           {'AAA-200-A-' + str(n).zfill(3)
+                            for n in range(1,11)} |
+                           {'AAA-200-L-' + str(n).zfill(3)
+                            for n in range(111,121)} |
+                           {'AAA-200-S-' + str(n).zfill(3)
+                            for n in range(181,191)} |
+                           {'AAA-200-T-' + str(n).zfill(3)
+                            for n in range(191,201)} |
+                           {'BEHAVIOR-' + str(n).zfill(3)
+                            for n in range(51,111)})
+                       and batch100['full_rule_passes'] == 0
+                       and batch100['individual_mg0_passes'] == 0
+                       and batch100['advancement_authorized'] is False
+                       and all(row['full_rule_semantics'] == 'UNKNOWN'
+                               and row['individual_mg0'] == 'UNKNOWN'
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in batch100['rules'].values()),
+                       'CONTROLLED_C07_BATCH100_MISSING_OR_FALSE_PASS')
+                self.append('SUPERVISOR_C07_BATCH100_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=batch100['original_audit_sha256'],
+                    original_audit_tail=batch100['original_audit_tail'],
+                    original_native_glb_sha256=batch100['original_glb_sha256'],
+                    source_rule_count=100,native_conditions_evaluated=340,
+                    native_conditions_observed=batch100['native_conditions_observed'],
+                    per_rule_source_evidence=batch100['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # C07 BEHAVIOR-001..050: fifty independently replayed
                 # original error/prevention machine evidence scopes. No
                 # negative-test green, audit absence or source hash constitutes
