@@ -91,7 +91,8 @@ class TestIndependentEXEC25Close(unittest.TestCase):
         self.reviews={}
         for rid in IDS:
             row=self.inv["rules"][rid]
-            ref=sha((rid+":independently-reviewed-artifact-test-only").encode())
+            reference_bytes=(rid+":independently-reviewed-artifact-test-only").encode()
+            ref=sha(reference_bytes)
             evidence={
                 "schema":gate.EVIDENCE_SCHEMA,"rule_id":rid,
                 "attempt_id":self.attempt,"master_sha256":self.master_sha,
@@ -104,7 +105,8 @@ class TestIndependentEXEC25Close(unittest.TestCase):
                     "finding":"PASS","evidence_sha256":ref} for n in range(1,6)],
                 "independent_evidence_references":[{
                     "sha256":ref,"source":"TEST_ONLY_ORIGINAL_EVIDENCE_FIXTURE",
-                    "verified":True}],
+                    "verified":True,
+                    "content_base64":base64.b64encode(reference_bytes).decode()}],
                 "independent_review_method":"TEST_ONLY_cryptography_fixture_not_real_review",
             }
             raw=canonical(evidence)
@@ -183,6 +185,19 @@ class TestIndependentEXEC25Close(unittest.TestCase):
         rid=IDS[9]
         self.reviews[rid]["signature_base64"]="A"*88
         with self.assertRaises(Exception):
+            self.certify_fixture()
+
+    def test_signed_review_with_missing_original_evidence_bytes_blocks(self):
+        rid=IDS[8]
+        evidence=json.loads(base64.b64decode(self.reviews[rid]["evidence_base64"]))
+        evidence["independent_evidence_references"][0]["content_base64"]=(
+            base64.b64encode(b"forged or unrelated external proof").decode())
+        raw=canonical(evidence)
+        self.reviews[rid]["evidence_base64"]=base64.b64encode(raw).decode()
+        self.reviews[rid]["payload"]["external_evidence_sha256"]=sha(raw)
+        self.reviews[rid]["signature_base64"]=self.sign(self.reviews[rid]["payload"])
+        with self.assertRaisesRegex(gate.FinalCertificationBlocked,
+                                    "REFERENCED_EVIDENCE_BYTES_SHA_MISMATCH"):
             self.certify_fixture()
 
     def test_missing_one_of_five_trigger_proofs_never_certifies(self):
