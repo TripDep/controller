@@ -1202,6 +1202,40 @@ class ControlledJudgment:
                     exact_source_specific_native_evidence=mq50['rules'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 BEHAVIOR-001..050: fifty independently replayed
+                # original error/prevention machine evidence scopes. No
+                # negative-test green, audit absence or source hash constitutes
+                # independent compliance, owner approval or MG0 PASS.
+                from c07_behavior_001_050_native import inspect as inspect_beh50
+                beh50 = inspect_beh50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(beh50['source_rules_examined'] == 50
+                       and beh50['native_conditions_evaluated'] == 150
+                       and set(beh50['rules']) == {
+                           'BEHAVIOR-' + str(n).zfill(3)
+                           for n in range(1,51)}
+                       and beh50['full_rule_passes'] == 0
+                       and beh50['individual_mg0_passes'] == 0
+                       and beh50['advancement_authorized'] is False
+                       and all(r['full_prevention_semantics'] == 'UNKNOWN'
+                               and r['individual_mg0'] == 'UNKNOWN'
+                               and r['owner_approval'] == 'UNKNOWN'
+                               and r['advancement_authorized'] is False
+                               for r in beh50['rules'].values()),
+                       'CONTROLLED_C07_BEHAVIOR50_FALSE_COMPLIANCE_OR_MG0')
+                self.append('SUPERVISOR_C07_BEHAVIOR001_050_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=beh50['original_audit_sha256'],
+                    original_audit_tail=beh50['original_audit_tail'],
+                    original_native_evidence=beh50['rules'],
+                    source_rule_count=50,native_conditions_evaluated=150,
+                    native_conditions_observed=beh50['native_conditions_observed'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # C07 B-011..F-060: fifty canonical original-source
                 # rule-specific machine evidence scopes. A/C reference checks
                 # are replayed against their original SHA-bound sources.
