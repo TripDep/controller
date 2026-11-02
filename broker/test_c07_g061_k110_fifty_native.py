@@ -114,4 +114,32 @@ class NativeGK50Tests(unittest.TestCase):
         self.assertIn("from c07_g061_k110_fifty_native import inspect as inspect_gk50",s)
         self.assertIn("SUPERVISOR_C07_G061_K110_FIFTY_ORIGINAL_NATIVE",s)
         self.assertIn("gk50['source_rules_examined'] == 50",s)
+    def test_two_different_original_world_scale_rock_instances_are_measured(self):
+        import json,struct
+        from glb_machine_qa import parse,audit_bytes
+        from c07_gk50_size_scan import readback
+        def raw_named(name,second_scale):
+            g,binary=parse(GLB)
+            g["meshes"][0]["name"]=name
+            g["nodes"]=[
+                {"mesh":0,"name":name+"_first","scale":[1,1,1]},
+                {"mesh":0,"name":name+"_second","scale":[second_scale]*3}]
+            g["scenes"][0]["nodes"]=[0,1]
+            payload=json.dumps(g,separators=(",",":")).encode()
+            payload+=b" "*(-len(payload)%4)
+            return (struct.pack("<4sII",b"glTF",2,
+                        12+8+len(payload)+8+len(binary))+
+                    struct.pack("<I4s",len(payload),b"JSON")+payload+
+                    struct.pack("<I4s",len(binary),b"BIN\\x00")+binary)
+        for name,key in (("taihu_rock","rock"),("bamboo_tree","vegetation")):
+            with self.subTest(group=key):
+                model=raw_named(name,2)
+                observation=readback(model,audit_bytes(model))
+                self.assertTrue(observation[key])
+                same=raw_named(name,1)
+                self.assertFalse(readback(same,audit_bytes(same))[key])
+    def test_original_world_scan_budget_does_not_fake_positive(self):
+        from c07_gk50_size_scan import readback,POINT_BUDGET
+        self.assertEqual(readback(GLB,{"vertices_examined":POINT_BUDGET+1}),
+                         {"rock":False,"vegetation":False})
 if __name__=="__main__":unittest.main()
