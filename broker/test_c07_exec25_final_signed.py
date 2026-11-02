@@ -199,4 +199,25 @@ class TestIndependentEXEC25Close(unittest.TestCase):
         self.assertEqual(set(self.original["rules"]),set(IDS))
         self.assertEqual(self.run()["independent_full_semantic_passes"],25)
 
+    def test_real_controller_has_independent_25_signature_command(self):
+        source=Path(__file__).with_name("controlled_judgment.py").read_text()
+        required=(
+            "def certify_exec25(self, packet):",
+            "SUPERVISOR_C07_EXEC25_FINAL_INDEPENDENT_SIGNED_MG0",
+            "CONTROLLED_EXEC25_ATTEMPT_ALREADY_CERTIFIED",
+            "owner_key_check(",
+            "C07_OWNER_APPROVED_REVIEWER_KEY_SHA256",
+            "C07_OWNER_APPROVED_REVIEWER_ID",
+            "certify25({",
+            "'certify-exec25'",
+            "--exec25-review",
+            "bridge.certify_exec25(data(args.exec25_review))",
+        )
+        for token in required:
+            with self.subTest(token=token):
+                self.assertIn(token,source)
+        self.assertLess(source.index("report = certify25({"),
+                        source.index("event = self.append(",
+                                     source.index("def certify_exec25(self, packet):")))
+
 if __name__=="__main__":unittest.main()
