@@ -26,7 +26,7 @@ def all_transitive_dependencies(plan,work,controller,source_loader):
     A list of direct files is not a transitive proof. Every node of a
     canonical dependency graph must be explicitly enrolled and re-read.
     """
-    graph=plan.get("dependency_graph")
+    graph=plan.get("outcome_contract",plan).get("dependency_graph")
     deps=plan.get("dependency_files")
     original=work.get("work_dependencies")
     if type(graph) is not dict or not graph or type(deps) is not dict or not deps:
@@ -148,8 +148,8 @@ def inspect(inv,plan,controller,asset,step,work,*,source_loader):
          "independent_qa_triads_registered",certificate(qa_roles[5])),
       6:("open_mandatory_issues_retested",valid_event("MANDATORY_ISSUES_RETESTED"),
          "optional_work_after_mandatory",valid_event("PRIORITY_SEQUENCE_VERIFIED")),
-      7:("time_budget_explicit",type(plan.get("timebox_seconds")) is int and
-         plan["timebox_seconds"]>0,
+      7:("time_budget_explicit",type(plan.get("outcome_contract",plan).get("timebox_seconds")) is int and
+         plan.get("outcome_contract",plan)["timebox_seconds"]>0,
          "actual_budget_comparison_verifiable",measured_timebox(plan,current)),
       8:("original_rollback_snapshot_verified",bool(base_snapshot),
          "independent_rollback_rehearsal",real_rollback_restored(originals,current)),
