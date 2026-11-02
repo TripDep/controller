@@ -62,6 +62,12 @@ def fixture():
             execs[rid]={**evidence,"independent_outcome_checks":{
                 "real_source_readback":True,
                 "actual_measurable_result_proven":False}}
+    # Original inventory is always 763, even though this cohort contains 200.
+    for i in range(563):
+        rid="OTHER_ORIGINAL_%03d"%i
+        wording="Outside current frozen cohort "+rid
+        records[rid]={"family":"OTHER","source_sha256":SHA,
+            "requirement_sha256":hashlib.sha256(wording.encode()).hexdigest()}
     inv={"schema":"gg-effective-family-inventory-v1","rule_count":763,
          "canonical_master_sha256":SHA,"rules":records}
     ctrl=Mock()
