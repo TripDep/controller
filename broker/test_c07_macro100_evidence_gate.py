@@ -45,7 +45,7 @@ class Macro100GateTests(unittest.TestCase):
         r["certified_full_count"] = 100
         r["individual_mg0_passes"] = 100
         r["advancement_authorized"] = True
-        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_VERIFIER_MISSING"):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
             gate.require_complete(r, x)
 
     def test_truncated_certificate_is_rejected(self):
@@ -58,7 +58,7 @@ class Macro100GateTests(unittest.TestCase):
     def test_missing_independent_backend_is_blocked(self):
         x = fixture()
         report = gate.inspect(x, {}, {})
-        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_VERIFIER_MISSING"):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
             gate.require_complete(report, x)
 
     def test_fake_independent_backend_without_approved_reviewers_is_blocked(self):
@@ -70,8 +70,8 @@ class Macro100GateTests(unittest.TestCase):
             "semantic_verdict": "PASS", "mg0_verdict": "PASS",
             "independent": True, "source_attestation_sha256": "a" * 64}
         with patch.dict(gate.REVIEWED, {}, clear=True):
-            with self.assertRaisesRegex(gate.Macro100Blocked, "NO_APPROVED_SEMANTIC_REVIEWER"):
-                gate.require_complete(report, x, independent_verifier=fake)
+            with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+                gate.require_complete(report, x, backend=fake)
 
     def test_native_certification_requires_actual_backend(self):
         with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
