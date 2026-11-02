@@ -40,20 +40,24 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         return binding, packet, spec, offer, log
 
     def test_each_approved_validator_requires_independent_readback(self):
-        self.assertEqual(len(approved.REVIEWED),18)
+        self.assertEqual(len(approved.REVIEWED),21)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
         for rid in approved.REVIEWED:
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
                 native_local=rid in (
-                    'AAA-200-R-171','AAA-200-R-172','AAA-200-R-176',
+                    'AAA-200-R-171','AAA-200-R-172','AAA-200-R-173',
+                    'AAA-200-R-175','AAA-200-R-176','AAA-200-R-177',
                     'AAA-200-R-178','AAA-200-R-179','AAA-200-R-180')
                 reader = ('planning_semantics.native_rule_readback'
                           if rid == 'AAA-200-B-012' else
                           'c07_r172_r178_reviewed_native.native_rule_readback'
                           if rid in ('AAA-200-R-172','AAA-200-R-178') else
                           'c07_r171_r180_more_reviewed_native.native_rule_readback'
+                          if rid in ('AAA-200-R-171','AAA-200-R-176',
+                                     'AAA-200-R-179','AAA-200-R-180') else
+                          'c07_r173_r175_r177_reviewed_native.native_rule_readback'
                           if native_local else
                           'r173_rule_semantics.native_rule_readback')
                 with patch.object(j.evidence,'native',return_value=log), patch(
@@ -71,13 +75,17 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
                 native_local=rid in (
-                    'AAA-200-R-171','AAA-200-R-172','AAA-200-R-176',
+                    'AAA-200-R-171','AAA-200-R-172','AAA-200-R-173',
+                    'AAA-200-R-175','AAA-200-R-176','AAA-200-R-177',
                     'AAA-200-R-178','AAA-200-R-179','AAA-200-R-180')
                 reader = ('planning_semantics.native_rule_readback'
                           if rid == 'AAA-200-B-012' else
                           'c07_r172_r178_reviewed_native.native_rule_readback'
                           if rid in ('AAA-200-R-172','AAA-200-R-178') else
                           'c07_r171_r180_more_reviewed_native.native_rule_readback'
+                          if rid in ('AAA-200-R-171','AAA-200-R-176',
+                                     'AAA-200-R-179','AAA-200-R-180') else
+                          'c07_r173_r175_r177_reviewed_native.native_rule_readback'
                           if native_local else
                           'r173_rule_semantics.native_rule_readback')
                 with patch.object(j.evidence,'native',return_value=log), patch(
