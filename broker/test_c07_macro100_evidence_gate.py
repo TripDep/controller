@@ -73,6 +73,19 @@ class Macro100GateTests(unittest.TestCase):
             with self.assertRaisesRegex(gate.Macro100Blocked, "NO_APPROVED_SEMANTIC_REVIEWER"):
                 gate.require_complete(report, x, independent_verifier=fake)
 
+    def test_native_certification_requires_actual_backend(self):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+            gate.certify_native(fixture(), {}, {}, object())
+
+    def test_native_certification_cannot_use_synthetic_mock(self):
+        class ForgedBackend:
+            synthetic = False
+            enrolled = {}
+            def rule(self, rule, expected, offer):
+                return {"result": "PASS", "mg0": "PASS", "proof_digest": "f"*64}
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+            gate.certify_native(fixture(), {}, {}, ForgedBackend())
+
     def test_source_tampering_is_hard_blocked(self):
         x = fixture()
         rid = gate.BATCH_IDS[0]
