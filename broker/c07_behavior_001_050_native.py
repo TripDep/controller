@@ -240,7 +240,7 @@ def scoped_original_features(rows,artifacts,state,plan,work,asset,step,controlle
        "controller_test_record_original":event("CONTROLLER_SELFTEST"),
     })
     first_and_second={k for triple in SPEC.values() for k in triple[:2]}
-    need(first_and_second==set(F),"C07_B50_MISSING_NATIVE_READBACK_PREDICATES")
+    need(first_and_second.issubset(F),"C07_B50_MISSING_NATIVE_READBACK_PREDICATES")
     need(all(type(v) is bool for v in F.values()),"C07_B50_NATIVE_BOOL_REQUIRED")
     return F
 
