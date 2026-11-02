@@ -45,7 +45,7 @@ class Macro100GateTests(unittest.TestCase):
         r["certified_full_count"] = 100
         r["individual_mg0_passes"] = 100
         r["advancement_authorized"] = True
-        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_FULL_AND_MG0_MISSING"):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
             gate.require_complete(r, x)
 
     def test_truncated_certificate_is_rejected(self):
@@ -54,6 +54,37 @@ class Macro100GateTests(unittest.TestCase):
         del r["rules"][gate.BATCH_IDS[0]]
         with self.assertRaisesRegex(gate.Macro100Blocked, "NOT_ALL_ONE_HUNDRED"):
             gate.require_complete(r, x)
+
+    def test_missing_independent_backend_is_blocked(self):
+        x = fixture()
+        report = gate.inspect(x, {}, {})
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+            gate.require_complete(report, x)
+
+    def test_fake_independent_backend_without_approved_reviewers_is_blocked(self):
+        x = fixture()
+        report = gate.inspect(x, {}, {})
+        fake = lambda rid, row: {
+            "rule_id": rid, "requirement_sha256": row["requirement_sha256"],
+            "source_sha256": row["source_sha256"], "validator_id": "fake",
+            "semantic_verdict": "PASS", "mg0_verdict": "PASS",
+            "independent": True, "source_attestation_sha256": "a" * 64}
+        with patch.dict(gate.REVIEWED, {}, clear=True):
+            with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+                gate.require_complete(report, x, backend=fake)
+
+    def test_native_certification_requires_actual_backend(self):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+            gate.certify_native(fixture(), {}, {}, object())
+
+    def test_native_certification_cannot_use_synthetic_mock(self):
+        class ForgedBackend:
+            synthetic = False
+            enrolled = {}
+            def rule(self, rule, expected, offer):
+                return {"result": "PASS", "mg0": "PASS", "proof_digest": "f"*64}
+        with self.assertRaisesRegex(gate.Macro100Blocked, "TRUSTED_NATIVE_BACKEND_REQUIRED"):
+            gate.certify_native(fixture(), {}, {}, ForgedBackend())
 
     def test_source_tampering_is_hard_blocked(self):
         x = fixture()

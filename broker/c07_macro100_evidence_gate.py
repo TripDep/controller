@@ -13,6 +13,16 @@ from approved_validators import REVIEWED
 SCHEMA = "gg-c07-macro100-evidence-gate-v1"
 BATCH_IDS = tuple(R122_FROZEN_IDS[:100])
 
+
+def inspect_semantic_candidates(inventory, observations, blobs=None):
+    """Execute development predicates without entering native certification.
+
+    The report cannot be passed to require_complete: it has a separate schema,
+    no trusted reviewer origin and no MG0 verdict. Enrollment remains unchanged.
+    """
+    from c07_macro100_semantics import inspect_candidate
+    return inspect_candidate(inventory, observations, blobs)
+
 class Macro100Blocked(ValueError):
     pass
 
@@ -93,18 +103,14 @@ def inspect(inventory, enrolled, observations):
         "rules": rows,
     }
 
-def require_complete(report, inventory):
-    """Only the trusted completion path may call this certification gate.
-
-    Reject ID-count, CI, synthetic evidence and self-reported PASS as substitutes
-    for individually approved reviewer + independent MG0 attestations.
-    This negative gate cannot mint positive attestations by itself.
-    """
+def require_complete(report, inventory, *, work=None, offers=None, backend=None):
+    """Reject user-supplied completions; replay trusted native proofs instead."""
     require(type(report) is dict and report.get("schema") == SCHEMA,
             "C07_MACRO100_CERTIFICATE_SCHEMA")
     require(type(report.get("rules")) is dict and
             set(report["rules"]) == set(BATCH_IDS) and
-            report.get("rule_count") == 100,
+            report.get("rule_count") == 100 and
+            report.get("cohort_sha256") == digest(list(BATCH_IDS)),
             "C07_MACRO100_NOT_ALL_ONE_HUNDRED_RULES")
     require(type(inventory) is dict and
             set(BATCH_IDS) <= set(inventory.get("rules", {})),
@@ -116,8 +122,54 @@ def require_complete(report, inventory):
                 row.get("requirement_sha256") == canonical.get("requirement_sha256") and
                 row.get("source_sha256") == canonical.get("source_sha256"),
                 "C07_MACRO100_WRONG_RULE_OR_SOURCE:" + rid)
-        # This implementation currently has no trusted positive MG0 backend:
-        # even an all-green dict cannot pass. The trusted certification backend
-        # must be integrated before legitimate certification can be granted.
-        raise Macro100Blocked("C07_MACRO100_INDEPENDENT_FULL_AND_MG0_MISSING:" + rid)
-    raise Macro100Blocked("C07_MACRO100_CERTIFIER_NOT_INSTALLED")
+    return certify_native(inventory, work, offers, backend)
+
+
+def certify_native(inventory, work, offers, backend):
+    """100 original obligations, verified via existing authenticated native backend.
+
+    No producer-supplied callback/JSON verdict can authorize certification.
+    This is a cohort gate; it does not replace global 763-rule work admission.
+    """
+    from supervisor_judgment import NativeRuleBackend, validate_work, binding
+    from approved_validators import validate as validate_reviewed
+    require(type(backend) is NativeRuleBackend and backend.synthetic is False,
+            "C07_MACRO100_TRUSTED_NATIVE_BACKEND_REQUIRED")
+    require(type(inventory) is dict and inventory.get("rule_count") == 763 and
+            len(inventory.get("rules", {})) == 763 and
+            type(offers) is dict and type(work) is dict,
+            "C07_MACRO100_REAL_WORK_CONTEXT_REQUIRED")
+    validate_work(work, inventory)
+    require(set(BATCH_IDS) <= set(inventory["rules"]),
+            "C07_MACRO100_ORIGINAL_COHORT_MISSING")
+    require(set(offers) <= set(inventory["rules"]),
+            "C07_MACRO100_UNKNOWN_OFFER")
+    # approved_validators checks the reviewed source-specific implementation,
+    # immutable issuer and expected criteria for every enrolled validator.
+    validate_reviewed(backend.enrolled, inventory)
+    checked = {}
+    for rid in BATCH_IDS:
+        row = inventory["rules"][rid]
+        clause = row.get("requirement")
+        require(type(clause) is str and clause.strip() and
+                hashlib.sha256(clause.encode("utf-8")).hexdigest() ==
+                row.get("requirement_sha256"),
+                "C07_MACRO100_SOURCE_CHANGED:" + rid)
+        require(rid in REVIEWED and rid in backend.enrolled,
+                "C07_MACRO100_MISSING_REVIEWED_VALIDATOR:" + rid)
+        expected = binding(work, row, rid)
+        result = backend.rule(rid, expected, offers.get(rid))
+        require(type(result) is dict and result.get("result") == "PASS" and
+                result.get("mg0") == "PASS" and
+                type(result.get("proof_digest")) is str and
+                len(result["proof_digest"]) == 64,
+                "C07_MACRO100_REAL_SEMANTIC_OR_MG0_NOT_PASS:" + rid)
+        checked[rid] = result["proof_digest"]
+    require(len(checked) == 100, "C07_MACRO100_INCOMPLETE")
+    return {"schema": "gg-c07-macro100-native-certified-v1",
+            "cohort_sha256": digest(list(BATCH_IDS)),
+            "rule_count": 100, "certified_full_count": 100,
+            "individual_mg0_passes": 100,
+            "verified_proof_digests": checked,
+            "cohort_verified": True,
+            "global_work_advancement_authorized": False}
