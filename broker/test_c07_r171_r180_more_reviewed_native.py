@@ -62,7 +62,12 @@ class FourMoreOriginalReviewers(unittest.TestCase):
         }
     def original(self,rid):return packet_for_original(self.ctx,rid,self.expected(rid))
     def save_current(self):
+        # Rebuild creates a NEW Controller with a new immutable original
+        # audit/state identity. Never replay evidence against a stale one.
         self.nested.persist()
+        self.ctx["controller"]=self.f.controller
+        self.ctx["plan"]=self.f.plan
+        self.ctx["work"]=self.f.work
 
     def append_current(self,event,**fields):
         f=self.f;records=f.records
