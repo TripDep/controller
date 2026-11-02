@@ -10,8 +10,8 @@ import zlib
 from visual_content_metrics import decode_grid, VisualContentBlocked
 
 
-def opaque_capture_png(raw):
-    """Independently reject invisible/partially transparent *render captures*.
+def original_alpha_grid(raw):
+    """Decode original per-pixel alpha, retaining invisible surface information.
 
     The shared PNG decoder deliberately returns RGB only. An RGBA capture with
     zero alpha can therefore fabricate any apparent neutral/direct/shadow
@@ -21,16 +21,16 @@ def opaque_capture_png(raw):
     where transparency is intentional. Source evidence is NOT renderer proof.
     """
     if type(raw) is not bytes:
-        return False
+        return None
     try:
         width, height, pixels = decode_grid(raw, step=1)
         if len(pixels) != width * height or raw[12:16] != b'IHDR':
-            return False
+            return None
         color = raw[25]
         if color == 2:
-            return True
+            return width, height, [255] * (width * height)
         if color != 6:
-            return False
+            return None
         offset, parts = 8, []
         while offset < len(raw):
             length = int.from_bytes(raw[offset:offset+4], 'big')
@@ -45,17 +45,18 @@ def opaque_capture_png(raw):
             expanded.extend(decoder.decompress(
                 part, expected + 1 - len(expanded)))
             if len(expanded) > expected or decoder.unconsumed_tail:
-                return False
+                return None
         expanded.extend(decoder.flush(expected + 1 - len(expanded)))
         if (len(expanded) != expected or not decoder.eof or
                 decoder.unused_data):
-            return False
+            return None
         cursor, previous, pitch = 0, [0] * width, width * 4
+        alpha_grid = []
         for _ in range(height):
             mode = expanded[cursor]
             cursor += 1
             if mode > 4:
-                return False
+                return None
             current = []
             for x in range(width):
                 left = current[x-1] if x else 0
@@ -75,16 +76,21 @@ def opaque_capture_png(raw):
                     predictor = (left if da <= db and da <= dc else
                                  up if db <= dc else corner)
                 alpha = (expanded[cursor + 4*x + 3] + predictor) & 255
-                if alpha != 255:
-                    return False
                 current.append(alpha)
             cursor += pitch
             previous = current
-        return cursor == len(expanded)
+            alpha_grid.extend(current)
+        return (width, height, alpha_grid) if cursor == len(expanded) else None
     except (VisualContentBlocked, ValueError, TypeError, IndexError,
             zlib.error):
-        return False
+        return None
 
+
+
+def opaque_capture_png(raw):
+    """Require real opaque QA screenshot pixels, not invisible RGBA RGB."""
+    sample = original_alpha_grid(raw)
+    return sample is not None and all(alpha == 255 for alpha in sample[2])
 
 def original_pixels(raw):
     if not opaque_capture_png(raw):
