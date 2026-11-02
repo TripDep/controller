@@ -1202,6 +1202,42 @@ class ControlledJudgment:
                     exact_source_specific_native_evidence=mq50['rules'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 B-011..F-060: fifty canonical original-source
+                # rule-specific machine evidence scopes. A/C reference checks
+                # are replayed against their original SHA-bound sources.
+                # These never convert an engineering/artistic/MG0 unknown to PASS.
+                from c07_b011_f060_fifty_native import inspect as inspect_bf50
+                bf50 = inspect_bf50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(bf50['source_rules_examined'] == 50
+                       and bf50['native_conditions_evaluated'] == 200
+                       and set(bf50['rules']) == {
+                           'AAA-200-' + 'BCDEF'[(i-11)//10] +
+                           '-' + str(i).zfill(3) for i in range(11,61)}
+                       and bf50['full_rule_passes'] == 0
+                       and bf50['individual_mg0_passes'] == 0
+                       and bf50['advancement_authorized'] is False
+                       and all(rule['full_rule_semantics'] == 'UNKNOWN'
+                               and rule['individual_mg0'] == 'UNKNOWN'
+                               and rule['owner_approval'] == 'UNKNOWN'
+                               and rule['advancement_authorized'] is False
+                               for rule in bf50['rules'].values()),
+                       'CONTROLLED_C07_BF50_FALSE_FULL_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_B011_F060_FIFTY_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=bf50['original_audit_sha256'],
+                    original_audit_tail=bf50['original_audit_tail'],
+                    source_rules_examined=50,
+                    native_conditions_evaluated=200,
+                    native_conditions_observed=bf50['native_conditions_observed'],
+                    original_native_glb_sha256=bf50['native_glb_sha256'],
+                    individual_original_source_evidence=bf50['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
