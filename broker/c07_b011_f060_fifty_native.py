@@ -267,7 +267,8 @@ def inspect(inv,plan,controller,asset,step,work,*,source_loader):
         original=existing['rules'][rid]['native_original_file_criteria']
         need(len(original)==3,'BF50_C_RESEARCH_PROOF_INCOMPLETE:'+rid)
         for new,yes in zip(SPEC[n][:3],original.values()):
-            need(new not in F,'BF50_DUPLICATE_C_RESEARCH_FEATURE')
+            need(new not in F or F[new] is yes,
+                 'BF50_CONTRADICTORY_REUSED_ORIGINAL_RESEARCH_EVIDENCE:'+new)
             F[new]=yes
     known_false={scope[-1] for scope in SPEC.values()}
     missing={x for scope in SPEC.values() for x in scope if x not in F}
