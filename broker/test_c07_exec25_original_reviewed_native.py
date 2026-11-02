@@ -136,6 +136,7 @@ class Exec25ReviewedOriginalTests(unittest.TestCase):
     def test_missing_original_export_does_not_confer_success(self):
         del self.f.items["NATIVE_EXPORT"]
         self.fixture.rebuild()
+        self.context["controller"]=self.f.controller
         report=inspect(self.context)
         self.assertEqual(report["full_rule_passes"],0)
         self.assertEqual(report["individual_mg0_passes"],0)
