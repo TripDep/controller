@@ -22,7 +22,8 @@ from c07_p6_collision_semantics import _triangles
 from c07_p3_geometry_semantics import _read_accessor
 from visual_content_metrics import decode_grid, VisualContentBlocked
 from c07_p345_light_pixel_replay import (pixel_light_response,
-    triplet_light_response, lod_view_color_distance, frame_samples_within_budget)
+    triplet_light_response, lod_view_color_distance, frame_samples_within_budget,
+    opaque_capture_png)
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -405,7 +406,9 @@ def inspect(source_context,rule_id):
         return binary_json(raw) if raw is not None else {}
     def view(role):
         raw=original(role,'.png')
-        return rgba(raw) if raw is not None else None
+        # A CRC-valid RGBA screenshot with invisible RGB is NOT a capture of
+        # the model; do not let alpha-hidden pixels satisfy any P4/P5 QA.
+        return rgba(raw) if raw is not None and opaque_capture_png(raw) else None
     raw=original('NATIVE_EXPORT','.glb')
     doc,binary=_glb_parts(raw) if raw is not None else ({},b'')
     native=_mesh(raw) if raw is not None else None
