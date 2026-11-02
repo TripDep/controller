@@ -128,13 +128,13 @@ class TestIndependentEXEC25Close(unittest.TestCase):
                 "evidence_base64":base64.b64encode(raw).decode(),
             }
 
-    def run(self):
+    def certify_fixture(self):
         with patch.object(gate,"inspect_exec",return_value=self.original),\
              patch.object(gate,"read_mg0",return_value=self.mg0):
             return gate.certify(self.context,self.reviews,self.public,self.id)
 
     def test_complete_25_properly_signed_synthetic_fixture_only(self):
-        report=self.run()
+        report=self.certify_fixture()
         self.assertEqual(report["independent_mg0_passes"],25)
         self.assertEqual(report["independent_full_semantic_passes"],25)
         self.assertEqual(report["full_original_source_criteria_verified"],100)
@@ -145,7 +145,7 @@ class TestIndependentEXEC25Close(unittest.TestCase):
     def test_missing_one_signed_rule_prevents_any_batch_pass(self):
         self.reviews.pop(IDS[24])
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"EXACT_25"):
-            self.run()
+            self.certify_fixture()
 
     def test_negative_original_mg0_failure_cannot_be_overridden(self):
         self.mg0["counts"]={"FAIL":1,"UNKNOWN":24,"PASS":0}
@@ -153,37 +153,37 @@ class TestIndependentEXEC25Close(unittest.TestCase):
         self.mg0["rules"][IDS[3]]["verdict"]="FAIL"
         self.mg0["rules"][IDS[3]]["uncorrected_failure_count"]=1
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"ORIGINAL_CRITERIA"):
-            self.run()
+            self.certify_fixture()
 
     def test_99_of_100_source_observations_rejects_complete_certificate(self):
         self.original["positive_scope_observations"]=99
         self.original["rules"][IDS[5]]["scoped_positive_count"]=3
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"ORIGINAL_CRITERIA"):
-            self.run()
+            self.certify_fixture()
 
     def test_tampered_signed_evidence_bytes_do_not_pass(self):
         rid=IDS[2]
         self.reviews[rid]["evidence_base64"]=base64.b64encode(b'{"spoof":true}').decode()
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"EVIDENCE_SCHEMA"):
-            self.run()
+            self.certify_fixture()
 
     def test_other_attempt_signed_review_does_not_pass(self):
         rid=IDS[5]
         self.reviews[rid]["payload"]["attempt_id"]="f"*64
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"CROSS_ATTEMPT"):
-            self.run()
+            self.certify_fixture()
 
     def test_wrong_owner_key_cannot_approve_even_if_signed(self):
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,""):
             with patch.object(gate,"signature_valid",
                               side_effect=gate.FinalCertificationBlocked("UNTRUSTED_OWNER_KEY")):
-                self.run()
+                self.certify_fixture()
 
     def test_forged_positive_without_real_independent_signature_rejected(self):
         rid=IDS[9]
         self.reviews[rid]["signature_base64"]="A"*88
         with self.assertRaises(Exception):
-            self.run()
+            self.certify_fixture()
 
     def test_missing_one_of_five_trigger_proofs_never_certifies(self):
         rid=IDS[1]
@@ -191,13 +191,13 @@ class TestIndependentEXEC25Close(unittest.TestCase):
         evidence["five_mg0_trigger_findings"].pop()
         self.reviews[rid]["evidence_base64"]=base64.b64encode(canonical(evidence)).decode()
         with self.assertRaisesRegex(gate.FinalCertificationBlocked,"FIVE_MG0"):
-            self.run()
+            self.certify_fixture()
 
     def test_no_global_763_pass_is_required_for_scoped_signed_review(self):
         # The 738 other canonical rules remain untouched and cannot be falsely
         # counted by this independent 25-rule *certificate only*.
         self.assertEqual(set(self.original["rules"]),set(IDS))
-        self.assertEqual(self.run()["independent_full_semantic_passes"],25)
+        self.assertEqual(self.certify_fixture()["independent_full_semantic_passes"],25)
 
     def test_real_controller_has_independent_25_signature_command(self):
         source=Path(__file__).with_name("controlled_judgment.py").read_text()
