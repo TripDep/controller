@@ -12,6 +12,7 @@ from glb_winding_readback import scan_bytes,WindingBlocked
 from glb_pbr_evidence import validate_png_chunks,MaterialEvidenceError
 from c07_gk50_canonical import CLAUSES,IDS,CATALOG_SHA
 from c07_gk50_predicates import SPEC,UNVERIFIED
+from c07_gk50_size_scan import readback as original_world_size_readback
 
 SCHEMA="gg-c07-g061-k110-fifty-source-native-v1"
 GROUP_PATTERNS={
@@ -160,8 +161,10 @@ def machine_features(records,artifacts,plan,step,work):
     # Numeric size comparisons must use geometry, not object labels.
     # The existing original GLB machine parser confirms actual dimensions,
     # but a pair of differently named objects alone does not prove variations.
-    F["rock_bbox_variants"]=False
-    F["vegetation_bbox_variants"]=False
+    sizes=(original_world_size_readback(originals[0][2],report) if originals
+           else {'rock':False,'vegetation':False})
+    F["rock_bbox_variants"]=sizes['rock']
+    F["vegetation_bbox_variants"]=sizes['vegetation']
     # No fake assertion that reference matches, a plant is botanical, terrain
     # aligns to survey heights, or the water/wind works in FiveM.
     unproven={key for scope in SPEC.values() for key in scope
