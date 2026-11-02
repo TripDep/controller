@@ -1237,11 +1237,21 @@ class ControlledJudgment:
                 # These are independently replayed from the ORIGINAL work
                 # attempt, original registered output bytes and actual audit.
                 # Missing owner, Git-native or MG0 evidence stays UNKNOWN.
-                from c07_r171_r180_source_native import inspect as inspect_r10
-                ten_process = inspect_r10(
+                from c07_timed10_certification_pilot import measure as measure_cert10
+                pilot10, ten_process = measure_cert10(
                     self.inventory, plans[0]['plan'], self.c, self.asset,
                     step, reserved_work,
                     source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(pilot10['source_rules'] == 10
+                       and pilot10['counts']['CERTIFIED'] == 0
+                       and sum(pilot10['counts'].values()) == 10
+                       and pilot10['total_measured_execution_ns'] ==
+                           pilot10['original_source_validation_ns'] +
+                           pilot10['mg0_readback_ns']
+                       and pilot10['duration_scope'] ==
+                           'NATIVE_VERIFIER_EXECUTION_ONLY_NOT_ACTIVE_DEVELOPMENT_HOURS'
+                       and pilot10['advancement_authorized'] is False,
+                       'CONTROLLED_C07_PILOT10_UNTRUSTED_TIMING_OR_CERTIFICATION')
                 j.need(ten_process['source_rules_examined'] == 10
                        and ten_process['rule_count'] == 10
                        and ten_process['native_conditions_evaluated'] == 40
@@ -1268,6 +1278,26 @@ class ControlledJudgment:
                     native_conditions_evaluated=40,
                     native_conditions_observed=ten_process['native_conditions_observed'],
                     full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                self.append('SUPERVISOR_C07_TIMED_TEN_RULE_MG0_PILOT',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=pilot10['original_audit_sha256'],
+                    original_audit_tail=pilot10['original_audit_tail'],
+                    first_started_utc=pilot10['started_utc'],
+                    final_ended_utc=pilot10['ended_utc'],
+                    source_validation_ns=pilot10['original_source_validation_ns'],
+                    mg0_readback_ns=pilot10['mg0_readback_ns'],
+                    real_verifier_runtime_ns=pilot10['total_measured_execution_ns'],
+                    timing_scope=pilot10['duration_scope'],
+                    reviewed_positive_verifier_count=pilot10[
+                        'individually_approved_positive_reviewers_enrolled'],
+                    full_semantic_and_mg0_counts=pilot10['counts'],
+                    actual_development_person_hours=pilot10[
+                        'certifications_per_active_development_hour'],
+                    remaining_person_hours=pilot10['remaining_763_person_hours'],
+                    blockers_per_rule=pilot10['rules'],
                     advancement_authorized=False)
                 # C07 G-061..K-110: fifty exact original P2 obligations.
                 # Source-specific immutable catalog, original Controller audit,
