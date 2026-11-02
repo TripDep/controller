@@ -205,7 +205,7 @@ class P345PendingCaptureMacroTests(unittest.TestCase):
         changed=reuse.row('AAA-200-O-147')
         self.assertFalse(changed['checks'][NATIVE_RULES[
             'AAA-200-O-147'][1][2]])
-        self.assertEqual(changed['individual_mg0'],'UNKNOWN')
+        self.assertEqual(changed['mg0'],'UNKNOWN')
         self.assertFalse(changed['advancement_authorized'])
 
 if __name__=='__main__':
