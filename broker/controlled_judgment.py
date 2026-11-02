@@ -56,6 +56,12 @@ class ControlledJudgment:
             return []
         return [json.loads(line) for line in p.read_text().splitlines() if line.strip()]
 
+    def inspect_macro100(self, step, work, plan):
+        """Read current registered evidence under the existing Controller lock."""
+        from c07_macro100_controller import acquire
+        with self.locked():
+            return acquire(self.inventory, plan, self.c, self.asset, step, work)
+
     def append(self, event, **fields):
         record = self.c.append_event(self.asset, {'event': event, **fields})
         # Persist directory entries as well as the fsynced JSONL/state files.
