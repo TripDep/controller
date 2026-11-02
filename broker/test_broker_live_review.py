@@ -22,6 +22,44 @@ class LiveReviewTests(unittest.TestCase):
             'rules':[{'type':'pull_request'}],'node_id':'node','created_at':'2026-01-01T00:00:00.329+02:00','updated_at':'2026-10-13T01:14:29.621+02:00',
             '_attestation_captured_at':'2026-10-13T14:00:00Z',
             'bypass_actors':[]}
+    def test_20261102_canonical_policy_sync_and_disabled_broker(self):
+        from pathlib import Path
+        import json
+        root=Path(__file__).parent
+        broker=json.loads((root/'broker_policy.json').read_text('utf-8'))
+        supervisor=json.loads((root.parent/'supervisor/policy.json').read_text('utf-8'))
+        expected='2fc259a3b8d9c5a46762a677a503ceea86e29a723ff0847b465e2caec15a4b4e'
+        self.assertEqual(broker['master_sha256'],expected)
+        self.assertEqual(supervisor['canonical_master_sha256'],expected)
+        self.assertIs(broker['enabled'],False)
+        self.assertIsNone(broker['reviewer_public_key_sha256'])
+
+    def test_identical_trusted_pins_accept_exact_original_bytes_only(self):
+        real=b'test-only original master bytes'
+        h=hashlib.sha256(real).hexdigest()
+        self.assertEqual(live.verify_source_pins(
+            real,{'master_sha256':h},{'canonical_master_sha256':h}),h)
+
+    def test_public_policy_mismatch_fails_before_source_check(self):
+        real=b'test-only original master bytes'
+        h=hashlib.sha256(real).hexdigest()
+        with self.assertRaisesRegex(live.auto.Blocked,'PUBLIC_BROKER_SUPERVISOR_POLICY_SHA_DRIFT'):
+            live.verify_source_pins(real,{'master_sha256':'f'*64},
+                                    {'canonical_master_sha256':h})
+
+    def test_private_snapshot_mismatch_is_not_relabelled_as_success(self):
+        current=b'test-only canonical current Library bytes'
+        old=b'test-only older PRIVATE Git original'
+        h=hashlib.sha256(current).hexdigest()
+        with self.assertRaisesRegex(live.auto.Blocked,'PRIVATE_PINNED_MASTER_NOT_CANONICAL'):
+            live.verify_source_pins(old,{'master_sha256':h},
+                                    {'canonical_master_sha256':h})
+
+    def test_invalid_policy_pin_never_counts_as_verified_source(self):
+        with self.assertRaisesRegex(live.auto.Blocked,'PINNED_MASTER_METADATA_SHA_INVALID'):
+            live.verify_source_pins(b'test-only',{'master_sha256':'wrong'},
+                                    {'canonical_master_sha256':'0'*64})
+
     def test_equivalent_utc_and_second_precision_dates(self):
         attested=self.ruleset();current=copy.deepcopy(attested)
         current['created_at']='2025-12-31T22:00:00Z'
