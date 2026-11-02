@@ -7,6 +7,7 @@ Positive scoped evidence never implies independent MG0, owner or FiveM PASS.
 """
 import hashlib
 import math
+import xml.etree.ElementTree as ET
 
 from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json
@@ -43,6 +44,79 @@ CRITERIA = {
       'actual_registered_neutral_direct_shadow_pixel_buffers_recomputed',
       'trusted_independent_renderer_provenance_and_real_material_response_verified'),
 }
+
+def original_drawable_shader_compatibility(raw,doc,policy,embedded):
+    """Source-only CodeWalker XML -> actual GLB material/vertex/texture match.
+
+    A registered XML is not independent engine execution or shader support.
+    """
+    if (type(raw) is not bytes or not 32<=len(raw)<=2_000_000
+            or b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper()):
+        return False,False
+    try: root=ET.fromstring(raw)
+    except (ET.ParseError,ValueError,UnicodeError): return False,False
+    def local(tag): return tag.rsplit('}',1)[-1].lower() if type(tag) is str else ''
+    if local(root.tag)!='drawable': return False,False
+    nodes=list(root.iter())
+    if len(nodes)>5000: return False,False
+    names=[]
+    for group in nodes:
+        if local(group.tag)=='shaders':
+            for item in group:
+                if local(item.tag)!='item': continue
+                found=[x.text.strip() for x in item if local(x.tag)=='name'
+                       and type(x.text) is str and x.text.strip()]
+                if len(found)!=1: return False,False
+                names.extend(found)
+    if not names or len(names)>128 or len(names)!=len(set(names)):
+        return False,False
+    bindings=policy.get('material_shader_map')
+    mats,meshes=doc.get('materials'),doc.get('meshes')
+    textures,images=doc.get('textures',[]),doc.get('images',[])
+    if (type(bindings) is not dict or type(mats) is not list
+            or type(meshes) is not list or not meshes
+            or type(textures) is not list or type(images) is not list
+            or type(embedded) is not list or len(embedded)!=len(images)):
+        return True,False
+    used=set()
+    for mesh in meshes:
+        if type(mesh) is not dict or type(mesh.get('primitives')) is not list:
+            return True,False
+        for prim in mesh['primitives']:
+            if type(prim) is not dict: return True,False
+            index,attrs=prim.get('material'),prim.get('attributes')
+            if (type(index) is not int or not 0<=index<len(mats)
+                    or type(attrs) is not dict
+                    or not {'POSITION','NORMAL'}<=set(attrs)):
+                return True,False
+            mat=mats[index]
+            if (type(mat) is not dict or type(mat.get('name')) is not str
+                    or bindings.get(mat['name']) not in names):
+                return True,False
+            used.add(mat['name'])
+            pbr=mat.get('pbrMetallicRoughness')
+            if type(pbr) is not dict: return True,False
+            for entry in (pbr.get('baseColorTexture'),
+                          pbr.get('metallicRoughnessTexture'),
+                          mat.get('normalTexture'),mat.get('occlusionTexture'),
+                          mat.get('emissiveTexture')):
+                if entry is None: continue
+                if type(entry) is not dict or type(entry.get('index')) is not int:
+                    return True,False
+                tid,uv=entry['index'],entry.get('texCoord',0)
+                if (type(uv) is not int or not 0<=uv<=1
+                        or 'TEXCOORD_'+str(uv) not in attrs
+                        or not 0<=tid<len(textures)):
+                    return True,False
+                tex=textures[tid]
+                if type(tex) is not dict or type(tex.get('source')) is not int:
+                    return True,False
+                img=tex['source']
+                if (not 0<=img<len(images) or type(embedded[img]) is not dict
+                        or embedded[img].get('width',0)<2
+                        or embedded[img].get('height',0)<2):
+                    return True,False
+    return True,bool(used and set(bindings)==used)
 
 class MaterialMacroBlocked(ValueError):
     pass
@@ -241,6 +315,10 @@ def inspect(source_context, rule_id):
         im['pixel_sha256']!=reference['pixel_sha256']
         for im in actual_images))
 
+    # Reopen a pre-D SHA-pinned native drawable, never trust shader labels.
+    drawable=original('P4_NATIVE_DRAWABLE_XML','.xml')
+    shader_parsed,shader_compatible=original_drawable_shader_compatibility(
+        drawable,doc,policy,actual_images)
     names = {
         121: (bool(raw_contract and raw_glb and classification),
               classification, pbr_match),
@@ -252,11 +330,11 @@ def inspect(source_context, rule_id):
               all_five_used, five_real),
         127: (bool(raw_contract and raw_glb and raw_ref and wp),
               comparable, spread),
-        # This source reader deliberately cannot certify RAGE shader support
-        # from glTF PBR material labels or producer-generated QA JSON.
+        # Actual source consistency is measurable; independent RAGE engine
+        # support remains UNKNOWN, even if all three source checks are true.
         129: (bool(raw_contract and raw_glb and
                    type(policy.get('rage_shader_target')) is str),
-              False, False),
+              shader_parsed, shader_compatible),
         # Source PNGs show luminance differences, not trusted evidence of
         # the renderer/light rig used. Independent provenance is required.
         130: (bool(raw_contract and raw_glb and lp),
