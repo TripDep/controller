@@ -23,8 +23,22 @@ class ACOriginalMacroBroker(unittest.TestCase):
         self.addCleanup(fx.doCleanups)
         # The R140 fixture tests source notes in isolation; the consuming
         # broker additionally requires original work/attempt identity fields.
+        import hashlib
+        from c07_mg0_individual import TRIGGERS
+        master=('## MG0 — PROCESS FALSIFICATION\\n' +
+            ''.join('- '+trigger+'\\n' for trigger in TRIGGERS) +
+            'The response is not limited to fixing the asset.\\n'
+            'invalidate affected states and reapply the corrected process\\n'
+        ).replace('\\n','\n').encode()
+        fx.f.master=master
+        fx.f.controller.master.write_bytes(master)
+        master_sha=hashlib.sha256(master).hexdigest()
         fx.f.work.update(work_item_sha256='e'*64,
-                         attempt_number=1,previous_attempt_id=None)
+                         attempt_number=1,previous_attempt_id=None,
+                         phase='P0',master_sha256=master_sha)
+        fx.f.plan['phase']='P0'
+        fx.f.plan['master_sha256']=master_sha
+        fx.f.inv['canonical_master_sha256']=master_sha
         fx.f.rebuild()
         return fx
 
