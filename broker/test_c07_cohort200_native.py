@@ -32,7 +32,7 @@ SOURCE=("SOURCE_EDITABLE","/safe/asset.blend",
 def fixture():
     families={}
     for group,count in FAMILY_COUNTS.items():
-        families[group]=[group+"-"+str(n).zfill(3) for n in range(1,count+1)]
+        families[group]=["SYNTH_"+group+"-"+str(n).zfill(3) for n in range(1,count+1)]
     families["AAA-200"]=["AAA-200-A-"+str(n).zfill(3) for n in range(1,201)]
     families["BEHAVIOR_110"]=["BEHAVIOR-"+str(n).zfill(3) for n in range(1,111)]
     families["QUESTIONS_300"]=["Q-"+str(n).zfill(3) for n in range(1,301)]
