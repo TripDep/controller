@@ -22,7 +22,9 @@ from c07_r171_r180_source_native import (
 from c07_positive_native_process import (
     _original_attempt,_registered_artifacts,sha,
 )
-from c07_r171_r180_positive_source_oracles import automation_preserved_approved_bytes
+from c07_r171_r180_positive_source_oracles import (
+    automation_preserved_approved_bytes,native_script_output_matches_oracle)
+from glb_machine_qa import audit_bytes,GLBError
 from family_coverage import SOURCES
 import supervisor_judgment as j
 
@@ -226,7 +228,13 @@ def _replay(context,rid,expected,api):
         export=_one(by_role,"NATIVE_EXPORT")
         measurements=(export is not None and measured_repeated_automation(
             records,work,step,export[1]))
-        checks=dict(checks,measured_net_benefit_independently_proven=bool(measurements))
+        # Measured time on a file is not a benefit if the output never
+        # passed the originally enrolled *binary* acceptance contract.
+        actual=_one(by_role,"NATIVE_REIMPORT")
+        binary_ok=bool(actual and
+                       native_script_output_matches_oracle(plan,by_role))
+        benefit=bool(measurements and binary_ok)
+        checks=dict(checks,measured_net_benefit_independently_proven=benefit)
         qa=[r for r in records if
             _bound(r,work,step) and
             r.get("event")=="NATIVE_OUTPUT_INDEPENDENT_QA" and
@@ -235,9 +243,9 @@ def _replay(context,rid,expected,api):
             r["evidence_operation"].get("artifact_sha256")==export[1]]
         extra={
             "manual_and_automated_runs_all_bind_verified_binary":
-                bool(measurements and qa),
+                bool(benefit and qa),
             "two_actual_automated_runs_faster_than_manual_baseline":
-                bool(measurements),
+                bool(benefit),
         }
     else:
         original_copy=_one(by_role,"BASELINE_SNAPSHOT")
