@@ -23,7 +23,7 @@ from c07_p3_geometry_semantics import _read_accessor
 from visual_content_metrics import decode_grid, VisualContentBlocked
 from c07_p345_light_pixel_replay import (pixel_light_response,
     triplet_light_response, lod_view_color_distance, frame_samples_within_budget,
-    opaque_capture_png)
+    opaque_capture_png, original_alpha_grid)
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -247,7 +247,17 @@ def sampled_native_surface_colors(raw):
                         or offset<0 or length<=0 or offset+length>len(binary)):
                     return None
                 try:
-                    decoded[source]=decode_grid(binary[offset:offset+length],step=1)
+                    image_bytes=binary[offset:offset+length]
+                    width,height,rgb=decode_grid(image_bytes,step=1)
+                    alpha=original_alpha_grid(image_bytes)
+                    if alpha is None or alpha[:2]!=(width,height):
+                        return None
+                    # Compare the visible surface, including the real alpha
+                    # channel. RGB equality with alpha=0 is NOT texture
+                    # fidelity, and must not certify atlas/reuse quality.
+                    decoded[source]=(width,height,[
+                        (*pixel,coverage) for pixel,coverage
+                        in zip(rgb,alpha[2])])
                 except (ValueError,TypeError,VisualContentBlocked):
                     return None
             width,height,pixels=decoded[source]
