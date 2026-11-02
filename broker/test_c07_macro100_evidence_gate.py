@@ -45,7 +45,7 @@ class Macro100GateTests(unittest.TestCase):
         r["certified_full_count"] = 100
         r["individual_mg0_passes"] = 100
         r["advancement_authorized"] = True
-        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_FULL_AND_MG0_MISSING"):
+        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_VERIFIER_MISSING"):
             gate.require_complete(r, x)
 
     def test_truncated_certificate_is_rejected(self):
