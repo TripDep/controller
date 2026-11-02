@@ -153,3 +153,52 @@ def require_complete(report, inventory, *, independent_verifier=None):
             "cohort_sha256": digest(list(BATCH_IDS)),
             "independent_attestation_digests": verified,
             "advancement_authorized": True}
+
+def certify_native(inventory, work, offers, backend):
+    """100 original obligations, verified via existing authenticated native backend.
+
+    No producer-supplied callback/JSON verdict can authorize certification.
+    This is a cohort gate; it does not replace global 763-rule work admission.
+    """
+    from supervisor_judgment import NativeRuleBackend, validate_work, binding
+    from approved_validators import validate as validate_reviewed
+    require(type(backend) is NativeRuleBackend and backend.synthetic is False,
+            "C07_MACRO100_TRUSTED_NATIVE_BACKEND_REQUIRED")
+    require(type(inventory) is dict and inventory.get("rule_count") == 763 and
+            len(inventory.get("rules", {})) == 763 and
+            type(offers) is dict and type(work) is dict,
+            "C07_MACRO100_REAL_WORK_CONTEXT_REQUIRED")
+    validate_work(work, inventory)
+    require(set(BATCH_IDS) <= set(inventory["rules"]),
+            "C07_MACRO100_ORIGINAL_COHORT_MISSING")
+    require(set(offers) <= set(inventory["rules"]),
+            "C07_MACRO100_UNKNOWN_OFFER")
+    # approved_validators checks the reviewed source-specific implementation,
+    # immutable issuer and expected criteria for every enrolled validator.
+    validate_reviewed(backend.enrolled, inventory)
+    checked = {}
+    for rid in BATCH_IDS:
+        row = inventory["rules"][rid]
+        clause = row.get("requirement")
+        require(type(clause) is str and clause.strip() and
+                hashlib.sha256(clause.encode("utf-8")).hexdigest() ==
+                row.get("requirement_sha256"),
+                "C07_MACRO100_SOURCE_CHANGED:" + rid)
+        require(rid in REVIEWED and rid in backend.enrolled,
+                "C07_MACRO100_MISSING_REVIEWED_VALIDATOR:" + rid)
+        expected = binding(work, row, rid)
+        result = backend.rule(rid, expected, offers.get(rid))
+        require(type(result) is dict and result.get("result") == "PASS" and
+                result.get("mg0") == "PASS" and
+                type(result.get("proof_digest")) is str and
+                len(result["proof_digest"]) == 64,
+                "C07_MACRO100_REAL_SEMANTIC_OR_MG0_NOT_PASS:" + rid)
+        checked[rid] = result["proof_digest"]
+    require(len(checked) == 100, "C07_MACRO100_INCOMPLETE")
+    return {"schema": "gg-c07-macro100-native-certified-v1",
+            "cohort_sha256": digest(list(BATCH_IDS)),
+            "rule_count": 100, "certified_full_count": 100,
+            "individual_mg0_passes": 100,
+            "verified_proof_digests": checked,
+            "cohort_verified": True,
+            "global_work_advancement_authorized": False}
