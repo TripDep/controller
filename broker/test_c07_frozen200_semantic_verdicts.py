@@ -64,7 +64,7 @@ def mg0():
             "rules":{rid:{"verdict":"UNKNOWN"}
                      for rid in R122_FROZEN_IDS}}
 
-def invoke(records=None,registered=None,inv=None,mg0_result=None):
+def invoke(records=None,registered=None,inv=None,mg0_result=None,literal_process=None):
     inventory=inv or fake_inventory()
     ctrl=Mock()
     ctrl.master.read_bytes.return_value=MASTER
@@ -76,7 +76,8 @@ def invoke(records=None,registered=None,inv=None,mg0_result=None):
          patch("c07_frozen200_semantic_verdicts.inspect_mg0_batch",
                return_value=mg0_result or mg0()):
         return inspect(inventory,PLAN,ctrl,ASSET,STEP,WORK,
-                       source_loader=lambda _:RAW)
+                       source_loader=lambda _:RAW,
+                       literal_process=literal_process)
 
 class Frozen200SemanticsTest(unittest.TestCase):
     def test_exact_200_source_semantics_are_extracted(self):
@@ -177,6 +178,49 @@ class Frozen200SemanticsTest(unittest.TestCase):
         inv["rules"][rid]["requirement_sha256"]=hashlib.sha256(text.encode()).hexdigest()
         with self.assertRaisesRegex(Semantic200Blocked,"ERROR_PREVENTION_MISSING"):
             invoke(inv=inv)
+
+    def test_independent_r136_literal_positive_does_not_mint_work_mg0_pass(self):
+        inv=fake_inventory()
+        ids=("AAA-200-R-172","AAA-200-R-178")
+        prior={"schema":"gg-c07-native-2-exact-process-semantics-v1",
+               "source_rule_count":2,
+               "attempt_id":WORK["attempt_id"],
+               "operation_sha256":WORK["operation_sha256"],
+               "individual_mg0_passes":0,"full_work_rule_passes":0,
+               "advancement_authorized":False,
+               "original_audit_tail":"earlier-audited-record",
+               "rules":{rid:{
+                   "rule_id":rid,
+                   "source_sha256":inv["rules"][rid]["source_sha256"],
+                   "requirement_sha256":inv["rules"][rid]["requirement_sha256"],
+                   "literal_process_semantics":"PASS",
+                   "individual_mg0":"UNKNOWN",
+                   "full_work_rule_pass":False,
+               } for rid in ids}}
+        observed=[{"record_hash":"earlier-audited-record"}]
+        report=invoke(records=observed,inv=inv,literal_process=prior)
+        self.assertEqual(report["source_literal_process_passes"],2)
+        self.assertEqual(report["semantic_positive_passes"],0)
+        self.assertEqual(report["individual_mg0_passes"],0)
+        self.assertEqual(report["rules"][ids[0]]["semantic_result"],"UNKNOWN")
+
+    def test_forged_prior_literal_pass_with_no_current_audit_is_blocked(self):
+        source=fake_inventory()
+        rid="AAA-200-R-172"
+        fake={"schema":"gg-c07-native-2-exact-process-semantics-v1",
+              "source_rule_count":2,
+              "attempt_id":WORK["attempt_id"],
+              "operation_sha256":WORK["operation_sha256"],
+              "individual_mg0_passes":0,"full_work_rule_passes":0,
+              "advancement_authorized":False,
+              "original_audit_tail":"not-in-current-chain",
+              "rules":{n:{"rule_id":n,"source_sha256":source["rules"][n]["source_sha256"],
+                           "requirement_sha256":source["rules"][n]["requirement_sha256"],
+                           "literal_process_semantics":"PASS","individual_mg0":"UNKNOWN",
+                           "full_work_rule_pass":False}
+                        for n in ("AAA-200-R-172","AAA-200-R-178")}}
+        with self.assertRaisesRegex(Semantic200Blocked,"LITERAL_SOURCE_REPLAYER_NOT_CURRENT"):
+            invoke(inv=source,literal_process=fake)
 
     def test_live_controller_close_wired(self):
         s=Path(__file__).with_name("controlled_judgment.py").read_text()
