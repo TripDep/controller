@@ -131,6 +131,11 @@ def native_rule_readback(api,packet,expected,enrolled_spec,context):
          type(enrolled_spec.get("source_ref")) is str and
          re.fullmatch(r"[0-9a-f]{40}",enrolled_spec["source_ref"]),
          "R172_R178_ORIGINAL_REVIEWER_AND_IMMUTABLE_SOURCE_REQUIRED")
+    need(type(context) is dict and
+         set(context)=={"inventory","plan","controller","asset","step",
+                        "work","source_loader"} and
+         type(context["inventory"]) is dict,
+         "R172_R178_ORIGINAL_CONTROLLER_CONTEXT_REQUIRED")
     raw=decode_file(api.call(
         "GET","/contents/"+CATALOG_PATH+"?ref="+enrolled_spec["source_ref"]),
         CATALOG_PATH)
