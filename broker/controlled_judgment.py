@@ -573,6 +573,32 @@ class ControlledJudgment:
                             previous_contexts=previous['contexts'] if previous else None,
                             previous_decision=prior_decision)
             j.need(decision == fresh, 'CONTROLLED_NATIVE_DECISION_CHANGED')
+            # C07 first 200 MACRO: consume only the independently replayed
+            # Git-native full-rule + individual MG0 verdict (never source/file
+            # presence or CI). Never count N_A/FUTURE_PHASE as PASS.
+            from c07_frozen200_macro_native_decision import inspect as macro200_inspect
+            macro200 = macro200_inspect(self.inventory,work,plan,fresh)
+            j.need(macro200['rule_count'] == 200
+                   and sum(macro200['counts'].values()) == 200
+                   and len(macro200['rules']) == 200
+                   and macro200['native_decision_sha256']==fresh['decision_sha256']
+                   and macro200['advancement_authorized'] is False,
+                   'CONTROLLED_C07_MACRO200_NATIVE_PROOF_INCOMPLETE')
+            self.append('SUPERVISOR_C07_FROZEN200_NATIVE_POSITIVE_SEMANTIC_GATE',
+                attempt_id=work['attempt_id'],
+                operation_sha256=work['operation_sha256'],
+                master_sha256=work['master_sha256'],
+                native_decision_sha256=fresh['decision_sha256'],
+                cohort_sha256=macro200['cohort_sha256'],
+                source_rule_count=200,
+                independent_full_semantic_and_mg0_pass_count=macro200[
+                    'verified_full_semantic_and_mg0_passes'],
+                reviewed_positive_implementations_enrolled=macro200[
+                    'reviewed_positive_implementations_enrolled'],
+                current_native_semantic_counts=macro200['counts'],
+                per_rule_original_semantic_proofs=macro200['rules'],
+                advancement_authorized=False)
+
             # Preserve real STOP and corrections as well as eligible judgments.
             self.append('SUPERVISOR_NATIVE_DECISION', decision=decision, origin=origin,
                         issuer=plan['issuer'], contexts=current, plan_record_hash=row['record_hash'])
