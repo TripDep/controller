@@ -99,6 +99,7 @@ class ThreeMacroTests(unittest.TestCase):
         context['plan']['p678_evidence_contract'][
            'original_artifact_sha256'].pop('FIVEM_COLLISION_RUNTIME_LOG')
         self._last_fixture.f.rebuild()
+        context['controller']=self._last_fixture.f.controller
         row=inspect(context,P160)
         self.assertFalse(row['evidence_complete'])
         self.assertFalse(row['checks'][PREDICATES[P160][0]])
