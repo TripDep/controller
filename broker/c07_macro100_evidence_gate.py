@@ -13,6 +13,16 @@ from approved_validators import REVIEWED
 SCHEMA = "gg-c07-macro100-evidence-gate-v1"
 BATCH_IDS = tuple(R122_FROZEN_IDS[:100])
 
+
+def inspect_semantic_candidates(inventory, observations, blobs=None):
+    """Execute development predicates without entering native certification.
+
+    The report cannot be passed to require_complete: it has a separate schema,
+    no trusted reviewer origin and no MG0 verdict. Enrollment remains unchanged.
+    """
+    from c07_macro100_semantics import inspect_candidate
+    return inspect_candidate(inventory, observations, blobs)
+
 class Macro100Blocked(ValueError):
     pass
 
