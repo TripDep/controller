@@ -89,3 +89,41 @@ def original_observations(records, state, master_raw, master_path):
                'version': state.get('master_version', 'UNKNOWN')}
     return {'master': current, 'controller_records': records,
             'controller_asset_state': state}
+
+
+def acquire_registered_copies(snapshot, copies):
+    """Read recovered Library originals by registered digest, not old host path.
+
+    Repeated historical paths may identify different revisions; use the digest
+    as the relocation key and preserve each registration/step independently.
+    An unavailable revision remains missing, never silently substituted with a
+    later file of the same name. Returns original bytes for consuming readers.
+    """
+    require(snapshot.get('schema') == 'gg-c07-persisted-controller-snapshot-v1',
+            'verified Controller snapshot required')
+    require(type(copies) is dict, 'original-copy mapping required')
+    registrations = snapshot['asset_state'].get('artifacts')
+    require(type(registrations) is list, 'Controller artifact registry unavailable')
+    originals = {}
+    results = []
+    for registration in registrations:
+        digest = registration.get('sha256')
+        size = registration.get('size_bytes')
+        row = {'registered_path': registration.get('path'),
+               'step': registration.get('step'), 'sha256': digest}
+        if type(digest) is not str or type(size) is not int or size <= 0:
+            row['acquisition'] = 'UNBOUND'
+        elif digest not in copies:
+            row['acquisition'] = 'MISSING'
+        else:
+            path = Path(copies[digest])
+            require(path.is_file() and not path.is_symlink(), 'original copy unavailable: '+digest)
+            raw = path.read_bytes()
+            require(len(raw) == size and sha(raw) == digest,
+                    'recovered original differs from Controller registration: '+digest)
+            require(path.read_bytes() == raw, 'recovered original changed during read: '+digest)
+            originals[digest] = raw
+            row['acquisition'] = 'ORIGINAL_BYTES_VERIFIED'
+        results.append(row)
+    return {'registrations': results, 'original_bytes': originals,
+            'mg0': 'NOT_RUN', 'advancement_authorized': False}
