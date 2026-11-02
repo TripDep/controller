@@ -5,12 +5,89 @@ producer tags or file hashes. This does not authenticate an external renderer
 or prove physically correct shading; never promote these diagnostics to MG0.
 """
 import math
+import zlib
 
 from visual_content_metrics import decode_grid, VisualContentBlocked
 
 
-def original_pixels(raw):
+def opaque_capture_png(raw):
+    """Independently reject invisible/partially transparent *render captures*.
+
+    The shared PNG decoder deliberately returns RGB only. An RGBA capture with
+    zero alpha can therefore fabricate any apparent neutral/direct/shadow
+    response using completely invisible RGB values. Validate the original
+    CRC-checked bytes, then reconstruct each RGBA alpha scanline (all five
+    PNG filters). This applies to QA screenshots, never to asset textures
+    where transparency is intentional. Source evidence is NOT renderer proof.
+    """
     if type(raw) is not bytes:
+        return False
+    try:
+        width, height, pixels = decode_grid(raw, step=1)
+        if len(pixels) != width * height or raw[12:16] != b'IHDR':
+            return False
+        color = raw[25]
+        if color == 2:
+            return True
+        if color != 6:
+            return False
+        offset, parts = 8, []
+        while offset < len(raw):
+            length = int.from_bytes(raw[offset:offset+4], 'big')
+            kind = raw[offset+4:offset+8]
+            if kind == b'IDAT':
+                parts.append(raw[offset+8:offset+8+length])
+            offset += length + 12
+        expected = height * (width * 4 + 1)
+        decoder = zlib.decompressobj()
+        expanded = bytearray()
+        for part in parts:
+            expanded.extend(decoder.decompress(
+                part, expected + 1 - len(expanded)))
+            if len(expanded) > expected or decoder.unconsumed_tail:
+                return False
+        expanded.extend(decoder.flush(expected + 1 - len(expanded)))
+        if (len(expanded) != expected or not decoder.eof or
+                decoder.unused_data):
+            return False
+        cursor, previous, pitch = 0, [0] * width, width * 4
+        for _ in range(height):
+            mode = expanded[cursor]
+            cursor += 1
+            if mode > 4:
+                return False
+            current = []
+            for x in range(width):
+                left = current[x-1] if x else 0
+                up = previous[x]
+                corner = previous[x-1] if x else 0
+                if mode == 0:
+                    predictor = 0
+                elif mode == 1:
+                    predictor = left
+                elif mode == 2:
+                    predictor = up
+                elif mode == 3:
+                    predictor = (left + up) // 2
+                else:
+                    p = left + up - corner
+                    da, db, dc = abs(p-left), abs(p-up), abs(p-corner)
+                    predictor = (left if da <= db and da <= dc else
+                                 up if db <= dc else corner)
+                alpha = (expanded[cursor + 4*x + 3] + predictor) & 255
+                if alpha != 255:
+                    return False
+                current.append(alpha)
+            cursor += pitch
+            previous = current
+        return cursor == len(expanded)
+    except (VisualContentBlocked, ValueError, TypeError, IndexError,
+            zlib.error):
+        return False
+
+
+def original_pixels(raw):
+    if not opaque_capture_png(raw):
         return None
     try:
         width, height, grid = decode_grid(raw, step=1)
