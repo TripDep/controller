@@ -65,7 +65,9 @@ def semantic_packet(packet,expected,spec):
     return {'result':result,'mg0':mg['result'],'semantic_scope':SEMANTIC_SCOPE,'proof_digest':digest(packet)}
 class NativeRuleBackend:
     synthetic=False
-    def __init__(self,api,enrolled):self.api=api;self.enrolled=enrolled;self.cache={}
+    def __init__(self,api,enrolled,*,local_source_context=None):
+        self.api=api;self.enrolled=enrolled;self.cache={}
+        self.local_source_context=local_source_context
     def rule(self,rule,expected,offer):
         spec=self.enrolled.get(rule)
         if spec is None:
@@ -112,11 +114,36 @@ class NativeRuleBackend:
             # its own independent consuming-side implementation.
             if rule == 'AAA-200-B-012':
                 from planning_semantics import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec)
+            elif rule in ('AAA-200-R-172','AAA-200-R-178'):
+                # Real original asset bytes NEVER travel to Git. An authentic
+                # native Git packet is not enough: replay directly against
+                # the Controller's current hash-chained, enrolled local work.
+                need(type(self.local_source_context) is dict,
+                     'JUDGMENT_R172_R178_LOCAL_ORIGINAL_SOURCE_CONTEXT_REQUIRED')
+                from c07_r172_r178_reviewed_native import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec,
+                                     self.local_source_context)
+            elif rule in (
+                    'AAA-200-R-171','AAA-200-R-176',
+                    'AAA-200-R-179','AAA-200-R-180'):
+                need(type(self.local_source_context) is dict,
+                     'JUDGMENT_MORE_ORIGINAL_REPLAY_CONTEXT_REQUIRED')
+                from c07_r171_r180_more_reviewed_native import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec,
+                                     self.local_source_context)
+            elif rule in (
+                    'AAA-200-R-173','AAA-200-R-175','AAA-200-R-177'):
+                need(type(self.local_source_context) is dict,
+                     'JUDGMENT_R173_R175_R177_ORIGINAL_CONTEXT_REQUIRED')
+                from c07_r173_r175_r177_reviewed_native import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec,
+                                     self.local_source_context)
             elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
                 from r173_rule_semantics import native_rule_readback
+                native_rule_readback(self.api, packet, expected, spec)
             else:
                 need(False, 'JUDGMENT_NO_NATIVE_SOURCE_REPLAYER_FOR_RULE')
-            native_rule_readback(self.api, packet, expected, spec)
             return semantic_packet(packet,expected,spec)
         except (ValueError,KeyError,TypeError) as exc:return {'result':'UNKNOWN','reason':str(exc)}
 def judge(inv,work,offers,backend,*,current_contexts,previous_contexts=None,previous_decision=None):

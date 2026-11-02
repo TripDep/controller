@@ -23,6 +23,48 @@ OP_KEYS = {'action', 'category', 'locks', 'sections', 'evidence_before',
            'resolves', 'aaa_phase'}
 OPTIONAL_QUESTION_CONTEXT = {'question_context'}
 
+OPTIONAL_OUTCOME_CONTRACT = {'outcome_contract'}
+
+def validate_outcome_contract(plan):
+    """Optional approved positive-outcome criteria; no new mandatory work gate.
+
+    Enrolled only in the existing authorized STATUS plan. A saved report,
+    unapproved threshold or synthetic runtime flag never becomes a rule PASS.
+    """
+    if 'outcome_contract' not in plan:
+        return
+    from c07_exec25_true_measurements import criteria_well_formed
+    contract=plan['outcome_contract']
+    allowed={'acceptance_criteria','dependency_graph','timebox_seconds'}
+    j.need(type(contract) is dict and bool(contract) and
+           set(contract)<=allowed,
+           'CONTROLLED_SEMANTIC_OUTCOME_CONTRACT_SCHEMA')
+    if 'acceptance_criteria' in contract:
+        j.need(criteria_well_formed(contract),
+               'CONTROLLED_SEMANTIC_OUTCOME_CRITERIA_NOT_MEASURABLE')
+    if 'timebox_seconds' in contract:
+        budget=contract['timebox_seconds']
+        j.need(type(budget) is int and budget>0,
+               'CONTROLLED_SEMANTIC_TIMEBOX_INVALID')
+    if 'dependency_graph' in contract:
+        graph=contract['dependency_graph'];deps=plan.get('dependency_files')
+        j.need(type(graph) is dict and type(deps) is dict and
+               bool(deps) and set(graph)==set(deps) and
+               all(type(k) is str and type(v) is list and
+                   all(type(x) is str and x in graph for x in v) and
+                   len(v)==len(set(v)) for k,v in graph.items()),
+               'CONTROLLED_SEMANTIC_DEPENDENCY_GRAPH_NOT_CANONICAL')
+        active=set();done=set()
+        def visit(n):
+            j.need(n not in active,
+                   'CONTROLLED_SEMANTIC_DEPENDENCY_CYCLE')
+            if n in done:return
+            active.add(n)
+            for child in graph[n]:visit(child)
+            active.remove(n);done.add(n)
+        for k in graph:visit(k)
+
+
 
 class ControlledJudgment:
     def __init__(self, controller, asset, api, inventory):
@@ -107,8 +149,11 @@ class ControlledJudgment:
             active = st.get('active_step')
             j.need(st.get('d_authorized') and active and active['category'] == 'STATUS',
                    'CONTROLLED_PLAN_REQUIRES_AUTHORIZED_STATUS')
-            j.need(set(plan) in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
+            j.need(PLAN_KEYS <= set(plan) and
+                   set(plan)-PLAN_KEYS <=
+                   OPTIONAL_QUESTION_CONTEXT|OPTIONAL_OUTCOME_CONTRACT and
                    set(plan['operation']) == OP_KEYS, 'CONTROLLED_PLAN_SCHEMA')
+            validate_outcome_contract(plan)
             self.verify_question_context(plan)
             j.need(plan['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
             j.need(plan['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
@@ -147,6 +192,7 @@ class ControlledJudgment:
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
         self.verify_question_context(row['plan'])
+        validate_outcome_contract(row['plan'])
         from approved_validators import validate as validate_reviewed
         validate_reviewed(row['plan']['enrolled'],self.inventory)
         from c07_operation_scope import require_due_enrolled
@@ -573,6 +619,33 @@ class ControlledJudgment:
                             previous_contexts=previous['contexts'] if previous else None,
                             previous_decision=prior_decision)
             j.need(decision == fresh, 'CONTROLLED_NATIVE_DECISION_CHANGED')
+            if self.inventory.get('rule_count') == 763:
+                # C07 first 200 MACRO: consume only the independently replayed
+                # Git-native full-rule + individual MG0 verdict (never source/file
+                # presence or CI). Never count N_A/FUTURE_PHASE as PASS.
+                from c07_frozen200_macro_native_decision import inspect as macro200_inspect
+                macro200 = macro200_inspect(self.inventory,work,plan,fresh)
+                j.need(macro200['rule_count'] == 200
+                       and sum(macro200['counts'].values()) == 200
+                       and len(macro200['rules']) == 200
+                       and macro200['native_decision_sha256']==fresh['decision_sha256']
+                       and macro200['advancement_authorized'] is False,
+                       'CONTROLLED_C07_MACRO200_NATIVE_PROOF_INCOMPLETE')
+                self.append('SUPERVISOR_C07_FROZEN200_NATIVE_POSITIVE_SEMANTIC_GATE',
+                    attempt_id=work['attempt_id'],
+                    operation_sha256=work['operation_sha256'],
+                    master_sha256=work['master_sha256'],
+                    native_decision_sha256=fresh['decision_sha256'],
+                    cohort_sha256=macro200['cohort_sha256'],
+                    source_rule_count=200,
+                    independent_full_semantic_and_mg0_pass_count=macro200[
+                        'verified_full_semantic_and_mg0_passes'],
+                    reviewed_positive_implementations_enrolled=macro200[
+                        'reviewed_positive_implementations_enrolled'],
+                    current_native_semantic_counts=macro200['counts'],
+                    per_rule_original_semantic_proofs=macro200['rules'],
+                    advancement_authorized=False)
+
             # Preserve real STOP and corrections as well as eligible judgments.
             self.append('SUPERVISOR_NATIVE_DECISION', decision=decision, origin=origin,
                         issuer=plan['issuer'], contexts=current, plan_record_hash=row['record_hash'])
@@ -592,8 +665,88 @@ class ControlledJudgment:
                         operation_sha256=work['operation_sha256'], step=active['step'])
             return active
 
+    def certify_exec25(self, packet):
+        """Certify ONLY 25 EXEC independently of the global 763 operation close.
+
+        This method cannot authorize a model operation, merge, or substitute
+        producer observations for owner's signed original-clause/MG0 review.
+        Original audit is validated under lock and the exact original active
+        work reservation is replayed before any certificate is appended.
+        """
+        with self.locked():
+            from c07_exec25_final_signed import certify as certify25
+            from c07_independent_reviewer_preflight import (
+                check as owner_key_check)
+            active = self.c.asset_state(self.asset).get('active_step')
+            j.need(type(active) is dict and type(active.get('step')) is str,
+                   'CONTROLLED_EXEC25_REAL_OPEN_STEP_REQUIRED')
+            step = active['step']
+            events = self.records()
+            opens = [r for r in events
+                     if r.get('event') == 'SUPERVISOR_OPERATION_OPENED'
+                     and r.get('step') == step]
+            j.need(len(opens) == 1, 'CONTROLLED_EXEC25_ORIGINAL_OPEN_UNIQUE')
+            reservations = [r for r in events
+                    if r.get('event') == 'SUPERVISOR_OPERATION_RESERVED'
+                    and r.get('record_hash') == opens[0].get('reservation_hash')]
+            j.need(len(reservations) == 1,
+                   'CONTROLLED_EXEC25_ORIGINAL_RESERVATION_REQUIRED')
+            reservation = reservations[0]
+            enrolled = [r for r in events
+                    if r.get('event') == 'SUPERVISOR_PLAN_ENROLLED'
+                    and r.get('record_hash') == reservation.get('plan_record_hash')]
+            j.need(len(enrolled) == 1 and
+                   reservation.get('operation_sha256') ==
+                       reservation.get('work', {}).get('operation_sha256'),
+                   'CONTROLLED_EXEC25_ENROLLED_PLAN_AND_WORK_REQUIRED')
+            work = reservation['work']
+            plan = enrolled[0]['plan']
+            j.need(type(packet) is dict and set(packet) == {
+                    'schema','asset','attempt_id','master_sha256','reviews'} and
+                   packet['schema'] == 'gg-c07-exec25-owner-review-submission-v1' and
+                   packet['asset'] == self.asset and
+                   packet['attempt_id'] == work.get('attempt_id') and
+                   packet['master_sha256'] == work.get('master_sha256') and
+                   plan.get('master_sha256') == work.get('master_sha256') and
+                   type(packet['reviews']) is dict,
+                   'CONTROLLED_EXEC25_REVIEW_PACKAGE_OR_ATTEMPT_INVALID')
+            j.need(not any(r.get('event') ==
+                    'SUPERVISOR_C07_EXEC25_FINAL_INDEPENDENT_SIGNED_MG0'
+                    and r.get('attempt_id') == work['attempt_id']
+                    for r in events),
+                   'CONTROLLED_EXEC25_ATTEMPT_ALREADY_CERTIFIED')
+            identity = os.environ.get('C07_OWNER_APPROVED_REVIEWER_ID')
+            fingerprint = os.environ.get('C07_OWNER_APPROVED_REVIEWER_KEY_SHA256')
+            key_report = owner_key_check(
+                self.c.root, reviewer_identity=identity,
+                owner_authorized_sha256=fingerprint)
+            key = self.local_file(
+                key_report['trusted_public_key_path']).read_bytes()
+            report = certify25({
+                'inventory':self.inventory,
+                'plan':plan,'controller':self.c,'asset':self.asset,
+                'step':step,'work':work,
+                'source_loader':lambda absolute:Path(absolute).read_bytes(),
+            }, packet['reviews'],key,identity)
+            j.need(report['independent_full_semantic_passes'] == 25 and
+                   report['independent_mg0_passes'] == 25 and
+                   report['full_original_source_criteria_verified'] == 100 and
+                   report['advancement_authorized'] is False,
+                   'CONTROLLED_EXEC25_25_SIGNED_ORIGINAL_REVIEWS_REQUIRED')
+            event = self.append(
+                'SUPERVISOR_C07_EXEC25_FINAL_INDEPENDENT_SIGNED_MG0',
+                step=step, attempt_id=work['attempt_id'],
+                operation_sha256=work['operation_sha256'],
+                master_sha256=work['master_sha256'],
+                final_signed_review=report,
+                advancement_authorized=False)
+            return {'status':'EXEC25_25_OF_25_SIGNED_CERTIFIED',
+                    'record_hash':event['record_hash'],
+                    'signed_report':report,
+                    'advancement_authorized':False}
+
     def close(self, step, token, result, evidence, regression, sections_after, critical=True,
-              post_origin=None, post_offers=None):
+              post_origin=None, post_offers=None, signed_macro25=None):
         # C07 macro-certification cannot be smuggled into an ordinary close.
         # This negative gate does not alter regular asset work/phase PASS.
         if isinstance(result, str) and result.upper().startswith(('C07_MACRO100_COMPLETE', 'C07_100_CERTIFIED', 'C07_100_FULL')):
@@ -938,6 +1091,72 @@ class ControlledJudgment:
                     independently_measured_domain_probes=50,
                     full_native_semantics_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 MACRO EXEC25: independently read actual positive
+                # outcomes, not mere original file presence. All 25 are
+                # checked together, including complete transitive dependency
+                # closure and independently recorded QA/rollback evidence.
+                from c07_exec25_positive_outcomes import inspect as inspect_exec25_positive
+                exec25_positive = inspect_exec25_positive(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(exec25_positive['source_rule_count'] == 25
+                       and exec25_positive['native_positive_outcome_conditions_evaluated'] == 50
+                       and set(exec25_positive['rules']) ==
+                           {'EXEC-'+str(n).zfill(3) for n in range(1,26)}
+                       and exec25_positive['full_rule_semantics_passes'] == 0
+                       and exec25_positive['individual_mg0_passes'] == 0
+                       and exec25_positive['advancement_authorized'] is False
+                       and all(x['complete_original_clause_semantics'] == 'UNKNOWN'
+                               and x['individual_mg0'] == 'UNKNOWN'
+                               for x in exec25_positive['rules'].values()),
+                       'CONTROLLED_C07_EXEC25_POSITIVE_ORIGINAL_NOT_PROVEN')
+                # C07 25-EXEC MACRO: source-bound per-rule replay combining
+                # 100 distinct outcome/domain checks, never promoting machine
+                # components to full source or MG0 PASS.
+                from c07_exec25_original_reviewed_native import inspect as inspect_exec25_macro
+                original_macro25 = inspect_exec25_macro({
+                    'inventory':self.inventory,
+                    'plan':plans[0]['plan'],
+                    'controller':self.c,
+                    'asset':self.asset,
+                    'step':step,
+                    'work':reserved_work,
+                    'source_loader':lambda absolute:Path(absolute).read_bytes(),
+                })
+                j.need(original_macro25['rule_count']==25 and
+                       original_macro25['criteria_count']==100 and
+                       set(original_macro25['rules'])==
+                           {'EXEC-'+str(n).zfill(3) for n in range(1,26)} and
+                       original_macro25['original_audit_sha256']==
+                           exec25_positive['original_audit_sha256'] and
+                       original_macro25['original_audit_tail']==
+                           exec25_positive['original_audit_tail'] and
+                       original_macro25['full_rule_passes']==0 and
+                       original_macro25['individual_mg0_passes']==0 and
+                       original_macro25['advancement_authorized'] is False,
+                       'CONTROLLED_EXEC25_MACRO_ORIGINAL_SCOPE_NOT_AUTHENTIC')
+                self.append('SUPERVISOR_C07_EXEC25_SEMANTIC_MACRO100_CRITERIA',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    original_audit_sha256=original_macro25['original_audit_sha256'],
+                    criteria_count=100,
+                    rule_count=25,
+                    source_checks=original_macro25['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                self.append('SUPERVISOR_C07_EXEC25_ORIGINAL_POSITIVE_OUTCOMES',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=exec25_positive['original_audit_sha256'],
+                    original_audit_tail=exec25_positive['original_audit_tail'],
+                    positive_outcome_conditions_evaluated=50,
+                    positive_outcome_conditions_observed=exec25_positive[
+                        'native_positive_outcome_conditions_observed'],
+                    original_rule_specific_positive_outcomes=exec25_positive['rules'],
+                    full_rule_semantics_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R120: 13 actual machine-positive process *subpredicates*
                 # evaluated as one group within these exact first 200.
                 # They never upgrade full rules or individual MG0 to PASS.
@@ -968,6 +1187,42 @@ class ControlledJudgment:
                     results_sha256=positive['result_sha256'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # First frozen 200: source-specific semantic counterexamples
+                # and original error/prevention obligations from actual bytes.
+                # This cannot manufacture source reviewer or MG0 PASS.
+                from c07_frozen200_semantic_verdicts import inspect as semantic200_inspect
+                semantic200 = semantic200_inspect(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes(),
+                    literal_process=process_exact)
+                j.need(semantic200['source_rules_evaluated'] == 200
+                       and len(semantic200['rules']) == 200
+                       and semantic200['behavior_prevention_obligations'] == 110
+                       and semantic200['exec_obligations'] == 25
+                       and semantic200['semantic_failures'] +
+                           semantic200['semantic_unknowns'] == 200
+                       and semantic200['semantic_positive_passes'] == 0
+                       and semantic200['individual_mg0_passes'] == 0
+                       and semantic200['advancement_authorized'] is False
+                       and all(row['semantic_result'] in ('FAIL','UNKNOWN')
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in semantic200['rules'].values()),
+                       'CONTROLLED_C07_FIRST200_FALSE_SEMANTIC_PASS')
+                self.append('SUPERVISOR_C07_FIRST200_ORIGINAL_SEMANTIC_VERDICTS',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=semantic200['original_audit_sha256'],
+                    original_audit_tail=semantic200['original_audit_tail'],
+                    rule_count=200,
+                    semantic_failures=semantic200['semantic_failures'],
+                    semantic_unknowns=semantic200['semantic_unknowns'],
+                    per_rule_semantic_meaning_and_evidence=semantic200['rules'],
+                    individual_mg0_passes=0,advancement_authorized=False)
+                j.need(semantic200['semantic_failures'] == 0,
+                       'CONTROLLED_C07_ORIGINAL_RULE_FAILURE_STOP')
                 # R123: actual original-byte semantic evaluation of two
                 # literal process rules in one shared engine. This checks
                 # distinct editable/export/delivery bytes and manifest links,
@@ -1091,6 +1346,282 @@ class ControlledJudgment:
                     source_specific_expected_output_evidence=real_output['rules'],
                     source_rules_examined=2,
                     full_work_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # C07: ten exact P0 R-171..R-180 source obligations.
+                # These are independently replayed from the ORIGINAL work
+                # attempt, original registered output bytes and actual audit.
+                # Missing owner, Git-native or MG0 evidence stays UNKNOWN.
+                from c07_timed10_certification_pilot import measure as measure_cert10
+                pilot10, ten_process = measure_cert10(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(pilot10['source_rules'] == 10
+                       and pilot10['counts']['CERTIFIED'] == 0
+                       and sum(pilot10['counts'].values()) == 10
+                       and pilot10['total_measured_execution_ns'] ==
+                           pilot10['original_source_validation_ns'] +
+                           pilot10['mg0_readback_ns']
+                       and pilot10['duration_scope'] ==
+                           'NATIVE_VERIFIER_EXECUTION_ONLY_NOT_ACTIVE_DEVELOPMENT_HOURS'
+                       and pilot10['advancement_authorized'] is False,
+                       'CONTROLLED_C07_PILOT10_UNTRUSTED_TIMING_OR_CERTIFICATION')
+                j.need(ten_process['source_rules_examined'] == 10
+                       and ten_process['rule_count'] == 10
+                       and ten_process['native_conditions_evaluated'] == 40
+                       and set(ten_process['rules']) == {
+                           'AAA-200-R-' + str(i).zfill(3)
+                           for i in range(171, 181)}
+                       and ten_process['full_rule_passes'] == 0
+                       and ten_process['individual_mg0_passes'] == 0
+                       and ten_process['advancement_authorized'] is False
+                       and all(row['full_rule_pass'] is False
+                               and row['independent_mg0'] == 'UNKNOWN'
+                               and row['literal_semantics'] in
+                                   ('UNKNOWN', 'SCOPE_OBSERVED')
+                               for row in ten_process['rules'].values()),
+                       'CONTROLLED_C07_TEN_NATIVE_FALSE_FULL_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_R171_R180_TEN_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=ten_process['original_audit_sha256'],
+                    original_audit_tail=ten_process['original_audit_tail'],
+                    original_native_rule_evidence=ten_process['rules'],
+                    source_rule_count=10,
+                    native_conditions_evaluated=40,
+                    native_conditions_observed=ten_process['native_conditions_observed'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                self.append('SUPERVISOR_C07_TIMED_TEN_RULE_MG0_PILOT',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=pilot10['original_audit_sha256'],
+                    original_audit_tail=pilot10['original_audit_tail'],
+                    first_started_utc=pilot10['started_utc'],
+                    final_ended_utc=pilot10['ended_utc'],
+                    source_validation_ns=pilot10['original_source_validation_ns'],
+                    mg0_readback_ns=pilot10['mg0_readback_ns'],
+                    real_verifier_runtime_ns=pilot10['total_measured_execution_ns'],
+                    timing_scope=pilot10['duration_scope'],
+                    reviewed_positive_verifier_count=pilot10[
+                        'individually_approved_positive_reviewers_enrolled'],
+                    full_semantic_and_mg0_counts=pilot10['counts'],
+                    actual_development_person_hours=pilot10[
+                        'certifications_per_active_development_hour'],
+                    remaining_person_hours=pilot10['remaining_763_person_hours'],
+                    blockers_per_rule=pilot10['rules'],
+                    advancement_authorized=False)
+                # C07 G-061..K-110: fifty exact original P2 obligations.
+                # Source-specific immutable catalog, original Controller audit,
+                # registered native GLB, winding, and source PNG readbacks.
+                # Asset-type and future phase never become false MG0 PASS.
+                from c07_g061_k110_fifty_native import inspect as inspect_gk50
+                gk50 = inspect_gk50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(gk50['source_rules_examined'] == 50
+                       and gk50['native_conditions_evaluated'] >= 150
+                       and set(gk50['rules']) == {
+                           'AAA-200-' + 'GHIJK'[(i-61)//10] +
+                           '-' + str(i).zfill(3) for i in range(61,111)}
+                       and gk50['full_rule_passes'] == 0
+                       and gk50['individual_mg0_passes'] == 0
+                       and gk50['advancement_authorized'] is False
+                       and all(v['full_rule_semantics'] == 'UNKNOWN'
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               and v['owner_approval'] == 'UNKNOWN'
+                               and v['advancement_authorized'] is False
+                               for v in gk50['rules'].values()),
+                       'CONTROLLED_C07_GK50_FABRICATED_SEMANTICS_OR_MG0')
+                self.append('SUPERVISOR_C07_G061_K110_FIFTY_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=gk50['original_audit_sha256'],
+                    original_audit_tail=gk50['original_audit_tail'],
+                    source_rule_count=50,
+                    native_conditions_evaluated=gk50['native_conditions_evaluated'],
+                    native_conditions_observed=gk50['native_conditions_observed'],
+                    original_native_glb_sha256=gk50['native_glb_sha256'],
+                    individual_source_rule_evidence=gk50['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # C07 M-121..Q-170: FIFTY original source-specific rules.
+                # Authenticate canonical clauses, audit chain and registered
+                # bytes; each material/lighting/geometry/collision/FiveM
+                # diagnostic is computed from the real original GLB/native
+                # evidence instead of trusting a producer PASS dictionary.
+                from c07_m121_q170_fifty_native import inspect as inspect_mq50
+                mq50 = inspect_mq50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(mq50['source_rules_examined'] == 50
+                       and set(mq50['rules']) == {
+                           'AAA-200-' + 'MNOPQ'[(i - 121)//10] +
+                           '-' + str(i).zfill(3)
+                           for i in range(121, 171)}
+                       and mq50['native_predicates_evaluated'] >= 150
+                       and mq50['full_rule_passes'] == 0
+                       and mq50['individual_mg0_passes'] == 0
+                       and mq50['advancement_authorized'] is False
+                       and all(row['full_rule_semantics'] == 'UNKNOWN'
+                               and row['individual_mg0'] == 'UNKNOWN'
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in mq50['rules'].values()),
+                       'CONTROLLED_C07_MQ50_FALSE_RULE_OR_MG0_CERTIFICATION')
+                self.append('SUPERVISOR_C07_M121_Q170_FIFTY_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=mq50['original_audit_sha256'],
+                    original_audit_tail=mq50['original_audit_tail'],
+                    source_rule_count=50,
+                    native_conditions_evaluated=mq50['native_predicates_evaluated'],
+                    native_conditions_observed=mq50['native_predicates_observed'],
+                    native_glb_sha256=mq50['native_glb_sha256'],
+                    exact_source_specific_native_evidence=mq50['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                from c07_cohort200_native import inspect as inspect_cohort200
+                cohort200 = inspect_cohort200(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(cohort200['source_rules_examined'] == 200
+                       and cohort200['original_source_evidence_checks'] == 1200
+                       and cohort200['individual_mg0_passes'] == 0
+                       and not cohort200['advancement_authorized'],
+                       'C07_NEW200_INCOMPLETE_OR_UNPROVEN')
+                self.append('SUPERVISOR_C07_NEW200_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=cohort200['original_audit_sha256'],
+                    original_audit_tail=cohort200['original_audit_tail'],
+                    source_rules_examined=200,
+                    native_checks_evaluated=1200,
+                    original_source_evidence=cohort200['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # C07: 100 further original source obligations:
+                # AAA-200 A001-010/L111-120/S181-190/T191-200 (40),
+                # BEHAVIOR 051-110 (60). Machine observations must not
+                # self-certify qualitative results, owner consent, or MG0.
+                from c07_batch100_native import inspect as inspect_batch100
+                batch100 = inspect_batch100(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(batch100['source_rules_examined'] == 100
+                       and batch100['aaa_rules_examined'] == 40
+                       and batch100['behavior_rules_examined'] == 60
+                       and batch100['native_conditions_evaluated'] == 340
+                       and set(batch100['rules']) == (
+                           {'AAA-200-A-' + str(n).zfill(3)
+                            for n in range(1,11)} |
+                           {'AAA-200-L-' + str(n).zfill(3)
+                            for n in range(111,121)} |
+                           {'AAA-200-S-' + str(n).zfill(3)
+                            for n in range(181,191)} |
+                           {'AAA-200-T-' + str(n).zfill(3)
+                            for n in range(191,201)} |
+                           {'BEHAVIOR-' + str(n).zfill(3)
+                            for n in range(51,111)})
+                       and batch100['full_rule_passes'] == 0
+                       and batch100['individual_mg0_passes'] == 0
+                       and batch100['advancement_authorized'] is False
+                       and all(row['full_rule_semantics'] == 'UNKNOWN'
+                               and row['individual_mg0'] == 'UNKNOWN'
+                               and row['owner_approval'] == 'UNKNOWN'
+                               and row['advancement_authorized'] is False
+                               for row in batch100['rules'].values()),
+                       'CONTROLLED_C07_BATCH100_MISSING_OR_FALSE_PASS')
+                self.append('SUPERVISOR_C07_BATCH100_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=batch100['original_audit_sha256'],
+                    original_audit_tail=batch100['original_audit_tail'],
+                    original_native_glb_sha256=batch100['original_glb_sha256'],
+                    source_rule_count=100,native_conditions_evaluated=340,
+                    native_conditions_observed=batch100['native_conditions_observed'],
+                    per_rule_source_evidence=batch100['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # C07 BEHAVIOR-001..050: fifty independently replayed
+                # original error/prevention machine evidence scopes. No
+                # negative-test green, audit absence or source hash constitutes
+                # independent compliance, owner approval or MG0 PASS.
+                from c07_behavior_001_050_native import inspect as inspect_beh50
+                beh50 = inspect_beh50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(beh50['source_rules_examined'] == 50
+                       and beh50['native_conditions_evaluated'] == 150
+                       and set(beh50['rules']) == {
+                           'BEHAVIOR-' + str(n).zfill(3)
+                           for n in range(1,51)}
+                       and beh50['full_rule_passes'] == 0
+                       and beh50['individual_mg0_passes'] == 0
+                       and beh50['advancement_authorized'] is False
+                       and all(r['full_prevention_semantics'] == 'UNKNOWN'
+                               and r['individual_mg0'] == 'UNKNOWN'
+                               and r['owner_approval'] == 'UNKNOWN'
+                               and r['advancement_authorized'] is False
+                               for r in beh50['rules'].values()),
+                       'CONTROLLED_C07_BEHAVIOR50_FALSE_COMPLIANCE_OR_MG0')
+                self.append('SUPERVISOR_C07_BEHAVIOR001_050_ORIGINAL_NATIVE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=beh50['original_audit_sha256'],
+                    original_audit_tail=beh50['original_audit_tail'],
+                    original_native_evidence=beh50['rules'],
+                    source_rule_count=50,native_conditions_evaluated=150,
+                    native_conditions_observed=beh50['native_conditions_observed'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # C07 B-011..F-060: fifty canonical original-source
+                # rule-specific machine evidence scopes. A/C reference checks
+                # are replayed against their original SHA-bound sources.
+                # These never convert an engineering/artistic/MG0 unknown to PASS.
+                from c07_b011_f060_fifty_native import inspect as inspect_bf50
+                bf50 = inspect_bf50(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(bf50['source_rules_examined'] == 50
+                       and bf50['native_conditions_evaluated'] == 200
+                       and set(bf50['rules']) == {
+                           'AAA-200-' + 'BCDEF'[(i-11)//10] +
+                           '-' + str(i).zfill(3) for i in range(11,61)}
+                       and bf50['full_rule_passes'] == 0
+                       and bf50['individual_mg0_passes'] == 0
+                       and bf50['advancement_authorized'] is False
+                       and all(rule['full_rule_semantics'] == 'UNKNOWN'
+                               and rule['individual_mg0'] == 'UNKNOWN'
+                               and rule['owner_approval'] == 'UNKNOWN'
+                               and rule['advancement_authorized'] is False
+                               for rule in bf50['rules'].values()),
+                       'CONTROLLED_C07_BF50_FALSE_FULL_OR_MG0_PASS')
+                self.append('SUPERVISOR_C07_B011_F060_FIFTY_ORIGINAL_NATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=bf50['original_audit_sha256'],
+                    original_audit_tail=bf50['original_audit_tail'],
+                    source_rules_examined=50,
+                    native_conditions_evaluated=200,
+                    native_conditions_observed=bf50['native_conditions_observed'],
+                    original_native_glb_sha256=bf50['native_glb_sha256'],
+                    individual_original_source_evidence=bf50['rules'],
+                    full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
@@ -1411,6 +1942,40 @@ class ControlledJudgment:
                 j.need(not any(v['semantic_verdict']=='FAIL'
                                for v in q100_final['rules'].values()),
                        'CONTROLLED_R149_ORIGINAL_QUESTION_FAILURE_STOP')
+                # R153: global 763-source convergence. These 253 early
+                # question IDs already have authentic Q200/Q100 witnesses.
+                # Reuse their original source engines, never double-count.
+                # Exactly 763 canonical source IDs; independent MG0 remains 0.
+                from c07_complete763_convergence import inspect as inspect_763
+                all763 = inspect_763(
+                    self.inventory, plans[0]['plan'], self.c,
+                    self.asset, step, reserved_work,
+                    cohort200=cohort200, batch100=batch100, beh50=beh50,
+                    bf50=bf50, gk50=gk50, mq50=mq50,
+                    ten_process=ten_process,
+                    q200_actual=q200_actual, q100_final=q100_final)
+                j.need(all763['source_rules_covered'] == 763
+                       and all763['prior_six_batches_distinct'] == 510
+                       and all763['existing_original_question_rules_reconciled'] == 253
+                       and all763['all_question_ids_verified'] == 300
+                       and all763['coverage_complete'] is True
+                       and all763['independent_mg0_passes'] == 0
+                       and all763['full_rule_semantic_passes'] == 0
+                       and all763['advancement_authorized'] is False,
+                       'CONTROLLED_C07_763_ORIGINAL_SOURCES_NOT_CONVERGED')
+                self.append('SUPERVISOR_C07_ALL763_ORIGINAL_SOURCE_CONVERGENCE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=all763['original_audit_sha256'],
+                    original_audit_tail=all763['original_audit_tail'],
+                    source_rules_covered=763,
+                    original_question_rules_reconciled=253,
+                    family_count=20,
+                    independently_certified_mg0=0,
+                    per_engine_primary_ownership=all763['per_engine_primary_ownership'],
+                    all_rule_ids=all763['all_rule_ids'],
+                    advancement_authorized=False)
                 # R150: original auxiliary-source readback for the final 67
                 # canonical rule IDs. Applicability without verified scope
                 # stays UNKNOWN; no evidence receipt can mint semantic/MG0 PASS.
@@ -1480,6 +2045,40 @@ class ControlledJudgment:
                     new_full_positive_verifiers=0, individual_mg0_passes=0,
                     report_sha256=positive200['report_sha256'],
                     result='UNKNOWN_NEEDS_NATIVE_POSITIVE_AND_INDEPENDENT_MG0',
+                    advancement_authorized=False)
+                # C07: ONE consolidated same-attempt semantic ledger for
+                # the frozen 200. 110 prevention meanings, 25 independently
+                # measured EXEC outcomes, 65 original governance/AAA clauses.
+                # Partial positives never become full semantic or MG0 PASS.
+                from c07_frozen200_semantic_matrix import inspect as inspect_semantic_matrix
+                semantic_matrix200 = inspect_semantic_matrix(
+                    self.inventory, plans[0]['plan'], self.c,
+                    self.asset, step, reserved_work,
+                    semantic200=semantic200, exec25=exec25_positive,
+                    behavior_first50=beh50, behavior_last60=batch100,
+                    positive200=positive200)
+                j.need(semantic_matrix200['source_rule_count'] == 200
+                       and semantic_matrix200['source_groups'] == {
+                           'BEHAVIOR':110,'EXEC':25,'OTHER':65}
+                       and semantic_matrix200['current_failures'] +
+                           semantic_matrix200['current_unknowns'] == 200
+                       and semantic_matrix200['full_semantic_passes'] == 0
+                       and semantic_matrix200['individual_mg0_passes'] == 0
+                       and semantic_matrix200['advancement_authorized'] is False
+                       and len(semantic_matrix200['rules']) == 200,
+                       'CONTROLLED_C07_MACRO200_SEMANTIC_SOURCE_MATRIX_INCOMPLETE')
+                self.append('SUPERVISOR_C07_FROZEN200_CONSOLIDATED_SEMANTIC_EVIDENCE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=semantic_matrix200['original_audit_sha256'],
+                    original_audit_tail=semantic_matrix200['original_audit_tail'],
+                    source_rule_count=200,
+                    source_groups=semantic_matrix200['source_groups'],
+                    original_positive_components_observed=semantic_matrix200[
+                        'source_specific_positive_components_observed'],
+                    per_rule_original_semantic_evidence=semantic_matrix200['rules'],
+                    full_semantic_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
                 from c07_positive200_evidence import reconcile_current200
                 checked200 = reconcile_current200(
@@ -1818,7 +2417,15 @@ class ControlledJudgment:
                             'action': 'STOP_CORRECT_RESUBMIT',
                             'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
                 post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
-                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+                post_backend = j.NativeRuleBackend(
+                    self.api, plan['enrolled'],
+                    local_source_context={
+                        'inventory':self.inventory,
+                        'plan':plan,'controller':self.c,
+                        'asset':self.asset,'step':step,'work':work,
+                        'source_loader':lambda absolute:
+                            Path(absolute).read_bytes(),
+                    })
                 fresh = j.judge(self.inventory, work, post_offers, post_backend,
                                 current_contexts=self.contexts(), previous_contexts=prior_context,
                                 previous_decision=prior_decision)
@@ -1827,6 +2434,90 @@ class ControlledJudgment:
                        fresh.get('action') == 'READY_FOR_EXACT_OPERATION' and
                        fresh.get('operation_sha256') == work['operation_sha256'],
                        'CONTROLLED_POST_NATIVE_RULES_MG0_NOT_VERIFIED')
+                # C07 FINAL: derive truthful post-operation individual FULL
+                # semantic+MG0 certifications from the independently verified
+                # Git-native decision (never from initial-source observations,
+                # green CI, incomplete positive subsets or missing evidence).
+                if self.inventory.get('rule_count') == 763:
+                    from c07_763_post_certification import inspect as certify763
+                    native_final763 = certify763(self.inventory,plan,work,fresh)
+                    j.need(native_final763['canonical_rule_count']==763
+                           and native_final763['frozen200_rule_count']==200
+                           and sum(native_final763['counts'].values())==763
+                           and sum(native_final763['first_200_counts'].values())==200
+                           and native_final763['native_decision_sha256']==
+                               post_decision['decision_sha256']
+                           and native_final763['owner_approval_inferred'] is False
+                           and native_final763['advancement_authorized'] is False,
+                           'CONTROLLED_C07_FINAL_CERTIFICATION_SOURCE_DRIFT')
+                    if signed_macro25 is not None:
+                        # C07 positive MG0: an externally controlled review key
+                        # must exist at this FIXED trust location. Never import
+                        # keys from the producer's signed review packet.
+                        j.need(type(signed_macro25) is dict and
+                               set(signed_macro25)=={'rule_ids','reviews'},
+                               'CONTROLLED_MACRO25_SIGNED_REVIEW_SCHEMA')
+                        from c07_mg0_signed25 import certify_25
+                        from c07_independent_reviewer_preflight import (
+                            check as verify_authorized_reviewer)
+                        # Owner-controlled immutable out-of-band values.
+                        # Both missing values fail closed. The producer cannot
+                        # set a new key as trusted just by including its hash
+                        # inside the signed payload or the repository.
+                        owner_fingerprint=os.environ.get(
+                            'C07_OWNER_APPROVED_REVIEWER_KEY_SHA256')
+                        owner_reviewer_id=os.environ.get(
+                            'C07_OWNER_APPROVED_REVIEWER_ID')
+                        trust=verify_authorized_reviewer(
+                            self.c.root,reviewer_identity=owner_reviewer_id,
+                            owner_authorized_sha256=owner_fingerprint)
+                        reviewer_public_key = self.local_file(
+                            trust['trusted_public_key_path']
+                        ).read_bytes()
+                        j.need(type(signed_macro25['reviews']) is dict,
+                               'CONTROLLED_MACRO25_REVIEWER_RECORDS_REQUIRED')
+                        j.need(all(type(v) is dict and
+                                   type(v.get('payload')) is dict and
+                                   v['payload'].get('reviewer_id')==owner_reviewer_id
+                                   for v in signed_macro25['reviews'].values()),
+                               'CONTROLLED_MACRO25_OWNER_AUTHORIZED_REVIEWER_MISMATCH')
+                        signed_completion = certify_25(
+                            self.c.master.read_bytes(),
+                            self.c.audit_path(self.asset).read_bytes(),
+                            self.asset, work['master_sha256'],
+                            signed_macro25['rule_ids'], work['attempt_id'],
+                            self.inventory, plan, work, fresh,
+                            signed_macro25['reviews'], reviewer_public_key)
+                        j.need(signed_completion['full_semantic_passes']==25 and
+                               signed_completion['independent_mg0_passes']==25 and
+                               signed_completion['advancement_authorized'] is False,
+                               'CONTROLLED_MACRO25_NOT_FULLY_SIGNED')
+                        self.append('SUPERVISOR_C07_MACRO25_FINAL_SIGNED_MG0',
+                            step=step, attempt_id=work['attempt_id'],
+                            operation_sha256=work['operation_sha256'],
+                            source_decision_sha256=fresh['decision_sha256'],
+                            signed_macro25=signed_completion,
+                            advancement_authorized=False)
+                    self.append('SUPERVISOR_C07_FINAL_763_SEMANTIC_MG0_CERTIFICATION',
+                        step=step,
+                        attempt_id=work['attempt_id'],
+                        operation_sha256=work['operation_sha256'],
+                        master_sha256=work['master_sha256'],
+                        independent_post_native_decision_sha256=post_decision[
+                            'decision_sha256'],
+                        canonical_rule_count=763,
+                        frozen200_rule_count=200,
+                        individual_full_semantic_mg0_certifications=native_final763[
+                            'individual_native_and_mg0_certifications'],
+                        frozen200_certifications=native_final763[
+                            'first_200_certifications'],
+                        full_763_complete=native_final763['all_763_approved'],
+                        family_counts=native_final763['family_counts'],
+                        rule_statuses=native_final763['rules'],
+                        result_counts=native_final763['counts'],
+                        original_frozen200_sha256=native_final763[
+                            'original_frozen200_cohort_sha256'],
+                        advancement_authorized=False)
                 self.append('SUPERVISOR_POST_OPERATION_VERIFIED',
                             reservation_hash=rows[0]['reservation_hash'],
                             operation_sha256=work['operation_sha256'],
@@ -1851,7 +2542,7 @@ def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI, PRIVATE_REPO_SHA
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual', 'probe-blender'))
+    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual', 'probe-blender', 'certify-exec25'))
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--master', type=Path, required=True)
     parser.add_argument('--asset', required=True)
@@ -1865,6 +2556,7 @@ def main(argv=None):
     parser.add_argument('--subcheck-offset', type=int, default=0)
     parser.add_argument('--subcheck-limit', type=int, default=20)
     parser.add_argument('--close-record', type=Path)
+    parser.add_argument('--exec25-review', type=Path)
     parser.add_argument('--glb-sha256')
     parser.add_argument('--glb-rule')
     parser.add_argument('--visual-manifest-path')
@@ -1884,7 +2576,9 @@ def main(argv=None):
         def data(path):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
-        if args.command == 'probe-blender':
+        if args.command == 'certify-exec25':
+            result = bridge.certify_exec25(data(args.exec25_review))
+        elif args.command == 'probe-blender':
             j.need(args.blender_executable is not None,
                    'CONTROLLED_BLENDER_BINARY_REQUIRED')
             result=bridge.probe_registered_blender_roundtrip(

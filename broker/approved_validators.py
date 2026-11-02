@@ -9,6 +9,12 @@ import re
 
 from planning_semantics import ENGINE_RULE, VALIDATOR as PLANNING_VALIDATOR, CRITERIA as PLANNING_CRITERIA
 from r173_rule_semantics import VALIDATOR as R173_VALIDATOR
+from c07_r172_r178_reviewed_native import (
+    VALIDATOR as PROCESS_V, CRITERIA as PROCESS_CRITERIA)
+from c07_r171_r180_more_reviewed_native import (
+    VALIDATOR as MORE_PROCESS_V, CRITERIA as MORE_PROCESS_CRITERIA)
+from c07_r173_r175_r177_reviewed_native import (
+    VALIDATOR as AUTOMATION_V, CRITERIA as AUTOMATION_CRITERIA)
 
 R173_CRITERIA={
  'AAA-200-A-008':('uncertain_walkability_explicit','unknown_world_water_z_explicit',
@@ -45,6 +51,9 @@ R173_CRITERIA={
 }
 REVIEWED={
  ENGINE_RULE:(PLANNING_VALIDATOR,tuple(PLANNING_CRITERIA)),
+ **{rule:(PROCESS_V,criteria) for rule,criteria in PROCESS_CRITERIA.items()},
+ **{rule:(MORE_PROCESS_V,criteria) for rule,criteria in MORE_PROCESS_CRITERIA.items()},
+ **{rule:(AUTOMATION_V,criteria) for rule,criteria in AUTOMATION_CRITERIA.items()},
  **{rule:(R173_VALIDATOR,criteria) for rule,criteria in R173_CRITERIA.items()},
 }
 
@@ -81,6 +90,15 @@ def validate(enrolled,inventory):
         if validator==R173_VALIDATOR:
             require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
                     'VALIDATOR_R173_EVIDENCE_IMMUTABLE_REF:'+rid)
+        if validator==PROCESS_V:
+            require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
+                    'VALIDATOR_R172_R178_IMMUTABLE_SOURCE_REF:'+rid)
+        if validator==MORE_PROCESS_V:
+            require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
+                    'VALIDATOR_R171_R176_R179_R180_IMMUTABLE_SOURCE_REF:'+rid)
+        if validator==AUTOMATION_V:
+            require(re.fullmatch('[a-f0-9]{40}',str(spec.get('source_ref',''))),
+                    'VALIDATOR_R173_R175_R177_IMMUTABLE_SOURCE_REF:'+rid)
     return {'reviewed_enrolled_count':len(enrolled),
             'reviewed_rule_ids':sorted(enrolled),
             'complete_763_rule_coverage':False,'work_authorized':False}

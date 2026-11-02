@@ -30,7 +30,7 @@ def digest(s):return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
 # These are question *wordings* reviewed against immutable canonical sources.
 # They are NOT source-specific native semantic verifiers or independent asset QA.
-QUESTION_MASTER_PIN='b5f33d4ea13f888e87bdf698169af68fbeeeab6429f8868f77c6c6ad451df165'
+QUESTION_MASTER_PIN='2fc259a3b8d9c5a46762a677a503ceea86e29a723ff0847b465e2caec15a4b4e'
 QUESTION_FILES=('c07_questions_758_part1.json','c07_questions_758_part2.json')
 
 def _verified_wording(inv):

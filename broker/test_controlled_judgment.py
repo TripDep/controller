@@ -136,6 +136,24 @@ class Tests(unittest.TestCase):
         self.s.enroll_plan(self.plan)
         self.c.close('TEST', self.open['step'], self.open['token'], 'PASS', 'unit', 'unit', [], True)
 
+    def test_authorized_optional_native_outcome_contract_reenrolled_and_read_back(self):
+        # This is an actual Golden Controller STATUS enrollment, not merely
+        # a unit invocation of the contract validator.
+        key='c'*64
+        self.plan['outcome_contract']={
+            'dependency_graph':{key:[]},
+            'acceptance_criteria':[
+                {'name':'degenerate_triangles','operator':'eq','expected':0},
+                {'name':'triangles_examined','operator':'gte','expected':1},
+            ],
+            'timebox_seconds':180,
+        }
+        self.reenroll_mutation()
+        actual=self.s.plan()['plan']['outcome_contract']
+        self.assertEqual(actual,self.plan['outcome_contract'])
+        self.assertEqual(actual['dependency_graph'],{key:[]})
+        self.assertEqual(actual['acceptance_criteria'][0]['expected'],0)
+
     def issue(self, verdict='PASS', work_override=None):
         work = work_override if work_override is not None else self.s.expected_work()
         packets = []
