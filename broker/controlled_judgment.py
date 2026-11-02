@@ -2303,7 +2303,15 @@ class ControlledJudgment:
                             'action': 'STOP_CORRECT_RESUBMIT',
                             'prior_source': 'CONTROLLER_AUDITED_ANSWER_FAIL'}
                 post_decision = j.native_decision(self.api, post_origin, plan['issuer'])
-                post_backend = j.NativeRuleBackend(self.api, plan['enrolled'])
+                post_backend = j.NativeRuleBackend(
+                    self.api, plan['enrolled'],
+                    local_source_context={
+                        'inventory':self.inventory,
+                        'plan':plan,'controller':self.c,
+                        'asset':self.asset,'step':step,'work':work,
+                        'source_loader':lambda absolute:
+                            Path(absolute).read_bytes(),
+                    })
                 fresh = j.judge(self.inventory, work, post_offers, post_backend,
                                 current_contexts=self.contexts(), previous_contexts=prior_context,
                                 previous_decision=prior_decision)
