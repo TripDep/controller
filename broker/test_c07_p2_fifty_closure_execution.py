@@ -18,12 +18,14 @@ class CompleteP2FiftyBatchTests(unittest.TestCase):
         fixture=P2FiftyNativeMacroTests(
             'test_all_fifty_exact_rule_ids_type_scoped_100_original_predicates')
         mapping={}
+        fixtures={}
         for kind in ASSET_TYPES:
             fx=fixture.fixture(kind)
             # fixture owns teardown for every original temporary controller.
             mapping[kind]=fixture.ctx(fx)
+            fixtures[kind]=fx
         self.addCleanup(fixture.doCleanups)
-        return mapping,fixture
+        return mapping,fixtures
 
     def test_entire_fifty_rule_batch_is_really_executed_in_one_call(self):
         contexts,_=self.batch()
@@ -75,16 +77,14 @@ class CompleteP2FiftyBatchTests(unittest.TestCase):
             inspect(contexts)
 
     def test_missing_original_vegetation_alpha_pin_reports_source_gap(self):
-        contexts,fixture=self.batch()
-        ctx=contexts['vegetation']
-        t=fixture._last_fixture if hasattr(fixture,'_last_fixture') else None
-        ctx['plan']['p2_evidence_contract'][
-          'original_artifact_sha256'].pop('P2_LEAF_CARD_PNG')
-        # Rebuild Controller so this is a legitimate, but deficient, new
-        # original synthetic operation. Read back via original caller.
-        fx=next(x for x in fixture._cleanups if False) if False else None
-        # The plan still comes from a live mock, so original SHA pin loss
-        # must become missing source evidence, never FULL.
+        contexts,fixtures=self.batch()
+        t=fixtures['vegetation']
+        t.f.plan['p2_evidence_contract'][
+            'original_artifact_sha256'].pop('P2_LEAF_CARD_PNG')
+        # Rebuild a *new authenticated plan* with intentionally absent
+        # original evidence: tampering the enrolled plan is correctly blocked.
+        t.f.rebuild()
+        contexts['vegetation']=P2FiftyNativeMacroTests.ctx(t)
         result=inspect(contexts)
         entry=result['rules']['AAA-200-J-095']
         self.assertIn('original_leaf_card_R_G_B_A_PNG_bytes_decoded',
@@ -92,11 +92,12 @@ class CompleteP2FiftyBatchTests(unittest.TestCase):
         self.assertEqual(entry['full_rule_semantics'],'UNKNOWN')
 
     def test_terrain_elevation_without_numeric_source_stays_unverified(self):
-        contexts,_=self.batch()
-        ctx=contexts['terrain']
-        # Replacing source pins with producer claims is prohibited.
-        ctx['plan']['p2_evidence_contract'][
-          'original_artifact_sha256'].pop('P2_SURVEY')
+        contexts,fixtures=self.batch()
+        t=fixtures['terrain']
+        t.f.plan['p2_evidence_contract'][
+            'original_artifact_sha256'].pop('P2_SURVEY')
+        t.f.rebuild()
+        contexts['terrain']=P2FiftyNativeMacroTests.ctx(t)
         result=inspect(contexts)
         rule=result['rules']['AAA-200-K-101']
         self.assertFalse(rule['source_observations_complete'])
