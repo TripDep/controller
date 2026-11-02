@@ -17,8 +17,13 @@ OPERATORS=frozenset(("eq","lte","gte"))
 def _numeric(value):
     return type(value) in (int,float) and math.isfinite(value)
 
+def _outcome_contract(plan):
+    if type(plan) is not dict:return {}
+    outcome=plan.get("outcome_contract",plan)
+    return outcome if type(outcome) is dict else {}
+
 def criteria_well_formed(plan):
-    criteria=plan.get("acceptance_criteria")
+    criteria=_outcome_contract(plan).get("acceptance_criteria")
     if type(criteria) is not list or not criteria:return False
     names=set()
     for row in criteria:
@@ -38,7 +43,7 @@ def measured_original_glb(plan,technical):
         return False
     if technical.get("errors") or technical.get("unsupported_requires_independent_check"):
         return False
-    for criterion in plan["acceptance_criteria"]:
+    for criterion in _outcome_contract(plan)["acceptance_criteria"]:
         key=criterion["name"];observed=technical.get(key)
         if not _numeric(observed):return False
         op=criterion["operator"];v=criterion["expected"]
@@ -69,7 +74,7 @@ def real_rollback_restored(originals,current):
 
 def measured_timebox(plan,current):
     """Only measure bounded same-attempt timestamps; never provider uptime."""
-    budget=plan.get("timebox_seconds")
+    budget=_outcome_contract(plan).get("timebox_seconds")
     if type(budget) is not int or budget<=0:return False
     def parse(s):
         if type(s) is not str:return None
