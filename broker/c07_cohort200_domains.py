@@ -11,4 +11,9 @@ FAMILY_LANES = {
  "GLOBAL_GATES": ("E:SUPERVISOR_GATE_CHECK", "R:GATE_EVIDENCE", "X:current_audit"),
  "GOVERNANCE": ("X:master", "X:current_audit", "E:SUPERVISOR_OPERATION_OPENED"),
  "HISTORICAL_ASSET_GATES": ("R:BASELINE_SNAPSHOT", "R:REFERENCE_IMAGE", "M:glb_geometry"),
+ "MASTER_CHAIN": ("X:master", "X:current_audit", "X:original_dependencies"),
+ "META": ("X:master", "P:operation.action", "E:SUPERVISOR_OPERATION_OPENED"),
+ "PROFESSIONAL_PHASES": ("P:phase", "E:SUPERVISOR_OPERATION_OPENED", "X:delivery_status"),
+ "PROFESSIONAL_SYSTEM": ("P:operation.action", "R:NATIVE_EXPORT", "E:SUPERVISOR_NATIVE_QA"),
+ "PROVOCATION": ("R:RED_TEAM_REPORT", "E:SUPERVISOR_QUESTION_BATCH", "X:current_audit"),
 }
