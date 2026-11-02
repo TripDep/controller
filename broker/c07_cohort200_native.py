@@ -71,8 +71,8 @@ def inspect(inventory,plan,controller,asset,step,work,*,source_loader):
     def dependencies():
         dep=plan.get("dependency_files")
         declared=work.get("work_dependencies")
-        if type(dep) is not dict or not dep or
-            type(declared) is not dict or set(dep)!=set(declared):
+        if (type(dep) is not dict or not dep or
+            type(declared) is not dict or set(dep)!=set(declared)):
             return False
         root=getattr(controller,"root",None)
         if not isinstance(root,Path):return False
