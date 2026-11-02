@@ -23,6 +23,48 @@ OP_KEYS = {'action', 'category', 'locks', 'sections', 'evidence_before',
            'resolves', 'aaa_phase'}
 OPTIONAL_QUESTION_CONTEXT = {'question_context'}
 
+OPTIONAL_OUTCOME_CONTRACT = {'outcome_contract'}
+
+def validate_outcome_contract(plan):
+    """Optional approved positive-outcome criteria; no new mandatory work gate.
+
+    Enrolled only in the existing authorized STATUS plan. A saved report,
+    unapproved threshold or synthetic runtime flag never becomes a rule PASS.
+    """
+    if 'outcome_contract' not in plan:
+        return
+    from c07_exec25_true_measurements import criteria_well_formed
+    contract=plan['outcome_contract']
+    allowed={'acceptance_criteria','dependency_graph','timebox_seconds'}
+    j.need(type(contract) is dict and bool(contract) and
+           set(contract)<=allowed,
+           'CONTROLLED_SEMANTIC_OUTCOME_CONTRACT_SCHEMA')
+    if 'acceptance_criteria' in contract:
+        j.need(criteria_well_formed(contract),
+               'CONTROLLED_SEMANTIC_OUTCOME_CRITERIA_NOT_MEASURABLE')
+    if 'timebox_seconds' in contract:
+        budget=contract['timebox_seconds']
+        j.need(type(budget) is int and budget>0,
+               'CONTROLLED_SEMANTIC_TIMEBOX_INVALID')
+    if 'dependency_graph' in contract:
+        graph=contract['dependency_graph'];deps=plan.get('dependency_files')
+        j.need(type(graph) is dict and type(deps) is dict and
+               bool(deps) and set(graph)==set(deps) and
+               all(type(k) is str and type(v) is list and
+                   len(v)==len(set(v)) and all(type(x) is str and
+                   x in graph for x in v) for k,v in graph.items()),
+               'CONTROLLED_SEMANTIC_DEPENDENCY_GRAPH_NOT_CANONICAL')
+        active=set();done=set()
+        def visit(n):
+            j.need(n not in active,
+                   'CONTROLLED_SEMANTIC_DEPENDENCY_CYCLE')
+            if n in done:return
+            active.add(n)
+            for child in graph[n]:visit(child)
+            active.remove(n);done.add(n)
+        for k in graph:visit(k)
+
+
 
 class ControlledJudgment:
     def __init__(self, controller, asset, api, inventory):
@@ -107,8 +149,11 @@ class ControlledJudgment:
             active = st.get('active_step')
             j.need(st.get('d_authorized') and active and active['category'] == 'STATUS',
                    'CONTROLLED_PLAN_REQUIRES_AUTHORIZED_STATUS')
-            j.need(set(plan) in (PLAN_KEYS, PLAN_KEYS|OPTIONAL_QUESTION_CONTEXT) and
+            j.need(PLAN_KEYS <= set(plan) and
+                   set(plan)-PLAN_KEYS <=
+                   OPTIONAL_QUESTION_CONTEXT|OPTIONAL_OUTCOME_CONTRACT and
                    set(plan['operation']) == OP_KEYS, 'CONTROLLED_PLAN_SCHEMA')
+            validate_outcome_contract(plan)
             self.verify_question_context(plan)
             j.need(plan['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
             j.need(plan['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
@@ -147,6 +192,7 @@ class ControlledJudgment:
         j.need(row['plan']['inventory_sha256'] == j.digest(self.inventory), 'CONTROLLED_INVENTORY')
         j.need(row['plan']['master_sha256'] == self.c.master_identity()['sha256'], 'CONTROLLED_MASTER')
         self.verify_question_context(row['plan'])
+        validate_outcome_contract(row['plan'])
         from approved_validators import validate as validate_reviewed
         validate_reviewed(row['plan']['enrolled'],self.inventory)
         from c07_operation_scope import require_due_enrolled
