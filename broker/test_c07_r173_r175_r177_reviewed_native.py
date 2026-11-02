@@ -73,6 +73,7 @@ class FurtherThreeOriginalReviewers(unittest.TestCase):
         current=b"blender source current version B"
         f.add_item("SOURCE_EDITABLE","scene.blend",current)
         f.add_item("SOURCE_VERSION_BASELINE","previous-source.blend",before)
+        f.add_item("BASELINE_SNAPSHOT","approved-original.blend",before)
         f.rebuild();self.fixture.save_current()
         self.git_content={"1"*40:current,"2"*40:before}
         self.fixture.append_current("SOURCE_VERSION_INDEPENDENTLY_VERIFIED",
