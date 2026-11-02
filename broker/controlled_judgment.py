@@ -51,8 +51,8 @@ def validate_outcome_contract(plan):
         j.need(type(graph) is dict and type(deps) is dict and
                bool(deps) and set(graph)==set(deps) and
                all(type(k) is str and type(v) is list and
-                   len(v)==len(set(v)) and all(type(x) is str and
-                   x in graph for x in v) for k,v in graph.items()),
+                   all(type(x) is str and x in graph for x in v) and
+                   len(v)==len(set(v)) for k,v in graph.items()),
                'CONTROLLED_SEMANTIC_DEPENDENCY_GRAPH_NOT_CANONICAL')
         active=set();done=set()
         def visit(n):
