@@ -13,6 +13,7 @@ from c07_a10_c10_original_evidence import (
     inspect as inspect_existing_reference, _note, _pdf, original_image
 )
 from glb_machine_qa import audit_bytes,parse,GLBError,MAX_BYTES
+from glb_winding_readback import scan_bytes as native_winding, WindingBlocked
 from c07_bf50_canonical import CLAUSES,IDS,CATALOG_SHA
 from c07_bf50_predicates import SPEC
 
@@ -98,7 +99,7 @@ def observed_originals(records,artifacts,plan,work,step,asset,controller,source_
     glbs=[v for v in files.get('NATIVE_EXPORT',())
           if Path(v[0]).suffix.lower()=='.glb']
     need(len(glbs)<=1,'BF50_AMBIGUOUS_ORIGINAL_CURRENT_GLB')
-    glb=None;model=None;machine=None
+    glb=None;model=None;machine=None;winding=None
     if glbs:
         glb=glbs[0][2]
         need(len(glb)<=MAX_BYTES,'BF50_GLB_TOO_LARGE')
@@ -192,7 +193,7 @@ def observed_originals(records,artifacts,plan,work,step,asset,controller,source_
       'original_top_view_png_valid':png('VISUAL_VIEW_TOP'),
       'original_rear_view_png_valid':png('VISUAL_VIEW_REAR'),
       'scene_mesh_geometry_original':bool(machine and machine['triangles_examined']>0),
-      'winding_scan_completed':False,
+      'winding_scan_completed':winding is not None,
       'original_point_of_interest_declared':words(control.get('focal_points')),
       'player_camera_qa_original':bool(event('PLAYER_CAMERA_QA')),
       'original_mesh_name_repetitions_measured':len(model_names)>0,
@@ -239,11 +240,6 @@ def observed_originals(records,artifacts,plan,work,step,asset,controller,source_
           machine and machine.get('triangle_surface_crossing_evidence',{})
           .get('all_requested_pairs_fully_scanned') is True),
     }
-    # The underlying authentic R140 native evidence replays each original
-    # pre-D research note, original PNG/PDF and SHA-linked reference contract.
-    native=inspect_existing_reference(
-        controller.inventory if hasattr(controller,'inventory') else None,
-        plan,controller,asset,step,work,source_loader=source_loader) if False else None
     # No word/name/file-only inference can establish design or owner acceptance.
     return F,machine
 
