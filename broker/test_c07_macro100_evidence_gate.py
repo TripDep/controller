@@ -35,6 +35,26 @@ class Macro100GateTests(unittest.TestCase):
         self.assertEqual(r["certified_full_count"], 0)
         self.assertEqual(r["unknown_count"], 100)
 
+    def test_100_claims_cannot_be_self_certified(self):
+        x = fixture()
+        r = gate.inspect(x, {}, {})
+        for rid in gate.BATCH_IDS:
+            r["rules"][rid]["full_rule_pass"] = True
+            r["rules"][rid]["individual_mg0_pass"] = True
+            r["rules"][rid]["verdict"] = "PASS"
+        r["certified_full_count"] = 100
+        r["individual_mg0_passes"] = 100
+        r["advancement_authorized"] = True
+        with self.assertRaisesRegex(gate.Macro100Blocked, "INDEPENDENT_FULL_AND_MG0_MISSING"):
+            gate.require_complete(r, x)
+
+    def test_truncated_certificate_is_rejected(self):
+        x = fixture()
+        r = gate.inspect(x, {}, {})
+        del r["rules"][gate.BATCH_IDS[0]]
+        with self.assertRaisesRegex(gate.Macro100Blocked, "NOT_ALL_ONE_HUNDRED"):
+            gate.require_complete(r, x)
+
     def test_source_tampering_is_hard_blocked(self):
         x = fixture()
         rid = gate.BATCH_IDS[0]
