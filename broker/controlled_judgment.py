@@ -1121,6 +1121,10 @@ class ControlledJudgment:
                     negative_findings=behavior50['negative_findings'],
                     full_rule_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # An authenticated recorded violation must stop this operation;
+                # logging FAIL and advancing would make the checks decorative.
+                j.need(behavior50['negative_findings'] == 0,
+                       'CONTROLLED_C07_BEHAVIOR50_RECORDED_VIOLATION')
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
