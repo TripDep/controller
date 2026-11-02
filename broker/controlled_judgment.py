@@ -1031,6 +1031,40 @@ class ControlledJudgment:
                                and x['individual_mg0'] == 'UNKNOWN'
                                for x in exec25_positive['rules'].values()),
                        'CONTROLLED_C07_EXEC25_POSITIVE_ORIGINAL_NOT_PROVEN')
+                # C07 25-EXEC MACRO: source-bound per-rule replay combining
+                # 100 distinct outcome/domain checks, never promoting machine
+                # components to full source or MG0 PASS.
+                from c07_exec25_original_reviewed_native import inspect as inspect_exec25_macro
+                original_macro25 = inspect_exec25_macro({
+                    'inventory':self.inventory,
+                    'plan':plans[0]['plan'],
+                    'controller':self.c,
+                    'asset':self.asset,
+                    'step':step,
+                    'work':reserved_work,
+                    'source_loader':lambda absolute:Path(absolute).read_bytes(),
+                })
+                j.need(original_macro25['rule_count']==25 and
+                       original_macro25['criteria_count']==100 and
+                       set(original_macro25['rules'])==
+                           {'EXEC-'+str(n).zfill(3) for n in range(1,26)} and
+                       original_macro25['original_audit_sha256']==
+                           exec25_positive['original_audit_sha256'] and
+                       original_macro25['original_audit_tail']==
+                           exec25_positive['original_audit_tail'] and
+                       original_macro25['full_rule_passes']==0 and
+                       original_macro25['individual_mg0_passes']==0 and
+                       original_macro25['advancement_authorized'] is False,
+                       'CONTROLLED_EXEC25_MACRO_ORIGINAL_SCOPE_NOT_AUTHENTIC')
+                self.append('SUPERVISOR_C07_EXEC25_SEMANTIC_MACRO100_CRITERIA',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    original_audit_sha256=original_macro25['original_audit_sha256'],
+                    criteria_count=100,
+                    rule_count=25,
+                    source_checks=original_macro25['rules'],
+                    full_rule_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 self.append('SUPERVISOR_C07_EXEC25_ORIGINAL_POSITIVE_OUTCOMES',
                     step=step, attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
