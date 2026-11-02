@@ -803,6 +803,32 @@ def build_packet(source_context, rule_id, *, expected=None):
              q_four_review['advancement_authorized'] is False and
              q_four_review['full_rule_semantics']=='UNKNOWN',
              'C07_Q_FOUR_TOOL_EXECUTION_PROVENANCE_UNVERIFIED')
+    # P1 D: this is a single ten-rule macro, not ten producer reports.
+    # The original design/geometric/raster readers already reconstruct
+    # eight independent predicates. Reopen the same hash-chained sources
+    # for all ten D literals and bind their 30 stricter semantic measures
+    # into EVERY native replay packet, without FULL/artistic promotion.
+    d_ten_review = None
+    if rule_id.startswith('AAA-200-D-') and rule_id in P1_RESIDUAL_CANDIDATES:
+        from c07_p1_d_ten_original_semantic_review import (
+            evaluate as evaluate_d_ten, IDS as d_ids, CRITERIA as d_criteria)
+        d_ten_review = evaluate_d_ten(source_context)
+        need(d_ten_review['rule_count']==10 and
+             set(d_ten_review['rows'])==set(d_ids) and
+             d_ten_review['full_semantic_passes']==0 and
+             d_ten_review['mg0_passes']==0 and
+             d_ten_review['advancement_authorized'] is False and
+             d_ten_review['original_audit_sha256']==
+                report['original_audit_sha256'] and
+             d_ten_review['attempt_id']==work['attempt_id'] and
+             d_ten_review['operation_sha256']==work['operation_sha256'] and
+             all(set(d_ten_review['rows'][r]['checks'])==
+                 set(d_criteria[int(r[-3:])]) and
+                 d_ten_review['rows'][r]['full_rule_semantics']=='UNKNOWN'
+                 and d_ten_review['rows'][r]['individual_mg0']=='UNKNOWN'
+                 and d_ten_review['rows'][r]['advancement_authorized'] is False
+                 for r in d_ids),
+             'C07_P1_D_TEN_MACRO_ORIGINAL_SOURCE_REPLAY_DRIFT')
     topology_review = None
     if domain == 'topology' and rule_id in (
             'AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
@@ -862,6 +888,11 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if d_ten_review is not None:
+        proof['original_p1_d_ten_design_and_geometry_macro'] = (
+            d_ten_review['rows'][rule_id])
+        proof['original_p1_d_ten_all_ids_sha256'] = digest(
+            judgment.canonical_bytes(d_ten_review))
     if q_four_review is not None:
         proof['original_p7_q_four_crossformat_source_macro'] = q_four_review
     if p4_n_six_review is not None:
