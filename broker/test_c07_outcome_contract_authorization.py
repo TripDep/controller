@@ -91,5 +91,10 @@ class AuthorizedOutcomeContractTests(unittest.TestCase):
         self.assertIn("validate_outcome_contract(row['plan'])",text)
         self.assertIn("PLAN_KEYS <= set(plan)",text)
 
+    def test_unhashable_graph_node_is_blocked_not_python_exception(self):
+        self.plan["outcome_contract"]["dependency_graph"]={self.dep:[{}]}
+        with self.assertRaises(Blocked):
+            validate_outcome_contract(self.plan)
+
 if __name__=="__main__":
     unittest.main()
