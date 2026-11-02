@@ -96,14 +96,10 @@ def inspect(ctx,rid):
         if valid:
             visuals=_triangles(native)
             proxies=_triangles(collision)
-            supported=bool(visuals and proxies and len(visuals)<=50000
-                and len(proxies)<=50000
-                and all(point_supported(p,tri,tol)
-                    for surface in visuals for p in surface for tri in proxies)
-                    if False else False)
             # Per-vertex existence of a surface witness. Requiring one
             # collision triangle for all vertices is incorrect for tiling.
-            supported=bool(visuals and proxies and
+            supported=bool(visuals and proxies and len(visuals)<=5000
+                and len(proxies)<=5000 and
                 all(any(point_supported(p,tri,tol) for tri in proxies)
                     for surface in visuals for p in surface))
         checks=[valid,supported,False]
