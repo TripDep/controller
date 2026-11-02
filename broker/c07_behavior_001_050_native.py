@@ -221,6 +221,24 @@ def scoped_original_features(rows,artifacts,state,plan,work,asset,step,controlle
        "artistic_review_original":role("ARTISTIC_REVIEW"),
        "library_readback_verified":role("LIBRARY_READBACK"),
     })
+    F.update({
+       "requested_api_in_plan":nonempty(plan.get("api_service")),
+       "deployment_reference_recorded":role("DEPLOYMENT_RECEIPT"),
+       "native_delivery_bytes":role("DELIVERY_PACKAGE"),
+       "original_schedule_present":bool(plan.get("schedule")),
+       "active_run_interval_observed":bool(run_spans),
+       "actual_provider_run_verified":False,
+       "two_run_durations_observed":len(run_spans)>=2,
+       "original_provider_error_record":role("PROVIDER_ERROR"),
+       "last_run_timestamp_present":role("LAST_RUN_STATE"),
+       "true_checkpoint_completion_observed":False,
+       "guardian_audit_event_present":event("GUARDIAN_CHECK"),
+       "checkpoint_before_restart_present":role("CHECKPOINT_SOURCE"),
+       "post_resume_output_original":bool(original_export and
+                                           event("CHECKPOINT_RESTORED")),
+       "provider_failure_event_present":event("PROVIDER_FAILURE"),
+       "controller_test_record_original":event("CONTROLLER_SELFTEST"),
+    })
     first_and_second={k for triple in SPEC.values() for k in triple[:2]}
     need(first_and_second==set(F),"C07_B50_MISSING_NATIVE_READBACK_PREDICATES")
     need(all(type(v) is bool for v in F.values()),"C07_B50_NATIVE_BOOL_REQUIRED")
