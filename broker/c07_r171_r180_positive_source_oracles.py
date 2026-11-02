@@ -8,12 +8,47 @@ Any missing originally registered source bytes, timestamp order, real source
 oracle, or exact current attempt -> False, never an affirmative claim.
 """
 import hashlib
-from glb_machine_qa import audit_bytes,GLBError,MAX_BYTES
+import json
+from pathlib import Path
+from glb_machine_qa import audit_bytes,parse,read_accessor,GLBError,MAX_BYTES
 from c07_exec25_true_measurements import measured_original_glb,criteria_well_formed
 
 def _single(artifacts,role):
     rows=artifacts.get(role,())
     return rows[0] if len(rows)==1 else None
+
+def _mesh_signature(raw):
+    """Exact original mesh coordinates, primitives and world transforms.
+
+    Triangle counts alone are NOT sufficient: a modified vertex with the
+    same counts must fail. This conservative signature may reject equivalent
+    triangulations; it never claims visual/FiveM acceptance.
+    """
+    document,blob=parse(raw)
+    meshes=[]
+    for mesh in document.get("meshes",[]):
+        primitives=[]
+        for primitive in mesh.get("primitives",[]):
+            attrs=primitive.get("attributes",{})
+            if "POSITION" not in attrs:return None
+            positions=read_accessor(document,blob,attrs["POSITION"],"VEC3")
+            indices=(read_accessor(document,blob,primitive["indices"],"SCALAR")
+                     if "indices" in primitive else [(i,) for i in range(len(positions))])
+            primitives.append({
+                "positions":positions,
+                "indices":indices,
+                "mode":primitive.get("mode",4),
+            })
+        meshes.append(primitives)
+    if not meshes:return None
+    geometry={
+        "meshes":meshes,
+        "nodes":document.get("nodes",[]),
+        "scenes":document.get("scenes",[]),
+        "scene":document.get("scene"),
+    }
+    return hashlib.sha256(json.dumps(geometry,sort_keys=True,
+        separators=(",",":"),allow_nan=False).encode()).hexdigest()
 
 def native_script_output_matches_oracle(plan,artifacts):
     """R176, verify true output and independent reimport vs measured criteria.
@@ -39,8 +74,14 @@ def native_script_output_matches_oracle(plan,artifacts):
         return False
     if not (measured_original_glb(plan,first) and
             measured_original_glb(plan,second)):return False
-    # Exact structural measured quantities, rather than exit code alone.
+    # Exact original mesh geometry, not merely matching triangle counts.
+    try:
+        mesh1=_mesh_signature(actual[2])
+        mesh2=_mesh_signature(reimport[2])
+    except (GLBError,ValueError,TypeError,KeyError,IndexError,OverflowError):
+        return False
     return (first["triangles_examined"]>0 and
+            mesh1 is not None and mesh1==mesh2 and
             all(first.get(k)==second.get(k) for k in (
                 "triangles_examined","vertices_examined","mesh_primitives",
                 "nonfinite_positions","invalid_indices","degenerate_triangles")))
@@ -82,7 +123,8 @@ def automation_preserved_approved_bytes(records,artifacts,work,step):
     return (len(before)==len(later)==len(execution)==len(approvals)==1
             and before[0]<=approvals[0]<execution[0]<later[0])
 
-def real_checkpoint_restored_without_duplicate(records,artifacts,work,step):
+def real_checkpoint_restored_without_duplicate(records,artifacts,work,step,
+                                               source_loader=None):
     """R179, source of checkpoint predates current attempt and restored bytes.
 
     This proves the checkpoint's binary identity/lineage, not that all
@@ -108,10 +150,35 @@ def real_checkpoint_restored_without_duplicate(records,artifacts,work,step):
              type(r.get("evidence_operation")) is dict and
              r["evidence_operation"].get("role")=="CHECKPOINT_RESTORED_SOURCE" and
              r["evidence_operation"].get("sha256")==restored[1]]
-    if not (len(parents)==len(current)==len(artifact_rows)==1 and
+    # A historical event naming a checkpoint SHA is NOT a source readback.
+    # Demand its original registered checkpoint bytes, reread independently
+    # through the original Controller source reader.
+    previous=[(i,r) for i,r in enumerate(records) if
+             r.get("event")=="ARTIFACT_RECORDED" and
+             r.get("result")=="PASS" and
+             type(r.get("evidence_operation")) is dict and
+             r["evidence_operation"].get("role")=="CHECKPOINT_SOURCE" and
+             r["evidence_operation"].get("sha256")==restored[1] and
+             r.get("step")!=step]
+    if not (len(parents)==len(current)==len(artifact_rows)==len(previous)==1
+            and callable(source_loader) and
             type(work.get("previous_attempt_id")) is str and
             work["previous_attempt_id"]!=work.get("attempt_id") and
-            parents[0][0]<artifact_rows[0][0]<current[0][0]):
+            parents[0][0]<previous[0][0]<artifact_rows[0][0]<current[0][0]):
+        return False
+    past=previous[0][1]["evidence_operation"]
+    path=past.get("path")
+    if (type(path) is not str or not Path(path).is_absolute() or
+        Path(path).resolve()!=Path(path) or Path(path).is_symlink() or
+        type(past.get("size_bytes")) is not int or
+        past["size_bytes"]!=len(restored[2])):
+        return False
+    try:
+        original=source_loader(path)
+    except (OSError,ValueError,TypeError,KeyError):
+        return False
+    if type(original) is not bytes or original!=restored[2] or (
+        hashlib.sha256(original).hexdigest()!=past["sha256"]):
         return False
     duplicate=[r for r in records if r.get("event") in (
         "SUPERVISOR_OPERATION_RESERVED","SUPERVISOR_OPERATION_CLOSED")
