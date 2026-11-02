@@ -21,6 +21,11 @@ class ACOriginalMacroBroker(unittest.TestCase):
         fx=R140Test('test_all_twenty_source_ids_have_three_distinct_factual_checks')
         fx.setUp()
         self.addCleanup(fx.doCleanups)
+        # The R140 fixture tests source notes in isolation; the consuming
+        # broker additionally requires original work/attempt identity fields.
+        fx.f.work.update(work_item_sha256='e'*64,
+                         attempt_number=1,previous_attempt_id=None)
+        fx.f.rebuild()
         return fx
 
     @staticmethod
