@@ -1657,6 +1657,40 @@ class ControlledJudgment:
                 j.need(not any(v['semantic_verdict']=='FAIL'
                                for v in q100_final['rules'].values()),
                        'CONTROLLED_R149_ORIGINAL_QUESTION_FAILURE_STOP')
+                # R153: global 763-source convergence. These 253 early
+                # question IDs already have authentic Q200/Q100 witnesses.
+                # Reuse their original source engines, never double-count.
+                # Exactly 763 canonical source IDs; independent MG0 remains 0.
+                from c07_complete763_convergence import inspect as inspect_763
+                all763 = inspect_763(
+                    self.inventory, plans[0]['plan'], self.c,
+                    self.asset, step, reserved_work,
+                    cohort200=cohort200, batch100=batch100, beh50=beh50,
+                    bf50=bf50, gk50=gk50, mq50=mq50,
+                    ten_process=ten_process,
+                    q200_actual=q200_actual, q100_final=q100_final)
+                j.need(all763['source_rules_covered'] == 763
+                       and all763['prior_six_batches_distinct'] == 510
+                       and all763['existing_original_question_rules_reconciled'] == 253
+                       and all763['all_question_ids_verified'] == 300
+                       and all763['coverage_complete'] is True
+                       and all763['independent_mg0_passes'] == 0
+                       and all763['full_rule_semantic_passes'] == 0
+                       and all763['advancement_authorized'] is False,
+                       'CONTROLLED_C07_763_ORIGINAL_SOURCES_NOT_CONVERGED')
+                self.append('SUPERVISOR_C07_ALL763_ORIGINAL_SOURCE_CONVERGENCE',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=all763['original_audit_sha256'],
+                    original_audit_tail=all763['original_audit_tail'],
+                    source_rules_covered=763,
+                    original_question_rules_reconciled=253,
+                    family_count=20,
+                    independently_certified_mg0=0,
+                    per_engine_primary_ownership=all763['per_engine_primary_ownership'],
+                    all_rule_ids=all763['all_rule_ids'],
+                    advancement_authorized=False)
                 # R150: original auxiliary-source readback for the final 67
                 # canonical rule IDs. Applicability without verified scope
                 # stays UNKNOWN; no evidence receipt can mint semantic/MG0 PASS.
