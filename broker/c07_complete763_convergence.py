@@ -5,7 +5,7 @@ This does NOT certify the 763 requirements. It proves that all 200 AAA,
 nonduplicated, source-bound operational observations at current attempt.
 A green workflow/merely existing file is never MG0 or owner acceptance.
 """
-from c07_positive_native_process import sha
+from c07_positive_native_process import sha, _original_attempt
 from c07_questions_300 import extract_bank
 
 SCHEMA="gg-c07-763-original-source-convergence-v1"
@@ -16,7 +16,7 @@ class ConvergenceBlocked(ValueError):
 def need(ok,why):
     if not ok: raise ConvergenceBlocked(why)
 
-def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
+def inspect(inventory,plan,controller,asset,step,work,*,cohort200,batch100,beh50,bf50,
             gk50,mq50,ten_process,q200_actual,q100_final):
     need(type(inventory) is dict and
          inventory.get("schema")=="gg-effective-family-inventory-v1"
@@ -56,8 +56,13 @@ def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
        ("AAA_M121_Q170",mq50,50),
        ("AAA_R171_R180",ten_process,10),
     ]
+    audit_rows,latest_tail,latest_state,latest_sha=_original_attempt(
+        inventory,plan,controller,asset,step,work)
+    need(latest_state.get('last_audit_hash')==latest_tail and
+         (latest_state.get('active_step') or {}).get('step')==step,
+         'C07_763_FINAL_ORIGINAL_AUDIT_STATE_DRIFT')
+    audit_origins={row.get('record_hash') for row in audit_rows}
     seen={}
-    audit_origins=set()
     for engine,result,count in recent:
         need(type(result) is dict and
              type(result.get("rules")) is dict and
@@ -70,7 +75,9 @@ def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
         need(result.get("attempt_id")==work.get("attempt_id")
              and result.get("operation_sha256")==work.get("operation_sha256"),
              "C07_763_REPLAYED_DIFFERENT_ATTEMPT:"+engine)
-        audit_origins.add(result.get("original_audit_sha256"))
+        need(result.get('original_audit_tail') in audit_origins and
+             type(result.get('original_audit_sha256')) is str,
+             'C07_763_SOURCE_ENGINE_AUDIT_NOT_IN_CURRENT_CHAIN:'+engine)
         for rid,row in result["rules"].items():
             need(rid not in seen,
                  "C07_763_DUPLICATED_RULE_ID:"+rid+":"+engine)
@@ -91,8 +98,8 @@ def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
                  in ("UNKNOWN","NOT_DUE"),
                  "C07_763_UNAUTHORIZED_INDIVIDUAL_MG0_PASS:"+rid)
             seen[rid]=engine
-    need(len(audit_origins)==1 and None not in audit_origins,
-         "C07_763_MULTIPLE_OR_MISSING_ORIGINAL_AUDIT_SHA")
+    need(latest_tail in audit_origins,
+         'C07_763_FINAL_AUDIT_CHAIN_EMPTY')
     need(len(seen)==510,
          "C07_763_PRIOR_SIX_COHORT_510_NOT_DISTINCT")
     for engine,result,first,last in (
@@ -108,7 +115,7 @@ def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
              result.get("advancement_authorized") is False and
              result.get("attempt_id")==work.get("attempt_id") and
              result.get("operation_sha256")==work.get("operation_sha256") and
-             result.get("original_audit_sha256") in audit_origins,
+             result.get("original_audit_tail") in audit_origins,
              "C07_763_ORIGINAL_QUESTION_SOURCE_ENGINE_UNTRUSTED:"+engine)
         need(set(result["rules"])==
              {"Q-%03d"%n for n in range(first,last+1)},
@@ -152,7 +159,8 @@ def inspect(inventory,controller,work,*,cohort200,batch100,beh50,bf50,
        "existing_original_question_rules_reconciled":253,
        "overall_families":20,"all_question_ids_verified":300,
        "original_master_sha256":master,
-       "original_audit_sha256":next(iter(audit_origins)),
+       "original_audit_sha256":latest_sha,
+       "original_audit_tail":latest_tail,
        "attempt_id":work["attempt_id"],
        "operation_sha256":work["operation_sha256"],
        "coverage_complete":True,"independent_mg0_passes":0,
