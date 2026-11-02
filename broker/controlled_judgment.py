@@ -965,6 +965,38 @@ class ControlledJudgment:
                     independently_measured_domain_probes=50,
                     full_native_semantics_passes=0, individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 MACRO EXEC25: independently read actual positive
+                # outcomes, not mere original file presence. All 25 are
+                # checked together, including complete transitive dependency
+                # closure and independently recorded QA/rollback evidence.
+                from c07_exec25_positive_outcomes import inspect as inspect_exec25_positive
+                exec25_positive = inspect_exec25_positive(
+                    self.inventory, plans[0]['plan'], self.c, self.asset,
+                    step, reserved_work,
+                    source_loader=lambda absolute: Path(absolute).read_bytes())
+                j.need(exec25_positive['source_rule_count'] == 25
+                       and exec25_positive['native_positive_outcome_conditions_evaluated'] == 50
+                       and set(exec25_positive['rules']) ==
+                           {'EXEC-'+str(n).zfill(3) for n in range(1,26)}
+                       and exec25_positive['full_rule_semantics_passes'] == 0
+                       and exec25_positive['individual_mg0_passes'] == 0
+                       and exec25_positive['advancement_authorized'] is False
+                       and all(x['complete_original_clause_semantics'] == 'UNKNOWN'
+                               and x['individual_mg0'] == 'UNKNOWN'
+                               for x in exec25_positive['rules'].values()),
+                       'CONTROLLED_C07_EXEC25_POSITIVE_ORIGINAL_NOT_PROVEN')
+                self.append('SUPERVISOR_C07_EXEC25_ORIGINAL_POSITIVE_OUTCOMES',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=exec25_positive['original_audit_sha256'],
+                    original_audit_tail=exec25_positive['original_audit_tail'],
+                    positive_outcome_conditions_evaluated=50,
+                    positive_outcome_conditions_observed=exec25_positive[
+                        'native_positive_outcome_conditions_observed'],
+                    original_rule_specific_positive_outcomes=exec25_positive['rules'],
+                    full_rule_semantics_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R120: 13 actual machine-positive process *subpredicates*
                 # evaluated as one group within these exact first 200.
                 # They never upgrade full rules or individual MG0 to PASS.
