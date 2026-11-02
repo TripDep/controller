@@ -7,8 +7,18 @@ The remaining M129 shader and O150 runtime obligations stay UNKNOWN without
 independent RAGE/FiveM provenance. No fixture is an MG0 or owner approval.
 """
 import unittest
+import copy
 
-from test_c07_p4_texture_semantics import png, solid
+from test_c07_p3_uv_semantics import uv_glb
+from test_c07_p5_budget_semantics import with_embedded_texture
+from test_c07_p5_full_review import two_material_bindings
+from test_c07_p5_optimization_semantics import rewrite_glb
+from test_c07_p4_texture_semantics import png, solid, material
+from test_c07_p345_remaining_original_review import tangent_normals, decorated
+from test_c07_p345_bake_reuse_macro_full_review import BakeReuseOriginalSourceTests
+from c07_p345_remaining_original_review import (
+    CRITERIA as REMAINING_CRITERIA, atlas_surface_fidelity)
+from c07_native_source_rule_replayers import NATIVE_RULES
 from test_c07_p345_forty_native_evidence import encoded
 from test_c07_p4_lighting_player_full_review import P4LightingPlayerFullReviewTests
 from test_c07_p345_remaining_original_review import RemainingP345Tests
@@ -131,6 +141,50 @@ class P345PendingCaptureMacroTests(unittest.TestCase):
         self.assertEqual(runtime['full_rule_semantics'],'UNKNOWN')
         self.assertEqual(runtime['fivem_runtime'],'UNKNOWN')
         self.assertFalse(runtime['advancement_authorized'])
+
+    def test_original_atlas_and_reuse_compare_alpha_at_actual_uv_samples(self):
+        """L118/O147 cannot PASS when RGBA becomes invisible but RGB matches."""
+        # Same original RGB, geometry, UVs and material bindings as the
+        # accepted baseline; only the actual source texture alpha changes.
+        transparent=[[(r,g,b,0) for r,g,b,_ in row]
+                     for row in tangent_normals()]
+        baseline=with_embedded_texture(uv_glb(with_texture=False),
+                                       png(transparent))
+        baseline=rewrite_glb(baseline,material)
+        baseline=rewrite_glb(baseline,decorated)
+        def second_primitive(doc):
+            doc['meshes'][0]['primitives'].append(
+                copy.deepcopy(doc['meshes'][0]['primitives'][0]))
+        baseline=rewrite_glb(baseline,second_primitive)
+        baseline=two_material_bindings(baseline)
+
+        obj=RemainingP345Tests(
+            'test_all_thirteen_have_distinct_real_source_predicates_no_full')
+        test,ctx=obj.context()
+        current=test.art['NATIVE_EXPORT']
+        self.assertFalse(atlas_surface_fidelity(baseline,current,0))
+        good=remaining(ctx,'AAA-200-L-118')
+        self.assertTrue(good['checks'][REMAINING_CRITERIA[118][2]])
+        test.add('P3_ATLAS_BASELINE','atlas_baseline.glb',baseline)
+        test.sync()
+        ctx['controller']=test.f.controller
+        bad=remaining(ctx,'AAA-200-L-118')
+        self.assertFalse(bad['checks'][REMAINING_CRITERIA[118][2]])
+
+        reuse=BakeReuseOriginalSourceTests(
+            'test_both_exact_originals_reconstruct_positive_semantics')
+        reuse.setUp()
+        self.addCleanup(reuse.doCleanups)
+        original=reuse.row('AAA-200-O-147')
+        self.assertTrue(original['checks'][NATIVE_RULES[
+            'AAA-200-O-147'][1][2]])
+        reuse.before=baseline
+        reuse.refresh()
+        changed=reuse.row('AAA-200-O-147')
+        self.assertFalse(changed['checks'][NATIVE_RULES[
+            'AAA-200-O-147'][1][2]])
+        self.assertEqual(changed['individual_mg0'],'UNKNOWN')
+        self.assertFalse(changed['advancement_authorized'])
 
 if __name__=='__main__':
     unittest.main()
