@@ -829,6 +829,24 @@ def build_packet(source_context, rule_id, *, expected=None):
                  and d_ten_review['rows'][r]['advancement_authorized'] is False
                  for r in d_ids),
              'C07_P1_D_TEN_MACRO_ORIGINAL_SOURCE_REPLAY_DRIFT')
+    p678_three_review = None
+    if rule_id in ('AAA-200-P-155','AAA-200-P-160',
+                   'AAA-200-S-190'):
+        from c07_p678_three_residual_crosscheck_macro import (
+            inspect as inspect_p678_three, PREDICATES as p678_predicates)
+        p678_three_review = inspect_p678_three(source_context,rule_id)
+        need(p678_three_review['rule_id']==rule_id and
+             set(p678_three_review['checks'])==
+                 set(p678_predicates[rule_id]) and
+             p678_three_review['original_audit_sha256']==
+                 report['original_audit_sha256'] and
+             p678_three_review['attempt_id']==work['attempt_id'] and
+             p678_three_review['operation_sha256']==work['operation_sha256'] and
+             p678_three_review['full_rule_semantics']=='UNKNOWN' and
+             p678_three_review['individual_mg0']=='UNKNOWN' and
+             p678_three_review['advancement_authorized'] is False and
+             list(p678_three_review['checks'].values())[-1] is False,
+             'C07_P678_THREE_SOURCE_ONLY_GUARD_UNVERIFIED')
     topology_review = None
     if domain == 'topology' and rule_id in (
             'AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
@@ -888,6 +906,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if p678_three_review is not None:
+        proof['original_p678_three_residual_crosschecks'] = p678_three_review
     if d_ten_review is not None:
         proof['original_p1_d_ten_design_and_geometry_macro'] = (
             d_ten_review['rows'][rule_id])
