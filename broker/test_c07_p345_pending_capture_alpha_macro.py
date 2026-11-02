@@ -13,7 +13,7 @@ from test_c07_p3_uv_semantics import uv_glb
 from test_c07_p5_budget_semantics import with_embedded_texture
 from test_c07_p5_full_review import two_material_bindings
 from test_c07_p5_optimization_semantics import rewrite_glb
-from test_c07_p4_texture_semantics import png, solid, material
+from test_c07_p4_texture_semantics import png, solid, material as set_material
 from test_c07_p345_remaining_original_review import tangent_normals, decorated
 from test_c07_p345_bake_reuse_macro_full_review import BakeReuseOriginalSourceTests
 from c07_p345_remaining_original_review import (
@@ -150,7 +150,7 @@ class P345PendingCaptureMacroTests(unittest.TestCase):
                      for row in tangent_normals()]
         baseline=with_embedded_texture(uv_glb(with_texture=False),
                                        png(transparent))
-        baseline=rewrite_glb(baseline,material)
+        baseline=rewrite_glb(baseline,set_material)
         baseline=rewrite_glb(baseline,decorated)
         def second_primitive(doc):
             doc['meshes'][0]['primitives'].append(
