@@ -197,7 +197,7 @@ class Frozen200MacroPositiveTests(unittest.TestCase):
             "expected_applicability"]="FUTURE_PHASE"
         rehash(native)
         with self.assertRaisesRegex(
-                Macro200Blocked,"SOURCE_OR_APPLICABILITY"):
+                Macro200Blocked,"NATIVE_RULE_CONTEXT_OR_SOURCE_REPLAY"):
             evaluate(inv,plan,native)
 
     def test_begin_path_wires_native_macro_before_authorization(self):
