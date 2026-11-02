@@ -12,7 +12,8 @@ from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json
 from c07_native_output_oracle import read_mesh_geometry
 from visual_content_metrics import decode_grid, VisualContentBlocked
 from c07_p345_light_pixel_replay import (neutral_pixel_qa, pixel_light_response,
-                                         player_camera_horizontal_alignment)
+                                         player_camera_horizontal_alignment,
+                                         opaque_capture_png)
 
 NEUTRAL = 'AAA-200-N-131'
 SEPARATE = 'AAA-200-N-132'
@@ -50,7 +51,8 @@ def vec(x):
     return type(x) is list and len(x) == 3 and all(finite(v) for v in x)
 
 def pixels(raw):
-    if raw is None:
+    # The RGB PNG decoder omits alpha; reject an invisible render capture.
+    if raw is None or not opaque_capture_png(raw):
         return None
     try:
         w,h,grid = decode_grid(raw, step=1)
