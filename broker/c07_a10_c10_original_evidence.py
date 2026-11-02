@@ -100,7 +100,27 @@ def original_image(raw):
         return None
 
 def _pdf(raw):
-    return type(raw) is bytes and len(raw)>=13 and raw.startswith(b'%PDF-') and b'%%EOF' in raw[-1024:]
+    """Reject header/EOF-only impostors before using drawings as evidence.
+
+    This is a structural prerequisite, not proof that the drawing is genuine,
+    readable, relevant, licensed, or independently reviewed.
+    """
+    if type(raw) is not bytes or not 40 <= len(raw) <= 32_000_000:
+        return False
+    if re.match(rb'%PDF-1\\.[0-7](?:\\r?\\n|\\r)', raw[:16]) is None and \\
+       re.match(rb'%PDF-2\\.0(?:\\r?\\n|\\r)', raw[:16]) is None:
+        return False
+    marker = re.search(rb'startxref\\s+(\\d+)\\s+%%EOF\\s*\\Z', raw[-2048:])
+    if marker is None:
+        return False
+    offset = int(marker.group(1))
+    if not 0 < offset < len(raw):
+        return False
+    # Both conventional xref tables and PDF 1.5+ xref stream objects.
+    tail = raw[offset:offset+256].lstrip()
+    return tail.startswith(b'xref') or (
+        re.match(rb'\\d+\\s+\\d+\\s+obj\\b', tail) is not None
+        and b'/Type' in tail and b'/XRef' in tail)
 
 def _note(raw):
     try:
