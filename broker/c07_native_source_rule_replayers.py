@@ -790,6 +790,19 @@ def build_packet(source_context, rule_id, *, expected=None):
              p4_n_six_review['operation_sha256']==work['operation_sha256'] and
              p4_n_six_review['advancement_authorized'] is False,
              'C07_N_SIX_SOURCE_REPLAY_BINDING_INVALID')
+    q_four_review = None
+    if rule_id in ('AAA-200-Q-167','AAA-200-Q-168',
+                   'AAA-200-Q-169','AAA-200-Q-170'):
+        from c07_p7_q_four_crossformat_macro import inspect as inspect_q_four
+        q_four_review = inspect_q_four(source_context,rule_id)
+        need(q_four_review['rule_id']==rule_id and
+             q_four_review['original_audit_sha256']==
+                report['original_audit_sha256'] and
+             q_four_review['attempt_id']==work['attempt_id'] and
+             q_four_review['operation_sha256']==work['operation_sha256'] and
+             q_four_review['advancement_authorized'] is False and
+             q_four_review['full_rule_semantics']=='UNKNOWN',
+             'C07_Q_FOUR_TOOL_EXECUTION_PROVENANCE_UNVERIFIED')
     topology_review = None
     if domain == 'topology' and rule_id in (
             'AAA-200-L-111', 'AAA-200-L-113', 'AAA-200-L-114'):
@@ -849,6 +862,8 @@ def build_packet(source_context, rule_id, *, expected=None):
         'checks': checks, 'mg0_observation_sha256':
             audit['rules'][rule_id]['observation_sha256'],
     }
+    if q_four_review is not None:
+        proof['original_p7_q_four_crossformat_source_macro'] = q_four_review
     if p4_n_six_review is not None:
         proof['original_p4_n_six_lighting_qa_macro'] = p4_n_six_review
     if topology_review is not None:
