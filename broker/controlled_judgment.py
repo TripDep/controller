@@ -2394,6 +2394,8 @@ class ControlledJudgment:
                         reviewer_public_key = self.local_file(
                             trust['trusted_public_key_path']
                         ).read_bytes()
+                        j.need(type(signed_macro25['reviews']) is dict,
+                               'CONTROLLED_MACRO25_REVIEWER_RECORDS_REQUIRED')
                         j.need(all(type(v) is dict and
                                    type(v.get('payload')) is dict and
                                    v['payload'].get('reviewer_id')==owner_reviewer_id
