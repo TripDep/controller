@@ -665,6 +665,86 @@ class ControlledJudgment:
                         operation_sha256=work['operation_sha256'], step=active['step'])
             return active
 
+    def certify_exec25(self, packet):
+        """Certify ONLY 25 EXEC independently of the global 763 operation close.
+
+        This method cannot authorize a model operation, merge, or substitute
+        producer observations for owner's signed original-clause/MG0 review.
+        Original audit is validated under lock and the exact original active
+        work reservation is replayed before any certificate is appended.
+        """
+        with self.locked():
+            from c07_exec25_final_signed import certify as certify25
+            from c07_independent_reviewer_preflight import (
+                check as owner_key_check)
+            active = self.c.asset_state(self.asset).get('active_step')
+            j.need(type(active) is dict and type(active.get('step')) is str,
+                   'CONTROLLED_EXEC25_REAL_OPEN_STEP_REQUIRED')
+            step = active['step']
+            events = self.records()
+            opens = [r for r in events
+                     if r.get('event') == 'SUPERVISOR_OPERATION_OPENED'
+                     and r.get('step') == step]
+            j.need(len(opens) == 1, 'CONTROLLED_EXEC25_ORIGINAL_OPEN_UNIQUE')
+            reservations = [r for r in events
+                    if r.get('event') == 'SUPERVISOR_OPERATION_RESERVED'
+                    and r.get('record_hash') == opens[0].get('reservation_hash')]
+            j.need(len(reservations) == 1,
+                   'CONTROLLED_EXEC25_ORIGINAL_RESERVATION_REQUIRED')
+            reservation = reservations[0]
+            enrolled = [r for r in events
+                    if r.get('event') == 'SUPERVISOR_PLAN_ENROLLED'
+                    and r.get('record_hash') == reservation.get('plan_record_hash')]
+            j.need(len(enrolled) == 1 and
+                   reservation.get('operation_sha256') ==
+                       reservation.get('work', {}).get('operation_sha256'),
+                   'CONTROLLED_EXEC25_ENROLLED_PLAN_AND_WORK_REQUIRED')
+            work = reservation['work']
+            plan = enrolled[0]['plan']
+            j.need(type(packet) is dict and set(packet) == {
+                    'schema','asset','attempt_id','master_sha256','reviews'} and
+                   packet['schema'] == 'gg-c07-exec25-owner-review-submission-v1' and
+                   packet['asset'] == self.asset and
+                   packet['attempt_id'] == work.get('attempt_id') and
+                   packet['master_sha256'] == work.get('master_sha256') and
+                   plan.get('master_sha256') == work.get('master_sha256') and
+                   type(packet['reviews']) is dict,
+                   'CONTROLLED_EXEC25_REVIEW_PACKAGE_OR_ATTEMPT_INVALID')
+            j.need(not any(r.get('event') ==
+                    'SUPERVISOR_C07_EXEC25_FINAL_INDEPENDENT_SIGNED_MG0'
+                    and r.get('attempt_id') == work['attempt_id']
+                    for r in events),
+                   'CONTROLLED_EXEC25_ATTEMPT_ALREADY_CERTIFIED')
+            identity = os.environ.get('C07_OWNER_APPROVED_REVIEWER_ID')
+            fingerprint = os.environ.get('C07_OWNER_APPROVED_REVIEWER_KEY_SHA256')
+            key_report = owner_key_check(
+                self.c.root, reviewer_identity=identity,
+                owner_authorized_sha256=fingerprint)
+            key = self.local_file(
+                key_report['trusted_public_key_path']).read_bytes()
+            report = certify25({
+                'inventory':self.inventory,
+                'plan':plan,'controller':self.c,'asset':self.asset,
+                'step':step,'work':work,
+                'source_loader':lambda absolute:Path(absolute).read_bytes(),
+            }, packet['reviews'],key,identity)
+            j.need(report['independent_full_semantic_passes'] == 25 and
+                   report['independent_mg0_passes'] == 25 and
+                   report['full_original_source_criteria_verified'] == 100 and
+                   report['advancement_authorized'] is False,
+                   'CONTROLLED_EXEC25_25_SIGNED_ORIGINAL_REVIEWS_REQUIRED')
+            event = self.append(
+                'SUPERVISOR_C07_EXEC25_FINAL_INDEPENDENT_SIGNED_MG0',
+                step=step, attempt_id=work['attempt_id'],
+                operation_sha256=work['operation_sha256'],
+                master_sha256=work['master_sha256'],
+                final_signed_review=report,
+                advancement_authorized=False)
+            return {'status':'EXEC25_25_OF_25_SIGNED_CERTIFIED',
+                    'record_hash':event['record_hash'],
+                    'signed_report':report,
+                    'advancement_authorized':False}
+
     def close(self, step, token, result, evidence, regression, sections_after, critical=True,
               post_origin=None, post_offers=None, signed_macro25=None):
         # C07 macro-certification cannot be smuggled into an ordinary close.
@@ -2462,7 +2542,7 @@ def main(argv=None):
     from broker_live_review import decode_file
     from git_judgment_origin import OriginAPI, PRIVATE_REPO_SHA
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual', 'probe-blender'))
+    parser.add_argument('command', choices=('request', 'begin', 'close', 'enroll', 'probe-glb', 'probe-visual', 'probe-blender', 'certify-exec25'))
     parser.add_argument('--workspace', type=Path, required=True)
     parser.add_argument('--master', type=Path, required=True)
     parser.add_argument('--asset', required=True)
@@ -2476,6 +2556,7 @@ def main(argv=None):
     parser.add_argument('--subcheck-offset', type=int, default=0)
     parser.add_argument('--subcheck-limit', type=int, default=20)
     parser.add_argument('--close-record', type=Path)
+    parser.add_argument('--exec25-review', type=Path)
     parser.add_argument('--glb-sha256')
     parser.add_argument('--glb-rule')
     parser.add_argument('--visual-manifest-path')
@@ -2495,7 +2576,9 @@ def main(argv=None):
         def data(path):
             j.need(path is not None, 'CONTROLLED_REQUIRED_INPUT')
             return j.evidence.strict_json(path.read_bytes(), max_size=1000000)
-        if args.command == 'probe-blender':
+        if args.command == 'certify-exec25':
+            result = bridge.certify_exec25(data(args.exec25_review))
+        elif args.command == 'probe-blender':
             j.need(args.blender_executable is not None,
                    'CONTROLLED_BLENDER_BINARY_REQUIRED')
             result=bridge.probe_registered_blender_roundtrip(
