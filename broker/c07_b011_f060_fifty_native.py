@@ -56,9 +56,9 @@ def observed_originals(records,artifacts,plan,work,step,asset,controller,source_
         return v[0] if len(v)==1 else None
     contract=plan.get('reference_evidence_contract')
     bound={}
-    if type(contract) is dict and contract.get('schema')==(
-            'gg-c07-original-pre-d-research-contract-v1') and
-            type(contract.get('artifact_sha256')) is dict:
+    if (type(contract) is dict and contract.get('schema')==
+            'gg-c07-original-pre-d-research-contract-v1' and
+            type(contract.get('artifact_sha256')) is dict):
         bound={role:unique(role) for role in contract['artifact_sha256']
                if unique(role) is not None and
                unique(role)[1]==contract['artifact_sha256'][role]}
