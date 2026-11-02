@@ -40,18 +40,24 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         return binding, packet, spec, offer, log
 
     def test_each_approved_validator_requires_independent_readback(self):
-        self.assertEqual(len(approved.REVIEWED),12)
+        self.assertEqual(len(approved.REVIEWED),14)
         self.assertIn('AAA-200-B-013',approved.REVIEWED)
         self.assertIn('AAA-200-B-019',approved.REVIEWED)
         for rid in approved.REVIEWED:
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
+                native_local=rid in ('AAA-200-R-172','AAA-200-R-178')
                 reader = ('planning_semantics.native_rule_readback'
-                          if rid == 'AAA-200-B-012'
-                          else 'r173_rule_semantics.native_rule_readback')
+                          if rid == 'AAA-200-B-012' else
+                          'c07_r172_r178_reviewed_native.native_rule_readback'
+                          if native_local else
+                          'r173_rule_semantics.native_rule_readback')
                 with patch.object(j.evidence,'native',return_value=log), patch(
                         reader, side_effect=ValueError('INDEPENDENT_SOURCE_BYTES_MISMATCH')) as native:
-                    answer = j.NativeRuleBackend(API(),{rid:spec}).rule(rid,binding,offer)
+                    answer = j.NativeRuleBackend(
+                        API(),{rid:spec},
+                        local_source_context={} if native_local else None
+                    ).rule(rid,binding,offer)
                     native.assert_called_once()
                     self.assertEqual(answer['result'],'UNKNOWN')
                     self.assertIn('INDEPENDENT_SOURCE_BYTES_MISMATCH',answer['reason'])
@@ -60,13 +66,19 @@ class ReviewedNativeReadbackTests(unittest.TestCase):
         for rid in approved.REVIEWED:
             with self.subTest(rule=rid):
                 binding, packet, spec, offer, log = self.attempt(rid)
+                native_local=rid in ('AAA-200-R-172','AAA-200-R-178')
                 reader = ('planning_semantics.native_rule_readback'
-                          if rid == 'AAA-200-B-012'
-                          else 'r173_rule_semantics.native_rule_readback')
+                          if rid == 'AAA-200-B-012' else
+                          'c07_r172_r178_reviewed_native.native_rule_readback'
+                          if native_local else
+                          'r173_rule_semantics.native_rule_readback')
                 with patch.object(j.evidence,'native',return_value=log), patch(
                         reader, return_value={'documentary_result':'PASS',
                                               'individual_rule_mg0':'UNKNOWN'}) as native:
-                    answer = j.NativeRuleBackend(API(),{rid:spec}).rule(rid,binding,offer)
+                    answer = j.NativeRuleBackend(
+                        API(),{rid:spec},
+                        local_source_context={} if native_local else None
+                    ).rule(rid,binding,offer)
                     native.assert_called_once()
                     self.assertEqual(answer['result'],'UNKNOWN')
                     self.assertEqual(answer['mg0'],'UNKNOWN')
