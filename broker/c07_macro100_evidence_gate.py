@@ -92,3 +92,32 @@ def inspect(inventory, enrolled, observations):
         "advancement_authorized": False,
         "rules": rows,
     }
+
+def require_complete(report, inventory):
+    """Only the trusted completion path may call this certification gate.
+
+    Reject ID-count, CI, synthetic evidence and self-reported PASS as substitutes
+    for individually approved reviewer + independent MG0 attestations.
+    This negative gate cannot mint positive attestations by itself.
+    """
+    require(type(report) is dict and report.get("schema") == SCHEMA,
+            "C07_MACRO100_CERTIFICATE_SCHEMA")
+    require(type(report.get("rules")) is dict and
+            set(report["rules"]) == set(BATCH_IDS) and
+            report.get("rule_count") == 100,
+            "C07_MACRO100_NOT_ALL_ONE_HUNDRED_RULES")
+    require(type(inventory) is dict and
+            set(BATCH_IDS) <= set(inventory.get("rules", {})),
+            "C07_MACRO100_CANONICAL_RECHECK")
+    for rid in BATCH_IDS:
+        row = report["rules"][rid]
+        canonical = inventory["rules"][rid]
+        require(type(row) is dict and row.get("rule_id") == rid and
+                row.get("requirement_sha256") == canonical.get("requirement_sha256") and
+                row.get("source_sha256") == canonical.get("source_sha256"),
+                "C07_MACRO100_WRONG_RULE_OR_SOURCE:" + rid)
+        # This implementation currently has no trusted positive MG0 backend:
+        # even an all-green dict cannot pass. The trusted certification backend
+        # must be integrated before legitimate certification can be granted.
+        raise Macro100Blocked("C07_MACRO100_INDEPENDENT_FULL_AND_MG0_MISSING:" + rid)
+    raise Macro100Blocked("C07_MACRO100_CERTIFIER_NOT_INSTALLED")
