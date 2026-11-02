@@ -130,7 +130,7 @@ class NativeGK50Tests(unittest.TestCase):
             return (struct.pack("<4sII",b"glTF",2,
                         12+8+len(payload)+8+len(binary))+
                     struct.pack("<I4s",len(payload),b"JSON")+payload+
-                    struct.pack("<I4s",len(binary),b"BIN\\x00")+binary)
+                    struct.pack("<I4s",len(binary),b"BIN\x00")+binary)
         for name,key in (("taihu_rock","rock"),("bamboo_tree","vegetation")):
             with self.subTest(group=key):
                 model=raw_named(name,2)
