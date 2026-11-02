@@ -139,12 +139,6 @@ class NativeRuleBackend:
                 from c07_r173_r175_r177_reviewed_native import native_rule_readback
                 native_rule_readback(self.api, packet, expected, spec,
                                      self.local_source_context)
-            elif rule in tuple('EXEC-'+str(n).zfill(3) for n in range(1,26)):
-                need(type(self.local_source_context) is dict,
-                     'JUDGMENT_EXEC25_ORIGINAL_CONTEXT_REQUIRED')
-                from c07_exec25_original_reviewed_native import native_rule_readback
-                native_rule_readback(self.api, packet, expected, spec,
-                                     self.local_source_context)
             elif rule in reviewed and spec['validator_id'] == reviewed[rule][0]:
                 from r173_rule_semantics import native_rule_readback
                 native_rule_readback(self.api, packet, expected, spec)
