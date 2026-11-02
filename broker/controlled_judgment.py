@@ -1092,6 +1092,39 @@ class ControlledJudgment:
                     source_rules_examined=2,
                     full_work_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 BEHAVIOR 001-050: execute 50 canonical negative semantics
+                # against the same authenticated original audit/attempt.
+                # Absence of an incident never grants a full rule or MG0 PASS.
+                from c07_behavior50_negative_native import inspect as behavior50_inspect
+                behavior50 = behavior50_inspect(
+                    self.inventory, self.c.audit_path(self.asset).read_bytes(),
+                    self.asset, reserved_work['attempt_id'],
+                    reserved_work['operation_sha256'])
+                j.need(behavior50['rule_count'] == 50
+                       and len(behavior50['rules']) == 50
+                       and behavior50['certified_count'] == 0
+                       and behavior50['individual_mg0_passes'] == 0
+                       and behavior50['advancement_authorized'] is False
+                       and all(v['verdict'] in ('UNKNOWN', 'FAIL')
+                               and v['full_rule_pass'] is False
+                               and v['individual_mg0'] == 'UNKNOWN'
+                               for v in behavior50['rules'].values()),
+                       'CONTROLLED_C07_BEHAVIOR50_FALSE_CERTIFICATION')
+                self.append('SUPERVISOR_C07_BEHAVIOR50_NATIVE_NEGATIVE',
+                    step=step, attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    source_sha256=behavior50['source_sha256'],
+                    original_audit_tail=behavior50['audit_tail'],
+                    per_rule_negative_observations=behavior50['rules'],
+                    source_rules_examined=50,
+                    negative_findings=behavior50['negative_findings'],
+                    full_rule_passes=0, individual_mg0_passes=0,
+                    advancement_authorized=False)
+                # An authenticated recorded violation must stop this operation;
+                # logging FAIL and advancing would make the checks decorative.
+                j.need(behavior50['negative_findings'] == 0,
+                       'CONTROLLED_C07_BEHAVIOR50_RECORDED_VIOLATION')
                 # R140: 20 separate canonical P0 A/C source-native
                 # research and goal criteria. Actual pre-D plan binds original
                 # reference file bytes. A source-scope result never implies
