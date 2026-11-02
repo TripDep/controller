@@ -21,7 +21,8 @@ from c07_p4_texture_semantics import rgba, _embedded
 from c07_p6_collision_semantics import _triangles
 from c07_p3_geometry_semantics import _read_accessor
 from visual_content_metrics import decode_grid, VisualContentBlocked
-from c07_p345_light_pixel_replay import pixel_light_response
+from c07_p345_light_pixel_replay import (pixel_light_response,
+    triplet_light_response, lod_view_color_distance, frame_samples_within_budget)
 
 NUMBERS=(118,119,120,133,134,135,136,139,140,143,145,147,150)
 RULES=frozenset('AAA-200-'+('L' if n<=120 else 'N' if n<=140 else 'O')+
@@ -496,7 +497,12 @@ def inspect(source_context,rule_id):
                      direct['mean']>neutral['mean'] and
                      pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
                                           original('LIGHT_DIRECT_VIEW','.png'),
-                                          direction=1,minimum_delta=5)),False)
+                                          direction=1,minimum_delta=5) and
+                     triplet_light_response(
+                         original('LIGHT_NEUTRAL_VIEW','.png'),
+                         original('LIGHT_DIRECT_VIEW','.png'),
+                         original('LIGHT_SHADOW_VIEW','.png'),
+                         min_direct_delta=5,min_shadow_delta=5)),False)
     elif n==135:
         shadow=view('LIGHT_SHADOW_VIEW')
         neutral=view('LIGHT_NEUTRAL_VIEW')
@@ -505,14 +511,25 @@ def inspect(source_context,rule_id):
                      shadow['mean']<neutral['mean'] and
                      pixel_light_response(original('LIGHT_NEUTRAL_VIEW','.png'),
                                           original('LIGHT_SHADOW_VIEW','.png'),
-                                          direction=-1,minimum_delta=5)),False)
+                                          direction=-1,minimum_delta=5) and
+                     triplet_light_response(
+                         original('LIGHT_NEUTRAL_VIEW','.png'),
+                         original('LIGHT_DIRECT_VIEW','.png'),
+                         original('LIGHT_SHADOW_VIEW','.png'),
+                         min_direct_delta=5,min_shadow_delta=5)),False)
     elif n==136:
         reflection=view('REFLECTION_VIEW')
         material_plan=policy('P4_MATERIAL_PLAN')
+        # A metal material that is never bound to a native primitive cannot
+        # explain the original reflection capture.
         metal=bool(mats and any(
-            type(m) is dict and type(m.get('pbrMetallicRoughness')) is dict
-            and numeric(m['pbrMetallicRoughness'].get('metallicFactor'))
-            and m['pbrMetallicRoughness']['metallicFactor']>=0.7 for m in mats))
+            type(p.get('material')) is int and
+            0<=p['material']<len(mats) and
+            type(mats[p['material']]) is dict and
+            type(mats[p['material']].get('pbrMetallicRoughness')) is dict and
+            numeric(mats[p['material']]['pbrMetallicRoughness'].get('metallicFactor')) and
+            mats[p['material']]['pbrMetallicRoughness']['metallicFactor']>=0.7
+            for p in prims))
         checks=(bool(original('P4_MATERIAL_PLAN','.json') and
                      material_plan.get('fivem_shader_profile') and reflection),
                 bool(metal and reflection and
@@ -579,7 +596,12 @@ def inspect(source_context,rule_id):
                      and boxes_close(native,lod,budget.get(
                          'lod_bounds_tolerance_m',0.01))
                      and lod_surface_coherence(raw,lod_raw,
-                         budget.get('lod_surface_deviation_m'))),False)
+                         budget.get('lod_surface_deviation_m'))
+                     and ('lod_max_view_rgb_delta' not in budget or
+                          lod_view_color_distance(
+                              original('LOD_NEAR_VIEW','.png'),
+                              original('LOD_FAR_VIEW','.png'),
+                              budget['lod_max_view_rgb_delta']))),False)
     elif n==147:
         budget=policy('P5_PERF_BUDGET')
         min_shared=budget.get('min_shared_texture_bindings')
@@ -598,10 +620,7 @@ def inspect(source_context,rule_id):
         target=budget.get('target_frame_ms')
         checks=(bool(raw and original('P5_PERF_BUDGET','.json') and
                      original('P5_RUNTIME_CAPTURE','.json')),
-                bool(type(samples) is list and len(samples)>=10 and
-                     all(positive(x) and x<10000 for x in samples) and
-                     positive(target) and
-                     sum(samples)/len(samples)<=target),False)
+                frame_samples_within_budget(samples,target),False)
     criteria=CRITERIA[n]
     need(len(criteria)==3 and len(checks)==3 and
          all(type(x) is bool for x in checks),

@@ -13,7 +13,7 @@ from c07_positive_native_process import _original_attempt, _registered_artifacts
 from c07_p345_forty_native_evidence import inspect as inspect_p345, binary_json
 from c07_p5_budget_semantics import _glb_parts
 from c07_p4_texture_semantics import rgba, _embedded
-from c07_p345_light_pixel_replay import pixel_light_response
+from c07_p345_light_pixel_replay import pixel_light_response, triplet_light_response
 
 SECTION = 'M'
 NEW = (121, 122, 125, 126, 127, 129, 130)
@@ -297,7 +297,10 @@ def inspect(source_context, rule_id):
         pixel_light_response(raw_views[0],raw_views[1],direction=1,
             minimum_delta=light_policy['min_direct_neutral_delta']) and
         pixel_light_response(raw_views[0],raw_views[2],direction=-1,
-            minimum_delta=light_policy['min_neutral_shadow_delta']))
+            minimum_delta=light_policy['min_neutral_shadow_delta']) and
+        triplet_light_response(raw_views[0],raw_views[1],raw_views[2],
+            min_direct_delta=light_policy['min_direct_neutral_delta'],
+            min_shadow_delta=light_policy['min_neutral_shadow_delta']))
 
     weather = policy.get('weathering', {})
     wp = bool(type(weather) is dict and
@@ -338,7 +341,7 @@ def inspect(source_context, rule_id):
         # Source PNGs show luminance differences, not trusted evidence of
         # the renderer/light rig used. Independent provenance is required.
         130: (bool(raw_contract and raw_glb and lp),
-              visual, False),
+              bool(visual and luminance), False),
     }
     num=int(rule_id.rsplit('-',1)[1])
     checks=dict(zip(CRITERIA[num],(bool(v) for v in names[num])))

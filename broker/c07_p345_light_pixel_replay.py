@@ -65,6 +65,66 @@ def pixel_light_response(reference, changed, *, direction,
         direction == 0 or inverse / count <= 0.1)
 
 
+def triplet_light_response(neutral, direct, shadow, *,
+                           min_direct_delta=5, min_shadow_delta=5,
+                           required_fraction=0.75):
+    """Recompute *coincident* original pixels under three light conditions.
+
+    Separate average/75%-each comparisons can pass when the bright and dark
+    regions are disjoint. This requires the SAME spatial pixels to respond in
+    both directions. It is source QA only, not renderer or FiveM provenance.
+    """
+    values = [original_pixels(raw) for raw in (neutral, direct, shadow)]
+    if (any(v is None for v in values) or
+            len({v[:2] for v in values}) != 1 or
+            not all(type(x) in (int, float) and math.isfinite(x) and x>0
+                    for x in (min_direct_delta, min_shadow_delta)) or
+            type(required_fraction) not in (int, float) or
+            not math.isfinite(required_fraction) or
+            not 0 < required_fraction <= 1):
+        return False
+    n, d, s = (v[2] for v in values)
+    correct = inverse = 0
+    for pn, pd, ps in zip(n, d, s):
+        rise = (sum(pd[:3]) - sum(pn[:3])) / 3.0
+        fall = (sum(pn[:3]) - sum(ps[:3])) / 3.0
+        correct += rise >= min_direct_delta and fall >= min_shadow_delta
+        inverse += rise < -min_direct_delta or fall < -min_shadow_delta
+    return correct / len(n) >= required_fraction and inverse / len(n) <= 0.1
+
+
+def lod_view_color_distance(near, far, max_channel_delta):
+    """Check original near/far raster continuity against a pre-D bound.
+
+    Image alignment/capture authenticity still require separate evidence.
+    """
+    a, b = original_pixels(near), original_pixels(far)
+    if (a is None or b is None or a[:2] != b[:2] or
+            type(max_channel_delta) not in (int, float) or
+            not math.isfinite(max_channel_delta) or
+            not 0 <= max_channel_delta <= 255):
+        return False
+    return all(max(abs(x[k]-y[k]) for k in range(3)) <= max_channel_delta
+               for x,y in zip(a[2],b[2]))
+
+
+def frame_samples_within_budget(samples, target):
+    """Original frame observations: both mean and nearest-rank P95 must fit.
+
+    A single severe stutter must not disappear behind a passing mean.
+    Authentic in-game provenance is NOT established by numeric samples.
+    """
+    if (type(samples) is not list or len(samples)<10 or
+            type(target) not in (int,float) or
+            not math.isfinite(target) or not 0<target<10000 or
+            not all(type(v) in (int,float) and math.isfinite(v)
+                    and 0<v<10000 for v in samples)):
+        return False
+    ordered=sorted(samples)
+    p95=ordered[math.ceil(0.95*len(ordered))-1]
+    return sum(ordered)/len(ordered)<=target and p95<=target
+
+
 def player_camera_horizontal_alignment(position, forward, native):
     """Project an original camera ray to the front of actual GLB XY bounds.
 
