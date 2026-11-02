@@ -30,7 +30,7 @@ def criteria_well_formed(plan):
         if type(row) is not dict or set(row)!={"name","operator","expected"}:
             return False
         name=row["name"];op=row["operator"];v=row["expected"]
-        if name not in ALLOWED_METRICS or name in names or op not in OPERATORS or not _numeric(v):
+        if type(name) is not str or name not in ALLOWED_METRICS or name in names or type(op) is not str or op not in OPERATORS or not _numeric(v):
             return False
         if v<0:return False
         names.add(name)
