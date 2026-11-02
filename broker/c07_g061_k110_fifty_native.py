@@ -11,7 +11,7 @@ from glb_machine_qa import audit_bytes,parse,GLBError,MAX_BYTES
 from glb_winding_readback import scan_bytes,WindingBlocked
 from glb_pbr_evidence import validate_png_chunks,MaterialEvidenceError
 from c07_gk50_canonical import CLAUSES,IDS,CATALOG_SHA
-from c07_gk50_predicates import SPEC
+from c07_gk50_predicates import SPEC,UNVERIFIED
 
 SCHEMA="gg-c07-g061-k110-fifty-source-native-v1"
 GROUP_PATTERNS={
@@ -166,8 +166,7 @@ def machine_features(records,artifacts,plan,step,work):
     # aligns to survey heights, or the water/wind works in FiveM.
     unproven={key for scope in SPEC.values() for key in scope
              if key not in F}
-    need(all(key.endswith(("proven","excluded","reviewed","sufficient_proven"))
-             for key in unproven),
+    need(unproven==UNVERIFIED,
          "GK50_UNRECOGNIZED_SOURCE_RULE_PREDICATE:"+str(sorted(unproven)))
     F.update({key:False for key in unproven})
     need(all(type(v) is bool for v in F.values()),"GK50_INVALID_NATIVE_BOOL")
