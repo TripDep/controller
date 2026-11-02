@@ -98,6 +98,8 @@ def inspect(ctx,rid):
                 decoded[role]=rgba(raw)
         except (ValueError,TypeError,KeyError,IndexError,OverflowError):
             decoded={}
+    def capture_sha(role):
+        return sha(captures[role]) if captures.get(role) is not None else None
     native=original('NATIVE_EXPORT','.glb')
     mesh=_triangles(native) if native else []
     native_ok=bool(mesh and len(mesh)<=50000)
@@ -171,12 +173,12 @@ def inspect(ctx,rid):
             e.get('event')=='UNDER_SIDE_REVIEWED' and
             e.get('step')==step and e.get('attempt_id')==work['attempt_id']
             and e.get('operation_sha256')==work['operation_sha256']
-            and e.get('image_sha256')==sha(captures[roles[0]])]
+            and e.get('image_sha256')==capture_sha(roles[0])]
         checks=dict(zip(CODES[n],(
             bool(bound and q),bool(face_measure and bottom),
             bool(bound and len(positions)==1 and
                  q.get('underside_qa_sha256')==
-                 sha(captures['VISUAL_VIEW_UNDERSIDE'])))))
+                 capture_sha('VISUAL_VIEW_UNDERSIDE')))))
     else:
         q=jbytes(original('P345_QA_REPORT','.json') or b'')
         l=jbytes(original('P4_LIGHTING_QA','.json') or b'')
@@ -186,9 +188,9 @@ def inspect(ctx,rid):
             e.get('step')==step and e.get('attempt_id')==work['attempt_id']
             and e.get('operation_sha256')==work['operation_sha256']]
         tech=[e for e in events if e.get('review_kind')=='TECHNICAL'
-              and e.get('image_sha256')==sha(captures['LIGHT_NEUTRAL_VIEW'])]
+              and e.get('image_sha256')==capture_sha('LIGHT_NEUTRAL_VIEW')]
         art=[e for e in events if e.get('review_kind')=='PRESENTATION'
-             and e.get('image_sha256')==sha(captures['LIGHT_CINEMATIC_VIEW'])]
+             and e.get('image_sha256')==capture_sha('LIGHT_CINEMATIC_VIEW')]
         separated=bool(len(tech)==len(art)==1
             and tech[0].get('reviewer_id') and art[0].get('reviewer_id')
             and tech[0]['reviewer_id']!=art[0]['reviewer_id'])
