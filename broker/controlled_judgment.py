@@ -1815,6 +1815,53 @@ class ControlledJudgment:
                                and v['advancement_authorized'] is False
                                for v in native_p2['rules'].values()),
                            'CONTROLLED_R145_FALSE_CROSS_TYPE_OR_MG0_PASS')
+                    # Sixth C07 25: architecture G061-H080 and natural forms
+                    # I081-I085, with two independent original-source readers.
+                    # Execute BEFORE R145's append so the audit digest checked
+                    # on all three readers is from the same immutable snapshot.
+                    from c07_g061_i085_25_semantic_replay import inspect as inspect_gi25
+                    gi25=inspect_gi25({
+                        'inventory':self.inventory,'plan':plans[0]['plan'],
+                        'controller':self.c,'asset':self.asset,'step':step,
+                        'work':reserved_work,
+                        'source_loader':lambda absolute:Path(absolute).read_bytes()})
+                    expected_gi25=(20 if reserved_work['asset_type']=='architecture'
+                                   else 5 if reserved_work['asset_type']=='organic'
+                                   else 0)
+                    j.need(gi25['rule_count']==25 and
+                           gi25['original_source_clauses']==25 and
+                           gi25['due_rules']==expected_gi25 and
+                           gi25['nonapplicable_rules']==25-expected_gi25 and
+                           set(gi25['rules'])=={
+                               'AAA-200-%s-%03d'%(
+                                   'G' if n<=70 else 'H' if n<=80 else 'I',n)
+                               for n in range(61,86)} and
+                           gi25['original_audit_sha256']==
+                               native_p2['original_audit_sha256'] and
+                           gi25['original_audit_tail']==
+                               native_p2['original_audit_tail'] and
+                           gi25['full_rule_semantic_passes']==0 and
+                           gi25['independent_mg0_passes']==0 and
+                           gi25['advancement_authorized'] is False,
+                           'C07_G061_I085_REPLAY_REQUIRED')
+                    self.append('SUPERVISOR_C07_G061_I085_ORIGINAL_SEMANTIC_25',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=gi25['original_audit_sha256'],
+                        original_audit_tail=gi25['original_audit_tail'],
+                        original_scope=gi25['rules'],
+                        checked_source_subconditions=gi25['machine_subconditions_checked'],
+                        independent_negative_mg0_failures=gi25['original_mg0_negative_failures'],
+                        due_rules=gi25['due_rules'],
+                        nonapplicable_rules=gi25['nonapplicable_rules'],
+                        full_rule_semantic_passes=0,individual_mg0_passes=0,
+                        advancement_authorized=False)
+                    # R145's audit append must now reread the updated tail.
+                    native_p2=inspect_r145(
+                        self.inventory,plans[0]['plan'],self.c,self.asset,
+                        step,reserved_work,
+                        source_loader=lambda absolute:Path(absolute).read_bytes())
                     self.append('SUPERVISOR_C07_R145_P2_50_ORIGINAL_DOMAIN',
                         step=step,attempt_id=reserved_work['attempt_id'],
                         operation_sha256=reserved_work['operation_sha256'],
@@ -1848,10 +1895,10 @@ class ControlledJudgment:
                                'AAA-200-%s-%03d'%(
                                    'I' if n<=90 else 'J' if n<=100 else 'K',n)
                                for n in range(86,111)} and
-                           ik25['original_audit_sha256']==
-                               native_p2['original_audit_sha256'] and
-                           ik25['original_audit_tail']==
-                               native_p2['original_audit_tail'] and
+                           ik25['master_sha256']==
+                               reserved_work['master_sha256'] and
+                           ik25['attempt_id']==
+                               reserved_work['attempt_id'] and
                            ik25['full_rule_semantic_passes']==0 and
                            ik25['independent_mg0_passes']==0 and
                            ik25['advancement_authorized'] is False,
