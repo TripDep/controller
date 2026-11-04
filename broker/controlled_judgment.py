@@ -1691,6 +1691,44 @@ class ControlledJudgment:
                     native_conditions_evaluated=60,
                     full_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 eighth 25 P0 original sources A001–C025. Re-read the
+                # actual audited original documents and planning predicates
+                # plus independent MG0-negative evidence on one attempt.
+                # C21–C25 shared R140 evidence is NOT double-counted.
+                from c07_a001_c025_25_semantic_replay import inspect as inspect_ac25
+                ac25=inspect_ac25({
+                    'inventory':self.inventory,'plan':plans[0]['plan'],
+                    'controller':self.c,'asset':self.asset,'step':step,
+                    'work':reserved_work,
+                    'source_loader':lambda absolute:Path(absolute).read_bytes()})
+                j.need(ac25['rule_count']==25 and
+                       ac25['canonical_source_clauses']==25 and
+                       ac25['actual_machine_subchecks_checked']==85 and
+                       ac25['mg0_individual_negative_checks']==25 and
+                       set(ac25['rules'])=={
+                           'AAA-200-'+('A' if n<=10 else 'B' if n<=20 else 'C')+
+                           '-'+str(n).zfill(3) for n in range(1,26)} and
+                       ac25['full_rule_semantic_passes']==0 and
+                       ac25['individual_mg0_passes']==0 and
+                       ac25['advancement_authorized'] is False and
+                       all(v['full_rule_semantic_certified'] is False and
+                           v['independent_mg0_certified'] is False and
+                           v['advancement_authorized'] is False
+                           for v in ac25['rules'].values()),
+                       'C07_A001_C025_25_ORIGINAL_SOURCE_REPLAY_REQUIRED')
+                self.append('SUPERVISOR_C07_A001_C025_ORIGINAL_SEMANTIC_25',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=ac25['original_audit_sha256'],
+                    original_audit_tail=ac25['original_audit_tail'],
+                    source_original=ac25['rules'],
+                    source_subcriteria_count=85,
+                    source_subcriteria_observed=ac25['actual_machine_subchecks_observed'],
+                    mg0_negative_rule_count=25,
+                    negative_mg0_failures=ac25['negative_mg0_failures'],
+                    full_rule_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 # R142: 37 original mother / G0 rule-specific checks, each
                 # with two distinct real Controller source/audit predicates.
                 # Full source semantics / independent MG0 still UNKNOWN.
