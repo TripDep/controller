@@ -2051,6 +2051,39 @@ class ControlledJudgment:
                            mo25['individual_mg0_passes']==0 and
                            mo25['advancement_authorized'] is False,
                            'C07_M121_O145_REPLAY_REQUIRED')
+                    # C07 ninth 25: exact untouched AAA-200 gaps, all native
+                    # source-specific readers rerun on this same real attempt.
+                    # This remains a negative/UNKNOWN readback, not MG0 PASS.
+                    from c07_aaa25_gap_semantics import inspect as inspect_gap25
+                    gap25=inspect_gap25({
+                        'inventory':self.inventory,
+                        'plan':plans[0]['plan'],'controller':self.c,
+                        'asset':self.asset,'step':step,'work':reserved_work,
+                        'source_loader':lambda p:Path(p).read_bytes()})
+                    j.need(gap25['rule_count']==25 and
+                           gap25['canonical_clauses']==25 and
+                           gap25['machine_subchecks_checked']==90 and
+                           gap25['individual_mg0_negative_checks']==25 and
+                           len(gap25['rules'])==25 and
+                           gap25['original_audit_sha256']==
+                               native_p345['original_audit_sha256'] and
+                           gap25['original_audit_tail']==
+                               native_p345['original_audit_tail'] and
+                           gap25['full_rule_semantic_passes']==0 and
+                           gap25['individual_mg0_passes']==0 and
+                           gap25['advancement_authorized'] is False,
+                           'C07_REMAINING_AAA25_REAL_SEMANTIC_REPLAY_REQUIRED')
+                    self.append('SUPERVISOR_C07_REMAINING_AAA25_SEMANTIC', 
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=gap25['original_audit_sha256'],
+                        original_audit_tail=gap25['original_audit_tail'],
+                        scoped_native_checks=gap25['rules'],
+                        source_check_count=90,
+                        individual_mg0_passes=0,
+                        full_rule_semantic_passes=0,
+                        advancement_authorized=False)
                     self.append('SUPERVISOR_C07_R146_P345_40_ORIGINAL_DOMAIN',
                         step=step,attempt_id=reserved_work['attempt_id'],
                         operation_sha256=reserved_work['operation_sha256'],
