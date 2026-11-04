@@ -71,10 +71,10 @@ class Original25Tests(unittest.TestCase):
             self.assertFalse(v["independent_mg0_certified"])
     def test_different_original_text_is_blocked(self):
         self.inv["rules"][IDS[0]]["requirement"]="FORGED"
-        with self.assertRaisesRegex(ValueError,"SOURCE_DRIFT"):self.run_gate()
+        with self.assertRaisesRegex(ValueError,"CANONICAL_CLAUSE_CHANGED"):self.run_gate()
     def test_changed_digest_is_blocked(self):
         self.inv["rules"][IDS[10]]["requirement_sha256"]="0"*64
-        with self.assertRaisesRegex(ValueError,"SOURCE_DRIFT"):self.run_gate()
+        with self.assertRaisesRegex(ValueError,"CANONICAL_CLAUSE_CHANGED"):self.run_gate()
     def test_c_duplicate_machine_proof_is_not_counted_twice(self):
         self.bf["rules"][IDS[0]]["original_native_predicates"][SPEC[26][0]]=False
         with self.assertRaisesRegex(ValueError,"NOT_DUPLICATED"):self.run_gate()
