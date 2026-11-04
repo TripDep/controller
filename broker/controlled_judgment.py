@@ -1895,10 +1895,10 @@ class ControlledJudgment:
                                'AAA-200-%s-%03d'%(
                                    'I' if n<=90 else 'J' if n<=100 else 'K',n)
                                for n in range(86,111)} and
-                           ik25['original_audit_sha256']==
-                               native_p2['original_audit_sha256'] and
-                           ik25['original_audit_tail']==
-                               native_p2['original_audit_tail'] and
+                           ik25['master_sha256']==
+                               reserved_work['master_sha256'] and
+                           ik25['attempt_id']==
+                               reserved_work['attempt_id'] and
                            ik25['full_rule_semantic_passes']==0 and
                            ik25['independent_mg0_passes']==0 and
                            ik25['advancement_authorized'] is False,
