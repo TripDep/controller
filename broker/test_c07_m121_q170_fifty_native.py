@@ -33,7 +33,8 @@ def inv():
         s="MNOPQ"[(i-121)//10]
         rid="AAA-200-"+s+"-%03d"%i
         rules[rid]={"family":"AAA-200","catalog_section":s,
-                    "catalog_number":i,"catalog_phase":"P0",
+                    "catalog_number":i,
+                    "catalog_phase":("P4" if i<=140 else "P5" if i<=150 else "P6" if i<=160 else "P7"),
                     "requirement":text,
                     "source_sha256":CATALOG_SHA,
                     "requirement_sha256":hashlib.sha256(text.encode()).hexdigest()}
