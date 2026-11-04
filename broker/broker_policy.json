@@ -3,7 +3,7 @@
   "enabled": false,
   "base_branch": "main",
   "master_sha256": "2fc259a3b8d9c5a46762a677a503ceea86e29a723ff0847b465e2caec15a4b4e",
-  "public_controller_sha": "b6adc6d8b6574bea057252a8bfeeec1709cdc7a8",
+  "public_controller_sha": "13d8228cdccd7880eb3bfa69fdc168dec849ce24",
   "reviewer_public_key_sha256": null,
   "required_checks": [
     "guard-tests",
