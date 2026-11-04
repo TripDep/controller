@@ -113,8 +113,8 @@ class A001C025Test(unittest.TestCase):
             }
 
     def run_gate(self):
-        with patch.object(gate, "inspect_ac", return_value=self.ac), \\
-             patch.object(gate, "inspect_bf", return_value=self.bf), \\
+        with patch.object(gate, "inspect_ac", return_value=self.ac), \
+             patch.object(gate, "inspect_bf", return_value=self.bf), \
              patch.object(gate, "inspect_mg0", return_value=self.mg):
             return gate.inspect(self.context)
 
