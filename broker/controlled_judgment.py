@@ -1854,6 +1854,36 @@ class ControlledJudgment:
                                and v['advancement_authorized'] is False
                                for v in native_p345['rules'].values()),
                            'CONTROLLED_R146_FAKE_P345_MG0_OR_TECHNICAL_PASS')
+                    # C07 next 25 original material/light/LOD semantic readings.
+                    # No source subset can grant artistic QA or individual MG0.
+                    from c07_m121_o145_25_semantic_replay import inspect as inspect_mo25
+                    mo25 = inspect_mo25({
+                        'inventory':self.inventory,
+                        'plan':plans[0]['plan'],
+                        'controller':self.c,
+                        'asset':self.asset,
+                        'step':step,
+                        'work':reserved_work,
+                        'source_loader':lambda absolute:Path(absolute).read_bytes(),
+                    })
+                    due_mo25=(0 if plans[0]['plan']['phase']=='P3' else
+                              20 if plans[0]['plan']['phase']=='P4' else 25)
+                    j.need(mo25['rule_count']==25 and
+                           mo25['original_clause_count']==25 and
+                           mo25['due_rules']==due_mo25 and
+                           mo25['future_phase_rules']==25-due_mo25 and
+                           set(mo25['rules'])=={
+                               'AAA-200-%s-%03d' %
+                               ('M' if n<=130 else 'N' if n<=140 else 'O',n)
+                               for n in range(121,146)} and
+                           mo25['original_audit_sha256']==
+                               native_p345['original_audit_sha256'] and
+                           mo25['original_audit_tail']==
+                               native_p345['original_audit_tail'] and
+                           mo25['full_rule_semantic_passes']==0 and
+                           mo25['individual_mg0_passes']==0 and
+                           mo25['advancement_authorized'] is False,
+                           'C07_M121_O145_REPLAY_REQUIRED')
                     self.append('SUPERVISOR_C07_R146_P345_40_ORIGINAL_DOMAIN',
                         step=step,attempt_id=reserved_work['attempt_id'],
                         operation_sha256=reserved_work['operation_sha256'],
@@ -1865,6 +1895,20 @@ class ControlledJudgment:
                         due_rules=native_p345['applicable_phase_rule_count'],
                         future_phase_rules=native_p345['future_phase_rule_count'],
                         full_rule_passes=0,individual_mg0_passes=0,
+                        advancement_authorized=False)
+                    self.append('SUPERVISOR_C07_M121_O145_ORIGINAL_SEMANTIC_25',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=mo25['original_audit_sha256'],
+                        original_audit_tail=mo25['original_audit_tail'],
+                        semantic_scope=mo25['rules'],
+                        original_clause_count=25,
+                        source_named_checks=mo25['original_named_semantic_subchecks'],
+                        negative_failures=mo25['independent_negative_failures'],
+                        due_rules=mo25['due_rules'],
+                        future_phase_rules=mo25['future_phase_rules'],
+                        full_rule_semantic_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the

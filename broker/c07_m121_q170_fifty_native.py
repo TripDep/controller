@@ -93,7 +93,7 @@ def literal_sources(inv):
         need(row.get("family") == "AAA-200" and
              row.get("catalog_section") == section and
              row.get("catalog_number") == n and
-             row.get("catalog_phase") == "P0" and
+             row.get("catalog_phase") == ("P4" if n <= 140 else "P5" if n <= 150 else "P6" if n <= 160 else "P7") and
              row.get("requirement") == sentence and
              row.get("requirement_sha256") == sha(sentence.encode("utf-8")) and
              row.get("source_sha256") == CATALOG_SHA,
