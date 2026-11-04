@@ -1612,6 +1612,40 @@ class ControlledJudgment:
                                and r['advancement_authorized'] is False
                                for r in beh50['rules'].values()),
                        'CONTROLLED_C07_BEHAVIOR50_FALSE_COMPLIANCE_OR_MG0')
+                # C07 tenth exact 25 original behavior/prevention clauses.
+                # Recompute original machine facts and independent negative
+                # observations on this SAME audited attempt before append.
+                from c07_behavior001_025_semantic_replay import inspect as inspect_b25
+                behavior25=inspect_b25({
+                    'inventory':self.inventory,'plan':plans[0]['plan'],
+                    'controller':self.c,'asset':self.asset,'step':step,
+                    'work':reserved_work,
+                    'source_loader':lambda path:Path(path).read_bytes()})
+                j.need(behavior25['rule_count']==25
+                       and behavior25['canonical_clauses']==25
+                       and behavior25['native_facts_checked']==50
+                       and behavior25['mg0_negative_checks']==25
+                       and set(behavior25['rules'])=={
+                           'BEHAVIOR-'+str(n).zfill(3) for n in range(1,26)}
+                       and behavior25['original_audit_sha256']==
+                           beh50['original_audit_sha256']
+                       and behavior25['original_audit_tail']==
+                           beh50['original_audit_tail']
+                       and behavior25['full_rule_semantic_passes']==0
+                       and behavior25['individual_mg0_passes']==0
+                       and behavior25['advancement_authorized'] is False,
+                       'C07_BEHAVIOR25_ORIGINAL_SEMANTIC_REPLAY_REQUIRED')
+                self.append('SUPERVISOR_C07_BEHAVIOR001_025_ORIGINAL_SEMANTIC_25',
+                    step=step,attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=behavior25['original_audit_sha256'],
+                    original_audit_tail=behavior25['original_audit_tail'],
+                    exact_source_findings=behavior25['rules'],
+                    native_facts_checked=50,
+                    mg0_negative_checks=25,
+                    full_rule_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 self.append('SUPERVISOR_C07_BEHAVIOR001_050_ORIGINAL_NATIVE',
                     step=step,attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
