@@ -1827,6 +1827,48 @@ class ControlledJudgment:
                         other_asset_type_rules=native_p2['other_asset_type_rules'],
                         full_semantic_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                    # C07 fifth 25: I086-I090 organic, J091-J100 vegetation,
+                    # K101-K110 terrain. Current P2 asset type determines
+                    # applicability; two original readers + MG0 negative audit.
+                    from c07_i086_k110_25_semantic_replay import inspect as inspect_ik25
+                    ik25=inspect_ik25({
+                        'inventory':self.inventory,
+                        'plan':plans[0]['plan'],'controller':self.c,
+                        'asset':self.asset,'step':step,'work':reserved_work,
+                        'source_loader':lambda absolute:Path(absolute).read_bytes(),
+                    })
+                    kind_ik25=reserved_work['asset_type']
+                    expected_ik25=(5 if kind_ik25=='organic' else
+                                   10 if kind_ik25 in ('vegetation','terrain') else 0)
+                    j.need(ik25['rule_count']==25 and
+                           ik25['source_original_clauses']==25 and
+                           ik25['due_rules']==expected_ik25 and
+                           ik25['not_applicable_rules']==25-expected_ik25 and
+                           set(ik25['rules'])=={
+                               'AAA-200-%s-%03d'%(
+                                   'I' if n<=90 else 'J' if n<=100 else 'K',n)
+                               for n in range(86,111)} and
+                           ik25['original_audit_sha256']==
+                               native_p2['original_audit_sha256'] and
+                           ik25['original_audit_tail']==
+                               native_p2['original_audit_tail'] and
+                           ik25['full_rule_semantic_passes']==0 and
+                           ik25['independent_mg0_passes']==0 and
+                           ik25['advancement_authorized'] is False,
+                           'C07_I086_K110_REPLAY_REQUIRED')
+                    self.append('SUPERVISOR_C07_I086_K110_ORIGINAL_SEMANTIC_25',
+                        step=step,attempt_id=reserved_work['attempt_id'],
+                        operation_sha256=reserved_work['operation_sha256'],
+                        master_sha256=reserved_work['master_sha256'],
+                        original_audit_sha256=ik25['original_audit_sha256'],
+                        original_audit_tail=ik25['original_audit_tail'],
+                        original_scope=ik25['rules'],
+                        source_named_subcriteria=ik25['machine_subcriteria_checked'],
+                        negative_failures=ik25['independent_negative_mg0_failures'],
+                        due_rules=ik25['due_rules'],
+                        not_applicable_rules=ik25['not_applicable_rules'],
+                        full_rule_semantic_passes=0,individual_mg0_passes=0,
+                        advancement_authorized=False)
                 # R146: original source-specific P3/P4/P5 technical evidence.
                 # Observe 40 source IDs; only canonical current/future phase
                 # scope determines due checks (10/30/40), never producer PASS.
