@@ -3,7 +3,16 @@ import hashlib
 import unittest
 from unittest.mock import patch
 import c07_aaa25_gap_semantics as gate
-from c07_aaa25_gap_canonical import IDS, NUMBERS, source, sec
+from c07_aaa25_gap_canonical import IDS, NUMBERS
+from c07_a10_c10_original_evidence import TEXT as CT
+from c07_p1_thirty_native_domain import TEXT as DT
+from c07_p345_forty_native_evidence import TEXT as LT
+from c07_r171_r180_source_native import CLAUSES as RT
+def sec(n):return "C" if n<=30 else "D" if n<=35 else "L" if n<=120 else "R"
+def source(n):
+    return (CT[n],"P0") if n<=30 else (
+        (DT[str(n)],"P1") if n<=35 else (
+        (LT[str(n)][0],"P3") if n<=120 else (RT[n],"P0")))
 from c07_bf50_canonical import CATALOG_SHA
 from c07_bf50_predicates import SPEC
 
