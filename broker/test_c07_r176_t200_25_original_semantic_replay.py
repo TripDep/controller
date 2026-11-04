@@ -212,4 +212,19 @@ class R176T200Test(unittest.TestCase):
         self.assertEqual(r["independent_mg0_passes"],0)
         self.assertFalse(r["advancement_authorized"])
 
+    def test_controller_executes_25_on_real_close_not_as_synthetic_pass(self):
+        from pathlib import Path
+        path=Path(__file__).with_name("controlled_judgment.py")
+        source=path.read_text(encoding="utf-8")
+        for marker in (
+            "from c07_r176_t200_25_original_semantic_replay import inspect as inspect_next25",
+            "SUPERVISOR_C07_R176_T200_ORIGINAL_SEMANTIC_25",
+            "CONTROLLED_R176_T200_REAL_SEMANTIC_25_REQUIRED",
+            "full_rule_semantic_passes=0,individual_mg0_passes=0",
+            "source_original_rules=next25['rules']",
+        ):
+            with self.subTest(marker=marker):
+                self.assertIn(marker,source)
+
+
 if __name__=="__main__":unittest.main()
