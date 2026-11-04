@@ -1910,6 +1910,46 @@ class ControlledJudgment:
                         future_phase_rules=mo25['future_phase_rules'],
                         full_rule_semantic_passes=0,individual_mg0_passes=0,
                         advancement_authorized=False)
+                    if plans[0]['plan']['phase'] in ('P5','P6','P7','P8'):
+                        from c07_o146_q170_25_semantic_replay import inspect as inspect_oq25
+                        oq25=inspect_oq25({
+                            'inventory':self.inventory,
+                            'plan':plans[0]['plan'],
+                            'controller':self.c,'asset':self.asset,
+                            'step':step,'work':reserved_work,
+                            'source_loader':lambda absolute:Path(absolute).read_bytes()})
+                        due_oq25=(5 if plans[0]['plan']['phase']=='P5'
+                                   else 15 if plans[0]['plan']['phase']=='P6'
+                                   else 25)
+                        j.need(oq25['rule_count']==25 and
+                               oq25['exact_source_clauses']==25 and
+                               oq25['due_rules']==due_oq25 and
+                               oq25['future_phase_rules']==25-due_oq25 and
+                               set(oq25['rules'])=={
+                                  'AAA-200-%s-%03d'%(
+                                      'O' if n<=150 else 'P' if n<=160 else 'Q',n)
+                                  for n in range(146,171)} and
+                               oq25['original_audit_sha256']==
+                                   native_p345['original_audit_sha256'] and
+                               oq25['original_audit_tail']==
+                                   native_p345['original_audit_tail'] and
+                               oq25['full_rule_semantic_passes']==0 and
+                               oq25['individual_mg0_passes']==0 and
+                               oq25['advancement_authorized'] is False,
+                               'C07_O146_Q170_REPLAY_REQUIRED')
+                        self.append('SUPERVISOR_C07_O146_Q170_ORIGINAL_SEMANTIC_25',
+                            step=step,attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=oq25['original_audit_sha256'],
+                            original_audit_tail=oq25['original_audit_tail'],
+                            original_scope=oq25['rules'],
+                            source_named_subcriteria=oq25['original_named_machine_subcriteria'],
+                            negative_failures=oq25['original_negative_mg0_failures'],
+                            due_rules=oq25['due_rules'],
+                            future_phase_rules=oq25['future_phase_rules'],
+                            full_rule_semantic_passes=0,individual_mg0_passes=0,
+                            advancement_authorized=False)
                 # R147: 40 original P6 collision / P7 RAGE / P8 final QA
                 # source-bound machine facts. R-171..180 are already in the
                 # frozen P0 cohort and must never be counted twice.
