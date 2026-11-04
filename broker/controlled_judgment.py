@@ -1776,6 +1776,46 @@ class ControlledJudgment:
                                and v['artistic_approval']=='UNKNOWN'
                                for v in p1_thirty['rules'].values()),
                            'CONTROLLED_R144_FALSE_P1_ARTISTIC_OR_MG0_PASS')
+                    # C07 seventh 25: original P1 design and blockout
+                    # D036..F060. Both independent source engines are
+                    # replayed before R144's append, on one current audit.
+                    # Source observations never authorize semantic/MG0 PASS.
+                    if plans[0]['plan']['phase'] in (
+                            'P1','P2','P3','P4','P5','P6','P7','P8'):
+                        from c07_d036_f060_25_semantic_replay import inspect as inspect_df25
+                        df25=inspect_df25({
+                            'inventory':self.inventory,
+                            'plan':plans[0]['plan'],
+                            'controller':self.c,'asset':self.asset,
+                            'step':step,'work':reserved_work,
+                            'source_loader':lambda absolute:Path(absolute).read_bytes()})
+                        j.need(df25['rule_count']==25 and
+                               df25['canonical_source_clauses']==25 and
+                               df25['actual_machine_subchecks_checked']==175 and
+                               set(df25['rules'])=={
+                                   'AAA-200-%s-%03d'%(
+                                       'D' if n<=40 else 'E' if n<=50 else 'F',n)
+                                   for n in range(36,61)} and
+                               df25['original_audit_sha256']==
+                                   p1_thirty['original_audit_sha256'] and
+                               df25['original_audit_tail']==
+                                   p1_thirty['original_audit_tail'] and
+                               df25['full_rule_semantic_passes']==0 and
+                               df25['individual_mg0_passes']==0 and
+                               df25['advancement_authorized'] is False,
+                               'C07_D036_F060_SOURCE_REPLAY_REQUIRED')
+                        self.append('SUPERVISOR_C07_D036_F060_ORIGINAL_SEMANTIC_25',
+                            step=step,attempt_id=reserved_work['attempt_id'],
+                            operation_sha256=reserved_work['operation_sha256'],
+                            master_sha256=reserved_work['master_sha256'],
+                            original_audit_sha256=df25['original_audit_sha256'],
+                            original_audit_tail=df25['original_audit_tail'],
+                            scope_original=df25['rules'],
+                            source_subcriteria_count=175,
+                            source_subcriteria_true=df25['actual_machine_subchecks_observed'],
+                            negative_mg0_failures=df25['negative_mg0_failures'],
+                            full_rule_semantic_passes=0,individual_mg0_passes=0,
+                            advancement_authorized=False)
                     self.append('SUPERVISOR_C07_R144_P1_30_ORIGINAL_DOMAIN',
                         step=step,attempt_id=reserved_work['attempt_id'],
                         operation_sha256=reserved_work['operation_sha256'],
