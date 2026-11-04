@@ -1145,6 +1145,42 @@ class ControlledJudgment:
                     source_checks=original_macro25['rules'],
                     full_rule_passes=0,individual_mg0_passes=0,
                     advancement_authorized=False)
+                # C07 next semantic 25: R176..180 automation and S/T181..200
+                # final QA/delivery. Recompute original-byte source engines
+                # plus canonical MG0 negative readback on this exact attempt.
+                from c07_r176_t200_25_original_semantic_replay import inspect as inspect_next25
+                next25 = inspect_next25({
+                    'inventory': self.inventory,
+                    'plan': plans[0]['plan'],
+                    'controller': self.c,
+                    'asset': self.asset,
+                    'step': step,
+                    'work': reserved_work,
+                    'source_loader': lambda absolute: Path(absolute).read_bytes(),
+                })
+                j.need(next25['rule_count'] == 25 and
+                       next25['source_rules_exact'] == 25 and
+                       next25['original_semantic_criteria_checked'] == 100 and
+                       set(next25['rules']) == {
+                           'AAA-200-%s-%03d' %
+                           ('R' if n <= 180 else 'S' if n <= 190 else 'T', n)
+                           for n in range(176, 201)} and
+                       next25['full_rule_semantic_passes'] == 0 and
+                       next25['independent_mg0_passes'] == 0 and
+                       next25['advancement_authorized'] is False,
+                       'CONTROLLED_R176_T200_REAL_SEMANTIC_25_REQUIRED')
+                self.append('SUPERVISOR_C07_R176_T200_ORIGINAL_SEMANTIC_25',
+                    step=step,
+                    attempt_id=reserved_work['attempt_id'],
+                    operation_sha256=reserved_work['operation_sha256'],
+                    master_sha256=reserved_work['master_sha256'],
+                    original_audit_sha256=next25['original_audit_sha256'],
+                    original_audit_tail=next25['original_audit_tail'],
+                    source_original_rules=next25['rules'],
+                    original_semantic_criteria_checked=100,
+                    negative_failures=next25['negative_failures'],
+                    full_rule_semantic_passes=0,individual_mg0_passes=0,
+                    advancement_authorized=False)
                 self.append('SUPERVISOR_C07_EXEC25_ORIGINAL_POSITIVE_OUTCOMES',
                     step=step, attempt_id=reserved_work['attempt_id'],
                     operation_sha256=reserved_work['operation_sha256'],
